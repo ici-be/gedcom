@@ -7,6 +7,7 @@ import { ecrire, garderFichier, lire, lireFichier, oublierFichier, oublierTout }
 import { Bienvenue, TableauDeBord } from './Accueil'
 import { Individus } from './Individus'
 import { Communes, Lieu } from './Communes'
+import { Metiers, PageMetier } from './Metiers'
 
 interface Fichier { nom: string; importe: string; arbre: Arbre }
 
@@ -118,6 +119,8 @@ export function App() {
   else if (page === 'personnes') contenu = <Individus d={donnees} perimetre={perimetre} setPerimetre={setPerimetre} />
   else if (page === 'lieux' && route[1]) contenu = <Lieu d={donnees} lieu={route[1]} perimetre={perimetre} setPerimetre={setPerimetre} />
   else if (page === 'lieux') contenu = <Communes d={donnees} perimetre={perimetre} setPerimetre={setPerimetre} />
+  else if (page === 'metiers' && route[1]) contenu = <PageMetier d={donnees} cle={route[1]} perimetre={perimetre} setPerimetre={setPerimetre} />
+  else if (page === 'metiers') contenu = <Metiers d={donnees} perimetre={perimetre} setPerimetre={setPerimetre} />
   else contenu = (
     <>
       {erreur && <p class="erreur" role="alert">{erreur}</p>}
@@ -135,6 +138,7 @@ export function App() {
               <a href="#/" class={page === '' ? 'actif' : ''}>Accueil</a>
               <a href="#/personnes" class={page === 'personnes' ? 'actif' : ''}>Personnes</a>
               <a href="#/lieux" class={page === 'lieux' ? 'actif' : ''}>Lieux</a>
+              <a href="#/metiers" class={page === 'metiers' ? 'actif' : ''}>Métiers</a>
             </nav>
           )}
         </div>

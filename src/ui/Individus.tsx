@@ -10,6 +10,7 @@ import { score, type Etat, type Fait, type Suivi } from '../lib/suivi'
 import { libelle, NOMS_ETATS, nombre } from '../lib/format'
 import { telecharger, versCsv } from '../lib/csv'
 import { ecrire, lire } from '../lib/stockage'
+import { LiensMetiers } from './Metiers'
 import { Annees, CelluleFait, ChoixPerimetre, DateLieu, Pagination, Pastille, Personne, Sources, normaliser } from './commun'
 
 type QuelFait = 'tous' | 'naissance' | 'mariage' | 'deces'
@@ -281,7 +282,7 @@ function Details({ d, ind }: { d: Donnees; ind: Individu }) {
         {pere || mere ? (
           <>Enfant de {pere ? <Personne d={d} id={pere.id} annees /> : '?'} et {mere ? <Personne d={d} id={mere.id} annees /> : '?'}</>
         ) : 'Parents inconnus'}
-        {ind.metiers.length > 0 && <> · {ind.metiers.join(', ')}</>}
+        {ind.metiers.length > 0 && <> · <LiensMetiers d={d} valeurs={ind.metiers} /></>}
       </p>
       <ul class="evenements">
         {ind.evenements.filter((e) => e.tag !== 'OCCU').map((e, i) => (

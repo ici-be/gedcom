@@ -4,6 +4,7 @@ import type { Arbre, Individu } from './gedcom/arbre'
 import { ancetres, fratries, homonymes, type Ancetre } from './parente'
 import { score, suivi, type Suivi } from './suivi'
 import { lienGeneWeb } from './geneanet'
+import { indexerMetiers, type IndexMetiers } from './metiers'
 
 export type Perimetre = 'ancetres' | 'ancetres-fratries' | 'tous'
 
@@ -15,6 +16,7 @@ export interface Donnees {
   fratries: Map<string, Ancetre>
   homonymes: Set<string>
   suivis: Map<string, Suivi>
+  metiers: IndexMetiers
   lien: (ind: Individu) => string | undefined
 }
 
@@ -31,6 +33,7 @@ export function calculer(arbre: Arbre, racine: string, adresse: string): Donnees
     fratries: fratries(arbre, anc),
     homonymes: hom,
     suivis,
+    metiers: indexerMetiers(arbre),
     lien: (ind) => lienGeneWeb(adresse, ind, hom.has(ind.id)),
   }
 }

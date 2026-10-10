@@ -16,6 +16,15 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
 - **Lieux** : pour chaque commune, le nombre de faits et ceux qui n'ont pas de source ; puis la liste
   des actes à chercher, par type et par décennie, avec une case à cocher quand un acte est trouvé.
   Export CSV.
+- **Métiers** : les professions, avec le nombre de personnes (hommes, femmes), l'époque et les
+  communes principales ; puis une page par métier avec chaque personne, la mention exacte (date, lieu,
+  source) et ses autres métiers. « Cultivateur, échevin » compte pour deux métiers. Les formes
+  féminine et masculine sont réunies (« Cultivateur / cultivatrice », « Ouvrier de fabrique /
+  ouvrière de fabrique », « Roi / reine ») quand la forme masculine existe dans le fichier, ainsi que
+  les variantes d'écriture (« ménagère » et « menagere »).
+
+Pour chaque événement, un badge **S** (bleu) ouvre la source en ligne ; un badge **T** (orange)
+montre une source écrite en texte.
 
 Chaque nom renvoie à la fiche de la personne sur Geneanet (ou tout autre site GeneWeb) quand l'adresse
 de l'arbre est indiquée. Le GEDCOM ne contient pas le numéro qui distingue les homonymes sur GeneWeb :
@@ -48,6 +57,7 @@ Preact + TypeScript + Vite. La lecture du fichier se fait dans un *worker* (`src
 - `src/lib/parente.ts` : ancêtres (Sosa), frères et sœurs, homonymes
 - `src/lib/suivi.ts` : état des naissance, mariage et décès de chaque personne
 - `src/lib/communes.ts` : faits regroupés par lieu
+- `src/lib/metiers.ts` : métiers, variantes et féminins
 - `src/ui/` : les écrans
 
 ## Publier
