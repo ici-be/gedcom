@@ -32,7 +32,7 @@ export function lienGeneWeb(adresse: string, ind: Individu, homonyme: boolean): 
   const sep = adresse.includes('?') ? '&' : '?'
   const p = encodeURIComponent(cle(ind.prenom || '?')).replace(/%2B/g, '+')
   const n = encodeURIComponent(cle(ind.nom || '?')).replace(/%2B/g, '+')
-  return `${adresse}${sep}lang=fr${homonyme ? '&m=S' : ''}&p=${p}&n=${n}`
+  return `${adresse}${sep}lang=fr${homonyme ? '&m=S' : ''}&p=${p}&n=${n}&type=fiche`
 }
 
 /** Base Geneanet devinée d'après l'en-tête du fichier (« 2 DATA bveyckemans.gwb ») */

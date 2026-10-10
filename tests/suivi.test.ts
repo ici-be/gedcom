@@ -94,7 +94,7 @@ describe('liens GeneWeb', () => {
   })
   test('fiche et homonymes', () => {
     const p = { ...ind('@I1@'), prenom: 'Jean Célestin', nom: 'Veÿckemans' }
-    expect(lienGeneWeb('https://gw.geneanet.org/x', p, false)).toBe('https://gw.geneanet.org/x?lang=fr&p=jean+c%C3%A9lestin&n=ve%C3%BFckemans')
+    expect(lienGeneWeb('https://gw.geneanet.org/x', p, false)).toBe('https://gw.geneanet.org/x?lang=fr&p=jean+c%C3%A9lestin&n=ve%C3%BFckemans&type=fiche')
     expect(lienGeneWeb('https://gw.geneanet.org/x', p, true)).toContain('?lang=fr&m=S&p=')
     expect(lienGeneWeb('http://h/?b=base', p, false)).toContain('?b=base&lang=fr')
     expect(lienGeneWeb('', p, false)).toBeUndefined()
