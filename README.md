@@ -14,7 +14,7 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   nom, lieu, fait, état, générations, branche (ancêtres d'un Sosa : 2 = côté paternel, 3 = maternel).
   Un clic sur ▸ montre tous les événements et leurs sources. Export CSV.
 - **Lieux** : pour chaque commune, le nombre de faits et ceux qui n'ont pas de source ; puis la liste
-  des actes à chercher, par type et par décennie, avec une case à cocher quand un acte est trouvé.
+  des actes à chercher, par type et par siècle, avec une case à cocher quand un acte est trouvé.
   Export CSV.
 - **Métiers** : les professions, avec le nombre de personnes (hommes, femmes), l'époque et les
   communes principales ; puis une page par métier avec chaque personne, la mention exacte (date, lieu,

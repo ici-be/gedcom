@@ -3,7 +3,7 @@
 import { Fragment } from 'preact'
 import { useEffect, useMemo, useState } from 'preact/hooks'
 import { membres, type Donnees, type Perimetre } from '../lib/donnees'
-import { communes, decennie, GROUPES, type Acte, type Commune } from '../lib/communes'
+import { communes, siecle, GROUPES, type Acte, type Commune } from '../lib/communes'
 import { libelle, nombre, pourcent } from '../lib/format'
 import { telecharger, versCsv } from '../lib/csv'
 import { nomComplet } from '../lib/parente'
@@ -114,7 +114,7 @@ export function Communes({ d, perimetre, setPerimetre }: { d: Donnees; perimetre
   )
 }
 
-/** Les actes d'une commune, par type puis par décennie */
+/** Les actes d'une commune, par type puis par siècle */
 export function Lieu({ d, lieu, perimetre, setPerimetre }: { d: Donnees; lieu: string; perimetre: Perimetre; setPerimetre: (p: Perimetre) => void }) {
   const [autres] = useState(() => lire('autres', false))
   const [tout, setTout] = useState(false)
@@ -134,12 +134,12 @@ export function Lieu({ d, lieu, perimetre, setPerimetre }: { d: Donnees; lieu: s
     if (!c) return []
     const actes = c.actes.filter((a) => (tout || !a.evenement.sources.length) && !(masquerFaits && coches.has(a.cle) && !tout))
     return GROUPES.map((g) => {
-      const parDecennie = new Map<string, Acte[]>()
+      const parSiecle = new Map<string, Acte[]>()
       for (const a of actes.filter((x) => x.groupe === g.id).sort((x, y) => (x.evenement.date?.tri || 99999999) - (y.evenement.date?.tri || 99999999))) {
-        const k = decennie(a.evenement)
-        parDecennie.set(k, [...(parDecennie.get(k) ?? []), a])
+        const k = siecle(a.evenement)
+        parSiecle.set(k, [...(parSiecle.get(k) ?? []), a])
       }
-      return { ...g, decennies: [...parDecennie.entries()], nombre: actes.filter((x) => x.groupe === g.id).length }
+      return { ...g, siecles: [...parSiecle.entries()], nombre: actes.filter((x) => x.groupe === g.id).length }
     }).filter((g) => g.nombre)
   }, [c, tout, masquerFaits, coches])
 
@@ -154,7 +154,7 @@ export function Lieu({ d, lieu, perimetre, setPerimetre }: { d: Donnees; lieu: s
   }
 
   const exporter = () => {
-    const rangs = groupes.flatMap((g) => g.decennies.flatMap(([, actes]) => actes.map((a) => [
+    const rangs = groupes.flatMap((g) => g.siecles.flatMap(([, actes]) => actes.map((a) => [
       g.titre, libelle(a.evenement), a.evenement.date?.texte ?? '', a.personnes.map((p) => { const i = d.arbre.individus.get(p); return i ? nomComplet(i) : '?' }).join(' & '),
       a.evenement.sources.join(' | '), coches.has(a.cle) ? 'oui' : '',
     ])))
@@ -193,8 +193,8 @@ export function Lieu({ d, lieu, perimetre, setPerimetre }: { d: Donnees; lieu: s
       {groupes.map((g) => (
         <section key={g.id} class="groupe">
           <h2>{g.titre} <span class="compte">{g.nombre}</span></h2>
-          {g.decennies.map(([dec, actes]) => (
-            <div key={dec} class="decennie">
+          {g.siecles.map(([dec, actes]) => (
+            <div key={dec} class="siecle">
               <h3>{dec}</h3>
               <ul class="actes">
                 {actes.map((a) => (

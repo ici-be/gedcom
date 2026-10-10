@@ -75,10 +75,19 @@ export function communes(arbre: Arbre, perimetre: Set<string> | null, avecAutres
   return [...parLieu.values()]
 }
 
-/** Décennie d'un fait : « 1850-1859 », ou « Date inconnue » */
-export function decennie(e: Evenement): string {
+const ROMAINS: [number, string][] = [[10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']]
+
+/** 18 → « XVIII » */
+function romain(n: number): string {
+  let r = ''
+  for (const [v, l] of ROMAINS) while (n >= v) { r += l; n -= v }
+  return r
+}
+
+/** Siècle d'un fait : « XVIIIe siècle » (années 1700 à 1799), ou « Date inconnue » */
+export function siecle(e: Evenement): string {
   const a = e.date?.debut?.annee
   if (a === undefined) return 'Date inconnue'
-  const d = Math.floor(a / 10) * 10
-  return `${d}-${d + 9}`
+  const n = Math.floor(a / 100) + 1
+  return n > 0 ? `${romain(n)}${n === 1 ? 'er' : 'e'} siècle` : 'Avant notre ère'
 }
