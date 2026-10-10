@@ -24,31 +24,41 @@ export function Pastille({ etat }: { etat: Etat }) {
   )
 }
 
-/** Lien externe discret vers une source quand elle contient une adresse web */
+/** Badge d'une source : « S » bleu, lien vers la source en ligne ; « T » orange, source en texte (cliquer l'affiche) */
+function BadgeSource({ s }: { s: string }) {
+  const [ouvert, setOuvert] = useState(false)
+  const url = lienDansSource(s)
+  if (url) {
+    return <a class="badge-source lien-source" href={url} target="_blank" rel="noopener noreferrer" title={s} aria-label={'Source : ' + s}>S</a>
+  }
+  return (
+    <span class="source-texte-conteneur">
+      <button type="button" class="badge-source texte" title={s} aria-label={'Source : ' + s} aria-expanded={ouvert} onClick={() => setOuvert(!ouvert)}>T</button>
+      {ouvert && <span class="bulle-source" role="note">{s}</span>}
+    </span>
+  )
+}
+
 export function Sources({ sources }: { sources: string[] }) {
   if (!sources.length) return null
   return (
     <span class="sources">
-      {sources.map((s, i) => {
-        const url = lienDansSource(s)
-        return url ? (
-          <a key={i} href={url} target="_blank" rel="noopener noreferrer" title={s}>source{sources.length > 1 ? ' ' + (i + 1) : ''} ↗</a>
-        ) : (
-          <span key={i} class="source-texte" title={s}>{s.length > 40 ? s.slice(0, 38) + '…' : s}</span>
-        )
-      })}
+      {sources.map((s, i) => <BadgeSource key={i} s={s} />)}
     </span>
   )
 }
 
 /** Date et commune d'un événement, sur deux lignes */
-export function DateLieu({ e, prefixe }: { e?: Evenement; prefixe?: boolean }) {
+export function DateLieu({ e, prefixe, sources }: { e?: Evenement; prefixe?: boolean; sources?: boolean }) {
   if (!e) return null
   const commune = e.lieu ? decouperLieu(e.lieu).nom : ''
   const type = prefixe && e.tag !== 'BIRT' && e.tag !== 'DEAT' && e.tag !== 'MARR' ? libelle(e).toLowerCase() + ' ' : ''
   return (
     <span class="date-lieu">
-      <span>{type}{e.date?.texte || (e.avere && !e.lieu ? 'date inconnue' : '')}</span>
+      <span>
+        {type}{e.date?.texte || (e.avere && !e.lieu ? 'date inconnue' : '')}
+        {sources && e.sources.length > 0 && <> <Sources sources={e.sources} /></>}
+      </span>
       {commune && <span class="lieu" title={e.lieu}>{commune}</span>}
     </span>
   )
@@ -59,7 +69,7 @@ export function CelluleFait({ f }: { f: Fait }) {
   return (
     <span class="fait">
       <Pastille etat={f.etat} />
-      <DateLieu e={f.evenement} prefixe />
+      <DateLieu e={f.evenement} prefixe sources />
     </span>
   )
 }

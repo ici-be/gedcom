@@ -16,6 +16,10 @@
   --mid-bg: #fdecc8;
   --ko: #b23a2c;
   --ko-bg: #fbe1dc;
+  --bleu: #1f5fbf;
+  --bleu-bord: #a9c2ea;
+  --orange: #d0661c;
+  --orange-bord: #f0c19c;
   --shadow: 0 1px 2px rgb(40 30 10 / 6%), 0 6px 18px rgb(40 30 10 / 6%);
   --display: "Fraunces", Georgia, serif;
   --body: "Atkinson Hyperlegible", system-ui, sans-serif;
@@ -27,6 +31,7 @@
     --bg: #121615; --panel: #1a201e; --panel-2: #222a27; --fg: #e8ece9; --muted: #9aa6a0; --line: #2e3834;
     --accent: #8cc7b1; --accent-fg: #0d1a15; --accent-bg: #1c302a; --or: #e3b562;
     --ok: #7ed7a3; --ok-bg: #163324; --mid: #ffc76e; --mid-bg: #3a2d12; --ko: #ff978a; --ko-bg: #3d1c18;
+    --bleu: #8db6ff; --bleu-bord: #3b5a8c; --orange: #ff9d5c; --orange-bord: #7a4520;
     --shadow: 0 1px 2px rgb(0 0 0 / 35%); color-scheme: dark;
   }
 }
@@ -34,6 +39,7 @@
   --bg: #121615; --panel: #1a201e; --panel-2: #222a27; --fg: #e8ece9; --muted: #9aa6a0; --line: #2e3834;
   --accent: #8cc7b1; --accent-fg: #0d1a15; --accent-bg: #1c302a; --or: #e3b562;
   --ok: #7ed7a3; --ok-bg: #163324; --mid: #ffc76e; --mid-bg: #3a2d12; --ko: #ff978a; --ko-bg: #3d1c18;
+    --bleu: #8db6ff; --bleu-bord: #3b5a8c; --orange: #ff9d5c; --orange-bord: #7a4520;
   --shadow: 0 1px 2px rgb(0 0 0 / 35%); color-scheme: dark;
 }
 
@@ -174,8 +180,18 @@ input[type="search"], input[type="url"], input[type="number"], select {
 .evenements { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .evenements li { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
 .evenements .date-lieu { flex-direction: row; gap: 8px; }
-.sources { display: inline-flex; gap: 8px; flex-wrap: wrap; font-size: 0.85rem; }
-.source-texte { color: var(--muted); font-style: italic; }
+.sources { display: inline-flex; gap: 4px; flex-wrap: wrap; align-items: center; vertical-align: middle; }
+/* badges de source : S = lien (bleu), T = texte (orange) */
+.badge-source { display: inline-grid; place-items: center; width: 18px; height: 18px; padding: 0; border-radius: 4px; font: 700 11px/1 var(--body);
+  background: var(--panel); border: 1px solid; text-decoration: none; transition: background .15s, color .15s; }
+.badge-source.lien-source { color: var(--bleu); border-color: var(--bleu-bord); }
+.badge-source.texte { color: var(--orange); border-color: var(--orange-bord); }
+.badge-source.lien-source:hover { background: var(--bleu); color: var(--panel); }
+.badge-source.texte:hover, .badge-source.texte[aria-expanded="true"] { background: var(--orange); color: var(--panel); }
+.source-texte-conteneur { position: relative; display: inline-flex; }
+.bulle-source { position: absolute; z-index: 6; top: calc(100% + 6px); left: 0; width: max-content; max-width: min(320px, 70vw);
+  background: var(--panel); border: 1px solid var(--orange-bord); border-radius: 8px; padding: 8px 10px; box-shadow: var(--shadow);
+  font-size: 0.85rem; color: var(--fg); white-space: normal; overflow-wrap: anywhere; }
 
 .lieux .commune { font-weight: 700; text-decoration: none; }
 .lieux .commune:hover { text-decoration: underline; }
@@ -196,15 +212,14 @@ input[type="search"], input[type="url"], input[type="number"], select {
 .decennie { margin-top: 14px; }
 .decennie h3 { font: 700 0.85rem var(--body); color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
 .actes { list-style: none; margin: 0; padding: 0; }
-.actes li { display: grid; grid-template-columns: auto auto 9.5rem 7.5rem 1fr; gap: 4px 10px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.actes li { display: grid; grid-template-columns: auto auto 9.5rem 7.5rem 1fr auto; gap: 4px 10px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--line); }
 .actes li:last-child { border-bottom: 0; }
 .actes li.coche { opacity: 0.55; }
 .actes li.coche .qui { text-decoration: line-through; }
 .actes input { width: 18px; height: 18px; margin: 0; align-self: center; accent-color: var(--accent); }
 .actes .date { font-variant-numeric: tabular-nums; }
 .actes .type { color: var(--muted); font-size: 0.9rem; }
-.actes .sources { grid-column: 3 / -1; }
-.actes .sources:empty { display: none; }
+
 
 /* ---------- attente ---------- */
 .attente { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 80px 0; color: var(--muted); font-weight: 700; }
@@ -222,7 +237,9 @@ input[type="search"], input[type="url"], input[type="number"], select {
   .barre-resultats .bouton { margin-left: 0; }
   .actes li { grid-template-columns: auto auto 1fr; }
   .actes .type { grid-column: 3; }
-  .actes .qui, .actes .sources { grid-column: 3 / -1; }
+  .actes .qui { grid-column: 3 / -1; }
+  .actes .sources { grid-column: 3 / -1; }
   .actes .date { grid-column: 3; }
 }
 .bandeau-info { background: var(--mid-bg); color: var(--fg); padding: 10px 14px; border-radius: var(--radius); }
+.date-lieu .sources { margin-left: 5px; }
