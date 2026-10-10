@@ -8,6 +8,7 @@ import { Bienvenue, TableauDeBord } from './Accueil'
 import { Individus } from './Individus'
 import { Communes, Lieu } from './Communes'
 import { Metiers, PageMetier } from './Metiers'
+import type { Carte as TypeCarte } from './Carte'
 
 interface Fichier { nom: string; importe: string; arbre: Arbre }
 
@@ -35,6 +36,8 @@ export function App() {
   const [perimetre, setPerimetreBrut] = useState<Perimetre>(() => lire('perimetre', 'ancetres'))
   const [releves, setReleves] = useState<Releve[]>(() => lire('releves', []))
   const nouveauReleve = useRef(false)
+  // La carte (Leaflet) n'est chargée qu'à la première visite de l'onglet
+  const [Carte, setCarte] = useState<typeof TypeCarte | null>(null)
 
   const setRacine = (id: string) => { setRacineBrute(id); ecrire('racine', id) }
   const setAdresse = (a: string) => { setAdresseBrute(a); ecrire('adresse', a) }
@@ -112,6 +115,9 @@ export function App() {
   }, [bilan])
 
   const page = route[0] || ''
+  useEffect(() => {
+    if (page === 'carte' && !Carte) import('./Carte').then((m) => setCarte(() => m.Carte))
+  }, [page])
   let contenu
   if (etat === 'demarrage') contenu = null
   else if (etat === 'lecture') contenu = <div class="attente" role="status"><span class="rouet" />Lecture de l'arbre…</div>
@@ -120,6 +126,9 @@ export function App() {
   else if (page === 'lieux' && route[1]) contenu = <Lieu d={donnees} lieu={route[1]} perimetre={perimetre} setPerimetre={setPerimetre} />
   else if (page === 'lieux') contenu = <Communes d={donnees} perimetre={perimetre} setPerimetre={setPerimetre} />
   else if (page === 'metiers' && route[1]) contenu = <PageMetier d={donnees} cle={route[1]} perimetre={perimetre} setPerimetre={setPerimetre} />
+  else if (page === 'carte') contenu = Carte
+    ? <Carte key={route[1] ?? ''} d={donnees} perimetre={perimetre} setPerimetre={setPerimetre} focus={route[1]} />
+    : <div class="attente" role="status"><span class="rouet" />Chargement de la carte…</div>
   else if (page === 'metiers') contenu = <Metiers d={donnees} perimetre={perimetre} setPerimetre={setPerimetre} />
   else contenu = (
     <>
@@ -139,6 +148,7 @@ export function App() {
               <a href="#/personnes" class={page === 'personnes' ? 'actif' : ''}>Personnes</a>
               <a href="#/lieux" class={page === 'lieux' ? 'actif' : ''}>Lieux</a>
               <a href="#/metiers" class={page === 'metiers' ? 'actif' : ''}>Métiers</a>
+              <a href="#/carte" class={page === 'carte' ? 'actif' : ''}>Carte</a>
             </nav>
           )}
         </div>

@@ -166,7 +166,7 @@ export function Lieu({ d, lieu, perimetre, setPerimetre }: { d: Donnees; lieu: s
       <p class="retour"><a href="#/lieux">‹ Tous les lieux</a></p>
       <header class="titre-ecran">
         <h1>{c.nom}</h1>
-        <p class="sous-titre">{c.contexte}</p>
+        <p class="sous-titre">{c.contexte}{c.contexte && ' · '}<a href={'#/carte/' + encodeURIComponent(c.lieu)}>Voir sur la carte</a></p>
       </header>
       <div class="filtres">
         <ChoixPerimetre valeur={perimetre} changer={setPerimetre} />

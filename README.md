@@ -22,6 +22,13 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   féminine et masculine sont réunies (« Cultivateur / cultivatrice », « Ouvrier de fabrique /
   ouvrière de fabrique », « Roi / reine ») quand la forme masculine existe dans le fichier, ainsi que
   les variantes d'écriture (« ménagère » et « menagere »).
+- **Carte** : un cercle par lieu, d'autant plus grand qu'il y a de faits, du rouge (rien de sourcé)
+  au vert (tout est sourcé). Filtres par personnes, type de fait et siècle, ou seulement les lieux qui
+  ont des faits sans source. Un clic mène aux actes du lieu. Les lieux sont reconnus dans des listes de
+  localités livrées avec le site (`public/geo/`, d'après GeoNames) : aucun nom de lieu n'est envoyé sur
+  Internet, seul le fond de carte OpenStreetMap est téléchargé. Les lieux introuvables (hameau,
+  orthographe ancienne, faute de frappe) se placent d'un clic ; ces positions restent dans le
+  navigateur et peuvent être exportées.
 
 Pour chaque événement, un badge **S** (bleu) ouvre la source en ligne ; un badge **T** (orange)
 montre une source écrite en texte.
@@ -58,6 +65,10 @@ Preact + TypeScript + Vite. La lecture du fichier se fait dans un *worker* (`src
 - `src/lib/suivi.ts` : état des naissance, mariage et décès de chaque personne
 - `src/lib/communes.ts` : faits regroupés par lieu
 - `src/lib/metiers.ts` : métiers, variantes et féminins
+- `src/lib/geo.ts` : reconnaissance des pays et des communes pour la carte
+- `scripts/geonames.py` : fabrique `public/geo/*.json` à partir des extraits
+  [GeoNames](https://download.geonames.org/export/dump/) (CC BY 4.0) :
+  `python3 -I scripts/geonames.py <dossier des .zip> public/geo`
 - `src/ui/` : les écrans
 
 ## Publier
