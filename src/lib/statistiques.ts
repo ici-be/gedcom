@@ -150,7 +150,7 @@ export function statistiques(d: Donnees, perimetre: Set<string> | null): Statist
 
     // Prénoms (le premier), noms
     const prenom = ind.prenom.split(/[\s,]+/)[0]
-    if (prenom && prenom !== '?') s.prenoms.push({ prenom: prenom.charAt(0).toUpperCase() + prenom.slice(1), sexe: ind.sexe, siecle })
+    if (/\p{L}{2}/u.test(prenom)) s.prenoms.push({ prenom: prenom.charAt(0).toUpperCase() + prenom.slice(1), sexe: ind.sexe, siecle })
     if (ind.nom) s.noms.push({ nom: ind.nom.toUpperCase(), siecle })
 
     // Métiers (chaque métier une fois par personne)

@@ -23,7 +23,7 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   ouvrière de fabrique », « Roi / reine ») quand la forme masculine existe dans le fichier, ainsi que
   les variantes d'écriture (« ménagère » et « menagere »).
 - **Statistiques** : durée de vie, âge au premier mariage, écart d'âge entre époux, enfants par couple,
-  âge des parents, mois des naissances, mariages et décès, prénoms et patronymes les plus portés,
+  âge des parents, mois des naissances, mariages et décès, prénoms (variantes latines, flamandes… regroupées : Joannes, Jan → Jean) et patronymes les plus portés,
   métiers par sexe, lieux et pays de naissance, sédentarité, part sourcée et complétude de
   l'ascendance par génération (implexe). Moyenne ou médiane, par sexe et par siècle de naissance, pour
   les ancêtres seuls ou tout l'arbre, et filtrables sur un siècle.
@@ -71,6 +71,7 @@ Preact + TypeScript + Vite. La lecture du fichier se fait dans un *worker* (`src
 - `src/lib/communes.ts` : faits regroupés par lieu
 - `src/lib/metiers.ts` : métiers, variantes et féminins
 - `src/lib/statistiques.ts` : relevés pour les statistiques (âges, couples, calendrier, générations)
+- `src/lib/prenoms.ts` : table des variantes de prénoms et leur forme usuelle
 - `src/lib/geo.ts` : reconnaissance des pays et des communes pour la carte
 - `scripts/geonames.py` : fabrique `public/geo/*.json` à partir des extraits
   [GeoNames](https://download.geonames.org/export/dump/) (CC BY 4.0) :

@@ -7,6 +7,8 @@ import { nomSiecle } from '../lib/communes'
 import { nombre, pourcent } from '../lib/format'
 import { ChoixPerimetre, Personne } from './commun'
 import { lienMetier } from './Metiers'
+import { clePrenom, formeUsuelle } from '../lib/prenoms'
+import { sansAccents } from '../lib/metiers'
 import { Choix, Classement, Colonnes, Legende, type Serie } from './graphiques'
 
 type Mesure = 'moyenne' | 'mediane'
@@ -26,6 +28,34 @@ const ans = (v: number) => v.toLocaleString('fr-BE', { maximumFractionDigits: 1 
 const ansTexte = (v?: number) => (v === undefined ? '–' : `${ans(v)} ans`)
 const pc = (v: number) => `${Math.round(v)} %`
 const court = (s: number) => nomSiecle(s).replace(' siècle', '')
+
+interface RangPrenom { cle: string; nom: string; n: number; variantes: [string, number][] }
+
+/** Prénoms les plus portés, variantes regroupées sous leur forme usuelle ou non */
+function classerPrenoms(liste: { prenom: string }[], regrouper: boolean): RangPrenom[] {
+  const groupes = new Map<string, Map<string, number>>()
+  for (const { prenom } of liste) {
+    const cle = regrouper ? clePrenom(prenom) : prenom
+    const g = groupes.get(cle) ?? new Map<string, number>()
+    g.set(prenom, (g.get(prenom) ?? 0) + 1)
+    groupes.set(cle, g)
+  }
+  return [...groupes].map(([cle, g]) => {
+    const variantes = [...g].sort((a, b) => b[1] - a[1])
+    const n = variantes.reduce((t, [, x]) => t + x, 0)
+    return { cle, nom: (regrouper && formeUsuelle(cle)) || variantes[0][0], n, variantes }
+  }).sort((a, b) => b.n - a.n || a.nom.localeCompare(b.nom, 'fr'))
+}
+
+function lignePrenom(p: RangPrenom) {
+  // Les écarts d'accent ou de casse (Elisabeth, Élisabeth) ne sont détaillés que dans l'info-bulle
+  const autres = p.variantes.filter(([v]) => sansAccents(v) !== sansAccents(p.nom))
+  return {
+    cle: p.cle,
+    libelle: <span title={p.variantes.map(([v, n]) => `${v} : ${nombre(n)}`).join('\n')}>{p.nom}{autres.length > 0 && <span class="variantes"> {autres.map(([v]) => v).join(', ')}</span>}</span>,
+    parts: [p.n],
+  }
+}
 
 function valeur(r: Resume | undefined, m: Mesure): number | undefined {
   return r ? (m === 'moyenne' ? r.moyenne : r.mediane) : undefined
@@ -85,6 +115,7 @@ export function Statistiques({ d, perimetre, setPerimetre }: Props) {
   const [adultes, setAdultes] = useState(false)
   const [calendrier, setCalendrier] = useState<Calendrier>('mariages')
   const [sexeMetiers, setSexeMetiers] = useState<'tous' | Sexe>('tous')
+  const [regrouper, setRegrouper] = useState(true)
 
   const brut = useMemo(() => statistiques(d, membres(d, perimetre)), [d, perimetre])
   const gens = useMemo(() => generations(d), [d])
@@ -122,7 +153,7 @@ export function Statistiques({ d, perimetre, setPerimetre }: Props) {
   const vie = resumer(s.vies.map((x) => x.age))
   const enfants = resumer(s.fratries.map((x) => x.enfants))
   const sources = s.sources.filter((x) => x.source).length
-  const prenomsDistincts = new Set(s.prenoms.map((p) => p.prenom.toLowerCase())).size
+  const prenomsDistincts = new Set(s.prenoms.map((p) => (regrouper ? clePrenom(p.prenom) : p.prenom))).size
   const nomsDistincts = new Set(s.noms.map((p) => p.nom)).size
   const plusAncien = Math.min(...brut.personnes.map((p) => p.siecle ?? Infinity))
 
@@ -150,7 +181,7 @@ export function Statistiques({ d, perimetre, setPerimetre }: Props) {
   const totalMois = parMois.reduce((a, b) => a + b, 0)
 
   // ——— Prénoms, noms, métiers, lieux ———
-  const topPrenoms = (sexe: Sexe) => compter(s.prenoms.filter((p) => p.sexe === sexe), (p) => p.prenom).slice(0, 15)
+  const topPrenoms = (sexe: Sexe) => classerPrenoms(s.prenoms.filter((p) => p.sexe === sexe), regrouper).slice(0, 15)
   const topNoms = compter(s.noms, (p) => p.nom).slice(0, 15)
   const metiersFiltres = sexeMetiers === 'tous' ? s.metiers : s.metiers.filter((m) => m.sexe === sexeMetiers)
   const topMetiers = compter(metiersFiltres, (m) => m.cle).slice(0, 15)
@@ -303,15 +334,16 @@ export function Statistiques({ d, perimetre, setPerimetre }: Props) {
           <Colonnes ariaLabel="Part des personnes nées dans la commune de leur père" categories={cats} series={sedentaires} format={pc} max={100} actif={actif} hauteur={180} rogner />
         </Section>
 
-        <Section titre="Prénoms et patronymes" sous="Premier prénom de chacun ; noms de famille." large>
+        <Section titre="Prénoms et patronymes" sous="Premier prénom de chacun ; noms de famille." large
+          outils={<Choix label="Variantes des prénoms" options={[['oui', 'Variantes regroupées'], ['non', 'Formes exactes']]} valeur={regrouper ? 'oui' : 'non'} changer={(v) => setRegrouper(v === 'oui')} />}>
           <div class="trois">
             <div>
               <h3 class="h">Garçons</h3>
-              <Classement lignes={topPrenoms('M').map(([p, n]) => ({ cle: p, libelle: p, parts: [n] }))} couleurs={[HOMMES]} />
+              <Classement lignes={topPrenoms('M').map(lignePrenom)} couleurs={[HOMMES]} />
             </div>
             <div>
               <h3 class="f">Filles</h3>
-              <Classement lignes={topPrenoms('F').map(([p, n]) => ({ cle: p, libelle: p, parts: [n] }))} couleurs={[FEMMES]} />
+              <Classement lignes={topPrenoms('F').map(lignePrenom)} couleurs={[FEMMES]} />
             </div>
             <div>
               <h3>Patronymes</h3>

@@ -364,3 +364,4 @@ th:not([aria-sort]) .tri .fleche { opacity: 0.35; }
 @media (max-width: 860px) {
   .stats-grille { grid-template-columns: minmax(0, 1fr); }
 }
+.classement .variantes { color: var(--muted); font-size: 0.82rem; }

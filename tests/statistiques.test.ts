@@ -3,6 +3,7 @@ import { lireArbre } from '../src/lib/gedcom/arbre'
 import { calculer } from '../src/lib/donnees'
 import { compter, ecartAnnees, generations, resumer, statistiques } from '../src/lib/statistiques'
 import { GED } from './exemple'
+import { clePrenom, formeUsuelle } from '../src/lib/prenoms'
 
 describe('outils', () => {
   test('âge en années, au jour près quand on le peut', () => {
@@ -37,5 +38,17 @@ describe('arbre d\'exemple', () => {
     expect(s.mois).toContainEqual({ type: 'mariages', mois: 6, siecle: 20 })
     expect(s.fratries.map((f) => f.enfants).sort()).toEqual([1, 2])
     expect(s.prenoms.find((p) => p.prenom === 'Paul')?.sexe).toBe('M')
+  })
+})
+
+describe('prénoms', () => {
+  test('regroupe les variantes sous la forme usuelle', () => {
+    expect(formeUsuelle('Joannes')).toBe('Jean')
+    expect(formeUsuelle('Jan')).toBe('Jean')
+    expect(formeUsuelle('Jacobus')).toBe('Jacques')
+    expect(formeUsuelle('Joanna')).toBe('Jeanne')
+    expect(formeUsuelle('Pétronille')).toBe('Pétronille')
+    expect(formeUsuelle('Petronella')).toBe('Pétronille')
+    expect(clePrenom('Zénobe')).toBe('zenobe')
   })
 })
