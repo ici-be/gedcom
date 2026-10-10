@@ -84,10 +84,18 @@ function romain(n: number): string {
   return r
 }
 
-/** Siècle d'un fait : « XVIIIe siècle » (années 1700 à 1799), ou « Date inconnue » */
+/** 18 → « XVIIIe siècle » (années 1700 à 1799) */
+export function nomSiecle(n: number): string {
+  return n > 0 ? `${romain(n)}${n === 1 ? 'er' : 'e'} siècle` : 'Avant notre ère'
+}
+
+/** Numéro du siècle d'une année, à la manière des généalogistes : 1700 → 18 */
+export function numeroSiecle(annee: number): number {
+  return Math.floor(annee / 100) + 1
+}
+
+/** Siècle d'un fait : « XVIIIe siècle », ou « Date inconnue » */
 export function siecle(e: Evenement): string {
   const a = e.date?.debut?.annee
-  if (a === undefined) return 'Date inconnue'
-  const n = Math.floor(a / 100) + 1
-  return n > 0 ? `${romain(n)}${n === 1 ? 'er' : 'e'} siècle` : 'Avant notre ère'
+  return a === undefined ? 'Date inconnue' : nomSiecle(numeroSiecle(a))
 }

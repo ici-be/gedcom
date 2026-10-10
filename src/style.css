@@ -20,6 +20,11 @@
   --bleu-bord: #a9c2ea;
   --orange: #d0661c;
   --orange-bord: #f0c19c;
+  --homme: #3d6fb4;
+  --femme: #c4547a;
+  --serie1: #2f8f6b;
+  --serie2: #c08a1e;
+  --serie3: #6a5aa8;
   --shadow: 0 1px 2px rgb(40 30 10 / 6%), 0 6px 18px rgb(40 30 10 / 6%);
   --display: "Fraunces", Georgia, serif;
   --body: "Atkinson Hyperlegible", system-ui, sans-serif;
@@ -31,7 +36,7 @@
     --bg: #121615; --panel: #1a201e; --panel-2: #222a27; --fg: #e8ece9; --muted: #9aa6a0; --line: #2e3834;
     --accent: #8cc7b1; --accent-fg: #0d1a15; --accent-bg: #1c302a; --or: #e3b562;
     --ok: #7ed7a3; --ok-bg: #163324; --mid: #ffc76e; --mid-bg: #3a2d12; --ko: #ff978a; --ko-bg: #3d1c18;
-    --bleu: #8db6ff; --bleu-bord: #3b5a8c; --orange: #ff9d5c; --orange-bord: #7a4520;
+    --bleu: #8db6ff; --bleu-bord: #3b5a8c; --orange: #ff9d5c; --orange-bord: #7a4520; --homme: #86aef0; --femme: #f093b4; --serie1: #6fcca6; --serie2: #e8bb5c; --serie3: #a99be6;
     --shadow: 0 1px 2px rgb(0 0 0 / 35%); color-scheme: dark;
   }
 }
@@ -39,7 +44,7 @@
   --bg: #121615; --panel: #1a201e; --panel-2: #222a27; --fg: #e8ece9; --muted: #9aa6a0; --line: #2e3834;
   --accent: #8cc7b1; --accent-fg: #0d1a15; --accent-bg: #1c302a; --or: #e3b562;
   --ok: #7ed7a3; --ok-bg: #163324; --mid: #ffc76e; --mid-bg: #3a2d12; --ko: #ff978a; --ko-bg: #3d1c18;
-    --bleu: #8db6ff; --bleu-bord: #3b5a8c; --orange: #ff9d5c; --orange-bord: #7a4520;
+    --bleu: #8db6ff; --bleu-bord: #3b5a8c; --orange: #ff9d5c; --orange-bord: #7a4520; --homme: #86aef0; --femme: #f093b4; --serie1: #6fcca6; --serie2: #e8bb5c; --serie3: #a99be6;
   --shadow: 0 1px 2px rgb(0 0 0 / 35%); color-scheme: dark;
 }
 
@@ -230,7 +235,8 @@ input[type="search"], input[type="url"], input[type="number"], select {
 /* ---------- téléphone ---------- */
 @media (max-width: 640px) {
   .bandeau-dedans { gap: 8px; }
-  .onglets a { padding: 5px 8px; font-size: 0.92rem; }
+  .onglets { flex-wrap: wrap; }
+  .onglets a { padding: 4px 9px; font-size: 0.92rem; }
   .filtres label input[type="search"] { width: 100%; }
   .filtres label { flex: 1 1 140px; }
   .filtres label.court { flex: 0 1 auto; }
@@ -269,8 +275,8 @@ th:not([aria-sort]) .tri .fleche { opacity: 0.35; }
 /* ---------- carte ---------- */
 .siecles { flex-wrap: wrap; align-self: flex-start; border-radius: 18px; }
 .carte-cadre { position: relative; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
-.carte { height: clamp(420px, calc(100vh - 330px), 820px); background: var(--panel-2); }
-.carte.en-placement, .carte.en-placement .leaflet-interactive { cursor: crosshair; }
+.carte-fond { height: clamp(420px, calc(100vh - 330px), 820px); background: var(--panel-2); }
+.carte-fond.en-placement, .carte-fond.en-placement .leaflet-interactive { cursor: crosshair; }
 .carte-attente { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; background: color-mix(in srgb, var(--bg) 70%, transparent); color: var(--muted); font-weight: 700; z-index: 500; }
 .carte-consigne { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 600; background: var(--panel); border: 2px solid var(--or); border-radius: 999px; padding: 6px 8px 6px 16px; display: flex; align-items: center; gap: 12px; box-shadow: var(--shadow); max-width: calc(100% - 24px); }
 .legende { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; color: var(--muted); font-size: 0.9rem; }
@@ -305,7 +311,56 @@ th:not([aria-sort]) .tri .fleche { opacity: 0.35; }
 .bulle-actions { font-size: 0.85rem; }
 /* fond OpenStreetMap assombri en mode sombre */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .carte .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.85) saturate(0.6); }
+  :root:not([data-theme="light"]) .carte-fond .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.85) saturate(0.6); }
 }
-:root[data-theme="dark"] .carte .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.85) saturate(0.6); }
-.carte .leaflet-tile-pane { filter: saturate(0.55) brightness(1.03); }
+:root[data-theme="dark"] .carte-fond .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.85) saturate(0.6); }
+.carte-fond .leaflet-tile-pane { filter: saturate(0.55) brightness(1.03); }
+
+/* ---------- statistiques ---------- */
+.chiffres { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+.chiffres.bref { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.chiffre { background: var(--panel-2); border-radius: 10px; padding: 10px 14px; display: flex; flex-direction: column; gap: 2px; }
+.chiffres.bref .chiffre { background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow); }
+.chiffre-valeur { font: 700 1.55rem/1.15 var(--display); font-variant-numeric: tabular-nums; }
+.chiffre-legende { font-weight: 700; color: var(--muted); font-size: 0.85rem; }
+.chiffre-detail { color: var(--muted); font-size: 0.8rem; }
+.h { color: var(--homme); }
+.f { color: var(--femme); }
+.stats-grille { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: start; }
+.stats-grille .large { grid-column: 1 / -1; }
+.stat { gap: 12px; min-width: 0; }
+.stat h3 { font-size: 1rem; margin-top: 4px; }
+.stat-entete { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px 16px; flex-wrap: wrap; }
+.stat-entete .aide { margin-top: 4px; }
+.deux { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 12px 28px; }
+.trois { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 12px 28px; }
+.deux > div, .trois > div { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.segments.petit button { padding: 4px 11px; font-size: 0.88rem; }
+.graphique { width: 100%; min-height: 40px; }
+.graphique svg { display: block; overflow: visible; }
+.graphique .grille { stroke: var(--line); stroke-dasharray: 2 3; }
+.graphique .base { stroke: var(--muted); stroke-opacity: 0.5; }
+.graphique .axe { fill: var(--muted); font: 11px var(--body); font-variant-numeric: tabular-nums; }
+.graphique .axe.actif { fill: var(--fg); font-weight: 700; }
+.graphique .valeur { fill: var(--fg); font: 700 10px var(--body); font-variant-numeric: tabular-nums; }
+.graphique rect { transition: opacity 0.15s; }
+.graphique rect:hover { opacity: 0.75; }
+.legende-graphique { display: flex; flex-wrap: wrap; gap: 4px 16px; color: var(--muted); font-size: 0.85rem; }
+.legende-graphique i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; }
+.classement { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+.classement li { display: grid; grid-template-columns: 1.6em minmax(0, 1fr) auto; grid-template-areas: "rang libelle total" "rang piste piste"; gap: 1px 8px; align-items: center; }
+.classement .rang { grid-area: rang; color: var(--muted); font-size: 0.8rem; font-variant-numeric: tabular-nums; text-align: right; align-self: start; padding-top: 2px; }
+.classement .libelle { grid-area: libelle; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.classement .total { grid-area: total; font-variant-numeric: tabular-nums; color: var(--muted); font-size: 0.9rem; }
+.classement .piste { grid-area: piste; display: flex; height: 7px; border-radius: 999px; background: var(--panel-2); overflow: hidden; }
+.classement .piste > span { height: 100%; }
+.constat { margin: 0; background: var(--panel-2); border-radius: 10px; padding: 10px 14px; }
+.doyens summary { cursor: pointer; font-weight: 700; color: var(--accent); }
+.doyens ol { margin: 8px 0 0; padding-left: 1.6em; display: flex; flex-direction: column; gap: 4px; }
+.doyens .age { color: var(--muted); font-variant-numeric: tabular-nums; }
+.tableau-defilant { overflow-x: auto; max-height: 360px; overflow-y: auto; }
+.tableau.generations td, .tableau.generations th { text-align: right; font-variant-numeric: tabular-nums; }
+.tableau.generations td:first-child, .tableau.generations th:first-child { text-align: left; }
+@media (max-width: 860px) {
+  .stats-grille { grid-template-columns: minmax(0, 1fr); }
+}

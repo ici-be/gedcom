@@ -268,7 +268,7 @@ export function Carte({ d, perimetre, setPerimetre, focus }: Props) {
       </div>
 
       <div class="carte-cadre">
-        <div ref={conteneur} class="carte" />
+        <div ref={conteneur} class="carte-fond" />
         {!auto && <div class="carte-attente" role="status"><span class="rouet" />Recherche des lieux…</div>}
         {aPlacer && (
           <div class="carte-consigne" role="status">

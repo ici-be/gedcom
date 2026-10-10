@@ -58,7 +58,7 @@ export function pire(etats: Etat[]): Etat {
 }
 
 /** Année de naissance, ou à défaut estimée d'après le mariage (−25 ans) ou le premier enfant (−30 ans) */
-function anneeNaissanceEstimee(arbre: Arbre, ind: Individu, naissance: Fait): number | undefined {
+export function anneeNaissanceEstimee(arbre: Arbre, ind: Individu, naissance: Fait): number | undefined {
   const n = annee(naissance.evenement?.date)
   if (n !== undefined) return n
   const annees: number[] = []
