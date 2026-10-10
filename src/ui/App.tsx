@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import type { Arbre } from '../lib/gedcom/arbre'
 import { bilan as faireBilan, calculer, type Perimetre, type Releve } from '../lib/donnees'
 import { charger } from '../lib/chargement'
+import { adresseDevinee } from '../lib/geneanet'
 import { ecrire, garderFichier, lire, lireFichier, oublierFichier, oublierTout } from '../lib/stockage'
 import { Bienvenue, TableauDeBord } from './Accueil'
 import { Individus } from './Individus'
@@ -95,7 +96,9 @@ export function App() {
     return a.individus.keys().next().value ?? ''
   }, [fichier, racine])
 
-  const donnees = useMemo(() => (fichier ? calculer(fichier.arbre, racineEffective, adresse) : null), [fichier, racineEffective, adresse])
+  // Sans adresse saisie, celle que l'en-tête du fichier Geneanet laisse deviner
+  const adresseEffective = adresse || (fichier ? adresseDevinee(fichier.arbre.origine) : '')
+  const donnees = useMemo(() => (fichier ? calculer(fichier.arbre, racineEffective, adresseEffective) : null), [fichier, racineEffective, adresseEffective])
   const bilan = useMemo(() => (donnees ? faireBilan(donnees) : null), [donnees])
 
   // Un relevé par import, pour mesurer les progrès d'un export à l'autre

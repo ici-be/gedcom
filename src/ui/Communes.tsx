@@ -59,6 +59,7 @@ export function Communes({ d, perimetre, setPerimetre }: { d: Donnees; perimetre
         <h1>Lieux</h1>
         <p class="sous-titre">Les faits à sourcer, commune par commune : de quoi préparer une séance aux archives ou sur les registres en ligne.</p>
       </header>
+      {!d.adresse && <p class="astuce bandeau-info">Pour que les noms deviennent des liens vers les fiches en ligne, indiquez l'adresse de votre arbre dans les <a href="#/">réglages de l'accueil</a>.</p>}
 
       <div class="filtres">
         <ChoixPerimetre valeur={perimetre} changer={(p) => { setPerimetre(p); setPage(0) }} />

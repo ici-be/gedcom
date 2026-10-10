@@ -225,3 +225,4 @@ input[type="search"], input[type="url"], input[type="number"], select {
   .actes .qui, .actes .sources { grid-column: 3 / -1; }
   .actes .date { grid-column: 3; }
 }
+.bandeau-info { background: var(--mid-bg); color: var(--fg); padding: 10px 14px; border-radius: var(--radius); }

@@ -148,11 +148,11 @@ export function TableauDeBord({ d, bilan, releves, fichier, ouvrir, setRacine, s
           <h3>Adresse de l'arbre en ligne</h3>
           <p class="aide">Pour que chaque nom ouvre la fiche correspondante sur Geneanet (ou sur un autre site GeneWeb).</p>
           <form class="ligne" onSubmit={(e) => { e.preventDefault(); valider(saisie) }}>
-            <input type="url" value={saisie} onInput={(e) => setSaisie(e.currentTarget.value)} placeholder="https://gw.geneanet.org/votre_identifiant" aria-label="Adresse de l'arbre en ligne" />
+            <input type="text" inputMode="url" spellcheck={false} value={saisie} onInput={(e) => setSaisie(e.currentTarget.value)} placeholder="https://gw.geneanet.org/votre_identifiant" aria-label="Adresse de l'arbre en ligne" />
             <button type="submit" class="bouton">Enregistrer</button>
           </form>
-          {!d.adresse && devinee && (
-            <p class="aide">D'après le fichier : <button type="button" class="lien" onClick={() => valider(devinee)}>{devinee}</button></p>
+          {devinee && d.adresse === devinee && (
+            <p class="aide">Adresse trouvée dans le fichier. Pour ouvrir les fiches en mode modification, indiquez la vôtre (par exemple {devinee}_w).</p>
           )}
           {d.adresse && racine && <p class="aide">Essai : <Personne d={d} id={racine.id} /></p>}
         </div>

@@ -150,6 +150,7 @@ export function Individus({ d, perimetre, setPerimetre }: { d: Donnees; perimetr
         <h1>Personnes</h1>
         <p class="sous-titre">Naissance, mariage et décès : ce qui est sourcé, ce qui ne l'est pas, ce qui manque.</p>
       </header>
+      {!d.adresse && <p class="astuce bandeau-info">Pour que les noms deviennent des liens vers les fiches en ligne, indiquez l'adresse de votre arbre dans les <a href="#/">réglages de l'accueil</a>.</p>}
 
       <div class="filtres">
         <ChoixPerimetre valeur={perimetre} changer={(p) => { setPerimetre(p); setPage(0) }} />
@@ -266,7 +267,6 @@ export function Individus({ d, perimetre, setPerimetre }: { d: Donnees; perimetr
         {!lignes.length && <p class="aucun">Aucune personne ne correspond à ces critères.</p>}
       </div>
       <Pagination page={page} pages={pages} aller={(p) => { setPage(p); window.scrollTo({ top: 0 }) }} />
-      {d.adresse === '' && <p class="astuce">Indiquez l'adresse de votre arbre en ligne sur l'accueil pour que les noms deviennent des liens vers les fiches.</p>}
     </section>
   )
 }
