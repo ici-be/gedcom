@@ -263,3 +263,5 @@ a.etiquette:hover { border-color: var(--accent); color: var(--accent); }
 a.metier { text-decoration: none; }
 a.metier:hover { text-decoration: underline; }
 .fait .date-lieu > span:first-child { white-space: nowrap; }
+.tri .fleche { display: inline-block; width: 1em; margin-left: 4px; font-size: 0.75em; }
+th:not([aria-sort]) .tri .fleche { opacity: 0.35; }

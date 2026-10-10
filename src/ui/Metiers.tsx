@@ -10,9 +10,9 @@ import { annee } from '../lib/gedcom/dates'
 import { nombre } from '../lib/format'
 import { telecharger, versCsv } from '../lib/csv'
 import { comparerSosa, nomComplet } from '../lib/parente'
-import { CelluleFait, ChoixPerimetre, DateLieu, Pagination, Personne, Sources, normaliser } from './commun'
+import { CelluleFait, ChoixPerimetre, DateLieu, EnTeteTri, type Tri, Pagination, Personne, Sources, normaliser } from './commun'
 
-type TriMetiers = 'personnes' | 'nom' | 'periode'
+type TriMetiers = 'nom' | 'personnes' | 'hommes' | 'femmes' | 'periode'
 const PAR_PAGE = 100
 
 /** Un métier réduit aux personnes du périmètre, avec ses chiffres */
@@ -66,15 +66,6 @@ function Periode({ r }: { r: Resume }) {
   return <span class="periode">{r.debut === r.fin ? r.debut : `${r.debut}–${r.fin}`}</span>
 }
 
-function HommesFemmes({ r }: { r: Resume }) {
-  return (
-    <span class="sexes">
-      {r.hommes > 0 && <span title="Hommes">H {nombre(r.hommes)}</span>}
-      {r.femmes > 0 && <span title="Femmes">F {nombre(r.femmes)}</span>}
-    </span>
-  )
-}
-
 export function lienMetier(cle: string): string {
   return '#/metiers/' + encodeURIComponent(cle)
 }
@@ -99,7 +90,8 @@ export function LiensMetiers({ d, valeurs }: { d: Donnees; valeurs: string[] }) 
 
 export function Metiers({ d, perimetre, setPerimetre }: { d: Donnees; perimetre: Perimetre; setPerimetre: (p: Perimetre) => void }) {
   const [recherche, setRecherche] = useState('')
-  const [tri, setTri] = useState<TriMetiers>('personnes')
+  const [tri, setTriBrut] = useState<Tri<TriMetiers>>({ cle: 'personnes', sens: -1 })
+  const setTri = (t: Tri<TriMetiers>) => { setTriBrut(t); setPage(0) }
   const [page, setPage] = useState(0)
 
   const resumes = useMemo(() => {
@@ -114,12 +106,15 @@ export function Metiers({ d, perimetre, setPerimetre }: { d: Donnees; perimetre:
       const n = normaliser(x.metier.variantes.map((v) => v.libelle).join(' '))
       return mots.every((m) => n.includes(m))
     })
+    // ordre croissant ; le sens choisi l'inverse au besoin, à égalité le plus de personnes d'abord
     const comparer: Record<TriMetiers, (a: Resume, b: Resume) => number> = {
-      personnes: (a, b) => b.personnes.length - a.personnes.length,
       nom: (a, b) => a.metier.titre.localeCompare(b.metier.titre, 'fr'),
-      periode: (a, b) => (a.debut ?? 9999) - (b.debut ?? 9999),
+      personnes: (a, b) => a.personnes.length - b.personnes.length,
+      hommes: (a, b) => a.hommes - b.hommes,
+      femmes: (a, b) => a.femmes - b.femmes,
+      periode: (a, b) => (a.debut ?? 9999) - (b.debut ?? 9999) || (a.fin ?? 9999) - (b.fin ?? 9999),
     }
-    return r.sort((a, b) => comparer[tri](a, b) || a.metier.titre.localeCompare(b.metier.titre, 'fr'))
+    return r.sort((a, b) => tri.sens * comparer[tri.cle](a, b) || b.personnes.length - a.personnes.length || a.metier.titre.localeCompare(b.metier.titre, 'fr'))
   }, [resumes, recherche, tri])
 
   const avecMetier = useMemo(() => new Set(resumes.flatMap((r) => r.personnes.map(([id]) => id))).size, [resumes])
@@ -148,14 +143,6 @@ export function Metiers({ d, perimetre, setPerimetre }: { d: Donnees; perimetre:
           <span>Métier</span>
           <input type="search" value={recherche} onInput={(e) => { setRecherche(e.currentTarget.value); setPage(0) }} placeholder="ex. musicien" />
         </label>
-        <label>
-          <span>Trier par</span>
-          <select value={tri} onChange={(e) => { setTri(e.currentTarget.value as TriMetiers); setPage(0) }}>
-            <option value="personnes">Nombre de personnes</option>
-            <option value="nom">Nom</option>
-            <option value="periode">Époque</option>
-          </select>
-        </label>
       </div>
 
       <div class="barre-resultats">
@@ -166,7 +153,14 @@ export function Metiers({ d, perimetre, setPerimetre }: { d: Donnees; perimetre:
       <div class="tableau-conteneur">
         <table class="tableau metiers">
           <thead>
-            <tr><th>Métier</th><th class="nombre">Personnes</th><th>Hommes · femmes</th><th>Naissances</th><th>Communes principales</th></tr>
+            <tr>
+              <EnTeteTri cle="nom" texte="Métier" tri={tri} trier={setTri} />
+              <EnTeteTri cle="personnes" texte="Personnes" tri={tri} trier={setTri} sensInitial={-1} classe="nombre" />
+              <EnTeteTri cle="hommes" texte="Hommes" tri={tri} trier={setTri} sensInitial={-1} classe="nombre" />
+              <EnTeteTri cle="femmes" texte="Femmes" tri={tri} trier={setTri} sensInitial={-1} classe="nombre" />
+              <EnTeteTri cle="periode" texte="Naissances" tri={tri} trier={setTri} />
+              <th>Communes principales</th>
+            </tr>
           </thead>
           <tbody>
             {visibles.map((r) => (
@@ -176,7 +170,8 @@ export function Metiers({ d, perimetre, setPerimetre }: { d: Donnees; perimetre:
                   {r.metier.variantes.length > 2 && <span class="contexte">{r.metier.variantes.length} formes</span>}
                 </td>
                 <td class="nombre">{nombre(r.personnes.length)}</td>
-                <td><HommesFemmes r={r} /></td>
+                <td class="nombre">{r.hommes ? nombre(r.hommes) : <span class="vide">–</span>}</td>
+                <td class="nombre">{r.femmes ? nombre(r.femmes) : <span class="vide">–</span>}</td>
                 <td><Periode r={r} /></td>
                 <td class="communes-principales">
                   {r.communes.slice(0, 3).map(([l, n], i) => (
@@ -198,7 +193,8 @@ type TriPersonnes = 'naissance' | 'nom' | 'sosa'
 
 /** Les personnes qui ont exercé un métier */
 export function PageMetier({ d, cle, perimetre, setPerimetre }: { d: Donnees; cle: string; perimetre: Perimetre; setPerimetre: (p: Perimetre) => void }) {
-  const [tri, setTri] = useState<TriPersonnes>('naissance')
+  const [tri, setTriBrut] = useState<Tri<TriPersonnes>>({ cle: 'naissance', sens: 1 })
+  const setTri = (t: Tri<TriPersonnes>) => { setTriBrut(t); setPage(0) }
   const [page, setPage] = useState(0)
   const metier = d.metiers.metiers.get(cle)
   const r = useMemo(() => (metier ? resumer(d, metier, membres(d, perimetre)) : null), [d, metier, perimetre])
@@ -207,9 +203,18 @@ export function PageMetier({ d, cle, perimetre, setPerimetre }: { d: Donnees; cl
     if (!r) return []
     const l = [...r.personnes]
     const sosa = (id: string) => d.ancetres.get(id)?.sosa
-    if (tri === 'nom') l.sort(([a], [b]) => normaliser(nomComplet(d.arbre.individus.get(a)!)).localeCompare(normaliser(nomComplet(d.arbre.individus.get(b)!)), 'fr'))
-    else if (tri === 'sosa') l.sort(([a], [b]) => { const x = sosa(a), y = sosa(b); return x && y ? comparerSosa(x, y) : x ? -1 : y ? 1 : 0 })
-    else l.sort(([a], [b]) => (d.suivis.get(a)?.naissance.evenement?.date?.tri || 99999999) - (d.suivis.get(b)?.naissance.evenement?.date?.tri || 99999999))
+    const nom = (id: string) => normaliser(nomComplet(d.arbre.individus.get(id)!))
+    const naissance = (id: string) => d.suivis.get(id)?.naissance.evenement?.date?.tri || 99999999
+    const comparer: Record<TriPersonnes, (a: string, b: string) => number> = {
+      nom: (a, b) => nom(a).localeCompare(nom(b), 'fr'),
+      naissance: (a, b) => naissance(a) - naissance(b),
+      // les non-ancêtres restent en bas dans les deux sens
+      sosa: (a, b) => { const x = sosa(a), y = sosa(b); return x && y ? comparerSosa(x, y) : 0 },
+    }
+    l.sort(([a], [b]) => {
+      if (tri.cle === 'sosa' && !sosa(a) !== !sosa(b)) return sosa(a) ? -1 : 1
+      return tri.sens * comparer[tri.cle](a, b) || naissance(a) - naissance(b)
+    })
     return l
   }, [r, tri, d])
 
@@ -270,31 +275,29 @@ export function PageMetier({ d, cle, perimetre, setPerimetre }: { d: Donnees; cl
 
       <div class="filtres">
         <ChoixPerimetre valeur={perimetre} changer={(p) => { setPerimetre(p); setPage(0) }} />
-        <label>
-          <span>Trier par</span>
-          <select value={tri} onChange={(e) => { setTri(e.currentTarget.value as TriPersonnes); setPage(0) }}>
-            <option value="naissance">Date de naissance</option>
-            <option value="nom">Nom</option>
-            <option value="sosa">Sosa</option>
-          </select>
-        </label>
         <button type="button" class="bouton discret" onClick={exporter}>Exporter en CSV</button>
       </div>
 
       <div class="tableau-conteneur">
         <table class="tableau suivi">
           <thead>
-            <tr><th>Personne</th><th>Naissance</th><th>Mention</th><th>Autres métiers</th></tr>
+            <tr>
+              <EnTeteTri cle="sosa" texte="Sosa" tri={tri} trier={setTri} />
+              <EnTeteTri cle="nom" texte="Personne" tri={tri} trier={setTri} />
+              <EnTeteTri cle="naissance" texte="Naissance" tri={tri} trier={setTri} />
+              <th>Mention</th>
+              <th>Autres métiers</th>
+            </tr>
           </thead>
           <tbody>
             {visibles.map(([id, mentions]) => {
               const a = d.ancetres.get(id)
               return (
                 <tr key={id}>
-                  <td class="nom">
-                    <Personne d={d} id={id} annees />
-                    {a && <span class="gen-sosa" title={`Ancêtre, génération ${a.generation}`}>Sosa {a.sosa.length > 9 ? a.sosa.slice(0, 7) + '…' : a.sosa}</span>}
+                  <td class="sosa">
+                    {a && <><span title={a.sosa}>{a.sosa.length > 9 ? a.sosa.slice(0, 7) + '…' : a.sosa}</span><span class="gen">G{a.generation}</span></>}
                   </td>
+                  <td class="nom"><Personne d={d} id={id} annees /></td>
                   <td><CelluleFait f={d.suivis.get(id)!.naissance} /></td>
                   <td>
                     <ul class="mentions">

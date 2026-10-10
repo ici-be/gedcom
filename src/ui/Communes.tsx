@@ -8,9 +8,9 @@ import { libelle, nombre, pourcent } from '../lib/format'
 import { telecharger, versCsv } from '../lib/csv'
 import { nomComplet } from '../lib/parente'
 import { ecrire, lire } from '../lib/stockage'
-import { Barre, ChoixPerimetre, Pagination, Pastille, Personne, Sources, normaliser } from './commun'
+import { Barre, ChoixPerimetre, EnTeteTri, type Tri, Pagination, Pastille, Personne, Sources, normaliser } from './commun'
 
-type TriCommunes = 'sans-source' | 'nom' | 'total' | 'part'
+type TriCommunes = 'nom' | 'total' | 'sans-source' | 'part'
 const PAR_PAGE = 100
 
 function useCommunes(d: Donnees, perimetre: Perimetre, autres: boolean): Commune[] {
@@ -20,7 +20,8 @@ function useCommunes(d: Donnees, perimetre: Perimetre, autres: boolean): Commune
 export function Communes({ d, perimetre, setPerimetre }: { d: Donnees; perimetre: Perimetre; setPerimetre: (p: Perimetre) => void }) {
   const [recherche, setRecherche] = useState('')
   const [autres, setAutres] = useState(() => lire('autres', false))
-  const [tri, setTri] = useState<TriCommunes>('sans-source')
+  const [tri, setTriBrut] = useState<Tri<TriCommunes>>({ cle: 'total', sens: -1 })
+  const setTri = (t: Tri<TriCommunes>) => { setTriBrut(t); setPage(0) }
   const [page, setPage] = useState(0)
   useEffect(() => ecrire('autres', autres), [autres])
   const toutes = useCommunes(d, perimetre, autres)
@@ -33,13 +34,14 @@ export function Communes({ d, perimetre, setPerimetre }: { d: Donnees; perimetre
       return mots.every((m) => n.includes(m))
     })
     const part = (c: Commune) => (c.actes.length - c.sansSource) / c.actes.length
+    // ordre croissant ; le sens choisi l'inverse au besoin, à égalité le plus grand nombre de faits d'abord
     const comparer: Record<TriCommunes, (a: Commune, b: Commune) => number> = {
-      'sans-source': (a, b) => b.sansSource - a.sansSource || b.actes.length - a.actes.length,
-      total: (a, b) => b.actes.length - a.actes.length,
-      part: (a, b) => part(a) - part(b) || b.actes.length - a.actes.length,
       nom: (a, b) => a.nom.localeCompare(b.nom, 'fr') || a.contexte.localeCompare(b.contexte, 'fr'),
+      total: (a, b) => a.actes.length - b.actes.length,
+      'sans-source': (a, b) => a.sansSource - b.sansSource,
+      part: (a, b) => part(a) - part(b),
     }
-    return r.sort((a, b) => comparer[tri](a, b) || a.lieu.localeCompare(b.lieu, 'fr'))
+    return r.sort((a, b) => tri.sens * comparer[tri.cle](a, b) || b.actes.length - a.actes.length || a.lieu.localeCompare(b.lieu, 'fr'))
   }, [toutes, recherche, tri])
 
   const total = liste.reduce((n, c) => n + c.actes.length, 0)
@@ -67,15 +69,6 @@ export function Communes({ d, perimetre, setPerimetre }: { d: Donnees; perimetre
           <span>Commune</span>
           <input type="search" value={recherche} onInput={(e) => { setRecherche(e.currentTarget.value); setPage(0) }} placeholder="ex. Bruxelles" />
         </label>
-        <label>
-          <span>Trier par</span>
-          <select value={tri} onChange={(e) => { setTri(e.currentTarget.value as TriCommunes); setPage(0) }}>
-            <option value="sans-source">Faits sans source</option>
-            <option value="total">Nombre de faits</option>
-            <option value="part">Part sourcée (la plus faible)</option>
-            <option value="nom">Nom</option>
-          </select>
-        </label>
         <label class="case">
           <input type="checkbox" checked={autres} onChange={(e) => setAutres(e.currentTarget.checked)} />
           <span>Inclure les autres événements (résidence, recensement…)</span>
@@ -90,7 +83,12 @@ export function Communes({ d, perimetre, setPerimetre }: { d: Donnees; perimetre
       <div class="tableau-conteneur">
         <table class="tableau lieux">
           <thead>
-            <tr><th>Commune</th><th class="nombre">Faits</th><th class="nombre">Sans source</th><th>Sourcés</th></tr>
+            <tr>
+              <EnTeteTri cle="nom" texte="Commune" tri={tri} trier={setTri} />
+              <EnTeteTri cle="total" texte="Faits" tri={tri} trier={setTri} sensInitial={-1} classe="nombre" />
+              <EnTeteTri cle="sans-source" texte="Sans source" tri={tri} trier={setTri} sensInitial={-1} classe="nombre" />
+              <EnTeteTri cle="part" texte="Sourcés" tri={tri} trier={setTri} />
+            </tr>
           </thead>
           <tbody>
             {visibles.map((c) => (

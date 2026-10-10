@@ -11,7 +11,7 @@ import { libelle, NOMS_ETATS, nombre } from '../lib/format'
 import { telecharger, versCsv } from '../lib/csv'
 import { ecrire, lire } from '../lib/stockage'
 import { LiensMetiers } from './Metiers'
-import { Annees, CelluleFait, ChoixPerimetre, DateLieu, Pagination, Pastille, Personne, Sources, normaliser } from './commun'
+import { Annees, CelluleFait, ChoixPerimetre, DateLieu, EnTeteTri, Pagination, Pastille, Personne, Sources, normaliser } from './commun'
 
 type QuelFait = 'tous' | 'naissance' | 'mariage' | 'deces'
 type QuelEtat = 'tout' | 'a-faire' | 'sans-source' | 'manquant' | 'complet'
@@ -124,13 +124,9 @@ export function Individus({ d, perimetre, setPerimetre }: { d: Donnees; perimetr
 
   const pages = Math.ceil(lignes.length / PAR_PAGE)
   const visibles = lignes.slice(page * PAR_PAGE, (page + 1) * PAR_PAGE)
-  const triPar = (t: Tri) => changer({ tri: t, sens: f.tri === t ? (-f.sens as 1 | -1) : 1 })
-  const fleche = (t: Tri) => (f.tri === t ? (f.sens === 1 ? ' ▲' : ' ▼') : '')
-  const enTete = (t: Tri, texte: string) => (
-    <th aria-sort={f.tri === t ? (f.sens === 1 ? 'ascending' : 'descending') : undefined}>
-      <button type="button" class="tri" onClick={() => triPar(t)}>{texte}{fleche(t)}</button>
-    </th>
-  )
+  const tri = { cle: f.tri, sens: f.sens }
+  const trier = (t: { cle: Tri; sens: 1 | -1 }) => changer({ tri: t.cle, sens: t.sens })
+  const enTete = (t: Tri, texte: string) => <EnTeteTri cle={t} texte={texte} tri={tri} trier={trier} />
 
   const exporter = () => {
     const texteFait = (x: Fait) => [NOMS_ETATS[x.etat], x.evenement?.date?.texte ?? '', x.evenement?.lieu ?? '', x.evenement?.sources.join(' | ') ?? '']

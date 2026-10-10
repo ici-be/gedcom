@@ -172,3 +172,25 @@ export function ChoixPerimetre({ valeur, changer }: { valeur: Perimetre; changer
     </div>
   )
 }
+
+export interface Tri<K extends string> { cle: K; sens: 1 | -1 }
+
+/** En-tête de colonne cliquable : un premier clic trie dans le sens naturel de la colonne, un second l'inverse */
+export function EnTeteTri<K extends string>({ cle, tri, trier, texte, sensInitial = 1, classe }: {
+  cle: K
+  tri: Tri<K>
+  trier: (t: Tri<K>) => void
+  texte: string
+  /** 1 = croissant (noms, dates), -1 = décroissant (nombres) */
+  sensInitial?: 1 | -1
+  classe?: string
+}) {
+  const actif = tri.cle === cle
+  return (
+    <th class={classe} aria-sort={actif ? (tri.sens === 1 ? 'ascending' : 'descending') : undefined}>
+      <button type="button" class="tri" onClick={() => trier(actif ? { cle, sens: tri.sens === 1 ? -1 : 1 } : { cle, sens: sensInitial })}>
+        {texte}<span class="fleche" aria-hidden="true">{actif ? (tri.sens === 1 ? '▲' : '▼') : '↕'}</span>
+      </button>
+    </th>
+  )
+}
