@@ -79,6 +79,14 @@ describe('arbre', () => {
   })
 })
 
+describe('noms', () => {
+  test('les alias de SURN (Geneanet) sont ignorés, le nom entre barres fait foi', () => {
+    const a = lireArbre('0 HEAD\n0 @I1@ INDI\n1 NAME Charles /Miant/\n2 SURN Myant,Mians\n0 @I2@ INDI\n1 NAME Jean\n2 SURN Dupont,Dupond\n0 TRLR\n')
+    expect(a.individus.get('@I1@')).toMatchObject({ prenom: 'Charles', nom: 'Miant' })
+    expect(a.individus.get('@I2@')).toMatchObject({ prenom: 'Jean', nom: 'Dupont' })
+  })
+})
+
 describe('zip', () => {
   test('le .ged est extrait, les images ignorées', () => {
     const z = zipSync({ 'arbre.ged': strToU8(GED), 'images-wiki/photo.png': new Uint8Array(1000) })

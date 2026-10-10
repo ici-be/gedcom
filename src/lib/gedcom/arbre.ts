@@ -85,8 +85,10 @@ function lireEvenement(n: Noeud, titres: Map<string, string>): Evenement {
 function lireNom(n?: Noeud): { prenom: string; nom: string } {
   if (!n) return { prenom: '', nom: '' }
   const m = /^([^/]*)(?:\/([^/]*)\/?)?(.*)$/.exec(n.valeur) ?? ['', '', '', '']
-  let prenom = (valeur(n, 'GIVN') || (m[1] + ' ' + m[3])).replace(/\s+/g, ' ').trim()
-  let nom = (valeur(n, 'SURN') || m[2] || '').replace(/\s+/g, ' ').trim()
+  // Le nom entre barres obliques fait foi : Geneanet range dans SURN les alias (« Myant,Mians »)
+  const premier = (s: string) => s.split(',')[0]
+  let prenom = (m[1] + ' ' + m[3]).replace(/\s+/g, ' ').trim() || premier(valeur(n, 'GIVN')).replace(/\s+/g, ' ').trim()
+  let nom = (m[2] ?? '').replace(/\s+/g, ' ').trim() || premier(valeur(n, 'SURN')).replace(/\s+/g, ' ').trim()
   if (prenom === '?') prenom = ''
   if (nom === '?') nom = ''
   return { prenom, nom }
