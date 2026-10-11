@@ -11,7 +11,7 @@ import { libelle, NOMS_ETATS, nombre } from '../lib/format'
 import { telecharger, versCsv } from '../lib/csv'
 import { ecrire, lire } from '../lib/stockage'
 import { LiensMetiers } from './Metiers'
-import { Annees, CelluleFait, ChoixPerimetre, DateLieu, EffacerFiltres, EnTeteTri, Pagination, Pastille, Personne, Sources, normaliser } from './commun'
+import { Annees, CelluleFait, ChoixPerimetre, DateLieu, EffacerFiltres, EnTeteTri, Pagination, Pastille, Personne, Sources, normaliser, useImpression } from './commun'
 
 type QuelFait = 'tous' | 'naissance' | 'mariage' | 'deces'
 type QuelEtat = 'tout' | 'a-faire' | 'sans-source' | 'manquant' | 'complet'
@@ -83,6 +83,7 @@ export function Individus({ d, perimetre, setPerimetre }: { d: Donnees; perimetr
   const [f, setF] = useState<Filtres>(() => ({ ...FILTRES, ...lire<Partial<Filtres>>('filtres', {}) }))
   const [page, setPage] = useState(0)
   const [ouvert, setOuvert] = useState<string | null>(null)
+  const impression = useImpression()
   useEffect(() => ecrire('filtres', f), [f])
   const changer = (m: Partial<Filtres>) => { setF({ ...f, ...m }); setPage(0) }
 
@@ -138,7 +139,7 @@ export function Individus({ d, perimetre, setPerimetre }: { d: Donnees; perimetr
   }, [d, perimetre, f, avecAncetres])
 
   const pages = Math.ceil(lignes.length / PAR_PAGE)
-  const visibles = lignes.slice(page * PAR_PAGE, (page + 1) * PAR_PAGE)
+  const visibles = impression ? lignes : lignes.slice(page * PAR_PAGE, (page + 1) * PAR_PAGE)
   const tri = { cle: f.tri, sens: f.sens }
   const trier = (t: { cle: Tri; sens: 1 | -1 }) => changer({ tri: t.cle, sens: t.sens })
   const enTete = (t: Tri, texte: string) => <EnTeteTri cle={t} texte={texte} tri={tri} trier={trier} />

@@ -1,6 +1,7 @@
 // Petits éléments partagés par les écrans.
 
-import { useMemo, useState } from 'preact/hooks'
+import { options } from 'preact'
+import { useEffect, useMemo, useState } from 'preact/hooks'
 import type { Evenement, Individu } from '../lib/gedcom/arbre'
 import type { Donnees, Perimetre } from '../lib/donnees'
 import type { Etat, Fait } from '../lib/suivi'
@@ -162,13 +163,39 @@ const PERIMETRES: { id: Perimetre; texte: string }[] = [
   { id: 'tous', texte: 'Tout l’arbre' },
 ]
 
+/**
+ * Vrai pendant une impression (Ctrl+P), pour imprimer toutes les lignes et pas seulement la page affichée.
+ * Le rendu est forcé tout de suite : le navigateur met la page en forme dès la fin de « beforeprint ».
+ */
+export function useImpression(): boolean {
+  const [impression, setImpression] = useState(false)
+  useEffect(() => {
+    const regler = (oui: boolean) => () => {
+      const avant = options.debounceRendering
+      options.debounceRendering = (rendre) => rendre()
+      setImpression(oui)
+      options.debounceRendering = avant
+    }
+    const debut = regler(true)
+    const fin = regler(false)
+    window.addEventListener('beforeprint', debut)
+    window.addEventListener('afterprint', fin)
+    return () => { window.removeEventListener('beforeprint', debut); window.removeEventListener('afterprint', fin) }
+  }, [])
+  return impression
+}
+
 /** Bouton qui remet les filtres d'un tableau à « tout afficher » ; il dit combien sont actifs, et lesquels au survol */
 export function EffacerFiltres({ actifs, effacer }: { actifs: string[]; effacer: () => void }) {
   const n = actifs.length
   return (
-    <button type="button" class={'bouton discret effacer-filtres' + (n ? ' actif' : '')} onClick={effacer} disabled={!n} title={n ? 'Filtres actifs : ' + actifs.join(' · ') : undefined}>
-      {n ? `✕ Effacer ${n > 1 ? `les ${n} filtres` : 'le filtre'}` : 'Aucun filtre'}
-    </button>
+    <>
+      <button type="button" class={'bouton discret effacer-filtres' + (n ? ' actif' : '')} onClick={effacer} disabled={!n} title={n ? 'Filtres actifs : ' + actifs.join(' · ') : undefined}>
+        {n ? `✕ Effacer ${n > 1 ? `les ${n} filtres` : 'le filtre'}` : 'Aucun filtre'}
+      </button>
+      {/* rappel des filtres sur la feuille imprimée */}
+      <span class="filtres-imprimes">{n ? actifs.join(' · ') : 'sans filtre'}</span>
+    </>
   )
 }
 

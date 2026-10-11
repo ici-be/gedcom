@@ -10,7 +10,7 @@ import { annee } from '../lib/gedcom/dates'
 import { nombre } from '../lib/format'
 import { telecharger, versCsv } from '../lib/csv'
 import { comparerSosa, nomComplet } from '../lib/parente'
-import { CelluleFait, ChoixPerimetre, DateLieu, EffacerFiltres, EnTeteTri, type Tri, Pagination, Personne, Sources, normaliser } from './commun'
+import { CelluleFait, ChoixPerimetre, DateLieu, EffacerFiltres, EnTeteTri, type Tri, Pagination, Personne, Sources, normaliser, useImpression } from './commun'
 
 type TriMetiers = 'nom' | 'personnes' | 'hommes' | 'femmes' | 'periode'
 const PAR_PAGE = 100
@@ -93,6 +93,7 @@ export function Metiers({ d, perimetre, setPerimetre }: { d: Donnees; perimetre:
   const [tri, setTriBrut] = useState<Tri<TriMetiers>>({ cle: 'personnes', sens: -1 })
   const setTri = (t: Tri<TriMetiers>) => { setTriBrut(t); setPage(0) }
   const [page, setPage] = useState(0)
+  const impression = useImpression()
 
   const resumes = useMemo(() => {
     const m = membres(d, perimetre)
@@ -118,7 +119,7 @@ export function Metiers({ d, perimetre, setPerimetre }: { d: Donnees; perimetre:
   }, [resumes, recherche, tri])
 
   const avecMetier = useMemo(() => new Set(resumes.flatMap((r) => r.personnes.map(([id]) => id))).size, [resumes])
-  const visibles = liste.slice(page * PAR_PAGE, (page + 1) * PAR_PAGE)
+  const visibles = impression ? liste : liste.slice(page * PAR_PAGE, (page + 1) * PAR_PAGE)
 
   const exporter = () => {
     telecharger('metiers.csv', versCsv([
@@ -197,6 +198,7 @@ export function PageMetier({ d, cle, perimetre, setPerimetre }: { d: Donnees; cl
   const [tri, setTriBrut] = useState<Tri<TriPersonnes>>({ cle: 'naissance', sens: 1 })
   const setTri = (t: Tri<TriPersonnes>) => { setTriBrut(t); setPage(0) }
   const [page, setPage] = useState(0)
+  const impression = useImpression()
   const metier = d.metiers.metiers.get(cle)
   const r = useMemo(() => (metier ? resumer(d, metier, membres(d, perimetre)) : null), [d, metier, perimetre])
 
@@ -229,7 +231,7 @@ export function PageMetier({ d, cle, perimetre, setPerimetre }: { d: Donnees; cl
     )
   }
 
-  const visibles = personnes.slice(page * PAR_PAGE, (page + 1) * PAR_PAGE)
+  const visibles = impression ? personnes : personnes.slice(page * PAR_PAGE, (page + 1) * PAR_PAGE)
   const autres = (id: string) => d.arbre.individus.get(id)!.metiers.flatMap(decouperMetiers).filter((l) => d.metiers.cleDe(l) !== cle)
 
   const exporter = () => {

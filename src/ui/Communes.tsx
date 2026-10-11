@@ -8,7 +8,7 @@ import { libelle, nombre, pourcent } from '../lib/format'
 import { telecharger, versCsv } from '../lib/csv'
 import { nomComplet } from '../lib/parente'
 import { ecrire, lire } from '../lib/stockage'
-import { Barre, ChoixPerimetre, EffacerFiltres, EnTeteTri, type Tri, Pagination, Pastille, Personne, Sources, normaliser } from './commun'
+import { Barre, ChoixPerimetre, EffacerFiltres, EnTeteTri, type Tri, Pagination, Pastille, Personne, Sources, normaliser, useImpression } from './commun'
 
 type TriCommunes = 'nom' | 'total' | 'sans-source' | 'part'
 const PAR_PAGE = 100
@@ -23,6 +23,7 @@ export function Communes({ d, perimetre, setPerimetre }: { d: Donnees; perimetre
   const [tri, setTriBrut] = useState<Tri<TriCommunes>>({ cle: 'total', sens: -1 })
   const setTri = (t: Tri<TriCommunes>) => { setTriBrut(t); setPage(0) }
   const [page, setPage] = useState(0)
+  const impression = useImpression()
   useEffect(() => ecrire('autres', autres), [autres])
   const toutes = useCommunes(d, perimetre, autres)
 
@@ -46,7 +47,7 @@ export function Communes({ d, perimetre, setPerimetre }: { d: Donnees; perimetre
 
   const total = liste.reduce((n, c) => n + c.actes.length, 0)
   const sansSource = liste.reduce((n, c) => n + c.sansSource, 0)
-  const visibles = liste.slice(page * PAR_PAGE, (page + 1) * PAR_PAGE)
+  const visibles = impression ? liste : liste.slice(page * PAR_PAGE, (page + 1) * PAR_PAGE)
 
   const exporter = () => {
     telecharger('lieux.csv', versCsv([

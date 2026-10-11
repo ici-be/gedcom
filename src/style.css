@@ -367,3 +367,53 @@ th:not([aria-sort]) .tri .fleche { opacity: 0.35; }
   .stats-grille { grid-template-columns: minmax(0, 1fr); }
 }
 .classement .variantes { color: var(--muted); font-size: 0.82rem; }
+
+/* ---------- impression (Ctrl+P) : le titre, le rappel des filtres et le tableau, sur fond blanc ---------- */
+.filtres-imprimes { display: none; }
+@page { margin: 12mm 10mm; }
+@media print {
+  :root:root:root {
+    --bg: #fff; --panel: #fff; --panel-2: #f2f2f0; --fg: #111; --muted: #555; --line: #d4d4d0;
+    --accent: #2f5d50; --accent-bg: #fff; --ok: #1d7a4a; --ok-bg: #dcf1e3; --mid: #9a5b00; --mid-bg: #fdecc8; --ko: #b23a2c; --ko-bg: #fbe1dc;
+    --bleu: #1f5fbf; --bleu-bord: #a9c2ea; --orange: #d0661c; --orange-bord: #f0c19c; --shadow: none; color-scheme: light;
+  }
+  body { font-size: 9pt; background: #fff; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .bandeau, .pied, .sous-titre, .astuce, .bandeau-info, .retour, .pagination, .barre-resultats .bouton, .deplier, .erreur { display: none !important; }
+  .page { max-width: none; padding: 0; }
+  .ecran { gap: 6px; }
+  .titre-ecran h1 { font-size: 15pt; }
+  a { color: inherit; text-decoration: none; }
+
+  /* filtres : seulement « Ancêtres / Tous » et les filtres actifs, en une ligne de texte */
+  .filtres { display: block; background: none; border: 0; padding: 0; color: var(--muted); font-size: 8.5pt; }
+  .filtres > * { display: none !important; }
+  .filtres > .segments { display: inline !important; background: none; padding: 0; }
+  .filtres .segments button:not(.actif) { display: none; }
+  .filtres .segments button.actif { padding: 0; box-shadow: none; background: none; color: var(--fg); font-weight: 700; }
+  .filtres > .filtres-imprimes { display: inline !important; }
+  .filtres > .filtres-imprimes::before { content: " · "; }
+  .barre-resultats { font-size: 8.5pt; gap: 4px 14px; }
+
+  .tableau-conteneur { overflow: visible; border: 0; border-radius: 0; background: none; }
+  .tableau { font-size: 8pt; }
+  .tableau thead { display: table-header-group; }
+  .tableau tr { break-inside: avoid; }
+  .tableau th { background: none; color: var(--fg); padding: 3px 6px; border-bottom: 1.5px solid var(--fg); font-size: 7pt; }
+  .tableau td { padding: 3px 6px; line-height: 1.25; }
+  .tableau tbody tr:hover td, .tableau tr.ouvert td, .details td { background: none; }
+  .suivi td.nom { min-width: 0; }
+  .fait { min-width: 0; gap: 4px; }
+  .mariages { gap: 2px; }
+  .pastille { width: 12px; height: 12px; font-size: 6.5pt; margin-top: 0; }
+  .badge-source { width: 12px; height: 12px; font-size: 6.5pt; border-radius: 3px; }
+  .date-lieu { line-height: 1.2; }
+  .date-lieu .lieu, .annees, .sosa .gen, .tableau .contexte { font-size: 7pt; }
+  .barre { width: 50px; height: 5px; }
+  .fiche { padding: 2px 0 4px 12px; gap: 3px; }
+
+  /* détail d'un lieu */
+  .groupe { border: 0; padding: 0; break-inside: auto; }
+  .groupe h2 { font-size: 11pt; }
+  .actes li { padding: 2px 0; break-inside: avoid; }
+}
