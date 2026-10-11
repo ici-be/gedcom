@@ -158,7 +158,7 @@ export function Statistiques({ d, perimetre, setPerimetre }: Props) {
   const plusAncien = Math.min(...brut.personnes.map((p) => p.siecle ?? Infinity))
 
   // ——— Durée de vie ———
-  const tranches = Array.from({ length: 21 }, (_, i) => (i === 20 ? '100+' : String(i * 5)))
+  const tranches = Array.from({ length: 21 }, (_, i) => (i === 20 ? '100+' : `${i * 5}–${i * 5 + 4}`))
   const histoVie: Serie[] = SEXES.map(({ sexe, nom, couleur }) => ({
     nom, couleur,
     valeurs: tranches.map((_, i) => s.vies.filter((x) => x.sexe === sexe && Math.min(20, Math.floor(x.age / 5)) === i).length),
@@ -260,7 +260,7 @@ export function Statistiques({ d, perimetre, setPerimetre }: Props) {
             </div>
             <div>
               <h3>Âge au décès, par tranche de 5 ans</h3>
-              <Colonnes ariaLabel="Répartition des âges au décès" categories={tranches} series={histoVie} empile pasEtiquettes={2} />
+              <Colonnes ariaLabel="Répartition des âges au décès" categories={tranches} series={histoVie} empile />
               <Legende series={SEXES} />
             </div>
           </div>

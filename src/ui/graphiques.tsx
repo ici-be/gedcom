@@ -92,7 +92,8 @@ function ColonnesBrutes({ categories, series, format = (v) => String(Math.round(
   const groupe = lw / Math.max(1, categories.length)
   const barre = empile ? groupe * 0.68 : (groupe * 0.8) / series.length
   const etiquettes = !empile && barre >= 26
-  const saut = pasEtiquettes ?? Math.max(1, Math.ceil((categories.length * 34) / lw))
+  const place = Math.max(34, 8 + 6 * Math.max(0, ...categories.map((c) => c.length)))
+  const saut = pasEtiquettes ?? Math.max(1, Math.ceil((categories.length * place) / lw))
   const graduations: number[] = []
   for (let v = 0; v <= haut + 1e-9; v += p) graduations.push(v)
 
