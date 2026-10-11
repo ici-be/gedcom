@@ -10,7 +10,7 @@ import { annee } from '../lib/gedcom/dates'
 import { nombre } from '../lib/format'
 import { telecharger, versCsv } from '../lib/csv'
 import { comparerSosa, nomComplet } from '../lib/parente'
-import { CelluleFait, ChoixPerimetre, DateLieu, EnTeteTri, type Tri, Pagination, Personne, Sources, normaliser } from './commun'
+import { CelluleFait, ChoixPerimetre, DateLieu, EffacerFiltres, EnTeteTri, type Tri, Pagination, Personne, Sources, normaliser } from './commun'
 
 type TriMetiers = 'nom' | 'personnes' | 'hommes' | 'femmes' | 'periode'
 const PAR_PAGE = 100
@@ -143,6 +143,7 @@ export function Metiers({ d, perimetre, setPerimetre }: { d: Donnees; perimetre:
           <span>Métier</span>
           <input type="search" value={recherche} onInput={(e) => { setRecherche(e.currentTarget.value); setPage(0) }} placeholder="ex. musicien" />
         </label>
+        <EffacerFiltres actifs={recherche.trim() ? [`métier « ${recherche.trim()} »`] : []} effacer={() => { setRecherche(''); setPage(0) }} />
       </div>
 
       <div class="barre-resultats">

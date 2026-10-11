@@ -8,7 +8,7 @@ import { libelle, nombre, pourcent } from '../lib/format'
 import { telecharger, versCsv } from '../lib/csv'
 import { nomComplet } from '../lib/parente'
 import { ecrire, lire } from '../lib/stockage'
-import { Barre, ChoixPerimetre, EnTeteTri, type Tri, Pagination, Pastille, Personne, Sources, normaliser } from './commun'
+import { Barre, ChoixPerimetre, EffacerFiltres, EnTeteTri, type Tri, Pagination, Pastille, Personne, Sources, normaliser } from './commun'
 
 type TriCommunes = 'nom' | 'total' | 'sans-source' | 'part'
 const PAR_PAGE = 100
@@ -73,6 +73,7 @@ export function Communes({ d, perimetre, setPerimetre }: { d: Donnees; perimetre
           <input type="checkbox" checked={autres} onChange={(e) => setAutres(e.currentTarget.checked)} />
           <span>Inclure les autres événements (résidence, recensement…)</span>
         </label>
+        <EffacerFiltres actifs={recherche.trim() ? [`commune « ${recherche.trim()} »`] : []} effacer={() => { setRecherche(''); setPage(0) }} />
       </div>
 
       <div class="barre-resultats">

@@ -161,6 +161,16 @@ const PERIMETRES: { id: Perimetre; texte: string }[] = [
   { id: 'tous', texte: 'Tout l’arbre' },
 ]
 
+/** Bouton qui remet les filtres d'un tableau à « tout afficher » ; il dit combien sont actifs, et lesquels au survol */
+export function EffacerFiltres({ actifs, effacer }: { actifs: string[]; effacer: () => void }) {
+  const n = actifs.length
+  return (
+    <button type="button" class={'bouton discret effacer-filtres' + (n ? ' actif' : '')} onClick={effacer} disabled={!n} title={n ? 'Filtres actifs : ' + actifs.join(' · ') : undefined}>
+      {n ? `✕ Effacer ${n > 1 ? `les ${n} filtres` : 'le filtre'}` : 'Aucun filtre'}
+    </button>
+  )
+}
+
 export function ChoixPerimetre({ valeur, changer }: { valeur: Perimetre; changer: (p: Perimetre) => void }) {
   return (
     <div class="segments" role="radiogroup" aria-label="Qui afficher">

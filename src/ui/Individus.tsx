@@ -11,7 +11,7 @@ import { libelle, NOMS_ETATS, nombre } from '../lib/format'
 import { telecharger, versCsv } from '../lib/csv'
 import { ecrire, lire } from '../lib/stockage'
 import { LiensMetiers } from './Metiers'
-import { Annees, CelluleFait, ChoixPerimetre, DateLieu, EnTeteTri, Pagination, Pastille, Personne, Sources, normaliser } from './commun'
+import { Annees, CelluleFait, ChoixPerimetre, DateLieu, EffacerFiltres, EnTeteTri, Pagination, Pastille, Personne, Sources, normaliser } from './commun'
 
 type QuelFait = 'tous' | 'naissance' | 'mariage' | 'deces'
 type QuelEtat = 'tout' | 'a-faire' | 'sans-source' | 'manquant' | 'complet'
@@ -30,6 +30,8 @@ interface Filtres {
 }
 
 const FILTRES: Filtres = { recherche: '', lieu: '', fait: 'tous', etat: 'a-faire', genMin: '', genMax: '', branche: '', tri: 'sosa', sens: 1 }
+/** Tout afficher : aucun nom, lieu, fait, état, génération ni branche imposé (le tri est gardé) */
+const SANS_FILTRE: Partial<Filtres> = { recherche: '', lieu: '', fait: 'tous', etat: 'tout', genMin: '', genMax: '', branche: '' }
 const PAR_PAGE = 100
 
 interface Ligne {
@@ -80,6 +82,14 @@ export function Individus({ d, perimetre, setPerimetre }: { d: Donnees; perimetr
   const changer = (m: Partial<Filtres>) => { setF({ ...f, ...m }); setPage(0) }
 
   const avecAncetres = perimetre !== 'tous'
+  const actifs = [
+    f.recherche.trim() && `nom « ${f.recherche.trim()} »`,
+    f.lieu.trim() && `lieu « ${f.lieu.trim()} »`,
+    f.fait !== 'tous' && `fait : ${f.fait === 'deces' ? 'décès' : f.fait}`,
+    f.etat !== 'tout' && `état : ${{ 'a-faire': 'à compléter', 'sans-source': 'sans source', manquant: 'manquant', complet: 'tout sourcé' }[f.etat]}`,
+    avecAncetres && (f.genMin || f.genMax) && `générations ${f.genMin || '…'} à ${f.genMax || '…'}`,
+    avecAncetres && f.branche && `branche ${f.branche}`,
+  ].filter((x): x is string => !!x)
 
   const lignes = useMemo(() => {
     let base: Ligne[]
@@ -193,6 +203,7 @@ export function Individus({ d, perimetre, setPerimetre }: { d: Donnees; perimetr
             </label>
           </>
         )}
+        <EffacerFiltres actifs={actifs} effacer={() => changer(SANS_FILTRE)} />
       </div>
 
       <div class="barre-resultats">
