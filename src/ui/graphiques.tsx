@@ -71,13 +71,10 @@ export function Colonnes(props: PropsColonnes) {
   return <ColonnesBrutes {...props} categories={categories} series={series} actif={actif} seuil={seuil} />
 }
 
-/** Rectangle aux coins arrondis seulement en haut et/ou en bas (parts d'une pile qui se touchent) */
-function cheminBarre(x: number, y: number, l: number, h: number, r: number, haut: boolean, bas: boolean): string {
-  r = Math.min(r, l / 2, h / 2)
-  const rh = haut ? r : 0
-  const rb = bas ? r : 0
-  return `M${x},${y + rh}` + (rh ? `a${rh},${rh} 0 0 1 ${rh},${-rh}` : '') + `h${l - 2 * rh}` + (rh ? `a${rh},${rh} 0 0 1 ${rh},${rh}` : '') +
-    `v${h - rh - rb}` + (rb ? `a${rb},${rb} 0 0 1 ${-rb},${rb}` : '') + `h${-(l - 2 * rb)}` + (rb ? `a${rb},${rb} 0 0 1 ${-rb},${-rb}` : '') + 'Z'
+/** Rectangle aux coins du haut arrondis ou non (le bas, posé sur l'axe ou sur une autre part, reste carré) */
+function cheminBarre(x: number, y: number, l: number, h: number, r: number, arrondi: boolean): string {
+  r = arrondi ? Math.min(r, l / 2, h) : 0
+  return `M${x},${y + h}v${r - h}` + (r ? `a${r},${r} 0 0 1 ${r},${-r}` : '') + `h${l - 2 * r}` + (r ? `a${r},${r} 0 0 1 ${r},${r}` : '') + `v${h - r}Z`
 }
 
 function ColonnesBrutes({ categories, series, format = (v) => String(Math.round(v)), empile, hauteur = 220, actif, max: maxImpose, pasEtiquettes, ariaLabel, seuil = PEU, etiquetteMin = -Infinity }: PropsColonnes) {
@@ -113,9 +110,8 @@ function ColonnesBrutes({ categories, series, format = (v) => String(Math.round(
             const x0 = m.gauche + i * groupe
             const attenue = actif !== undefined && actif !== i
             let pile = 0
-            const pleines = series.flatMap((s, j) => ((s.valeurs[i] ?? 0) > 0 ? [j] : []))
-            const premiere = pleines[0]
-            const derniere = pleines[pleines.length - 1]
+            let derniere = -1
+            series.forEach((s, j) => { if ((s.valeurs[i] ?? 0) > 0) derniere = j })
             return (
               <g key={c} opacity={attenue ? 0.35 : 1}>
                 {series.map((s, j) => {
@@ -132,9 +128,7 @@ function ColonnesBrutes({ categories, series, format = (v) => String(Math.round(
                   const opacite = n !== undefined && n < seuil ? 0.45 : 1
                   return (
                     <g key={s.nom}>
-                      {empile
-                        ? <path d={cheminBarre(x + 1, yHaut, Math.max(1, barre - 2), h, r, j === derniere, j === premiere)} fill={s.couleur} opacity={opacite}>{titre}</path>
-                        : <rect x={x + 1} y={yHaut} width={Math.max(1, barre - 2)} height={h} rx={r} fill={s.couleur} opacity={opacite}>{titre}</rect>}
+                      <path d={cheminBarre(x + 1, yHaut, Math.max(1, barre - 2), h, r, !empile || j === derniere)} fill={s.couleur} opacity={opacite}>{titre}</path>
                       {etiquettes && v >= etiquetteMin && <text x={x + barre / 2} y={yHaut - 4} class="valeur" text-anchor="middle">{format(v)}</text>}
                     </g>
                   )
