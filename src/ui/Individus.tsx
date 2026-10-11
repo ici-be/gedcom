@@ -52,7 +52,8 @@ function etatsChoisis(s: Suivi, fait: QuelFait): Etat[] {
 function correspond(etats: Etat[], voulu: QuelEtat): boolean {
   const utiles = etats.filter((e) => e !== 'sans-objet')
   switch (voulu) {
-    case 'tout': return true
+    // Avec un fait précis, seulement les personnes concernées (mariées, décédées…)
+    case 'tout': return utiles.length > 0
     case 'a-faire': return utiles.some((e) => e !== 'source')
     case 'sans-source': return utiles.includes('sans-source')
     case 'manquant': return utiles.includes('manquant')
@@ -60,7 +61,11 @@ function correspond(etats: Etat[], voulu: QuelEtat): boolean {
   }
 }
 
-function faitsAvecLieu(s: Suivi): Fait[] {
+/** Faits où chercher le lieu : ceux du fait choisi, ou tous */
+function faitsAvecLieu(s: Suivi, fait: QuelFait): Fait[] {
+  if (fait === 'naissance') return [s.naissance]
+  if (fait === 'mariage') return s.mariages
+  if (fait === 'deces') return [s.deces]
   return [s.naissance, s.deces, ...s.mariages]
 }
 
@@ -112,7 +117,7 @@ export function Individus({ d, perimetre, setPerimetre }: { d: Donnees; perimetr
         const n = normaliser(l.ind.prenom + ' ' + l.ind.nom)
         if (!mots.every((m) => n.includes(m))) return false
       }
-      if (lieu && !faitsAvecLieu(l.s).some((x) => x.evenement?.lieu && normaliser(x.evenement.lieu).includes(lieu))) return false
+      if (lieu && !faitsAvecLieu(l.s, f.fait).some((x) => x.evenement?.lieu && normaliser(x.evenement.lieu).includes(lieu))) return false
       if (avecAncetres && l.anc) {
         if (l.anc.generation < gMin || l.anc.generation > gMax) return false
         if (branche && !dansBranche(l.anc.sosa, branche)) return false
