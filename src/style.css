@@ -377,6 +377,8 @@ th:not([aria-sort]) .tri .fleche { opacity: 0.35; }
     --accent: #2f5d50; --accent-bg: #fff; --ok: #1d7a4a; --ok-bg: #dcf1e3; --mid: #9a5b00; --mid-bg: #fdecc8; --ko: #b23a2c; --ko-bg: #fbe1dc;
     --bleu: #1f5fbf; --bleu-bord: #a9c2ea; --orange: #d0661c; --orange-bord: #f0c19c; --shadow: none; color-scheme: light;
   }
+  /* les tailles en rem (communes, années, contexte…) suivent la taille réduite */
+  html { font-size: 8pt; }
   body { font-size: 9pt; background: #fff; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .bandeau, .pied, .sous-titre, .astuce, .bandeau-info, .retour, .pagination, .barre-resultats .bouton, .deplier, .erreur { display: none !important; }
