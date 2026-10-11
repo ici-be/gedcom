@@ -394,6 +394,7 @@ th:not([aria-sort]) .tri .fleche { opacity: 0.35; }
   .filtres > .filtres-imprimes { display: inline !important; }
   .filtres > .filtres-imprimes::before { content: " · "; }
   .barre-resultats { font-size: 8.5pt; gap: 4px 14px; }
+  .avis-impression { margin: 0; padding: 4px 8px; border: 1px solid var(--mid); color: var(--mid); font-size: 8.5pt; }
 
   .tableau-conteneur { overflow: visible; border: 0; border-radius: 0; background: none; }
   .tableau { font-size: 8pt; }

@@ -185,6 +185,25 @@ export function useImpression(): boolean {
   return impression
 }
 
+/** Au-delà, l'impression se limite à la page affichée : des milliers de lignes d'un coup bloquent le navigateur */
+const LIMITE_IMPRESSION = 1000
+
+/** Lignes à afficher : la page courante, ou toutes pendant une impression si elles ne sont pas trop nombreuses */
+export function lignesAffichees<T>(liste: T[], page: number, parPage: number, impression: boolean): T[] {
+  return impression && liste.length <= LIMITE_IMPRESSION ? liste : liste.slice(page * parPage, (page + 1) * parPage)
+}
+
+/** Sur la feuille imprimée, prévient qu'une seule page du tableau est imprimée */
+export function AvisImpression({ impression, total, page, parPage }: { impression: boolean; total: number; page: number; parPage: number }) {
+  if (!impression || total <= LIMITE_IMPRESSION) return null
+  const fin = Math.min(total, (page + 1) * parPage)
+  return (
+    <p class="avis-impression">
+      Lignes {(page * parPage + 1).toLocaleString('fr-BE')} à {fin.toLocaleString('fr-BE')} sur {total.toLocaleString('fr-BE')} : au-delà de {LIMITE_IMPRESSION.toLocaleString('fr-BE')} lignes, seule la page affichée est imprimée. Filtrez le tableau pour tout imprimer.
+    </p>
+  )
+}
+
 /** Bouton qui remet les filtres d'un tableau à « tout afficher » ; il dit combien sont actifs, et lesquels au survol */
 export function EffacerFiltres({ actifs, effacer }: { actifs: string[]; effacer: () => void }) {
   const n = actifs.length

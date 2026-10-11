@@ -10,7 +10,7 @@ import { annee } from '../lib/gedcom/dates'
 import { nombre } from '../lib/format'
 import { telecharger, versCsv } from '../lib/csv'
 import { comparerSosa, nomComplet } from '../lib/parente'
-import { CelluleFait, ChoixPerimetre, DateLieu, EffacerFiltres, EnTeteTri, type Tri, Pagination, Personne, Sources, normaliser, useImpression } from './commun'
+import { CelluleFait, ChoixPerimetre, DateLieu, EffacerFiltres, EnTeteTri, type Tri, Pagination, Personne, Sources, normaliser, useImpression, lignesAffichees, AvisImpression } from './commun'
 
 type TriMetiers = 'nom' | 'personnes' | 'hommes' | 'femmes' | 'periode'
 const PAR_PAGE = 100
@@ -119,7 +119,7 @@ export function Metiers({ d, perimetre, setPerimetre }: { d: Donnees; perimetre:
   }, [resumes, recherche, tri])
 
   const avecMetier = useMemo(() => new Set(resumes.flatMap((r) => r.personnes.map(([id]) => id))).size, [resumes])
-  const visibles = impression ? liste : liste.slice(page * PAR_PAGE, (page + 1) * PAR_PAGE)
+  const visibles = lignesAffichees(liste, page, PAR_PAGE, impression)
 
   const exporter = () => {
     telecharger('metiers.csv', versCsv([
@@ -152,6 +152,7 @@ export function Metiers({ d, perimetre, setPerimetre }: { d: Donnees; perimetre:
         <button type="button" class="bouton discret" onClick={exporter} disabled={!liste.length}>Exporter en CSV</button>
       </div>
 
+      <AvisImpression impression={impression} total={liste.length} page={page} parPage={PAR_PAGE} />
       <div class="tableau-conteneur">
         <table class="tableau metiers">
           <thead>
@@ -231,7 +232,7 @@ export function PageMetier({ d, cle, perimetre, setPerimetre }: { d: Donnees; cl
     )
   }
 
-  const visibles = impression ? personnes : personnes.slice(page * PAR_PAGE, (page + 1) * PAR_PAGE)
+  const visibles = lignesAffichees(personnes, page, PAR_PAGE, impression)
   const autres = (id: string) => d.arbre.individus.get(id)!.metiers.flatMap(decouperMetiers).filter((l) => d.metiers.cleDe(l) !== cle)
 
   const exporter = () => {
@@ -281,6 +282,7 @@ export function PageMetier({ d, cle, perimetre, setPerimetre }: { d: Donnees; cl
         <button type="button" class="bouton discret" onClick={exporter}>Exporter en CSV</button>
       </div>
 
+      <AvisImpression impression={impression} total={personnes.length} page={page} parPage={PAR_PAGE} />
       <div class="tableau-conteneur">
         <table class="tableau suivi">
           <thead>
