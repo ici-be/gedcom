@@ -41,12 +41,18 @@ function fait(evenements: Evenement[], tags: string[]): Fait {
 
 const UNION_LIBRE = /unmarried|union libre|concubin|non mari/i
 
+/** Union hors mariage : aucun acte à chercher, donc rien à sourcer */
+export function unionLibre(e: Evenement): boolean {
+  return UNION_LIBRE.test(e.type ?? '')
+}
+
 function faitMariage(fam: Famille, ind: Individu): Fait {
   const f = fait(fam.evenements, ['MARR', 'MARB', 'MARC', 'MARL', 'ENGA'])
   const conjoint = fam.mari === ind.id ? fam.femme : fam.mari
   const base = { famille: fam.id, conjoint }
-  if (f.etat === 'manquant' && !f.evenement && fam.evenements.some((e) => UNION_LIBRE.test(e.type ?? ''))) {
-    return { etat: 'sans-objet', ...base }
+  const libre = fam.evenements.find(unionLibre)
+  if (f.etat === 'manquant' && !f.evenement && libre) {
+    return { etat: 'sans-objet', evenement: libre, ...base }
   }
   return { ...f, ...base }
 }

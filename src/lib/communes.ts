@@ -1,6 +1,7 @@
 // Les faits regroupés par lieu, pour compléter les sources commune par commune.
 
 import type { Arbre, Evenement } from './gedcom/arbre'
+import { unionLibre } from './suivi'
 
 export type Groupe = 'naissances' | 'mariages' | 'deces' | 'autres'
 
@@ -52,7 +53,8 @@ export function cleActe(proprietaire: string, e: Evenement): string {
 export function communes(arbre: Arbre, perimetre: Set<string> | null, avecAutres: boolean): Commune[] {
   const parLieu = new Map<string, Commune>()
   const ajouter = (e: Evenement, proprietaire: string, personnes: string[]) => {
-    if (!e.lieu) return
+    // une union hors mariage n'a pas d'acte à chercher
+    if (!e.lieu || unionLibre(e)) return
     const groupe = TAGS_GROUPES[e.tag] ?? 'autres'
     if (groupe === 'autres' && !avecAutres) return
     let c = parLieu.get(e.lieu)

@@ -65,7 +65,8 @@ export function DateLieu({ e, prefixe, sources }: { e?: Evenement; prefixe?: boo
 }
 
 export function CelluleFait({ f }: { f: Fait }) {
-  if (f.etat === 'sans-objet') return <span class="vide">—</span>
+  // Sans objet : un tiret, ou l'union hors mariage (« relation ») quand il y en a une
+  if (f.etat === 'sans-objet' && !f.evenement) return <span class="vide">—</span>
   return (
     <span class="fait">
       <Pastille etat={f.etat} />

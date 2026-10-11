@@ -14,8 +14,11 @@ const LIBELLES: Record<string, string> = {
   EVEN: 'Événement', FACT: 'Fait',
 }
 
+/** Types d'événements libres écrits en anglais par Geneanet */
+const TYPES: Record<string, string> = { unmarried: 'Relation', residence: 'Résidence' }
+
 export function libelle(e: Evenement): string {
-  if ((e.tag === 'EVEN' || e.tag === 'FACT') && e.type) return e.type.charAt(0).toUpperCase() + e.type.slice(1)
+  if ((e.tag === 'EVEN' || e.tag === 'FACT') && e.type) return TYPES[e.type.toLowerCase()] ?? e.type.charAt(0).toUpperCase() + e.type.slice(1)
   if (e.tag === 'OCCU' && e.type) return 'Profession : ' + e.type
   return LIBELLES[e.tag] ?? e.tag
 }

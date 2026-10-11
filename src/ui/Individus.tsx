@@ -6,7 +6,7 @@ import type { Donnees, Perimetre } from '../lib/donnees'
 import type { Individu } from '../lib/gedcom/arbre'
 import type { Ancetre } from '../lib/parente'
 import { comparerSosa, dansBranche, nomComplet, parents } from '../lib/parente'
-import { score, type Etat, type Fait, type Suivi } from '../lib/suivi'
+import { score, unionLibre, type Etat, type Fait, type Suivi } from '../lib/suivi'
 import { libelle, NOMS_ETATS, nombre } from '../lib/format'
 import { telecharger, versCsv } from '../lib/csv'
 import { ecrire, lire } from '../lib/stockage'
@@ -307,7 +307,7 @@ function Details({ d, ind }: { d: Donnees; ind: Individu }) {
           const conjoint = fam.mari === ind.id ? fam.femme : fam.mari
           return fam.evenements.map((e, i) => (
             <li key={fam.id + i}>
-              <Pastille etat={e.sources.length ? 'source' : 'sans-source'} />
+              <Pastille etat={e.sources.length ? 'source' : unionLibre(e) ? 'sans-objet' : 'sans-source'} />
               <strong>{libelle(e)}</strong>
               {conjoint && <> avec <Personne d={d} id={conjoint} /></>} <DateLieu e={e} /> <Sources sources={e.sources} />
             </li>
