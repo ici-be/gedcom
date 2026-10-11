@@ -343,8 +343,8 @@ th:not([aria-sort]) .tri .fleche { opacity: 0.35; }
 .graphique .axe { fill: var(--muted); font: 11px var(--body); font-variant-numeric: tabular-nums; }
 .graphique .axe.actif { fill: var(--fg); font-weight: 700; }
 .graphique .valeur { fill: var(--fg); font: 700 10px var(--body); font-variant-numeric: tabular-nums; }
-.graphique rect { transition: opacity 0.15s; }
-.graphique rect:hover { opacity: 0.75; }
+.graphique rect, .graphique path { transition: opacity 0.15s; }
+.graphique rect:hover, .graphique path:hover { opacity: 0.75; }
 .legende-graphique { display: flex; flex-wrap: wrap; gap: 4px 16px; color: var(--muted); font-size: 0.85rem; }
 .legende-graphique i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; }
 .classement { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
