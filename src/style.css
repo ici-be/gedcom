@@ -234,6 +234,14 @@ input[type="search"], input[type="url"], input[type="number"], select {
 @keyframes tourner { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .rouet { animation-duration: 3s; } }
 
+/* ---------- proposition d'installation (smartphone) ---------- */
+.installation { position: fixed; z-index: 20; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom));
+  max-width: 520px; margin: 0 auto; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow), 0 8px 28px rgb(0 0 0 / 18%); padding: 12px 14px; }
+.installation p { margin: 0; flex: 1 1 220px; font-size: 0.95rem; }
+.installation-actions { display: flex; gap: 8px; margin-left: auto; }
+.icone-partager { width: 1.1em; height: 1.1em; vertical-align: -0.15em; fill: none; stroke: var(--bleu); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
 /* ---------- téléphone ---------- */
 @media (max-width: 640px) {
   .bandeau-dedans { gap: 8px; }
@@ -381,7 +389,7 @@ th:not([aria-sort]) .tri .fleche { opacity: 0.35; }
   html { font-size: 8pt; }
   body { font-size: 9pt; background: #fff; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .bandeau, .pied, .sous-titre, .astuce, .bandeau-info, .retour, .pagination, .barre-resultats .bouton, .deplier, .erreur { display: none !important; }
+  .bandeau, .pied, .sous-titre, .astuce, .bandeau-info, .retour, .pagination, .barre-resultats .bouton, .deplier, .erreur, .installation { display: none !important; }
   .page { max-width: none; padding: 0; }
   .ecran { gap: 6px; }
   .titre-ecran h1 { font-size: 15pt; }

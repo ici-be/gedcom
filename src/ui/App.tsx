@@ -10,6 +10,7 @@ import { Communes, Lieu } from './Communes'
 import { Metiers, PageMetier } from './Metiers'
 import type { Carte as TypeCarte } from './Carte'
 import { Statistiques } from './Statistiques'
+import { ProposerInstallation } from './Installer'
 
 interface Fichier { nom: string; importe: string; arbre: Arbre }
 
@@ -160,6 +161,7 @@ export function App() {
       <footer class="pied">
         Vos données restent dans votre navigateur. · <a href="https://github.com/ici-be/gedcom" target="_blank" rel="noopener noreferrer">Code source</a>
       </footer>
+      <ProposerInstallation />
     </>
   )
 }

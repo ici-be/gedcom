@@ -50,6 +50,10 @@ pour eux, le lien ouvre la recherche, qui les liste tous.
   GEDCOM 5.5 / 5.5.1 en UTF-8, ANSI ou ANSEL, sources en ligne ou en enregistrements `@S1@`,
   dates approximatives, calendriers julien et républicain.
 
+Sur smartphone, le site propose de s'installer sur l'écran d'accueil (bouton « Installer » sur Android,
+mode d'emploi « Partager → Sur l'écran d'accueil » sur iPhone) ; il marche ensuite hors ligne.
+« Plus tard » repousse la proposition d'un mois.
+
 Le dernier fichier est gardé dans le navigateur (IndexedDB) ; les réglages et les cases cochées aussi
 (localStorage). « Oublier mon arbre sur cet appareil » efface tout.
 
