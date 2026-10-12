@@ -25,10 +25,10 @@
   --serie1: #2f8f6b;
   --serie2: #c08a1e;
   --serie3: #6a5aa8;
-  /* graphique des sources : couleurs vives */
-  --vif1: #1aa6c4;
-  --vif2: #f5a524;
-  --vif3: #e64f8d;
+  /* graphique des sources : palette coolors.co 001219-…-9b2226 */
+  --vif1: #0a9396;
+  --vif2: #ee9b00;
+  --vif3: #bb3e03;
   --shadow: 0 1px 2px rgb(40 30 10 / 6%), 0 6px 18px rgb(40 30 10 / 6%);
   --display: "Fraunces", Georgia, serif;
   --body: "Atkinson Hyperlegible", system-ui, sans-serif;
@@ -40,7 +40,7 @@
     --bg: #121615; --panel: #1a201e; --panel-2: #222a27; --fg: #e8ece9; --muted: #9aa6a0; --line: #2e3834;
     --accent: #8cc7b1; --accent-fg: #0d1a15; --accent-bg: #1c302a; --or: #e3b562;
     --ok: #7ed7a3; --ok-bg: #163324; --mid: #ffc76e; --mid-bg: #3a2d12; --ko: #ff978a; --ko-bg: #3d1c18;
-    --bleu: #8db6ff; --bleu-bord: #3b5a8c; --orange: #ff9d5c; --orange-bord: #7a4520; --homme: #86aef0; --femme: #f093b4; --serie1: #6fcca6; --serie2: #e8bb5c; --serie3: #a99be6; --vif1: #5fd3ec; --vif2: #ffc24f; --vif3: #ff80b2;
+    --bleu: #8db6ff; --bleu-bord: #3b5a8c; --orange: #ff9d5c; --orange-bord: #7a4520; --homme: #86aef0; --femme: #f093b4; --serie1: #6fcca6; --serie2: #e8bb5c; --serie3: #a99be6; --vif1: #94d2bd; --vif2: #ee9b00; --vif3: #ca6702;
     --shadow: 0 1px 2px rgb(0 0 0 / 35%); color-scheme: dark;
   }
 }
@@ -48,7 +48,7 @@
   --bg: #121615; --panel: #1a201e; --panel-2: #222a27; --fg: #e8ece9; --muted: #9aa6a0; --line: #2e3834;
   --accent: #8cc7b1; --accent-fg: #0d1a15; --accent-bg: #1c302a; --or: #e3b562;
   --ok: #7ed7a3; --ok-bg: #163324; --mid: #ffc76e; --mid-bg: #3a2d12; --ko: #ff978a; --ko-bg: #3d1c18;
-    --bleu: #8db6ff; --bleu-bord: #3b5a8c; --orange: #ff9d5c; --orange-bord: #7a4520; --homme: #86aef0; --femme: #f093b4; --serie1: #6fcca6; --serie2: #e8bb5c; --serie3: #a99be6; --vif1: #5fd3ec; --vif2: #ffc24f; --vif3: #ff80b2;
+    --bleu: #8db6ff; --bleu-bord: #3b5a8c; --orange: #ff9d5c; --orange-bord: #7a4520; --homme: #86aef0; --femme: #f093b4; --serie1: #6fcca6; --serie2: #e8bb5c; --serie3: #a99be6; --vif1: #94d2bd; --vif2: #ee9b00; --vif3: #ca6702;
   --shadow: 0 1px 2px rgb(0 0 0 / 35%); color-scheme: dark;
 }
 
