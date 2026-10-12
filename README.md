@@ -3,6 +3,8 @@
 Suivre les sources de son arbre généalogique à partir d'un fichier GEDCOM.
 Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
 
+**En ligne : https://ici.be/gedcom/**
+
 ## Ce que fait le site
 
 - **Accueil** : part des faits sourcés chez les ancêtres et dans tout l'arbre, nombre d'ancêtres et
