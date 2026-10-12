@@ -196,9 +196,9 @@ export function Statistiques({ d, perimetre, setPerimetre }: Props) {
 
   // ——— Sources ———
   const TYPES: { type: 'naissance' | 'mariage' | 'deces'; nom: string; couleur: string }[] = [
-    { type: 'naissance', nom: 'Naissances', couleur: 'var(--serie1)' },
-    { type: 'mariage', nom: 'Mariages', couleur: 'var(--serie2)' },
-    { type: 'deces', nom: 'Décès', couleur: 'var(--serie3)' },
+    { type: 'naissance', nom: 'Naissances', couleur: 'var(--vif1)' },
+    { type: 'mariage', nom: 'Mariages', couleur: 'var(--vif2)' },
+    { type: 'deces', nom: 'Décès', couleur: 'var(--vif3)' },
   ]
   const sourcesParSiecle: Serie[] = TYPES.map(({ type, nom, couleur }) => ({
     nom, couleur,
