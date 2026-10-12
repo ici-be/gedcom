@@ -244,7 +244,7 @@ export function Individus({ d, perimetre, setPerimetre }: { d: Donnees; perimetr
                       <td class="sosa">
                         {l.anc ? (
                           <>
-                            {l.fratrie && <span class="fratrie" title={`Frère ou sœur du Sosa ${l.anc.sosa}`}>≈</span>}
+                            {l.fratrie && <span class="fratrie" title={`${l.ind.sexe === 'M' ? 'Frère' : l.ind.sexe === 'F' ? 'Sœur' : 'Frère ou sœur'} du Sosa ${l.anc.sosa}`}>≈</span>}
                             <span title={l.anc.sosa}>{l.anc.sosa.length > 9 ? l.anc.sosa.slice(0, 7) + '…' : l.anc.sosa}</span>
                             <span class="gen">G{l.anc.generation}{l.anc.occurrences > 1 ? ' ×' + l.anc.occurrences : ''}</span>
                           </>
@@ -294,7 +294,7 @@ function Details({ d, ind }: { d: Donnees; ind: Individu }) {
     <div class="fiche">
       <p class="parents">
         {pere || mere ? (
-          <>Enfant de {pere ? <Personne d={d} id={pere.id} annees /> : '?'} et {mere ? <Personne d={d} id={mere.id} annees /> : '?'}</>
+          <>{ind.sexe === 'M' ? 'Fils' : ind.sexe === 'F' ? 'Fille' : 'Enfant'} de {pere ? <Personne d={d} id={pere.id} annees /> : '?'} et {mere ? <Personne d={d} id={mere.id} annees /> : '?'}</>
         ) : 'Parents inconnus'}
         {ind.metiers.length > 0 && <> · <LiensMetiers d={d} valeurs={ind.metiers} /></>}
       </p>
