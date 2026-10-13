@@ -17,7 +17,7 @@ import { Annees, CelluleFait, ChoixPerimetre, DateLieu, EffacerFiltres, EnTeteTr
 type QuelFait = 'tous' | 'naissance' | 'mariage' | 'deces'
 type QuelEtat = 'tout' | 'a-faire' | 'sans-source' | 'manquant' | 'complet'
 type Tri = 'sosa' | 'nom' | 'naissance' | 'deces' | 'score'
-/** à chercher : il manque un parent sans mention « Filiation : » · clos : un parent inconnu ou introuvable */
+/** à chercher : il manque un parent sans mention « Filiation: » · clos : un parent inconnu ou introuvable */
 type QuelsParents = 'tous' | 'a-chercher' | 'clos'
 
 interface Filtres {
@@ -231,7 +231,7 @@ export function Individus({ d, perimetre, setPerimetre }: { d: Donnees; perimetr
             </label>
           </>
         )}
-        <label title="Parents absents de l'arbre : à chercher, ou notés inconnus ou introuvables (« Filiation : père inconnu » dans la note)">
+        <label title="Parents absents de l'arbre : à chercher, ou notés inconnus ou introuvables (« Filiation: père inconnu » dans la note)">
           <span>Parents <a href="#/filiation" class="aide-lien" title="Noter un parent inconnu ou introuvable">?</a></span>
           <select value={f.parents} onChange={(e) => changer({ parents: e.currentTarget.value as QuelsParents })}>
             <option value="tous">Peu importe</option>

@@ -1,4 +1,4 @@
-// Parents inconnus ou introuvables : les mentions « Filiation : … » à écrire dans la note de la personne, et celles trouvées dans l'arbre.
+// Parents inconnus ou introuvables : les mentions « Filiation: … » à écrire dans la note de la personne, et celles trouvées dans l'arbre.
 
 import { useMemo, useState } from 'preact/hooks'
 import type { Donnees } from '../lib/donnees'
@@ -48,14 +48,14 @@ export function Filiation({ d }: { d: Donnees }) {
         <h2>Où l'écrire</h2>
         <p>
           Le format GEDCOM n'a pas de champ pour cela, et Geneanet non plus. On l'écrit donc dans la <strong>note de la personne</strong>{' '}
-          (sur Geneanet : modifier la personne, rubrique « Notes »), sous la forme d'une ligne qui commence par « Filiation : ».
+          (sur Geneanet : modifier la personne, rubrique « Notes »), sous la forme d'une ligne qui commence par « Filiation: ».
           La note fait partie de l'arbre : elle revient dans chaque export, sur tous vos appareils, et les visiteurs de votre arbre la voient aussi.
         </p>
         <p class="aide">
           La mention se met dans la note de l'<strong>enfant</strong>, pas du parent, n'importe où dans la note. Elle peut être suivie d'une explication
-          sur la même ligne (« Filiation : père inconnu, d'après l'acte de baptême, Malines 1754, folio 12 »), et réunir les deux côtés
-          (« Filiation : père inconnu, mère introuvable »). Accents, majuscules et accords sont libres :
-          « filiation: pere inconnu » ou « Filiation : père et mère introuvables » sont reconnus. Si le parent figure malgré tout dans l'arbre, c'est l'arbre qui l'emporte.
+          sur la même ligne (« Filiation: père inconnu, d'après l'acte de baptême, Malines 1754, folio 12 »), et réunir les deux côtés
+          (« Filiation: père inconnu, mère introuvable »). Accents, majuscules et accords sont libres :
+          « filiation:pere inconnu » ou « Filiation : père et mère introuvables » (avec une espace avant les deux-points) sont reconnus aussi. Si le parent figure malgré tout dans l'arbre, c'est l'arbre qui l'emporte.
         </p>
         <div class="tableau-conteneur">
           <table class="tableau mots-cles">

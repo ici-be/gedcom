@@ -214,7 +214,7 @@ export interface Generation {
   connus: number
   /** Personnes différentes */
   distincts: number
-  /** Places qui resteront vides : au-dessus d'un parent inconnu ou introuvable (« Filiation : père inconnu »…) */
+  /** Places qui resteront vides : au-dessus d'un parent inconnu ou introuvable (« Filiation: père inconnu »…) */
   closes: number
 }
 

@@ -30,7 +30,7 @@ export interface Individu {
   sources: string[]
   /** Notes de la personne (« 1 NOTE »), renvois « @N1@ » compris */
   note?: string
-  /** Parent inconnu ou introuvable, d'après la note (« Filiation : père inconnu »…) */
+  /** Parent inconnu ou introuvable, d'après la note (« Filiation: père inconnu »…) */
   filiation?: Filiation
 }
 

@@ -24,7 +24,7 @@ export function parents(arbre: Arbre, ind: Individu): { pere?: Individu; mere?: 
   return {}
 }
 
-/** Chaque parent : présent dans l'arbre, inconnu ou introuvable (« Filiation : … » dans la note), sinon à chercher */
+/** Chaque parent : présent dans l'arbre, inconnu ou introuvable (« Filiation: … » dans la note), sinon à chercher */
 export function etatParents(arbre: Arbre, ind: Individu): { pere: EtatParent; mere: EtatParent } {
   const { pere, mere } = parents(arbre, ind)
   return {
