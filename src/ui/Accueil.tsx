@@ -130,7 +130,7 @@ export function TableauDeBord({ d, bilan, releves, fichier, ouvrir, setRacine, s
         <Carte titre="Personnes" valeur={nombre(bilan.individus)} detail={`${nombre(bilan.familles)} familles`} />
       </div>
       <p class="astuce">Un « fait », c'est une naissance (ou un baptême), un mariage ou un décès (ou une inhumation). Il est sourcé quand au moins une source y est attachée.</p>
-      <p class="astuce">Un parent qu'il ne sert à rien de chercher (enfant naturel, enfant trouvé, registres perdus) se signale par un mot-clé dans la note de la personne : <a href="#/filiation">#pere-inconnu, #parents-introuvables…</a></p>
+      <p class="astuce">Un parent qu'il ne sert à rien de chercher (enfant naturel, enfant trouvé, registres perdus) se signale dans la note de la personne : <a href="#/filiation">« Filiation : père inconnu »…</a></p>
 
       <nav class="raccourcis">
         <a class="bouton principal" href="#/personnes">Voir les ancêtres à sourcer</a>

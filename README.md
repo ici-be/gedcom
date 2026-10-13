@@ -39,18 +39,19 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
 
 - **Parents inconnus ou introuvables** (`#/filiation`) : le GEDCOM n'a aucun champ pour dire qu'un
   parent n'est pas à chercher. On l'écrit dans la **note de la personne** (sur Geneanet : rubrique
-  « Notes » de l'enfant), qui revient dans chaque export :
+  « Notes » de l'enfant), qui revient dans chaque export, par une ligne « Filiation : … » (pas de `#` : la
+  syntaxe wiki de GeneWeb en fait une liste numérotée) :
 
-  | Mot-clé | Sens |
+  | Mention | Sens |
   |---|---|
-  | `#pere-inconnu` | l'acte ne nomme pas le père (enfant naturel) |
-  | `#mere-inconnue` | l'acte ne nomme pas la mère |
-  | `#parents-inconnus` | ni père ni mère (enfant trouvé, abandonné) |
-  | `#pere-introuvable` | recherche close faute de sources, côté paternel |
-  | `#mere-introuvable` | même chose côté maternel |
-  | `#parents-introuvables` | les deux |
+  | `Filiation : père inconnu` | l'acte ne nomme pas le père (enfant naturel) |
+  | `Filiation : mère inconnue` | l'acte ne nomme pas la mère |
+  | `Filiation : parents inconnus` | ni père ni mère (enfant trouvé, abandonné) |
+  | `Filiation : père introuvable` | recherche close faute de sources, côté paternel |
+  | `Filiation : mère introuvable` | même chose côté maternel |
+  | `Filiation : parents introuvables` | les deux |
 
-  Accents, majuscules, `_` et accords sont tolérés ; un parent présent dans l'arbre l'emporte sur la
+  Accents, majuscules et accords sont libres, une explication peut suivre sur la même ligne ; un parent présent dans l'arbre l'emporte sur la
   note. Effets : repère à côté du nom, filtre « Parents » (à chercher / inconnus ou introuvables) dans
   Personnes, et places « sans issue » dans la complétude de l'ascendance.
 
@@ -90,7 +91,7 @@ Preact + TypeScript + Vite. La lecture du fichier se fait dans un *worker* (`src
 
 - `src/lib/gedcom/` : décodage, lignes GEDCOM, dates, modèle de l'arbre
 - `src/lib/parente.ts` : ancêtres (Sosa), frères et sœurs, homonymes
-- `src/lib/filiation.ts` : mots-clés #pere-inconnu… des notes de personne
+- `src/lib/filiation.ts` : mentions « Filiation : … » des notes de personne
 - `src/lib/suivi.ts` : état des naissance, mariage et décès de chaque personne
 - `src/lib/communes.ts` : faits regroupés par lieu
 - `src/lib/metiers.ts` : métiers, variantes et féminins
