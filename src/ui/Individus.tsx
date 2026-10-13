@@ -5,7 +5,8 @@ import { useEffect, useMemo, useState } from 'preact/hooks'
 import type { Donnees, Perimetre } from '../lib/donnees'
 import type { Individu } from '../lib/gedcom/arbre'
 import type { Ancetre } from '../lib/parente'
-import { comparerSosa, dansBranche, nomComplet, parents } from '../lib/parente'
+import { comparerSosa, dansBranche, etatParents, nomComplet, parents } from '../lib/parente'
+import { texteParent, type EtatParent } from '../lib/filiation'
 import { score, unionLibre, type Etat, type Fait, type Suivi } from '../lib/suivi'
 import { libelle, NOMS_ETATS, nombre } from '../lib/format'
 import { telecharger, versCsv } from '../lib/csv'
@@ -16,6 +17,8 @@ import { Annees, CelluleFait, ChoixPerimetre, DateLieu, EffacerFiltres, EnTeteTr
 type QuelFait = 'tous' | 'naissance' | 'mariage' | 'deces'
 type QuelEtat = 'tout' | 'a-faire' | 'sans-source' | 'manquant' | 'complet'
 type Tri = 'sosa' | 'nom' | 'naissance' | 'deces' | 'score'
+/** à chercher : il manque un parent sans mot-clé · clos : un parent inconnu ou introuvable */
+type QuelsParents = 'tous' | 'a-chercher' | 'clos'
 
 interface Filtres {
   recherche: string
@@ -25,13 +28,14 @@ interface Filtres {
   genMin: string
   genMax: string
   branche: string
+  parents: QuelsParents
   tri: Tri
   sens: 1 | -1
 }
 
-const FILTRES: Filtres = { recherche: '', lieu: '', fait: 'tous', etat: 'a-faire', genMin: '', genMax: '', branche: '', tri: 'sosa', sens: 1 }
+const FILTRES: Filtres = { recherche: '', lieu: '', fait: 'tous', etat: 'a-faire', genMin: '', genMax: '', branche: '', parents: 'tous', tri: 'sosa', sens: 1 }
 /** Tout afficher : aucun nom, lieu, fait, état, génération ni branche imposé (le tri est gardé) */
-const SANS_FILTRE: Partial<Filtres> = { recherche: '', lieu: '', fait: 'tous', etat: 'tout', genMin: '', genMax: '', branche: '' }
+const SANS_FILTRE: Partial<Filtres> = { recherche: '', lieu: '', fait: 'tous', etat: 'tout', genMin: '', genMax: '', branche: '', parents: 'tous' }
 const PAR_PAGE = 100
 
 interface Ligne {
@@ -40,6 +44,21 @@ interface Ligne {
   /** Ancêtre lui-même, ou ancêtre dont il est frère ou sœur */
   anc?: Ancetre
   fratrie: boolean
+  parents: { pere: EtatParent; mere: EtatParent }
+}
+
+function parentsCorrespondent(p: Ligne['parents'], voulu: QuelsParents): boolean {
+  if (voulu === 'a-chercher') return p.pere === 'a-chercher' || p.mere === 'a-chercher'
+  if (voulu === 'clos') return [p.pere, p.mere].some((e) => e === 'inconnu' || e === 'introuvable')
+  return true
+}
+
+/** « père inconnu, mère introuvable » : seulement les parents absents de l'arbre */
+function texteParents(p: Ligne['parents'], aussiAChercher = false): string {
+  return (['pere', 'mere'] as const)
+    .filter((c) => p[c] !== 'connu' && (aussiAChercher || p[c] !== 'a-chercher'))
+    .map((c) => texteParent(p[c], c))
+    .join(', ')
 }
 
 function etatsChoisis(s: Suivi, fait: QuelFait): Etat[] {
@@ -95,16 +114,18 @@ export function Individus({ d, perimetre, setPerimetre }: { d: Donnees; perimetr
     f.etat !== 'tout' && `état : ${{ 'a-faire': 'à compléter', 'sans-source': 'sans source', manquant: 'manquant', complet: 'tout sourcé' }[f.etat]}`,
     avecAncetres && (f.genMin || f.genMax) && `générations ${f.genMin || '…'} à ${f.genMax || '…'}`,
     avecAncetres && f.branche && `branche ${f.branche}`,
+    f.parents !== 'tous' && (f.parents === 'a-chercher' ? 'parents à chercher' : 'parents inconnus ou introuvables'),
   ].filter((x): x is string => !!x)
 
   const lignes = useMemo(() => {
+    const ligne = (ind: Individu, anc: Ancetre | undefined, fratrie: boolean): Ligne => ({ ind, s: d.suivis.get(ind.id)!, anc, fratrie, parents: etatParents(d.arbre, ind) })
     let base: Ligne[]
     if (perimetre === 'tous') {
-      base = [...d.arbre.individus.values()].map((ind) => ({ ind, s: d.suivis.get(ind.id)!, anc: d.ancetres.get(ind.id) ?? d.fratries.get(ind.id), fratrie: !d.ancetres.has(ind.id) && d.fratries.has(ind.id) }))
+      base = [...d.arbre.individus.values()].map((ind) => ligne(ind, d.ancetres.get(ind.id) ?? d.fratries.get(ind.id), !d.ancetres.has(ind.id) && d.fratries.has(ind.id)))
     } else {
-      base = [...d.ancetres.values()].map((a) => ({ ind: d.arbre.individus.get(a.id)!, s: d.suivis.get(a.id)!, anc: a, fratrie: false }))
+      base = [...d.ancetres.values()].map((a) => ligne(d.arbre.individus.get(a.id)!, a, false))
       if (perimetre === 'ancetres-fratries') {
-        for (const a of d.fratries.values()) base.push({ ind: d.arbre.individus.get(a.id)!, s: d.suivis.get(a.id)!, anc: a, fratrie: true })
+        for (const a of d.fratries.values()) base.push(ligne(d.arbre.individus.get(a.id)!, a, true))
       }
     }
     const mots = normaliser(f.recherche).split(/\s+/).filter(Boolean)
@@ -114,6 +135,7 @@ export function Individus({ d, perimetre, setPerimetre }: { d: Donnees; perimetr
     const branche = /^\d+$/.test(f.branche) && f.branche !== '0' ? f.branche : ''
     const r = base.filter((l) => {
       if (!correspond(etatsChoisis(l.s, f.fait), f.etat)) return false
+      if (!parentsCorrespondent(l.parents, f.parents)) return false
       if (mots.length) {
         const n = normaliser(l.ind.prenom + ' ' + l.ind.nom)
         if (!mots.every((m) => n.includes(m))) return false
@@ -146,12 +168,12 @@ export function Individus({ d, perimetre, setPerimetre }: { d: Donnees; perimetr
 
   const exporter = () => {
     const texteFait = (x: Fait) => [NOMS_ETATS[x.etat], x.evenement?.date?.texte ?? '', x.evenement?.lieu ?? '', x.evenement?.sources.join(' | ') ?? '']
-    const entetes = ['Sosa', 'Génération', 'Nom', 'Prénom', 'Naissance', 'Date', 'Lieu', 'Source', 'Mariage', 'Date', 'Lieu', 'Source', 'Décès', 'Date', 'Lieu', 'Source', 'Lien']
+    const entetes = ['Sosa', 'Génération', 'Nom', 'Prénom', 'Naissance', 'Date', 'Lieu', 'Source', 'Mariage', 'Date', 'Lieu', 'Source', 'Décès', 'Date', 'Lieu', 'Source', 'Parents absents', 'Lien']
     const rangs = lignes.map((l) => {
       const m = l.s.mariages[0] ?? { etat: 'sans-objet' as Etat }
       return [
         l.anc ? (l.fratrie ? 'fratrie de ' : '') + l.anc.sosa : '', l.anc?.generation ?? '', l.ind.nom, l.ind.prenom,
-        ...texteFait(l.s.naissance), ...texteFait({ ...m, etat: l.s.mariage }), ...texteFait(l.s.deces), d.lien(l.ind) ?? '',
+        ...texteFait(l.s.naissance), ...texteFait({ ...m, etat: l.s.mariage }), ...texteFait(l.s.deces), texteParents(l.parents, true), d.lien(l.ind) ?? '',
       ]
     })
     telecharger('suivi-sources.csv', versCsv([entetes, ...rangs]))
@@ -209,6 +231,14 @@ export function Individus({ d, perimetre, setPerimetre }: { d: Donnees; perimetr
             </label>
           </>
         )}
+        <label title="Parents absents de l'arbre : à chercher, ou notés inconnus ou introuvables (#pere-inconnu…)">
+          <span>Parents <a href="#/filiation" class="aide-lien" title="Noter un parent inconnu ou introuvable">?</a></span>
+          <select value={f.parents} onChange={(e) => changer({ parents: e.currentTarget.value as QuelsParents })}>
+            <option value="tous">Peu importe</option>
+            <option value="a-chercher">À chercher</option>
+            <option value="clos">Inconnus ou introuvables</option>
+          </select>
+        </label>
         <EffacerFiltres actifs={actifs} effacer={() => changer(SANS_FILTRE)} />
       </div>
 
@@ -257,6 +287,7 @@ export function Individus({ d, perimetre, setPerimetre }: { d: Donnees; perimetr
                       </button>
                       <Personne d={d} id={l.ind.id} />
                       <Annees ind={l.ind} />
+                      {texteParents(l.parents) && <span class="filiation" title="D'après la note de la personne">{texteParents(l.parents)}</span>}
                     </td>
                     <td><CelluleFait f={l.s.naissance} /></td>
                     <td>
@@ -289,13 +320,15 @@ export function Individus({ d, perimetre, setPerimetre }: { d: Donnees; perimetr
 /** Tous les événements de la personne et de ses unions, avec leurs sources */
 function Details({ d, ind }: { d: Donnees; ind: Individu }) {
   const { pere, mere } = parents(d.arbre, ind)
+  const etats = etatParents(d.arbre, ind)
+  const absent = (c: 'pere' | 'mere') => etats[c] === 'a-chercher' ? '?' : <em>{texteParent(etats[c], c)}</em>
   const unions = ind.fams.map((f) => d.arbre.familles.get(f)).filter((f) => !!f)
   return (
     <div class="fiche">
       <p class="parents">
-        {pere || mere ? (
-          <>{ind.sexe === 'M' ? 'Fils' : ind.sexe === 'F' ? 'Fille' : 'Enfant'} de {pere ? <Personne d={d} id={pere.id} annees /> : '?'} et {mere ? <Personne d={d} id={mere.id} annees /> : '?'}</>
-        ) : 'Parents inconnus'}
+        {pere || mere || ind.filiation ? (
+          <>{ind.sexe === 'M' ? 'Fils' : ind.sexe === 'F' ? 'Fille' : 'Enfant'} de {pere ? <Personne d={d} id={pere.id} annees /> : absent('pere')} et {mere ? <Personne d={d} id={mere.id} annees /> : absent('mere')}</>
+        ) : 'Parents non renseignés'}
         {ind.metiers.length > 0 && <> · <LiensMetiers d={d} valeurs={ind.metiers} /></>}
       </p>
       <ul class="evenements">

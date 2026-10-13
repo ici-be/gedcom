@@ -214,22 +214,29 @@ export interface Generation {
   connus: number
   /** Personnes différentes */
   distincts: number
+  /** Places qui resteront vides : au-dessus d'un parent inconnu ou introuvable (#pere-inconnu…) */
+  closes: number
 }
 
 /** Complétude de l'ascendance, génération par génération (implexe compris) */
 export function generations(d: Donnees): Generation[] {
   const res: Generation[] = []
   let courante = new Map<string, number>([[d.racine, 1]])
+  let closes = 0
   for (let g = 1; courante.size && g <= 60; g++) {
     let connus = 0
     for (const c of courante.values()) connus += c
-    res.push({ generation: g, theoriques: 2 ** (g - 1), connus, distincts: courante.size })
+    res.push({ generation: g, theoriques: 2 ** (g - 1), connus, distincts: courante.size, closes })
     const suivante = new Map<string, number>()
+    // Une place close l'est aussi pour ses deux parents, à la génération suivante
+    closes *= 2
     for (const [id, c] of courante) {
       const ind = d.arbre.individus.get(id)
       if (!ind) continue
       const { pere, mere } = parents(d.arbre, ind)
       for (const p of [pere, mere]) if (p) suivante.set(p.id, (suivante.get(p.id) ?? 0) + c)
+      if (!pere && ind.filiation?.pere) closes += c
+      if (!mere && ind.filiation?.mere) closes += c
     }
     courante = suivante
   }

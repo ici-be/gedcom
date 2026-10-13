@@ -23,9 +23,9 @@ describe('arbre d\'exemple', () => {
   test('ascendance par génération', () => {
     const g = generations(d)
     expect(g.slice(0, 3)).toEqual([
-      { generation: 1, theoriques: 1, connus: 1, distincts: 1 },
-      { generation: 2, theoriques: 2, connus: 2, distincts: 2 },
-      { generation: 3, theoriques: 4, connus: 2, distincts: 2 },
+      { generation: 1, theoriques: 1, connus: 1, distincts: 1, closes: 0 },
+      { generation: 2, theoriques: 2, connus: 2, distincts: 2, closes: 0 },
+      { generation: 3, theoriques: 4, connus: 2, distincts: 2, closes: 0 },
     ])
   })
   test('relevés', () => {

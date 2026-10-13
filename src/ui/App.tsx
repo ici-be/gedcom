@@ -10,6 +10,7 @@ import { Communes, Lieu } from './Communes'
 import { Metiers, PageMetier } from './Metiers'
 import type { Carte as TypeCarte } from './Carte'
 import { Statistiques } from './Statistiques'
+import { Filiation } from './Filiation'
 import { ProposerInstallation } from './Installer'
 
 interface Fichier { nom: string; importe: string; arbre: Arbre }
@@ -132,6 +133,7 @@ export function App() {
     ? <Carte key={route[1] ?? ''} d={donnees} perimetre={perimetre} setPerimetre={setPerimetre} focus={route[1]} />
     : <div class="attente" role="status"><span class="rouet" />Chargement de la carte…</div>
   else if (page === 'statistiques') contenu = <Statistiques d={donnees} perimetre={perimetre} setPerimetre={setPerimetre} />
+  else if (page === 'filiation') contenu = <Filiation d={donnees} />
   else if (page === 'metiers') contenu = <Metiers d={donnees} perimetre={perimetre} setPerimetre={setPerimetre} />
   else contenu = (
     <>

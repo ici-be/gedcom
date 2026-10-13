@@ -92,7 +92,7 @@ function ParSexe({ liste, m, legende }: { liste: Age[]; m: Mesure; legende: stri
   )
 }
 
-function Section({ titre, sous, children, outils, large }: { titre: string; sous?: string; children: preact.ComponentChildren; outils?: preact.ComponentChildren; large?: boolean }) {
+function Section({ titre, sous, children, outils, large }: { titre: string; sous?: preact.ComponentChildren; children: preact.ComponentChildren; outils?: preact.ComponentChildren; large?: boolean }) {
   return (
     <section class={'panneau stat' + (large ? ' large' : '')}>
       <header class="stat-entete">
@@ -210,7 +210,9 @@ export function Statistiques({ d, perimetre, setPerimetre }: Props) {
   const gensUtiles = gens.filter((g) => g.connus > 0).slice(0, 30)
   const totalConnus = gens.reduce((a, g) => a + g.connus, 0)
   const totalDistincts = d.ancetres.size
-  const derniereComplete = gens.filter((g) => g.connus === g.theoriques).length
+  // Une génération est complète quand toutes les places qui peuvent l'être sont occupées
+  const derniereComplete = gens.filter((g) => g.connus === g.theoriques - g.closes).length
+  const avecCloses = gensUtiles.some((g) => g.closes > 0)
 
   const libelleSexe = (x: Sexe | 'tous') => (x === 'M' ? 'les hommes' : x === 'F' ? 'les femmes' : 'personne')
   const outilMesure = <Choix label="Mesure" options={[['moyenne', 'Moyenne'], ['mediane', 'Médiane']]} valeur={mesure} changer={setMesure} />
@@ -376,10 +378,11 @@ export function Statistiques({ d, perimetre, setPerimetre }: Props) {
           <Legende series={TYPES} />
         </Section>
 
-        <Section titre="Ascendance" sous="Ancêtres retrouvés à chaque génération, sur les 2ⁿ⁻¹ possibles (quel que soit le choix de personnes ci-dessus)." large>
+        <Section titre="Ascendance" sous={<>Ancêtres retrouvés à chaque génération, sur les 2ⁿ⁻¹ possibles (quel que soit le choix de personnes ci-dessus). Les places au-dessus d'un parent <a href="#/filiation">inconnu ou introuvable</a> sont sans issue.</>} large>
           <div class="chiffres">
             <Chiffre valeur={nombre(totalDistincts)} legende="ancêtres différents" detail={`${nombre(gens.length)} générations`} />
-            <Chiffre valeur={String(derniereComplete)} legende="générations complètes" />
+            <Chiffre valeur={String(derniereComplete)} legende="générations complètes"
+              detail={avecCloses ? 'sans compter les places sans issue' : undefined} />
             <Chiffre valeur={pourcent(totalConnus - totalDistincts, totalConnus)} legende="d'implexe" detail="places occupées par un ancêtre déjà rencontré" />
           </div>
           <Colonnes ariaLabel="Complétude de l'ascendance par génération" categories={gensUtiles.map((g) => String(g.generation))}
@@ -387,7 +390,7 @@ export function Statistiques({ d, perimetre, setPerimetre }: Props) {
             format={(v) => (v >= 1 || v === 0 ? pc(v) : v.toLocaleString('fr-BE', { maximumSignificantDigits: 1 }) + ' %')} max={100} seuil={0} etiquetteMin={1} />
           <div class="tableau-defilant">
             <table class="tableau generations">
-              <thead><tr><th>Génération</th><th>Possibles</th><th>Retrouvés</th><th>Complétude</th><th>Personnes différentes</th></tr></thead>
+              <thead><tr><th>Génération</th><th>Possibles</th><th>Retrouvés</th><th>Complétude</th>{avecCloses && <><th>Sans issue</th><th>Reste à trouver</th></>}<th>Personnes différentes</th></tr></thead>
               <tbody>
                 {gensUtiles.map((g) => (
                   <tr key={g.generation}>
@@ -395,6 +398,7 @@ export function Statistiques({ d, perimetre, setPerimetre }: Props) {
                     <td>{g.theoriques.toLocaleString('fr-BE')}</td>
                     <td>{nombre(g.connus)}</td>
                     <td>{g.connus / g.theoriques >= 0.001 ? pourcent(g.connus, g.theoriques) : '< 0,1 %'}</td>
+                    {avecCloses && <><td>{g.closes ? nombre(g.closes) : '—'}</td><td>{nombre(g.theoriques - g.closes - g.connus)}</td></>}
                     <td>{nombre(g.distincts)}</td>
                   </tr>
                 ))}

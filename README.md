@@ -37,6 +37,23 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   orthographe ancienne, faute de frappe) se placent d'un clic ; ces positions restent dans le
   navigateur et peuvent être exportées.
 
+- **Parents inconnus ou introuvables** (`#/filiation`) : le GEDCOM n'a aucun champ pour dire qu'un
+  parent n'est pas à chercher. On l'écrit dans la **note de la personne** (sur Geneanet : rubrique
+  « Notes » de l'enfant), qui revient dans chaque export :
+
+  | Mot-clé | Sens |
+  |---|---|
+  | `#pere-inconnu` | l'acte ne nomme pas le père (enfant naturel) |
+  | `#mere-inconnue` | l'acte ne nomme pas la mère |
+  | `#parents-inconnus` | ni père ni mère (enfant trouvé, abandonné) |
+  | `#pere-introuvable` | recherche close faute de sources, côté paternel |
+  | `#mere-introuvable` | même chose côté maternel |
+  | `#parents-introuvables` | les deux |
+
+  Accents, majuscules, `_` et accords sont tolérés ; un parent présent dans l'arbre l'emporte sur la
+  note. Effets : repère à côté du nom, filtre « Parents » (à chercher / inconnus ou introuvables) dans
+  Personnes, et places « sans issue » dans la complétude de l'ascendance.
+
 Pour chaque événement, un badge **S** (bleu) ouvre la source en ligne ; un badge **T** (orange)
 montre une source écrite en texte.
 
@@ -73,6 +90,7 @@ Preact + TypeScript + Vite. La lecture du fichier se fait dans un *worker* (`src
 
 - `src/lib/gedcom/` : décodage, lignes GEDCOM, dates, modèle de l'arbre
 - `src/lib/parente.ts` : ancêtres (Sosa), frères et sœurs, homonymes
+- `src/lib/filiation.ts` : mots-clés #pere-inconnu… des notes de personne
 - `src/lib/suivi.ts` : état des naissance, mariage et décès de chaque personne
 - `src/lib/communes.ts` : faits regroupés par lieu
 - `src/lib/metiers.ts` : métiers, variantes et féminins

@@ -2,6 +2,7 @@
 
 import { enfant, lireNoeuds, valeur, type Noeud } from './lecture'
 import { lireDate, type DateGed } from './dates'
+import { lireFiliation, type Filiation } from '../filiation'
 
 export interface Evenement {
   tag: string
@@ -27,6 +28,10 @@ export interface Individu {
   metiers: string[]
   /** Sources attachées à la personne plutôt qu'à un événement */
   sources: string[]
+  /** Notes de la personne (« 1 NOTE »), renvois « @N1@ » compris */
+  note?: string
+  /** Parent inconnu ou introuvable, d'après les mots-clés de la note (#pere-inconnu…) */
+  filiation?: Filiation
 }
 
 export interface Famille {
@@ -97,8 +102,10 @@ function lireNom(n?: Noeud): { prenom: string; nom: string } {
 export function lireArbre(texte: string): Arbre {
   const noeuds = lireNoeuds(texte)
   const titres = new Map<string, string>()
+  const notes = new Map<string, string>()
   for (const n of noeuds) {
     if (n.tag === 'SOUR' && n.xref) titres.set(n.xref, valeur(n, 'TITL') || valeur(n, 'ABBR') || n.xref)
+    else if (n.tag === 'NOTE' && n.xref) notes.set(n.xref, n.valeur)
   }
 
   const arbre: Arbre = { individus: new Map(), familles: new Map(), origine: {} }
@@ -128,7 +135,15 @@ export function lireArbre(texte: string): Arbre {
         else if (EVENEMENTS.has(e.tag)) {
           ind.evenements.push(lireEvenement(e, titres))
           if (e.tag === 'OCCU' && e.valeur.trim()) ind.metiers.push(e.valeur.trim())
+        } else if (e.tag === 'NOTE') {
+          const v = e.valeur.trim()
+          const texte = /^@[^@]+@$/.test(v) ? (notes.get(v) ?? '') : e.valeur
+          if (texte.trim()) ind.note = ind.note ? ind.note + '\n' + texte : texte
         }
+      }
+      if (ind.note) {
+        const f = lireFiliation(ind.note)
+        if (f) ind.filiation = f
       }
       arbre.individus.set(ind.id, ind)
     } else if (n.tag === 'FAM' && n.xref) {

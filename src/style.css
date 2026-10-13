@@ -174,6 +174,10 @@ input[type="search"], input[type="url"], input[type="number"], select {
 .personne a { font-weight: 700; text-decoration: none; }
 .personne a:hover { text-decoration: underline; }
 .annees { color: var(--muted); font-size: 0.85rem; margin-left: 6px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.filiation { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 6px; font-size: 0.78rem; color: var(--muted); background: var(--panel-2); white-space: nowrap; }
+.aide-lien { display: inline-block; width: 1.1em; height: 1.1em; line-height: 1.1em; text-align: center; border-radius: 50%; background: var(--panel-2); font-size: 0.75rem; text-decoration: none; }
+.mots-cles code { font-size: 0.95rem; white-space: nowrap; }
+.avertissement { color: var(--mid); }
 .fait { display: flex; gap: 8px; align-items: flex-start; min-width: 150px; }
 .mariages { display: flex; flex-direction: column; gap: 6px; }
 .date-lieu { display: flex; flex-direction: column; line-height: 1.3; }

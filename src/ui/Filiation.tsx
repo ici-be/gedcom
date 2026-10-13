@@ -1,0 +1,119 @@
+// Parents inconnus ou introuvables : la liste des mots-clés à écrire dans la note de la personne, et ceux trouvés dans l'arbre.
+
+import { useMemo, useState } from 'preact/hooks'
+import type { Donnees } from '../lib/donnees'
+import type { Individu } from '../lib/gedcom/arbre'
+import { MOTS_CLES, texteParent } from '../lib/filiation'
+import { comparerSosa, etatParents, filiationContredite, nomComplet } from '../lib/parente'
+import { nombre } from '../lib/format'
+import { Annees, Personne } from './commun'
+
+function Copier({ texte }: { texte: string }) {
+  const [fait, setFait] = useState(false)
+  if (!navigator.clipboard) return null
+  return (
+    <button type="button" class="bouton discret" onClick={() => navigator.clipboard.writeText(texte).then(() => { setFait(true); setTimeout(() => setFait(false), 1500) })}>
+      {fait ? 'Copié' : 'Copier'}
+    </button>
+  )
+}
+
+export function Filiation({ d }: { d: Donnees }) {
+  const notes = useMemo(() => {
+    const l = [...d.arbre.individus.values()].filter((ind) => ind.filiation)
+    const sosa = (i: Individu) => d.ancetres.get(i.id)?.sosa
+    return l.sort((a, b) => {
+      const x = sosa(a)
+      const y = sosa(b)
+      return x && y ? comparerSosa(x, y) : x ? -1 : y ? 1 : nomComplet(a).localeCompare(nomComplet(b), 'fr')
+    })
+  }, [d])
+  const aChercher = useMemo(() => {
+    let n = 0
+    for (const a of d.ancetres.values()) {
+      const p = etatParents(d.arbre, d.arbre.individus.get(a.id)!)
+      if (p.pere === 'a-chercher' || p.mere === 'a-chercher') n++
+    }
+    return n
+  }, [d])
+
+  return (
+    <section class="ecran">
+      <header class="titre-ecran">
+        <h1>Parents inconnus ou introuvables</h1>
+        <p class="sous-titre">Dire qu'un parent n'est pas à chercher, pour que la recherche se concentre sur les vraies pistes.</p>
+      </header>
+
+      <section class="panneau">
+        <h2>Où l'écrire</h2>
+        <p>
+          Le format GEDCOM n'a pas de champ pour cela, et Geneanet non plus. On l'écrit donc dans la <strong>note de la personne</strong>{' '}
+          (sur Geneanet : modifier la personne, rubrique « Notes »), sous la forme d'un mot-clé précédé d'un dièse.
+          La note fait partie de l'arbre : elle revient dans chaque export, sur tous vos appareils, et les visiteurs de votre arbre la voient aussi.
+        </p>
+        <p class="aide">
+          Le mot-clé se met dans la note de l'<strong>enfant</strong>, pas du parent. Il peut être accompagné d'une explication
+          (« #pere-inconnu : acte de baptême, Malines 1754, folio 12 »). Accents, majuscules et accords sont permis :
+          #Père-Inconnu, #mère_inconnue ou #parents-introuvable sont reconnus. Si le parent figure malgré tout dans l'arbre, c'est l'arbre qui l'emporte.
+        </p>
+        <div class="tableau-conteneur">
+          <table class="tableau mots-cles">
+            <thead><tr><th>Mot-clé</th><th>Quand l'utiliser</th><th /></tr></thead>
+            <tbody>
+              {MOTS_CLES.map((m) => (
+                <tr key={m.mot}>
+                  <td><code>{m.mot}</code></td>
+                  <td>{m.sens}<span class="contexte">{m.exemple}</span></td>
+                  <td><Copier texte={m.mot} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p class="aide">
+          <strong>Inconnu</strong> : l'acte existe et ne nomme pas le parent — c'est un résultat, il n'y a rien de plus à trouver.{' '}
+          <strong>Introuvable</strong> : le parent a un nom quelque part, mais les sources disponibles ne permettent pas d'aller plus loin ; on pourra rouvrir la piste si des registres sont mis en ligne.
+        </p>
+        <p class="aide">
+          Effets : un repère à côté du nom et dans la fiche (écran <a href="#/personnes">Personnes</a>), un filtre « Parents » pour ne garder que les pistes ouvertes, et
+          dans les <a href="#/statistiques">Statistiques</a>, les places de l'ascendance au-dessus d'un parent inconnu ou introuvable comptent comme sans issue.
+        </p>
+      </section>
+
+      <section class="panneau">
+        <h2>Dans votre arbre</h2>
+        <p>
+          <strong>{nombre(notes.length)}</strong> personne{notes.length > 1 ? 's portent' : ' porte'} un de ces mots-clés.{' '}
+          <strong>{nombre(aChercher)}</strong> ancêtre{aChercher > 1 ? 's ont' : ' a'} encore un parent à chercher.
+        </p>
+        {notes.length > 0 && (
+          <div class="tableau-conteneur">
+            <table class="tableau">
+              <thead><tr><th>Sosa</th><th>Personne</th><th>Note</th></tr></thead>
+              <tbody>
+                {notes.map((ind) => {
+                  const p = etatParents(d.arbre, ind)
+                  const contredits = filiationContredite(d.arbre, ind)
+                  return (
+                    <tr key={ind.id}>
+                      <td class="sosa">{d.ancetres.get(ind.id)?.sosa ?? ''}</td>
+                      <td class="nom"><Personne d={d} id={ind.id} /><Annees ind={ind} /></td>
+                      <td>
+                        {(['pere', 'mere'] as const).filter((c) => p[c] === 'inconnu' || p[c] === 'introuvable').map((c) => texteParent(p[c], c)).join(', ')}
+                        {contredits.length > 0 && (
+                          <span class="contexte avertissement">
+                            La note dit {contredits.map((c) => texteParent(ind.filiation![c]!, c)).join(' et ')}, mais l'arbre le contredit : c'est l'arbre qui compte.
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+    </section>
+  )
+}

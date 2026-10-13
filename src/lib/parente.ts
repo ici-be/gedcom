@@ -1,6 +1,7 @@
 // Ancêtres (numérotation Sosa) et frères et sœurs des ancêtres.
 
 import type { Arbre, Individu } from './gedcom/arbre'
+import type { EtatParent } from './filiation'
 
 export interface Ancetre {
   id: string
@@ -21,6 +22,22 @@ export function parents(arbre: Arbre, ind: Individu): { pere?: Individu; mere?: 
     }
   }
   return {}
+}
+
+/** Chaque parent : présent dans l'arbre, inconnu ou introuvable (mot-clé de la note), sinon à chercher */
+export function etatParents(arbre: Arbre, ind: Individu): { pere: EtatParent; mere: EtatParent } {
+  const { pere, mere } = parents(arbre, ind)
+  return {
+    pere: pere ? 'connu' : ind.filiation?.pere ?? 'a-chercher',
+    mere: mere ? 'connu' : ind.filiation?.mere ?? 'a-chercher',
+  }
+}
+
+/** Mot-clé contredit par l'arbre : un parent est dit inconnu ou introuvable, mais il y figure */
+export function filiationContredite(arbre: Arbre, ind: Individu): ('pere' | 'mere')[] {
+  if (!ind.filiation) return []
+  const p = parents(arbre, ind)
+  return (['pere', 'mere'] as const).filter((c) => ind.filiation![c] && p[c])
 }
 
 /** Parcours génération par génération : chaque ancêtre garde son plus petit Sosa. */
