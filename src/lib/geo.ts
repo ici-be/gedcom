@@ -16,6 +16,10 @@ export interface Position {
   qualite: 'trouve' | 'incertain' | 'manuel'
   /** La localité retenue, pour vérifier (« Cuesmes, Province du Hainaut ») */
   libelle?: string
+  /** Province, département, région ou État de la localité (« Hainaut », « Nord », « Zuid-Holland ») */
+  region?: string
+  /** Code ISO du pays de la localité */
+  pays?: string
 }
 
 /** Forme de comparaison : minuscules, sans accents ni ponctuation */
@@ -149,6 +153,30 @@ function libelleLocalite(idx: Index, l: Localite): string {
   return l[0] + (province ? ', ' + province : '')
 }
 
+/** Pays où la province est le premier niveau des fichiers GeoNames (le second y est la commune ou l'arrondissement) */
+const REGION_NIVEAU_1 = new Set(['NL', 'DE', 'CH', 'US', 'CA', 'LU'])
+
+/** Les provinces belges en français (les flamandes sont nommées en néerlandais dans GeoNames) */
+const PROVINCES_BE: Record<string, string> = {
+  'VLG.VAN': 'Anvers', 'VLG.VBR': 'Brabant flamand', 'VLG.VLI': 'Limbourg', 'VLG.VOV': 'Flandre-Orientale', 'VLG.VWV': 'Flandre-Occidentale',
+  'WAL.WBR': 'Brabant wallon', 'WAL.WHT': 'Hainaut', 'WAL.WLG': 'Liège', 'WAL.WLX': 'Luxembourg', 'WAL.WNA': 'Namur', 'BRU.BRU': 'Bruxelles',
+}
+
+const PREFIXE_REGION = /^(province|provincie|provincia|provinz|département|departement|région|region|canton|kanton|county of)\s+(du |de la |de l'|de l’|des |de |di |del |della |d'|d’)?/i
+
+/** « Province du Hainaut » → « Hainaut » */
+function regionLocalite(idx: Index, l: Localite): string | undefined {
+  if (idx.pays === 'monde') return undefined
+  const cle = REGION_NIVEAU_1.has(idx.pays) ? l[3] : l[3] + '.' + l[4]
+  if (idx.pays === 'BE' && PROVINCES_BE[cle]) return PROVINCES_BE[cle]
+  const nom = idx.rep.a[cle]?.[0] ?? idx.rep.a[l[3]]?.[0]
+  return nom?.replace(PREFIXE_REGION, '').trim() || undefined
+}
+
+function paysLocalite(idx: Index, l: Localite): string {
+  return idx.pays === 'monde' ? l[3] : idx.pays
+}
+
 const RAPPROCHER = 0.6 // degrés : au-delà, deux homonymes sont vraiment deux endroits différents
 
 /**
@@ -204,7 +232,7 @@ export async function situer(lieux: string[], charger: (fichier: string) => Prom
     const evident = retenus[0].l[5] >= 1000 && retenus.slice(1).every((x) => x.l[5] * 20 <= retenus[0].l[5])
     if (!loin || evident) {
       const l = retenus[0].l
-      positions.set(lieu, { lat: l[1], lon: l[2], qualite: 'trouve', libelle: libelleLocalite(retenus[0].idx, l) })
+      positions.set(lieu, { lat: l[1], lon: l[2], qualite: 'trouve', libelle: libelleLocalite(retenus[0].idx, l), region: regionLocalite(retenus[0].idx, l), pays: paysLocalite(retenus[0].idx, l) })
     } else enAttente.push({ lieu, d, c: retenus })
   }
 
@@ -226,7 +254,26 @@ export async function situer(lieux: string[], charger: (fichier: string) => Prom
       const dist = (l: Localite) => (l[1] - cl) ** 2 + ((l[2] - cn) * Math.cos((cl * Math.PI) / 180)) ** 2
       choix = [...c].sort((a, b) => dist(a.l) - dist(b.l))[0]
     }
-    positions.set(lieu, { lat: choix.l[1], lon: choix.l[2], qualite: 'incertain', libelle: libelleLocalite(choix.idx, choix.l) })
+    positions.set(lieu, { lat: choix.l[1], lon: choix.l[2], qualite: 'incertain', libelle: libelleLocalite(choix.idx, choix.l), region: regionLocalite(choix.idx, choix.l), pays: paysLocalite(choix.idx, choix.l) })
   }
   return positions
+}
+
+// ——— Lieux de l'arbre situés une fois pour toutes (carte, arbres imprimables) ———
+
+let enCache: { cle: object; promesse: Promise<Map<string, Position>> } | undefined
+
+/** Situe tous les lieux d'un arbre ; le résultat est gardé tant que l'arbre ne change pas */
+export function situerArbre(arbre: { individus: Map<string, { evenements: { lieu?: string }[] }>; familles: Map<string, { evenements: { lieu?: string }[] }> }): Promise<Map<string, Position>> {
+  if (enCache?.cle === arbre) return enCache.promesse
+  const lieux = new Set<string>()
+  for (const ind of arbre.individus.values()) for (const e of ind.evenements) if (e.lieu) lieux.add(e.lieu)
+  for (const fam of arbre.familles.values()) for (const e of fam.evenements) if (e.lieu) lieux.add(e.lieu)
+  const charger = async (f: string): Promise<Repertoire> => {
+    const r = await fetch(`geo/${f}.json`)
+    if (!r.ok) throw new Error(f)
+    return r.json()
+  }
+  enCache = { cle: arbre, promesse: situer([...lieux], charger) }
+  return enCache.promesse
 }

@@ -384,6 +384,30 @@ th:not([aria-sort]) .tri .fleche { opacity: 0.35; }
 }
 .classement .variantes { color: var(--muted); font-size: 0.82rem; }
 
+/* ---------- arbres à imprimer ---------- */
+.outils-impression { display: flex; flex-direction: column; gap: 12px; }
+.modeles { display: flex; gap: 6px; flex-wrap: wrap; }
+.modeles a { padding: 5px 12px; border-radius: 999px; border: 1px solid var(--line); text-decoration: none; color: var(--fg); }
+.modeles a.actif { border-color: var(--accent); color: var(--accent); font-weight: 700; }
+.modele-choisi { display: flex; flex-direction: column; gap: 4px; }
+.options-impression { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; }
+.options-impression .case { display: inline-flex; align-items: center; gap: 6px; }
+.options-impression input[type="date"] { font: inherit; padding: 4px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--fg); }
+.ligne .aide { flex: 1 1 280px; align-self: center; }
+.apercu-outils { align-items: center; justify-content: space-between; }
+.apercu { overflow: auto; border-radius: 6px; box-shadow: var(--shadow); background: #fff; }
+.apercu svg.feuille { display: block; width: 100%; height: auto; }
+.apercu.zoom svg.feuille { width: 260%; }
+/* textes de la feuille : couleurs fixes, c'est du papier */
+.feuille text { font-family: "Fira Sans Condensed", "Arial Narrow", sans-serif; fill: #1f2523; }
+.feuille .pn, .feuille .disp { font-family: "Fraunces", Georgia, serif; font-weight: 500; }
+.feuille .nm { font-weight: 600; letter-spacing: 0.04em; }
+.feuille .ns, .feuille .mt { fill: #646b67; font-style: italic; }
+.feuille .so { fill: #a07424; font-weight: 600; font-size: 0.8em; }
+.feuille .lieu { letter-spacing: 0.07em; font-weight: 500; }
+.feuille .cap { letter-spacing: 0.16em; font-weight: 500; }
+.feuille .mut { fill: #646b67; }
+
 /* ---------- impression (Ctrl+P) : le titre, le rappel des filtres et le tableau, sur fond blanc ---------- */
 .filtres-imprimes { display: none; }
 @page { margin: 12mm 10mm; }
@@ -433,6 +457,12 @@ th:not([aria-sort]) .tri .fleche { opacity: 0.35; }
 
   /* détail d'un lieu */
   .groupe { border: 0; padding: 0; break-inside: auto; }
+
+  /* arbre à imprimer : la feuille seule, à la taille du papier (règle @page posée par la page) */
+  .arbre-imprime > .titre-ecran, .arbre-imprime > .outils-impression { display: none !important; }
+  .arbre-imprime .apercu { overflow: visible; box-shadow: none; border-radius: 0; }
+  .arbre-imprime svg.feuille { display: block; }
+  body:has(.arbre-imprime) .page { padding: 0; }
   .groupe h2 { font-size: 11pt; }
   .actes li { padding: 2px 0; break-inside: avoid; }
 }

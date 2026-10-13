@@ -37,6 +37,11 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   orthographe ancienne, faute de frappe) se placent d'un clic ; ces positions restent dans le
   navigateur et peuvent être exportées.
 
+- **Imprimer** : des arbres prêts pour l'imprimeur ou pour un PDF. Premier modèle, l'**éventail des
+  origines** (A3 paysage) : huit générations sur 220°, chaque ancêtre teinté selon sa province ou sa région
+  de naissance (reconnue grâce aux listes de localités de la carte), avec les quatre quartiers et l'origine
+  des ancêtres par génération. Les dates sans source sont en italique. En option : la date en pied de page
+  et un petit code QR vers l'arbre en ligne. D'autres modèles s'ajoutent dans `src/ui/arbres/modeles.ts`.
 - **Parents inconnus ou introuvables** (`#/filiation`) : le GEDCOM n'a aucun champ pour dire qu'un
   parent n'est pas à chercher. On l'écrit dans la **note de la personne** (sur Geneanet : rubrique
   « Notes » de l'enfant), qui revient dans chaque export, par une ligne « Filiation: … » (pas de `#` : la

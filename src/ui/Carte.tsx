@@ -5,34 +5,15 @@ import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { render } from 'preact'
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
-import type { Arbre } from '../lib/gedcom/arbre'
 import { membres, type Donnees, type Perimetre } from '../lib/donnees'
 import { communes, siecle, GROUPES, type Groupe } from '../lib/communes'
-import { decouper, situer, type Position, type Repertoire } from '../lib/geo'
+import { decouper, situerArbre, type Position } from '../lib/geo'
 import { nombre, pourcent } from '../lib/format'
 import { telecharger } from '../lib/csv'
 import { ecrire, lire } from '../lib/stockage'
 import { Barre, ChoixPerimetre } from './commun'
 
 type Manuelles = Record<string, [number, number]>
-
-// ——— Positions trouvées automatiquement (calculées une fois par arbre) ———
-
-let enCache: { arbre: Arbre; promesse: Promise<Map<string, Position>> } | undefined
-
-function positionsAuto(arbre: Arbre): Promise<Map<string, Position>> {
-  if (enCache?.arbre === arbre) return enCache.promesse
-  const lieux = new Set<string>()
-  for (const ind of arbre.individus.values()) for (const e of ind.evenements) if (e.lieu) lieux.add(e.lieu)
-  for (const fam of arbre.familles.values()) for (const e of fam.evenements) if (e.lieu) lieux.add(e.lieu)
-  const charger = async (f: string): Promise<Repertoire> => {
-    const r = await fetch(`geo/${f}.json`)
-    if (!r.ok) throw new Error(f)
-    return r.json()
-  }
-  enCache = { arbre, promesse: situer([...lieux], charger) }
-  return enCache.promesse
-}
 
 // ——— Couleurs : du rouge (rien de sourcé) au vert (tout est sourcé) ———
 
@@ -73,7 +54,7 @@ export function Carte({ d, perimetre, setPerimetre, focus }: Props) {
 
   useEffect(() => {
     let vivant = true
-    positionsAuto(d.arbre).then((p) => vivant && setAuto(p))
+    situerArbre(d.arbre).then((p) => vivant && setAuto(p))
     return () => { vivant = false }
   }, [d.arbre])
 

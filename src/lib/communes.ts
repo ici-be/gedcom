@@ -80,7 +80,7 @@ export function communes(arbre: Arbre, perimetre: Set<string> | null, avecAutres
 const ROMAINS: [number, string][] = [[10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']]
 
 /** 18 → « XVIII » */
-function romain(n: number): string {
+export function romain(n: number): string {
   let r = ''
   for (const [v, l] of ROMAINS) while (n >= v) { r += l; n -= v }
   return r

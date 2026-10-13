@@ -9,6 +9,7 @@ import { Individus } from './Individus'
 import { Communes, Lieu } from './Communes'
 import { Metiers, PageMetier } from './Metiers'
 import type { Carte as TypeCarte } from './Carte'
+import type { Impression as TypeImpression } from './Impression'
 import { Statistiques } from './Statistiques'
 import { Filiation } from './Filiation'
 import { ProposerInstallation } from './Installer'
@@ -41,6 +42,8 @@ export function App() {
   const nouveauReleve = useRef(false)
   // La carte (Leaflet) n'est chargée qu'à la première visite de l'onglet
   const [Carte, setCarte] = useState<typeof TypeCarte | null>(null)
+  // Les arbres à imprimer aussi (polices et code QR)
+  const [Impression, setImpression] = useState<typeof TypeImpression | null>(null)
 
   const setRacine = (id: string) => { setRacineBrute(id); ecrire('racine', id) }
   const setAdresse = (a: string) => { setAdresseBrute(a); ecrire('adresse', a) }
@@ -120,6 +123,7 @@ export function App() {
   const page = route[0] || ''
   useEffect(() => {
     if (page === 'carte' && !Carte) import('./Carte').then((m) => setCarte(() => m.Carte))
+    if (page === 'imprimer' && !Impression) import('./Impression').then((m) => setImpression(() => m.Impression))
   }, [page])
   let contenu
   if (etat === 'demarrage') contenu = null
@@ -133,6 +137,9 @@ export function App() {
     ? <Carte key={route[1] ?? ''} d={donnees} perimetre={perimetre} setPerimetre={setPerimetre} focus={route[1]} />
     : <div class="attente" role="status"><span class="rouet" />Chargement de la carte…</div>
   else if (page === 'statistiques') contenu = <Statistiques d={donnees} perimetre={perimetre} setPerimetre={setPerimetre} />
+  else if (page === 'imprimer') contenu = Impression
+    ? <Impression d={donnees} id={route[1]} />
+    : <div class="attente" role="status"><span class="rouet" />Préparation de l'arbre…</div>
   else if (page === 'filiation') contenu = <Filiation d={donnees} />
   else if (page === 'metiers') contenu = <Metiers d={donnees} perimetre={perimetre} setPerimetre={setPerimetre} />
   else contenu = (
@@ -155,6 +162,7 @@ export function App() {
               <a href="#/metiers" class={page === 'metiers' ? 'actif' : ''}>Métiers</a>
               <a href="#/carte" class={page === 'carte' ? 'actif' : ''}>Carte</a>
               <a href="#/statistiques" class={page === 'statistiques' ? 'actif' : ''}>Statistiques</a>
+              <a href="#/imprimer" class={page === 'imprimer' ? 'actif' : ''}>Imprimer</a>
             </nav>
           )}
         </div>
