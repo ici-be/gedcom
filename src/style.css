@@ -392,7 +392,7 @@ th:not([aria-sort]) .tri .fleche { opacity: 0.35; }
 .modele-choisi { display: flex; flex-direction: column; gap: 4px; }
 .options-impression { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; }
 .options-impression .case { display: inline-flex; align-items: center; gap: 6px; }
-.options-impression input[type="date"] { font: inherit; padding: 4px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--fg); }
+.options-impression input[type="date"], .options-impression select { font: inherit; padding: 4px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--fg); }
 .ligne .aide { flex: 1 1 280px; align-self: center; }
 .apercu-outils { align-items: center; justify-content: space-between; }
 .apercu { overflow: auto; border-radius: 6px; box-shadow: var(--shadow); background: #fff; }

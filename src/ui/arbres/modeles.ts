@@ -12,14 +12,16 @@ export interface OptionsFeuille {
   qr: boolean
 }
 
+export type Format = 'A4' | 'A3' | 'A2'
+
 export interface Modele {
   id: string
   titre: string
   description: string
   /** Forme générale, pour regrouper les modèles quand il y en aura plusieurs */
   forme: 'eventail' | 'arbre' | 'tableau'
-  /** Papier et orientation, pour la règle @page */
-  papier: { format: 'A4' | 'A3' | 'A2'; orientation: 'portrait' | 'landscape' }
+  /** Papier prévu et orientation, pour la règle @page ; la feuille se réduit ou s'agrandit pour un autre format */
+  papier: { format: Format; orientation: 'portrait' | 'landscape' }
   generations: number
   Feuille: FunctionComponent<{ d: Donnees; options: OptionsFeuille }>
 }
