@@ -93,9 +93,14 @@ export function resumer(ind: Individu, s: Suivi): Resume {
   }
 }
 
-/** Premier prénom seulement (« Marie-Catherine Josèphe » → « Marie-Catherine ») */
-export function premierPrenom(p: string): string {
-  return p.split(/\s+/)[0] ?? ''
+/** Les `n` premiers prénoms (« Marie-Catherine Josèphe Ghislaine », 1 → « Marie-Catherine ») */
+export function prenoms(p: string, n: number): string {
+  return p.split(/\s+/).filter(Boolean).slice(0, n).join(' ')
+}
+
+/** « Saint-Ghislain » → « St-Ghislain », « Sainte-Ode » → « Ste-Ode » */
+export function abregerCommune(c: string): string {
+  return c.replace(/(^|[\s'’(-])Saint(e?)(?=[\s-])/gi, (_, avant, e) => `${avant}St${e}`)
 }
 
 // ——— Géométrie : angles en degrés, 0 vers le haut, sens des aiguilles d'une montre ———

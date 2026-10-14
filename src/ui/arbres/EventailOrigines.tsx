@@ -8,7 +8,7 @@ import type { Donnees } from '../../lib/donnees'
 import { situerArbre, type Position } from '../../lib/geo'
 import { romain } from '../../lib/communes'
 import {
-  angles, arc, LIEU_INCONNU, LIEU_NON_SITUE, places, point, premierPrenom, regionDuLieu, resumer, secteur,
+  abregerCommune, angles, arc, LIEU_INCONNU, LIEU_NON_SITUE, places, point, prenoms, regionDuLieu, resumer, secteur,
   type Centre, type Place, type Resume,
 } from '../../lib/eventail'
 import type { OptionsFeuille } from './modeles'
@@ -25,7 +25,8 @@ const AUTRES = '#dcdcd5'
 const INCONNU = '#efefea'
 
 type Morceau = [string, string?]
-interface Ligne { fs: number; parts: Morceau[]; cls?: string }
+/** `coupe` : texte abrégé par « … » plutôt que trop resserré */
+interface Ligne { fs: number; parts: Morceau[]; cls?: string; coupe?: boolean }
 
 const maj = (s: string) => s.toLocaleUpperCase('fr')
 const LH = 1.2
@@ -33,6 +34,11 @@ const LH = 1.2
 function Morceaux({ parts }: { parts: Morceau[] }) {
   return <>{parts.map(([t, c], i) => <tspan key={i} class={c}>{t}</tspan>)}</>
 }
+
+/** Attributs relus par ajuster() : taille prévue, place disponible, texte entier */
+const mesure = (l: Ligne, max: number) => ({
+  'font-size': l.fs, 'data-fs': l.fs, 'data-max': Math.round(max), 'data-texte': l.coupe ? l.parts.map(([t]) => t).join('') : undefined,
+})
 
 /** Lignes courbes, centrées dans la case ; retournées dans le bas de l'éventail pour rester lisibles */
 function TexteCourbe({ id, r1, r2, a1, a2, lignes }: { id: string; r1: number; r2: number; a1: number; a2: number; lignes: Ligne[] }) {
@@ -50,8 +56,8 @@ function TexteCourbe({ id, r1, r2, a1, a2, lignes }: { id: string; r1: number; r
         return (
           <g key={j}>
             <path id={pid} d={arc(O, r, a1, a2, retourne)} fill="none" />
-            <text font-size={l.fs} text-anchor="middle" class={l.cls}>
-              <textPath href={'#' + pid} startOffset="50%" data-max={Math.round(r * ((a2 - a1) * Math.PI / 180) - 8)}><Morceaux parts={l.parts} /></textPath>
+            <text {...mesure(l, r * ((a2 - a1) * Math.PI / 180) - 8)} text-anchor="middle" class={l.cls}>
+              <textPath href={'#' + pid} startOffset="50%"><Morceaux parts={l.parts} /></textPath>
             </text>
           </g>
         )
@@ -74,7 +80,7 @@ function TexteRayon({ r1, r2, a1, a2, lignes }: { r1: number; r2: number; a1: nu
         const y = -H / 2 + cumul + h * 0.76
         cumul += h
         return (
-          <text key={j} x={dehors ? rm : -rm} y={y.toFixed(2)} font-size={l.fs} text-anchor="middle" class={l.cls} data-max={r2 - r1 - 9}>
+          <text key={j} x={dehors ? rm : -rm} y={y.toFixed(2)} {...mesure(l, r2 - r1 - 9)} text-anchor="middle" class={l.cls}>
             <Morceaux parts={l.parts} />
           </text>
         )
@@ -90,36 +96,48 @@ function annees(r: Resume): Morceau[] {
   return [[n, cn], [' – '], [r.deces ?? '?', r.decesSourcee ? undefined : 'ns']]
 }
 
-function nom(r: Resume, fs: number, opts: { sosa?: number; implexe?: boolean; court?: boolean } = {}): Ligne {
-  return {
-    fs,
-    parts: [
-      ...(opts.sosa ? [[opts.sosa + ' ', 'so'] as Morceau] : []),
-      [(opts.court ? premierPrenom(r.prenom) : r.prenom) + ' ', 'pn'],
-      [maj(r.nom || '?'), 'nm'],
-      ...(opts.implexe ? [[' ◆', 'so'] as Morceau] : []),
-    ],
-  }
+/** Prénoms (deux au plus) puis nom sur une seconde ligne, ou « Prénom NOM » sur une seule */
+function nom(r: Resume, fs: number, opts: { fsNom?: number; implexe?: boolean } = {}): Ligne[] {
+  const nm: Morceau[] = [[maj(r.nom || '?'), 'nm'], ...(opts.implexe ? [[' ◆', 'so'] as Morceau] : [])]
+  if (!opts.fsNom) return [{ fs, parts: [[prenoms(r.prenom, 1) + ' ', 'pn'], ...nm] }]
+  const pn = prenoms(r.prenom, 2)
+  return pn ? [{ fs, parts: [[pn, 'pn']] }, { fs: opts.fsNom, parts: nm }] : [{ fs: opts.fsNom, parts: nm }]
 }
 
-/** Le texte d'une case, de plus en plus léger vers le bord */
-function lignesCase(p: Place, r: Resume, implexe: boolean): Ligne[] {
+/** Métier sur deux lignes quand il serait trop serré sur une (estimation : 0,45 em par signe) */
+function metier(t: string | undefined, fs: number, largeur: number): Ligne[] {
+  if (!t) return []
+  const mots = t.split(/\s+/)
+  if (t.length * fs * 0.45 <= largeur || mots.length < 2) return [{ fs, parts: [[t, 'mt']], coupe: true }]
+  let coupure = 1
+  let pire = Infinity
+  for (let i = 1; i < mots.length; i++) {
+    const l = Math.max(mots.slice(0, i).join(' ').length, mots.slice(i).join(' ').length)
+    if (l < pire) { pire = l; coupure = i }
+  }
+  return [mots.slice(0, coupure).join(' '), mots.slice(coupure).join(' ')].map((m) => ({ fs, parts: [[m, 'mt']], coupe: true }))
+}
+
+/** Le texte d'une case, de plus en plus léger vers le bord ; `largeur` : longueur approximative d'une ligne */
+function lignesCase(p: Place, r: Resume, implexe: boolean, largeur: number): Ligne[] {
   const g = p.generation
-  const lieu = r.commune ? maj(r.commune) : ''
-  const metier: Ligne | null = r.metier ? { fs: 0, parts: [[r.metier, 'mt']] } : null
-  const m = (fs: number) => (metier ? { ...metier, fs } : null)
-  const l = (fs: number, parts: Morceau[], cls?: string): Ligne | null => (parts.some(([t]) => t) ? { fs, parts, cls } : null)
-  const sosa = (fs: number): Ligne => ({ fs, parts: [['Sosa ' + p.sosa, 'so']] })
-  const repete = p.dejaVu ? [{ fs: 0, parts: [['= Sosa ' + p.dejaVu, 'so']] as Morceau[] }] : null
-  let lignes: (Ligne | null)[]
-  if (g === 1) lignes = [nom(r, 17, { implexe }), l(11, annees(r)), l(10, [[lieu]], 'lieu'), m(10.5), sosa(8.5)]
-  else if (g === 2) lignes = [nom(r, 13.5, { implexe }), l(10, annees(r)), l(9.5, [[lieu]], 'lieu'), m(9.5), sosa(8)]
-  else if (g === 3) lignes = [nom(r, 11.5, { implexe }), l(9.5, annees(r)), l(9, [[lieu]], 'lieu'), m(9), sosa(7.5)]
-  else if (g === 4) lignes = [nom(r, 10, { sosa: p.sosa, implexe }), l(8.8, annees(r)), l(8.3, [[lieu]], 'lieu'), m(8.3)]
-  else if (g === 5) lignes = [nom(r, 9, { sosa: p.sosa, implexe }), l(8.3, annees(r)), l(7.8, [[lieu]], 'lieu'), m(7.8)]
-  else if (g === 6) lignes = [nom(r, 8, { sosa: p.sosa, implexe }), repete ? { ...repete[0], fs: 7.2 } : l(7.2, [...annees(r), ...(lieu ? [[' · ' + lieu, 'lieu'] as Morceau] : [])])]
-  else lignes = [nom(r, 7.4, { court: true, implexe })]
-  return lignes.filter((x): x is Ligne => !!x)
+  const lieu = r.commune ? maj(abregerCommune(r.commune)) : ''
+  const l = (fs: number, parts: Morceau[], cls?: string): Ligne[] => (parts.some(([t]) => t) ? [{ fs, parts, cls }] : [])
+  if (g === 1) return [...nom(r, 16, { fsNom: 13.5, implexe }), ...l(11, annees(r)), ...l(10, [[lieu]], 'lieu'), ...metier(r.metier, 10.5, largeur)]
+  if (g === 2) return [...nom(r, 13, { fsNom: 11.5, implexe }), ...l(10, annees(r)), ...l(9.5, [[lieu]], 'lieu'), ...metier(r.metier, 9.5, largeur)]
+  if (g === 3) return [...nom(r, 11.5, { fsNom: 10, implexe }), ...l(9.5, annees(r)), ...l(9, [[lieu]], 'lieu'), ...metier(r.metier, 9, largeur)]
+  if (g === 4) return [...nom(r, 10, { fsNom: 9.2, implexe }), ...l(8.8, annees(r)), ...l(8.3, [[lieu]], 'lieu'), ...metier(r.metier, 8.3, largeur)]
+  if (g === 5) return [...nom(r, 9, { implexe }), ...l(8.3, annees(r)), ...l(7.8, [[lieu]], 'lieu'), ...metier(r.metier, 7.8, largeur)]
+  if (g === 6) return [...nom(r, 8, { implexe }), ...l(7.2, [...annees(r), ...(lieu ? [[' · ' + lieu, 'lieu'] as Morceau] : [])])]
+  return nom(r, 7.4, { implexe })
+}
+
+/** Réduit toutes les lignes d'une case si leur hauteur dépasse la place disponible */
+function caser(lignes: Ligne[], hauteur: number): Ligne[] {
+  const H = lignes.reduce((s, l) => s + l.fs * LH, 0)
+  if (H <= hauteur) return lignes
+  const k = hauteur / H
+  return lignes.map((l) => ({ ...l, fs: Math.round(l.fs * k * 100) / 100 }))
 }
 
 const LIBELLES: Record<string, (sosa: number) => string> = {
@@ -128,20 +146,31 @@ const LIBELLES: Record<string, (sosa: number) => string> = {
   'a-chercher': () => 'à trouver',
 }
 
-/** Les textes trop longs pour leur case sont resserrés, jamais coupés */
+/**
+ * Les textes trop longs pour leur case sont rapetissés (textLength n'est pas suivi partout sur un textPath) ;
+ * ceux marqués data-texte (métiers) sont plutôt abrégés par « … » quand il faudrait trop les rapetisser.
+ */
 function ajuster(svg: SVGSVGElement) {
-  for (const t of svg.querySelectorAll<SVGTextContentElement>('[data-max]')) {
-    const hote = (t.tagName === 'textPath' ? t.parentNode : t) as SVGTextElement
-    t.removeAttribute('textLength')
-    t.removeAttribute('lengthAdjust')
-    if (hote.dataset.fs) hote.setAttribute('font-size', hote.dataset.fs)
+  for (const t of svg.querySelectorAll<SVGTextElement>('text[data-max]')) {
+    t.dataset.fs ??= t.getAttribute('font-size') ?? ''
+    const fs = Number(t.dataset.fs)
+    t.setAttribute('font-size', String(fs))
+    const noeud = t.dataset.texte !== undefined ? t.querySelector('tspan')?.firstChild : null
+    if (noeud instanceof Text) noeud.data = t.dataset.texte!
     const max = Number(t.dataset.max)
     const long = t.getComputedTextLength()
     if (long <= max) continue
-    hote.dataset.fs = hote.getAttribute('font-size') ?? ''
-    if (long > max * 1.25) hote.setAttribute('font-size', ((Number(hote.dataset.fs) * max * 1.2) / long).toFixed(2))
-    t.setAttribute('textLength', String(max))
-    t.setAttribute('lengthAdjust', 'spacingAndGlyphs')
+    const k = max / long
+    if (noeud instanceof Text && k < 0.8) {
+      t.setAttribute('font-size', (fs * 0.85).toFixed(2))
+      let texte = t.dataset.texte!
+      while (texte.length > 1 && t.getComputedTextLength() > max) {
+        texte = texte.slice(0, -1).trimEnd()
+        noeud.data = texte + '…'
+      }
+      continue
+    }
+    t.setAttribute('font-size', (fs * k * 0.98).toFixed(2))
   }
 }
 
@@ -230,12 +259,15 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
     const r = resumes.get(s)
     const fond = r ? couleur(regions.get(s)!) : p.etat === 'vide' ? '#f6f6f3' : 'url(#hachures)'
     cases.push(<path key={s} d={secteur(O, r1, r2, a1, a2)} fill={fond} stroke="#fff" stroke-width={g >= 7 ? 0.8 : 1.4} />)
+    const rm = (r1 + r2) / 2
+    const ouv = (a2 - a1) * Math.PI / 180
+    const courbe = r && rm * ouv > (r2 - r1) * 1.05
     let lignes: Ligne[] = []
-    if (r) lignes = lignesCase(p, r, !!p.dejaVu || pl.some((q) => q?.dejaVu === s))
+    if (r) lignes = lignesCase(p, r, !!p.dejaVu || pl.some((q) => q?.dejaVu === s), courbe ? (r1 + (r2 - r1) * 0.3) * ouv - 8 : r2 - r1 - 9)
     else if (LIBELLES[p.etat]) lignes = [{ fs: g >= 7 ? 7.2 : 8.5, parts: [[LIBELLES[p.etat](s), 'ns']] }]
     if (!lignes.length) continue
-    const rm = (r1 + r2) / 2
-    const courbe = r && rm * ((a2 - a1) * Math.PI / 180) > (r2 - r1) * 1.05
+    // Hauteur : l'épaisseur de l'anneau pour un texte courbe, la largeur de la case côté centre pour un texte en rayon
+    lignes = caser(lignes, courbe ? r2 - r1 - 6 : (r1 + 4.5) * ouv - 3)
     textes.push(courbe
       ? <TexteCourbe key={s} id={`c${s}`} r1={r1} r2={r2} a1={a1} a2={a2} lignes={lignes} />
       : <TexteRayon key={s} r1={r1} r2={r2} a1={a1} a2={a2} lignes={lignes} />)
@@ -254,7 +286,7 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
         <path id={'q' + s} d={arc(O, R + 24, a1, a2)} fill="none" />
         <text font-size={10.5} text-anchor="middle" class="cap">
           <textPath href={'#q' + s} startOffset="50%">
-            <tspan class="mut">QUARTIER </tspan><tspan class="nm">{maj(nomQ || '?')}</tspan><tspan class="so">{'  Sosa ' + s}</tspan>
+            <tspan class="mut">QUARTIER </tspan><tspan class="nm">{maj(nomQ || '?')}</tspan>
           </textPath>
         </text>
       </g>
@@ -288,7 +320,7 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
           <text x={O.cx} y={O.cy - 22} font-size="26" class="pn" data-max="170">{p1.prenom}</text>
           <text x={O.cx} y={O.cy - 2} font-size="13" class="nm" data-max="170">{maj(p1.nom)}</text>
           <text x={O.cx} y={O.cy + 19} font-size="11"><Morceaux parts={annees(p1)} /></text>
-          {p1.commune && <text x={O.cx} y={O.cy + 34} font-size="9.5" class="lieu" data-max="150">{maj(p1.commune)}</text>}
+          {p1.commune && <text x={O.cx} y={O.cy + 34} font-size="9.5" class="lieu" data-max="150">{maj(abregerCommune(p1.commune))}</text>}
         </g>
       )}
 

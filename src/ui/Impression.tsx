@@ -6,7 +6,7 @@ import '@fontsource/fira-sans-condensed/latin-400.css'
 import '@fontsource/fira-sans-condensed/latin-400-italic.css'
 import '@fontsource/fira-sans-condensed/latin-500.css'
 import '@fontsource/fira-sans-condensed/latin-600.css'
-import { useState } from 'preact/hooks'
+import { useLayoutEffect, useRef, useState } from 'preact/hooks'
 import type { Donnees } from '../lib/donnees'
 import { ecrire, lire } from '../lib/stockage'
 import { MODELES, type Modele } from './arbres/modeles'
@@ -22,6 +22,36 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
   const modele = MODELES.find((m) => m.id === id) ?? MODELES[0]
   const [reglages, setReglagesBrut] = useState<Reglages>(() => lire('impression', { date: true, qr: true }))
   const [zoom, setZoom] = useState(false)
+  const apercu = useRef<HTMLDivElement>(null)
+  const glisse = useRef<{ x: number; y: number; gauche: number; haut: number } | null>(null)
+  // En agrandissant : l'aperçu à l'écran, centré sur l'éventail
+  useLayoutEffect(() => {
+    const el = apercu.current
+    if (!zoom || !el) return
+    el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2
+    el.scrollTop = (el.scrollHeight - el.clientHeight) / 2
+    el.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  }, [zoom])
+  // Agrandi, la feuille se déplace en la tirant à la souris (au doigt, le défilement natif suffit)
+  const saisir = (e: PointerEvent) => {
+    const el = apercu.current
+    if (!zoom || !el || e.pointerType !== 'mouse' || e.button !== 0) return
+    glisse.current = { x: e.clientX, y: e.clientY, gauche: el.scrollLeft, haut: el.scrollTop }
+    el.setPointerCapture(e.pointerId)
+    el.classList.add('glisse')
+    e.preventDefault()
+  }
+  const tirer = (e: PointerEvent) => {
+    const g = glisse.current
+    const el = apercu.current
+    if (!g || !el) return
+    el.scrollLeft = g.gauche - (e.clientX - g.x)
+    el.scrollTop = g.haut - (e.clientY - g.y)
+  }
+  const lacher = () => {
+    glisse.current = null
+    apercu.current?.classList.remove('glisse')
+  }
   const setReglages = (r: Partial<Reglages>) => { const n = { ...reglages, ...r }; setReglagesBrut(n); ecrire('impression', n) }
   const jour = reglages.jour || aujourdHui()
   const [court, long] = PAPIERS[modele.papier.format]
@@ -72,12 +102,13 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
           </div>
         </section>
         <div class="ligne apercu-outils">
-          <span class="aide">Aperçu réduit</span>
+          <span class="aide">{zoom ? 'Aperçu agrandi : tirer la feuille pour la déplacer' : 'Aperçu réduit'}</span>
           <button type="button" class="bouton discret" onClick={() => setZoom(!zoom)}>{zoom ? 'Réduire' : 'Agrandir'}</button>
         </div>
       </div>
 
-      <div class={'apercu' + (zoom ? ' zoom' : '')}>
+      <div ref={apercu} class={'apercu' + (zoom ? ' zoom' : '')}
+        onPointerDown={saisir} onPointerMove={tirer} onPointerUp={lacher} onPointerCancel={lacher}>
         <modele.Feuille d={d} options={{ date: reglages.date ? dateLongue(jour) : undefined, qr: reglages.qr && !!d.adresse }} />
       </div>
     </section>

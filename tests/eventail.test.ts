@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
 import { lireArbre } from '../src/lib/gedcom/arbre'
 import { suivi } from '../src/lib/suivi'
-import { angles, LIEU_INCONNU, places, regionDuLieu, resumer } from '../src/lib/eventail'
+import { abregerCommune, angles, LIEU_INCONNU, places, prenoms, regionDuLieu, resumer } from '../src/lib/eventail'
 import { GED } from './exemple'
 
 test('places Sosa : personnes, parents à chercher, cases vides au-dessus', () => {
@@ -46,4 +46,13 @@ test('région de naissance', () => {
 test('angles : pères à gauche, mères à droite', () => {
   expect(angles(2, 220)).toEqual({ a1: -110, a2: 0, generation: 1 })
   expect(angles(7, 220)).toEqual({ a1: 55, a2: 110, generation: 2 })
+})
+
+test('prénoms limités et communes abrégées', () => {
+  expect(prenoms('Marie-Catherine Josèphe Ghislaine', 2)).toBe('Marie-Catherine Josèphe')
+  expect(prenoms('Jean', 1)).toBe('Jean')
+  expect(abregerCommune('Saint-Ghislain')).toBe('St-Ghislain')
+  expect(abregerCommune('Sainte-Ode')).toBe('Ste-Ode')
+  expect(abregerCommune('Braine-Saint-Pierre')).toBe('Braine-St-Pierre')
+  expect(abregerCommune('Saintes')).toBe('Saintes')
 })

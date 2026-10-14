@@ -397,6 +397,8 @@ th:not([aria-sort]) .tri .fleche { opacity: 0.35; }
 .apercu-outils { align-items: center; justify-content: space-between; }
 .apercu { overflow: auto; border-radius: 6px; box-shadow: var(--shadow); background: #fff; }
 .apercu svg.feuille { display: block; width: 100%; height: auto; }
+.apercu.zoom { max-height: calc(100vh - 32px); cursor: grab; }
+.apercu.zoom.glisse { cursor: grabbing; user-select: none; }
 .apercu.zoom svg.feuille { width: 260%; }
 /* textes de la feuille : couleurs fixes, c'est du papier */
 .feuille text { font-family: "Fira Sans Condensed", "Arial Narrow", sans-serif; fill: #1f2523; }
@@ -460,7 +462,7 @@ th:not([aria-sort]) .tri .fleche { opacity: 0.35; }
 
   /* arbre à imprimer : la feuille seule, à la taille du papier (règle @page posée par la page) */
   .arbre-imprime > .titre-ecran, .arbre-imprime > .outils-impression { display: none !important; }
-  .arbre-imprime .apercu { overflow: visible; box-shadow: none; border-radius: 0; }
+  .arbre-imprime .apercu { overflow: visible; max-height: none; box-shadow: none; border-radius: 0; }
   .arbre-imprime svg.feuille { display: block; }
   body:has(.arbre-imprime) .page { padding: 0; }
   .groupe h2 { font-size: 11pt; }
