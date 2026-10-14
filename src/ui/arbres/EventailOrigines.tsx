@@ -374,7 +374,7 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
 
       {/* Pied de page */}
       <text x="40" y={options.date ? 950 : 966} font-size="8.5" class="mut">
-        <tspan class="ns">italique</tspan> : date sans source · ◆ implexe · hachures : ancêtre à trouver, ou lignée arrêtée par un parent inconnu
+        <tspan class="ns">italique</tspan> : date sans source · ◆ implexe
       </text>
       {options.date && <text x="40" y="966" font-size="8.5" class="mut">Établi le {options.date}</text>}
       {adresse && (
