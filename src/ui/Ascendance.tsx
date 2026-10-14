@@ -324,10 +324,10 @@ export function Ascendance({ d, setPerimetre }: { d: Donnees; setPerimetre: (p: 
         <Panneau titre="Pistes les plus proches"
           lien={<a href="#/personnes" onClick={vers('a-chercher')}>Les {nombre(a.pistes.length)} ancêtres dont un parent est à chercher</a>}
           aide="Les ancêtres les plus récents dont un parent reste à trouver : c’est là que chaque découverte ouvre le plus de places.">
-          <div class="pistes">
+          <div class="asc-pistes">
             {a.pistes.slice(0, 12).map((p) => (
-              <div class="piste" key={p.id}>
-                <span class="piste-g">G{p.generation}</span>
+              <div class="asc-piste" key={p.id}>
+                <span class="asc-piste-g">G{p.generation}</span>
                 <span><Nom d={d} id={p.id} /> <Annees d={d} id={p.id} /></span>
                 <small>{commune(d, p.id) ? `${commune(d, p.id)} · ` : ''}<span class="manque">{manque(p)}</span></small>
               </div>
@@ -361,7 +361,7 @@ export function Ascendance({ d, setPerimetre }: { d: Donnees; setPerimetre: (p: 
       <section class="panneau asc asc-temps">
         <div>
           <h2>Siècle de naissance</h2>
-          <svg class="siecles" viewBox={`0 0 ${Math.max(1, barres.length) * 62} 116`} role="img" aria-label="Ancêtres par siècle de naissance">
+          <svg class="asc-siecles" viewBox={`0 0 ${Math.max(1, barres.length) * 62} 116`} role="img" aria-label="Ancêtres par siècle de naissance">
             {barres.map(([lib, n, pale], i) => {
               const h = Math.max(2, (n / maxSiecle) * 78)
               return (
