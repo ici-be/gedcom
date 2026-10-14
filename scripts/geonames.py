@@ -3,7 +3,9 @@
 Construit les fichiers de lieux de public/geo/ à partir des extraits GeoNames
 (https://download.geonames.org/export/dump/, licence CC BY 4.0).
 
-    python3 -I scripts/geonames.py <dossier des .zip téléchargés> public/geo
+    python3 -I scripts/geonames.py <dossier des .zip téléchargés> public/geo [codes…]
+
+Sans codes : tous les pays et monde.json ; avec des codes (IE GP…), seulement ces pays-là.
 
 Un fichier par pays (BE.json, FR.json…) pour les pays détaillés, plus monde.json
 (les villes de plus de 5 000 habitants des autres pays).
@@ -19,11 +21,12 @@ import unicodedata
 import zipfile
 from pathlib import Path
 
-PAYS = ['BE', 'FR', 'NL', 'LU', 'CH', 'DE', 'IT', 'ES', 'GB', 'CA', 'US']
+# Les départements d'outre-mer ont leurs propres extraits GeoNames (GP, MQ…), à part de la France
+PAYS = ['BE', 'FR', 'NL', 'LU', 'CH', 'DE', 'IT', 'ES', 'GB', 'IE', 'CA', 'US', 'GP', 'MQ', 'GF', 'RE', 'YT', 'PM']
 # Pour les grands pays, seulement les localités habitées d'une certaine taille
 POPULATION_MIN = {'US': 500}
 # Niveau administratif des communes (ADM3 est un arrondissement en France, une commune en Italie…)
-NIVEAU_COMMUNE = {'BE': 'ADM4', 'FR': 'ADM4', 'DE': 'ADM4', 'IT': 'ADM3', 'ES': 'ADM3', 'CH': 'ADM3', 'NL': 'ADM2', 'LU': 'ADM2'}
+NIVEAU_COMMUNE = {**{c: 'ADM4' for c in ('GP', 'MQ', 'GF', 'RE', 'YT', 'PM')}, 'BE': 'ADM4', 'FR': 'ADM4', 'DE': 'ADM4', 'IT': 'ADM3', 'ES': 'ADM3', 'CH': 'ADM3', 'NL': 'ADM2', 'LU': 'ADM2'}
 
 LATIN = re.compile(r"^[A-Za-zÀ-ÖØ-öø-ÿŒœŸĀ-ſ'’ .\-()]+$")
 
@@ -108,10 +111,13 @@ def monde(dossier: Path) -> dict:
 def main():
     dossier, sortie = Path(sys.argv[1]), Path(sys.argv[2])
     sortie.mkdir(parents=True, exist_ok=True)
-    for code in PAYS:
+    codes = sys.argv[3:] or PAYS
+    for code in codes:
         donnees = pays(dossier, code)
         (sortie / f'{code}.json').write_text(json.dumps(donnees, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
         print(code, len(donnees['l']))
+    if sys.argv[3:]:
+        return
     donnees = monde(dossier)
     (sortie / 'monde.json').write_text(json.dumps(donnees, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
     print('monde', len(donnees['l']))

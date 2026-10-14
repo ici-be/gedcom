@@ -7,7 +7,10 @@ export type Localite = [string, number, number, string, string, number, string[]
 export interface Repertoire { a: Record<string, string[]>; l: Localite[] }
 
 /** Pays qui ont leur propre fichier ; les autres sont cherchés dans monde.json (villes de plus de 5 000 habitants) */
-export const PAYS_DETAILLES = ['BE', 'FR', 'NL', 'LU', 'CH', 'DE', 'IT', 'ES', 'GB', 'CA', 'US']
+export const PAYS_DETAILLES = ['BE', 'FR', 'NL', 'LU', 'CH', 'DE', 'IT', 'ES', 'GB', 'IE', 'CA', 'US', 'GP', 'MQ', 'GF', 'RE', 'YT', 'PM']
+
+/** Départements et collectivités d'outre-mer : un fichier GeoNames chacun, mais des lieux de France (code INSEE) */
+const OUTRE_MER: Record<string, string> = { GP: '971', MQ: '972', GF: '973', RE: '974', PM: '975', YT: '976' }
 
 export interface Position {
   lat: number
@@ -92,11 +95,22 @@ export interface LieuDecoupe {
 /** « [Hameau] - Cuesmes, Hainaut, Belgique » → Cuesmes / [Hainaut] / BE */
 export function decouper(lieu: string): LieuDecoupe {
   const parties = lieu.replace(/^\[[^\]]*\]\s*-\s*/, '').split(',').map((s) => s.trim()).filter(Boolean)
-  const pays = parties.length ? codePays(parties[parties.length - 1]) : undefined
+  let pays = parties.length ? codePays(parties[parties.length - 1]) : undefined
   if (pays) parties.pop()
+  // « Saint-Claude, 97124, Guadeloupe, France » : l'outre-mer d'après son nom ou son code postal, pas la métropole
+  if (!pays || pays === 'FR') {
+    const dom = parties.slice(1).map((p) => OUTRE_MER[codePays(p) ?? ''] ? codePays(p) : codeOutreMer(p)).find(Boolean)
+    if (dom) pays = dom
+  }
   // « Rue Blaes 247, Bruxelles » : l'adresse est laissée de côté, la commune suit
   if (parties.length > 1 && ADRESSE.test(parties[0])) parties.shift()
   return { commune: parties[0] ?? '', contexte: parties.slice(1), pays }
+}
+
+/** « 97124 » → « GP » */
+function codeOutreMer(partie: string): string | undefined {
+  const m = /^97([1-6])\d\d$/.exec(partie.trim())
+  return m ? Object.keys(OUTRE_MER).find((k) => OUTRE_MER[k] === '97' + m[1]) : undefined
 }
 
 const ADRESSE = /^(rue|avenue|chauss[ée]e|place|boulevard|chemin|impasse|quai|all[ée]e|square|[ée]glise|cimeti[èe]re|h[ôo]pital)\b|\d/i
@@ -164,7 +178,21 @@ const PROVINCES_BE: Record<string, string> = {
   'WAL.WBR': 'Brabant wallon', 'WAL.WHT': 'Hainaut', 'WAL.WLG': 'Liège', 'WAL.WLX': 'Luxembourg', 'WAL.WNA': 'Namur', 'BRU.BRU': 'Bruxelles',
 }
 
-const PREFIXE_REGION = /^(province|provincie|provincia|provinz|département|departement|région|region|canton|kanton|county of)\s+(du |de la |de l'|de l’|des |de |di |del |della |d'|d’)?/i
+const PREFIXE_REGION = /^(province|provincie|provincia|provinz|département|departement|région|region|canton|kanton|county of|county|city and borough of|city and county of|city of|royal borough of|borough of)\s+(du |de la |de l'|de l’|des |de |di |del |della |d'|d’)?/i
+const SUFFIXE_REGION = /\s+(county|county council|city and county council)$/i
+
+/**
+ * Comtés irlandais : les noms anglais (GeoNames en donne plusieurs en irlandais) et les villes-comtés
+ * réunies à leur comté, comme Dublin et ses trois comtés de banlieue
+ */
+const COMTES_IE: Record<string, [string, string]> = {
+  '01': ['01', 'Carlow'], '02': ['02', 'Cavan'], '03': ['03', 'Clare'], '04': ['04', 'Cork'], '32': ['04', 'Cork'], '06': ['06', 'Donegal'],
+  '10': ['10', 'Galway'], '36': ['10', 'Galway'], '11': ['11', 'Kerry'], '12': ['12', 'Kildare'], '13': ['13', 'Kilkenny'], '14': ['14', 'Leitrim'],
+  '15': ['15', 'Laois'], '42': ['42', 'Limerick'], '18': ['18', 'Longford'], '19': ['19', 'Louth'], '20': ['20', 'Mayo'], '21': ['21', 'Meath'],
+  '22': ['22', 'Monaghan'], '23': ['23', 'Offaly'], '24': ['24', 'Roscommon'], '25': ['25', 'Sligo'], '26': ['26', 'Tipperary'],
+  '44': ['44', 'Waterford'], '29': ['29', 'Westmeath'], '30': ['30', 'Wexford'], '31': ['31', 'Wicklow'],
+  '33': ['33', 'Dublin'], '34': ['33', 'Dublin'], '35': ['33', 'Dublin'], '39': ['33', 'Dublin'],
+}
 
 /** Les cantons luxembourgeois regroupés dans les trois districts d'avant 2015, à l'échelle des provinces belges */
 const DISTRICTS_LU: Record<string, [string, string]> = {
@@ -176,6 +204,11 @@ const DISTRICTS_LU: Record<string, [string, string]> = {
 /** « Province du Hainaut » → « Hainaut », avec le code de la région (voir Position.codeRegion) */
 function regionLocalite(idx: Index, l: Localite): { region?: string; codeRegion?: string } {
   if (idx.pays === 'monde') return {}
+  if (OUTRE_MER[idx.pays]) return { region: idx.rep.a[l[3]]?.[0], codeRegion: 'FR.' + OUTRE_MER[idx.pays] }
+  if (idx.pays === 'IE') {
+    const c = COMTES_IE[l[4]]
+    return c ? { region: c[1], codeRegion: 'IE.' + c[0] } : {}
+  }
   if (idx.pays === 'LU') {
     const d = DISTRICTS_LU[l[3]]
     return d ? { region: d[1], codeRegion: 'LU.' + d[0] } : {}
@@ -185,11 +218,11 @@ function regionLocalite(idx: Index, l: Localite): { region?: string; codeRegion?
   const codeRegion = idx.pays + '.' + (niveau1 ? l[3] : l[4])
   if (idx.pays === 'BE' && PROVINCES_BE[cle]) return { region: PROVINCES_BE[cle], codeRegion }
   const nom = idx.rep.a[cle]?.[0] ?? idx.rep.a[l[3]]?.[0]
-  return { region: nom?.replace(PREFIXE_REGION, '').trim() || undefined, codeRegion }
+  return { region: nom?.replace(PREFIXE_REGION, '').replace(SUFFIXE_REGION, '').trim() || undefined, codeRegion }
 }
 
 function paysLocalite(idx: Index, l: Localite): string {
-  return idx.pays === 'monde' ? l[3] : idx.pays
+  return idx.pays === 'monde' ? l[3] : OUTRE_MER[idx.pays] ? 'FR' : idx.pays
 }
 
 const RAPPROCHER = 0.6 // degrés : au-delà, deux homonymes sont vraiment deux endroits différents

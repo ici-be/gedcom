@@ -107,7 +107,9 @@ Preact + TypeScript + Vite. La lecture du fichier se fait dans un *worker* (`src
 - `src/lib/geo.ts` : reconnaissance des pays et des communes pour la carte
 - `scripts/geonames.py` : fabrique `public/geo/*.json` à partir des extraits
   [GeoNames](https://download.geonames.org/export/dump/) (CC BY 4.0) :
-  `python3 -I scripts/geonames.py <dossier des .zip> public/geo`
+  `python3 -I scripts/geonames.py <dossier des .zip> public/geo [codes des pays à refaire]`. Les
+  départements d'outre-mer (Guadeloupe, Martinique…) ont leur propre fichier et sont reconnus à leur nom ou
+  à leur code postal (« Saint-Claude, 97124, Guadeloupe, France »), même suivis de « France »
 - `scripts/contours.py` : fabrique `public/geo/contours.json` (contours simplifiés pour la carte de
   l'éventail) à partir des [Admin 1 de Natural Earth](https://github.com/nvkelso/natural-earth-vector/blob/master/geojson/ne_10m_admin_1_states_provinces.geojson)
   (domaine public) : `python3 -I scripts/contours.py <ne_10m_admin_1_states_provinces.geojson> public/geo/contours.json`

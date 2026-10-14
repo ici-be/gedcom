@@ -17,8 +17,10 @@ const FR: Repertoire = {
   a: { '11': ['Île-de-France', 'ile de france'], '11.75': ['Paris', 'paris'] },
   l: [['Paris', 48.853, 2.349, '11', '75', 2138551], ['Les Paris', 45.64, 5.737, '84', '73', 0, ['Paris']]],
 }
+const GP: Repertoire = { a: { GP: ['Guadeloupe', 'guadeloupe'], 'GP.971': ['Guadeloupe', 'guadeloupe'] }, l: [['Saint-Claude', 16.017, -61.683, 'GP', '971', 10289]] }
+FR.l.push(['Saint-Claude', 46.387, 5.864, '84', '39', 9733])
 const monde: Repertoire = { a: {}, l: [['Prague', 50.088, 14.421, 'CZ', '', 1165581, ['Praha']]] }
-const charger = async (f: string) => ({ BE, FR, monde } as Record<string, Repertoire>)[f] ?? Promise.reject(new Error(f))
+const charger = async (f: string) => ({ BE, FR, GP, monde } as Record<string, Repertoire>)[f] ?? Promise.reject(new Error(f))
 
 describe('pays', () => {
   test('noms en plusieurs langues, alias et fautes de frappe', () => {
@@ -34,6 +36,10 @@ describe('pays', () => {
     expect(decouper('Cuesmes, Hainaut, Belgique')).toEqual({ commune: 'Cuesmes', contexte: ['Hainaut'], pays: 'BE' })
     expect(decouper('Rue Blaes 247, Bruxelles, Belgique')).toEqual({ commune: 'Bruxelles', contexte: [], pays: 'BE' })
     expect(decouper('Belgique').commune).toBe('')
+    // l'outre-mer d'après son nom ou son code postal, même suivi de « France »
+    expect(decouper('Saint-Claude, 97124, Guadeloupe, France').pays).toBe('GP')
+    expect(decouper('Saint-Claude, 97124, France').pays).toBe('GP')
+    expect(decouper('Saint-Claude, Jura, France').pays).toBe('FR')
   })
 })
 
@@ -52,4 +58,10 @@ describe('situer', () => {
     expect(p.has('Atlantide, Belgique')).toBe(false)
     expect(p.has('Belgique')).toBe(false)
   })
+})
+
+test('outre-mer : en France, mais pas en métropole', async () => {
+  const p = await situer(['Saint-Claude, 97124, Guadeloupe, France', 'Saint-Claude, Jura, France'], charger)
+  expect(p.get('Saint-Claude, 97124, Guadeloupe, France')).toMatchObject({ lat: 16.017, pays: 'FR', region: 'Guadeloupe', codeRegion: 'FR.971' })
+  expect(p.get('Saint-Claude, Jura, France')).toMatchObject({ lat: 46.387, pays: 'FR' })
 })
