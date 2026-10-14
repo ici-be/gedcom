@@ -6,7 +6,7 @@ import type { Jour } from './gedcom/dates'
 import type { Donnees } from './donnees'
 import { decouperLieu, numeroSiecle } from './communes'
 import { anneeNaissanceEstimee } from './suivi'
-import { parents } from './parente'
+import { etatParents, parents } from './parente'
 import { decouperMetiers, sansAccents } from './metiers'
 import { codePays } from './geo'
 
@@ -235,8 +235,9 @@ export function generations(d: Donnees): Generation[] {
       if (!ind) continue
       const { pere, mere } = parents(d.arbre, ind)
       for (const p of [pere, mere]) if (p) suivante.set(p.id, (suivante.get(p.id) ?? 0) + c)
-      if (!pere && ind.filiation?.pere) closes += c
-      if (!mere && ind.filiation?.mere) closes += c
+      const etats = etatParents(d.arbre, ind)
+      if (etats.pere === 'inconnu' || etats.pere === 'introuvable') closes += c
+      if (etats.mere === 'inconnu' || etats.mere === 'introuvable') closes += c
     }
     courante = suivante
   }

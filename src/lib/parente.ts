@@ -24,11 +24,21 @@ export function parents(arbre: Arbre, ind: Individu): { pere?: Individu; mere?: 
   return {}
 }
 
-/** Chaque parent : présent dans l'arbre, inconnu ou introuvable (« Filiation: … » dans la note), sinon à chercher */
+const clePatronyme = (n: string) => n.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z]/g, '')
+
+/** Enfant naturel : sans père dans l'arbre, il porte le nom de sa mère (le père n'est pas à chercher) */
+export function enfantNaturel(ind: Individu, pere: Individu | undefined, mere: Individu | undefined): boolean {
+  return !pere && !!mere && !!clePatronyme(ind.nom) && clePatronyme(ind.nom) === clePatronyme(mere.nom)
+}
+
+/**
+ * Chaque parent : présent dans l'arbre, inconnu ou introuvable (« Filiation: … » dans la note, ou père
+ * d'un enfant qui porte le nom de sa mère), sinon à chercher
+ */
 export function etatParents(arbre: Arbre, ind: Individu): { pere: EtatParent; mere: EtatParent } {
   const { pere, mere } = parents(arbre, ind)
   return {
-    pere: pere ? 'connu' : ind.filiation?.pere ?? 'a-chercher',
+    pere: pere ? 'connu' : ind.filiation?.pere ?? (enfantNaturel(ind, pere, mere) ? 'inconnu' : 'a-chercher'),
     mere: mere ? 'connu' : ind.filiation?.mere ?? 'a-chercher',
   }
 }

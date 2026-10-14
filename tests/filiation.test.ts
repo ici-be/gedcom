@@ -4,6 +4,7 @@ import { lireFiliation } from '../src/lib/filiation'
 import { etatParents, filiationContredite } from '../src/lib/parente'
 import { calculer } from '../src/lib/donnees'
 import { generations } from '../src/lib/statistiques'
+import { GED as EXEMPLE } from './exemple'
 
 describe('mentions « Filiation: »', () => {
   test('les six cas', () => {
@@ -78,4 +79,12 @@ describe('filiation dans l’arbre', () => {
     const g = generations(calculer(a, '@I1@', ''))
     expect(g.map((x) => [x.generation, x.connus, x.closes])).toEqual([[1, 1, 0], [2, 1, 1]])
   })
+})
+
+test('enfant qui porte le nom de sa mère, sans père : père inconnu', () => {
+  // Luc, fils d'Anne : sans Pierre comme père, et Anne nommée Dupont comme lui
+  const sansPere = EXEMPLE.replace('1 HUSB @I4@\n1 WIFE @I5@', '1 WIFE @I5@')
+  const luc = (ged: string) => { const a = lireArbre(ged); return etatParents(a, a.individus.get('@I6@')!) }
+  expect(luc(sansPere).pere).toBe('a-chercher')
+  expect(luc(sansPere.replace('1 NAME Anne /?/', '1 NAME Anne /Dupont/'))).toEqual({ pere: 'inconnu', mere: 'connu' })
 })

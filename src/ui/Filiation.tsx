@@ -57,6 +57,9 @@ export function Filiation({ d }: { d: Donnees }) {
           (« Filiation: père inconnu, mère introuvable »). Accents, majuscules et accords sont libres :
           « filiation:pere inconnu » ou « Filiation : père et mère introuvables » (avec une espace avant les deux-points) sont reconnus aussi. Si le parent figure malgré tout dans l'arbre, c'est l'arbre qui l'emporte.
         </p>
+        <p class="aide">
+          Sans mention, un enfant sans père dans l'arbre qui porte le nom de sa mère est tenu pour un enfant naturel : son père compte comme inconnu, pas à chercher.
+        </p>
         <div class="tableau-conteneur">
           <table class="tableau mots-cles">
             <thead><tr><th>Mention</th><th>Quand l'utiliser</th><th /></tr></thead>
