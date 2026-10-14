@@ -12,6 +12,8 @@ export interface OptionsFeuille {
   qr: boolean
   /** Bas de la feuille : carte des lieux de naissance plutôt que barres par génération */
   carte?: boolean
+  /** Centre de l'éventail : la personne de départ avec ses frères et sœurs (mêmes père et mère) */
+  fratrie?: boolean
 }
 
 export type Format = 'A4' | 'A3' | 'A2'

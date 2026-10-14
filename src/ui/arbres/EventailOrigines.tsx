@@ -8,11 +8,12 @@ import type { Donnees } from '../../lib/donnees'
 import { situerArbre, type Position } from '../../lib/geo'
 import { romain } from '../../lib/communes'
 import {
-  abregerCommune, angles, arc, LIEU_INCONNU, LIEU_NON_SITUE, nomPays, places, point, prenoms, regionDuLieu, resumer, secteur, situerRegion,
-  type Centre, type Place, type Resume,
+  abregerCommune, angles, arc, couperLignes, fratrie, LIEU_INCONNU, LIEU_NON_SITUE, morceauxTitre, nomPays, parNom, places, point, prenoms,
+  regionDuLieu, resumer, secteur, situerRegion, type Centre, type Place, type Resume,
 } from '../../lib/eventail'
 import { cadrer, chargerContours, colonnes, grouper, projeter, proportions, type Contours, type Entree, type Groupe } from '../../lib/carte-origines'
 import type { OptionsFeuille } from './modeles'
+import { chargerPolices, largeur, type Police } from './mesure'
 
 const GENERATIONS = 8
 const OUVERTURE = 220
@@ -94,7 +95,7 @@ function TexteRayon({ r1, r2, a1, a2, lignes }: { r1: number; r2: number; a1: nu
 function annees(r: Resume): Morceau[] {
   const n = r.naissance ?? '?'
   const cn = r.naissanceSourcee ? undefined : 'ns'
-  if (r.vivant) return [['° ' + n, cn]]
+  if (r.vivant) return [[n, cn]]
   return [[n, cn], [' – '], [r.deces ?? '?', r.decesSourcee ? undefined : 'ns']]
 }
 
@@ -176,6 +177,86 @@ function ajuster(svg: SVGSVGElement) {
   }
 }
 
+interface Bout { t: string; cls?: string; police: Police; k?: number; dx?: number }
+interface LigneCentre { fs: number; bouts: Bout[]; avant?: number }
+
+const longueur = (l: LigneCentre, fs = l.fs) =>
+  l.bouts.reduce((s, b) => s + largeur(b.t, fs * (b.k ?? 1), b.police) + (b.dx ?? 0) * fs * (b.k ?? 1), 0)
+
+/**
+ * Le cercle central avec toute la fratrie : un prénom par ligne suivi de l'année de naissance,
+ * le nom de famille dessous (une fois par nom), chaque ligne réduite à la corde du cercle à sa hauteur.
+ */
+function CentreFratrie({ enfants }: { enfants: Resume[] }) {
+  const R = RAYONS[1] - 6
+  const n = enfants.length
+  const fs = n <= 3 ? 19 : n <= 5 ? 15 : 13
+  const lignes: LigneCentre[] = []
+  parNom(enfants).forEach((g, i, gs) => {
+    for (const e of g.enfants) {
+      lignes.push({ fs, bouts: [
+        { t: prenoms(e.prenom, 1) || '?', cls: 'pn', police: 'prenom' },
+        ...(e.naissance ? [{ t: e.naissance, cls: e.naissanceSourcee ? 'mut' : 'ns', police: 'texte', k: fs < 15 ? 0.72 : 0.6, dx: 0.4 } as Bout] : []),
+      ] })
+    }
+    lignes.push({ fs: Math.max(11, fs * 0.62), bouts: [{ t: maj(g.nom || '?'), cls: 'nm', police: 'nom' }], avant: 2 })
+    if (i < gs.length - 1) lignes.push({ fs: fs * 0.4, bouts: [] })
+  })
+  const IL = 1.18
+  let H = lignes.reduce((s, l) => s + l.fs * IL + (l.avant ?? 0), 0)
+  const k = Math.min(1, (2 * R * 0.86) / H)
+  H *= k
+  let y = O.cy - H / 2
+  return (
+    <g text-anchor="middle">
+      {lignes.map((l, j) => {
+        y += (l.avant ?? 0) * k
+        const h = l.fs * k * IL
+        const base = y + h * 0.78
+        y += h
+        if (!l.bouts.length) return null
+        // largeur du cercle entre le haut et le bas de la ligne
+        const d = Math.max(Math.abs(base - l.fs * k * 0.72 - O.cy), Math.abs(base + l.fs * k * 0.22 - O.cy))
+        const corde = 2 * Math.sqrt(Math.max(0, R * R - d * d))
+        const w = longueur(l, l.fs * k)
+        const taille = w > corde ? (l.fs * k * corde) / w : l.fs * k
+        return (
+          <text key={j} x={O.cx} y={base.toFixed(1)} font-size={taille.toFixed(2)} data-max={Math.round(corde)}>
+            {l.bouts.map((b, i) => <tspan key={i} class={b.cls} font-size={b.k ? b.k + 'em' : undefined} dx={b.dx ? b.dx + 'em' : undefined}>{b.t}</tspan>)}
+          </text>
+        )
+      })}
+    </g>
+  )
+}
+
+/** L'éventail (bandeau des quartiers compris) s'arrête à ce rayon ; le titre s'en tient éloigné d'ECART */
+const BORD = 670
+const ECART = 40
+const MARGE_GAUCHE = 40
+
+/**
+ * Largeur permise à une ligne posée à gauche : son coin bas droit (le plus proche de l'éventail)
+ * reste à ECART du bord, mesuré vers le centre de l'éventail
+ */
+function placeAGauche(bas: number): number {
+  const dy = O.cy - bas
+  return O.cx - Math.sqrt(Math.max(0, (BORD + ECART) ** 2 - dy * dy)) - MARGE_GAUCHE
+}
+
+interface Bloc { lignes: { t: string; y: number; max: number }[]; fs: number; bas: number }
+
+/** Un texte coupé en lignes à gauche de l'éventail, à partir de la hauteur `haut` (haut des lettres) */
+function blocAGauche(morceaux: string[], haut: number, tailles: number[], maxLignes: number, interligne: number, police: Police): Bloc {
+  const base = (i: number, fs: number) => haut + fs * 0.8 + i * fs * interligne
+  const place = (i: number, fs: number) => placeAGauche(base(i, fs) + fs * 0.25)
+  // le moins de lignes possible : trois au plus si ça tient, sinon jusqu'à maxLignes
+  const couper = (n: number) => couperLignes(morceaux, tailles, n, (t, f) => largeur(t, f, police), place)
+  const c = couper(Math.min(3, maxLignes))
+  const { lignes, fs } = c.tient || maxLignes <= 3 ? c : couper(maxLignes)
+  return { lignes: lignes.map((t, i) => ({ t, y: base(i, fs), max: Math.round(place(i, fs)) })), fs, bas: base(lignes.length - 1, fs) }
+}
+
 function CodeQR({ url, x, y, taille }: { url: string; x: number; y: number; taille: number }) {
   const d = useMemo(() => {
     const qr = qrcode(0, 'M')
@@ -252,6 +333,9 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
   const svg = useRef<SVGSVGElement>(null)
   const [positions, setPositions] = useState<Map<string, Position>>()
   const [contours, setContours] = useState<Contours>()
+  // Les lignes du titre et du centre se coupent d'après les polices de la feuille : on les attend
+  const [polices, setPolices] = useState(false)
+  useEffect(() => { chargerPolices().then(() => setPolices(true)) }, [])
   useEffect(() => {
     let vivant = true
     situerArbre(d.arbre).then((p) => vivant && setPositions(p)).catch(() => {})
@@ -329,6 +413,9 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
   })
 
   const { pl, resumes, regions, couleur } = donnees
+  const enfants = useMemo(() => !options.fratrie ? [] : fratrie(d.arbre, d.racine, (ind) => d.suivis.get(ind.id)?.naissance.evenement)
+    .map((ind) => resumer(ind, d.suivis.get(ind.id)!)), [d, options.fratrie])
+  const avecFratrie = enfants.length > 1
   const cases: JSX.Element[] = []
   const textes: JSX.Element[] = []
   for (let s = 2; s < 2 ** GENERATIONS; s++) {
@@ -355,7 +442,16 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
 
   const R = RAYONS[GENERATIONS]
   const p1 = resumes.get(1)
-  const titre = p1 ? [p1.prenom, p1.nom].filter(Boolean).join(' ') : 'Ascendance'
+  const parents = [2, 3].map((s) => resumes.get(s)).filter((r): r is Resume => !!r).map((r) => [prenoms(r.prenom, 1), r.nom].filter(Boolean).join(' '))
+  const morceaux = avecFratrie ? morceauxTitre(enfants.map((e) => ({ prenom: prenoms(e.prenom, 1), nom: e.nom })), parents)
+    : p1 ? morceauxTitre([p1], []) : ['Ascendance']
+  const titre = morceaux.join(' ')
+  // Le titre et le sous-titre sur autant de lignes qu'il faut pour rester à distance de l'éventail
+  const [blocTitre, blocSous] = useMemo(() => {
+    const t = blocAGauche(morceaux, 72, [32, 30, 28, 26, 24, 22], 4, 1.12, 'titre')
+    const st = blocAGauche([`et ${avecFratrie ? 'leurs' : 'ses'} ancêtres,`, 'selon leur lieu de naissance'], t.bas + 12, [12, 11], 2, 1.3, 'texte')
+    return [t, st]
+  }, [titre, avecFratrie, polices])
   const quartiers = [4, 5, 6, 7].map((s, i) => {
     const a1 = -OUVERTURE / 2 + (i * OUVERTURE) / 4
     const a2 = a1 + OUVERTURE / 4
@@ -397,7 +493,7 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
 
       {/* Centre : la personne de départ */}
       <circle cx={O.cx} cy={O.cy} r={RAYONS[1]} fill="#fff" stroke={GRIS} stroke-width="1" />
-      {p1 && (
+      {avecFratrie ? <CentreFratrie enfants={enfants} /> : p1 && (
         <g text-anchor="middle">
           <text x={O.cx} y={O.cy - 22} font-size="26" class="pn" data-max="170">{p1.prenom}</text>
           <text x={O.cx} y={O.cy - 2} font-size="13" class="nm" data-max="170">{maj(p1.nom)}</text>
@@ -411,9 +507,9 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
       <text font-size="11" class="cap mut" text-anchor="middle" transform={`translate(${mx},${my}) rotate(20) translate(0,22)`}>CÔTÉ MATERNEL</text>
 
       {/* Titre et chiffres */}
-      <text x="40" y="64" font-size="11" class="cap mut">ASCENDANCE</text>
-      <text x="40" y="98" font-size="32" class="disp" data-max="420">{titre}</text>
-      <text x="40" y="120" font-size="12" class="mut">et ses ancêtres, selon leur lieu de naissance</text>
+      <text x={MARGE_GAUCHE} y="64" font-size="11" class="cap mut">ASCENDANCE</text>
+      {blocTitre.lignes.map((l) => <text key={'t' + l.y} x={MARGE_GAUCHE} y={l.y.toFixed(1)} font-size={blocTitre.fs} class="disp" data-max={l.max}>{l.t}</text>)}
+      {blocSous.lignes.map((l) => <text key={'s' + l.y} x={MARGE_GAUCHE} y={l.y.toFixed(1)} font-size={blocSous.fs} class="mut" data-max={l.max}>{l.t}</text>)}
       <g text-anchor="end">
         {([[donnees.ancetres, 'ancêtres identifiés'], [donnees.communes, 'communes de naissance'], [donnees.nbRegions, 'provinces et régions']] as const).map(([v, l], i) => (
           <g key={l}>

@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
 import { lireArbre } from '../src/lib/gedcom/arbre'
 import { suivi } from '../src/lib/suivi'
-import { abregerCommune, angles, LIEU_INCONNU, places, prenoms, regionDuLieu, resumer } from '../src/lib/eventail'
+import { abregerCommune, angles, couperLignes, enumerer, fratrie, LIEU_INCONNU, morceauxTitre, places, prenoms, regionDuLieu, resumer } from '../src/lib/eventail'
 import { GED } from './exemple'
 
 test('places Sosa : personnes, parents à chercher, cases vides au-dessus', () => {
@@ -64,4 +64,35 @@ test('prénoms limités et communes abrégées', () => {
   expect(abregerCommune('Sainte-Ode')).toBe('Ste-Ode')
   expect(abregerCommune('Braine-Saint-Pierre')).toBe('Braine-St-Pierre')
   expect(abregerCommune('Saintes')).toBe('Saintes')
+})
+
+test('fratrie : mêmes père et mère, dans l’ordre des naissances, sans les demi-frères', () => {
+  // Luc avant Jean dans la famille, et un demi-frère de Jean par son père
+  const ged = GED.replace('1 CHIL @I2@\n1 CHIL @I6@\n', '1 CHIL @I6@\n1 CHIL @I2@\n')
+    .replace('0 TRLR', '0 @I7@ INDI\n1 NAME Marc /Dupont/\n1 FAMC @F3@\n0 @F3@ FAM\n1 HUSB @I4@\n1 CHIL @I7@\n0 TRLR')
+  const arbre = lireArbre(ged)
+  const naissance = (ind: { id: string }) => suivi(arbre, arbre.individus.get(ind.id)!).naissance.evenement
+  expect(fratrie(arbre, '@I2@', naissance).map((i) => i.prenom)).toEqual(['Jean', 'Luc'])
+  expect(fratrie(arbre, '@I1@', naissance).map((i) => i.prenom)).toEqual(['Paul'])
+})
+
+test('titre : prénoms puis nom, fratrie, grande fratrie', () => {
+  expect(enumerer(['Pierre', 'Paul', 'Jacques'])).toBe('Pierre, Paul et Jacques')
+  const e = (prenom: string, nom = 'Dupont') => ({ prenom, nom })
+  expect(morceauxTitre([e('Bruno Marie')], [])).toEqual(['Bruno Marie', 'Dupont'])
+  expect(morceauxTitre([e('Pierre'), e('Paul'), e('Jacques')], [])).toEqual(['Pierre, Paul et Jacques', 'Dupont'])
+  expect(morceauxTitre([e('Jacques', 'Lambert'), e('Pierre'), e('Paul')], [])).toEqual(['Jacques Lambert,', 'Pierre et Paul Dupont'])
+  expect(morceauxTitre(['A', 'B', 'C', 'D'].map((p) => e(p)), ['Jean Dupont', 'Marie Lambert']))
+    .toEqual(['Les quatre enfants de', 'Jean Dupont', 'et Marie Lambert'])
+})
+
+test('lignes : sur une ligne si possible, puis entre les morceaux, puis entre les mots', () => {
+  const mesurer = (t: string, fs: number) => t.length * fs
+  const place = (largeur: number) => () => largeur
+  expect(couperLignes(['Bruno', 'Dupont'], [1], 3, mesurer, place(20)).lignes).toEqual(['Bruno Dupont'])
+  expect(couperLignes(['Pierre et Paul', 'Dupont'], [1], 3, mesurer, place(14)).lignes).toEqual(['Pierre et Paul', 'Dupont'])
+  // le premier morceau ne tient qu'en le coupant ; le nom reste à part
+  expect(couperLignes(['Pierre et Paul', 'Dupont'], [1], 3, mesurer, place(10)).lignes).toEqual(['Pierre et', 'Paul', 'Dupont'])
+  const c = couperLignes(['Anticonstitutionnellement'], [2, 1], 3, mesurer, place(10))
+  expect(c).toMatchObject({ fs: 1, tient: false })
 })
