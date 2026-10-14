@@ -26,9 +26,15 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   les variantes d'écriture (« ménagère » et « menagere »).
 - **Statistiques** : durée de vie, âge au premier mariage, écart d'âge entre époux, enfants par couple,
   âge des parents, mois des naissances, mariages et décès, prénoms (variantes latines, flamandes… regroupées : Joannes, Jan → Jean) et patronymes les plus portés,
-  métiers par sexe, lieux et pays de naissance, sédentarité, part sourcée et complétude de
-  l'ascendance par génération (implexe). Moyenne ou médiane, par sexe et par siècle de naissance, pour
-  les ancêtres seuls ou tout l'arbre, et filtrables sur un siècle.
+  métiers par sexe, lieux et pays de naissance, sédentarité, part sourcée. Moyenne ou médiane, par sexe
+  et par siècle de naissance, pour les ancêtres seuls ou tout l'arbre, et filtrables sur un siècle.
+- **Ascendance** (`#/ascendance`) : un éventail de complétude sur dix générations et les quatre
+  quartiers (avec les huit arrière-grands-parents) ; la frise des générations, une case par place
+  jusqu'à la 8e puis côté paternel face au côté maternel, avec ce qu'on rencontre en chemin (premier
+  mur, places sans issue, premier implexe…) et des liens vers les personnes à compléter ; les lignées
+  de père en père, de mère en mère et la plus longue ; les pistes les plus proches ; l'implexe ; les
+  noms les plus présents, les siècles de naissance et la durée d'une génération. Un enfant sans père
+  dans l'arbre qui porte le nom de sa mère compte comme enfant naturel (père inconnu, pas à chercher).
 - **Carte** : un cercle par lieu, d'autant plus grand qu'il y a de faits, du rouge (rien de sourcé)
   au vert (tout est sourcé). Filtres par personnes, type de fait et siècle, ou seulement les lieux qui
   ont des faits sans source. Un clic mène aux actes du lieu. Les lieux sont reconnus dans des listes de
@@ -104,6 +110,7 @@ Preact + TypeScript + Vite. La lecture du fichier se fait dans un *worker* (`src
 - `src/lib/communes.ts` : faits regroupés par lieu
 - `src/lib/metiers.ts` : métiers, variantes et féminins
 - `src/lib/statistiques.ts` : relevés pour les statistiques (âges, couples, calendrier, générations)
+- `src/lib/ascendance.ts` : la page Ascendance (places Sosa, branches, lignées, pistes, implexe, étapes)
 - `src/lib/prenoms.ts` : table des variantes de prénoms et leur forme usuelle
 - `src/lib/geo.ts` : reconnaissance des pays et des communes pour la carte
 - `scripts/geonames.py` : fabrique `public/geo/*.json` à partir des extraits

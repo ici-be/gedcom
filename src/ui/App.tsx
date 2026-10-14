@@ -11,6 +11,7 @@ import { Metiers, PageMetier } from './Metiers'
 import type { Carte as TypeCarte } from './Carte'
 import type { Impression as TypeImpression } from './Impression'
 import { Statistiques } from './Statistiques'
+import { Ascendance } from './Ascendance'
 import { Filiation } from './Filiation'
 import { ProposerInstallation } from './Installer'
 
@@ -136,6 +137,7 @@ export function App() {
   else if (page === 'carte') contenu = Carte
     ? <Carte key={route[1] ?? ''} d={donnees} perimetre={perimetre} setPerimetre={setPerimetre} focus={route[1]} />
     : <div class="attente" role="status"><span class="rouet" />Chargement de la carte…</div>
+  else if (page === 'ascendance') contenu = <Ascendance d={donnees} setPerimetre={setPerimetre} />
   else if (page === 'statistiques') contenu = <Statistiques d={donnees} perimetre={perimetre} setPerimetre={setPerimetre} />
   else if (page === 'imprimer') contenu = Impression
     ? <Impression d={donnees} id={route[1]} />
@@ -161,6 +163,7 @@ export function App() {
               <a href="#/lieux" class={page === 'lieux' ? 'actif' : ''}>Lieux</a>
               <a href="#/metiers" class={page === 'metiers' ? 'actif' : ''}>Métiers</a>
               <a href="#/carte" class={page === 'carte' ? 'actif' : ''}>Carte</a>
+              <a href="#/ascendance" class={page === 'ascendance' ? 'actif' : ''}>Ascendance</a>
               <a href="#/statistiques" class={page === 'statistiques' ? 'actif' : ''}>Statistiques</a>
               <a href="#/imprimer" class={page === 'imprimer' ? 'actif' : ''}>Imprimer</a>
             </nav>

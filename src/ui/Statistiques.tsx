@@ -6,7 +6,6 @@ import { compter, generations, resumer, statistiques, type Age, type Resume, typ
 import { nomSiecle } from '../lib/communes'
 import { nombre, pourcent } from '../lib/format'
 import { ChoixPerimetre, Personne } from './commun'
-import { preparerPersonnes, type QuelsParents } from './Individus'
 import { lienMetier } from './Metiers'
 import { clePrenom, formeUsuelle } from '../lib/prenoms'
 import { sansAccents } from '../lib/metiers'
@@ -207,21 +206,10 @@ export function Statistiques({ d, perimetre, setPerimetre }: Props) {
     n: siecles.map((x) => brut.sources.filter((v) => v.type === type && v.siecle === x).length),
   }))
 
-  // ——— Ascendance ———
-  const gensUtiles = gens.filter((g) => g.connus > 0).slice(0, 30)
-  const totalConnus = gens.reduce((a, g) => a + g.connus, 0)
-  const totalDistincts = d.ancetres.size
+  // ——— Ascendance (le détail est sur sa propre page) ———
   // Une génération est complète quand toutes les places qui peuvent l'être sont occupées
   const derniereComplete = gens.filter((g) => g.connus === g.theoriques - g.closes).length
-  const avecCloses = gensUtiles.some((g) => g.closes > 0)
 
-  // Les places vides d'une génération remontent aux ancêtres des générations précédentes dont un parent manque
-  const versPersonnes = (n: number, g: number, parents: QuelsParents, quoi: string) => (
-    n > 0
-      ? <a href="#/personnes" title={`Les ancêtres des générations 1 à ${g - 1} dont un parent est ${quoi}`}
-        onClick={() => { preparerPersonnes({ genMax: g - 1, parents }); setPerimetre('ancetres') }}>{nombre(n)}</a>
-      : nombre(n)
-  )
   const libelleSexe = (x: Sexe | 'tous') => (x === 'M' ? 'les hommes' : x === 'F' ? 'les femmes' : 'personne')
   const outilMesure = <Choix label="Mesure" options={[['moyenne', 'Moyenne'], ['mediane', 'Médiane']]} valeur={mesure} changer={setMesure} />
 
@@ -386,33 +374,12 @@ export function Statistiques({ d, perimetre, setPerimetre }: Props) {
           <Legende series={TYPES} />
         </Section>
 
-        <Section titre="Ascendance" sous={<>Ancêtres retrouvés à chaque génération, sur les 2ⁿ⁻¹ possibles (quel que soit le choix de personnes ci-dessus). Les places au-dessus d'un parent <a href="#/filiation">inconnu ou introuvable</a> sont sans issue.</>} large>
+        <Section titre="Ascendance" sous="Ancêtres retrouvés génération par génération, branches, lignées, pistes et implexe : tout est sur la page Ascendance." large>
           <div class="chiffres">
-            <Chiffre valeur={nombre(totalDistincts)} legende="ancêtres différents" detail={`${nombre(gens.length)} générations`} />
-            <Chiffre valeur={String(derniereComplete)} legende="générations complètes"
-              detail={avecCloses ? 'sans compter les places sans issue' : undefined} />
-            <Chiffre valeur={pourcent(totalConnus - totalDistincts, totalConnus)} legende="d'implexe" detail="places occupées par un ancêtre déjà rencontré" />
+            <Chiffre valeur={nombre(d.ancetres.size)} legende="ancêtres différents" detail={`${nombre(gens.length)} générations`} />
+            <Chiffre valeur={String(derniereComplete)} legende="générations complètes" />
           </div>
-          <Colonnes ariaLabel="Complétude de l'ascendance par génération" categories={gensUtiles.map((g) => String(g.generation))}
-            series={[{ nom: 'Complétude', couleur: 'var(--accent)', valeurs: gensUtiles.map((g) => (g.connus / g.theoriques) * 100), n: gensUtiles.map((g) => g.connus) }]}
-            format={(v) => (v >= 1 || v === 0 ? pc(v) : v.toLocaleString('fr-BE', { maximumSignificantDigits: 1 }) + ' %')} max={100} seuil={0} etiquetteMin={1} />
-          <div class="tableau-defilant">
-            <table class="tableau generations">
-              <thead><tr><th>Génération</th><th>Possibles</th><th>Retrouvés</th><th>Complétude</th>{avecCloses && <><th>Sans issue</th><th>Reste à trouver</th></>}<th>Personnes différentes</th></tr></thead>
-              <tbody>
-                {gensUtiles.map((g) => (
-                  <tr key={g.generation}>
-                    <td>{g.generation}</td>
-                    <td>{g.theoriques.toLocaleString('fr-BE')}</td>
-                    <td>{nombre(g.connus)}</td>
-                    <td>{g.connus / g.theoriques >= 0.001 ? pourcent(g.connus, g.theoriques) : '< 0,1 %'}</td>
-                    {avecCloses && <><td>{g.closes ? versPersonnes(g.closes, g.generation, 'clos', 'inconnu ou introuvable') : '—'}</td><td>{versPersonnes(g.theoriques - g.closes - g.connus, g.generation, 'a-chercher', 'à chercher')}</td></>}
-                    <td>{nombre(g.distincts)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <p><a class="bouton" href="#/ascendance">Voir la page Ascendance</a></p>
         </Section>
       </div>
     </section>
