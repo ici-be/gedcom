@@ -94,9 +94,10 @@ function TexteRayon({ r1, r2, a1, a2, lignes }: { r1: number; r2: number; a1: nu
 
 function annees(r: Resume): Morceau[] {
   const n = r.naissance ?? '?'
-  const cn = r.naissanceSourcee ? undefined : 'ns'
+  // nd : date sans source, en italique si l'option est cochée (classe « italiques » de la feuille)
+  const cn = r.naissanceSourcee ? undefined : 'nd'
   if (r.vivant) return [[n, cn]]
-  return [[n, cn], [' – '], [r.deces ?? '?', r.decesSourcee ? undefined : 'ns']]
+  return [[n, cn], [' – '], [r.deces ?? '?', r.decesSourcee ? undefined : 'nd']]
 }
 
 /** Prénoms (deux au plus) puis nom sur une seconde ligne, ou « Prénom NOM » sur une seule */
@@ -196,7 +197,7 @@ function CentreFratrie({ enfants }: { enfants: Resume[] }) {
     for (const e of g.enfants) {
       lignes.push({ fs, bouts: [
         { t: prenoms(e.prenom, 1) || '?', cls: 'pn', police: 'prenom' },
-        ...(e.naissance ? [{ t: e.naissance, cls: e.naissanceSourcee ? 'mut' : 'ns', police: 'texte', k: fs < 15 ? 0.72 : 0.6, dx: 0.4 } as Bout] : []),
+        ...(e.naissance ? [{ t: e.naissance, cls: e.naissanceSourcee ? 'mut' : 'mut nd', police: 'texte', k: fs < 15 ? 0.72 : 0.6, dx: 0.4 } as Bout] : []),
       ] })
     }
     lignes.push({ fs: Math.max(11, fs * 0.62), bouts: [{ t: maj(g.nom || '?'), cls: 'nm', police: 'nom' }], avant: 2 })
@@ -455,6 +456,8 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
   })
 
   const { pl, resumes, regions, couleur } = donnees
+  // Une même personne à deux places de l'éventail
+  const implexes = pl.some((p) => p?.dejaVu)
   const enfants = useMemo(() => !options.fratrie ? [] : fratrie(d.arbre, d.racine, (ind) => d.suivis.get(ind.id)?.naissance.evenement)
     .map((ind) => resumer(ind, d.suivis.get(ind.id)!)), [d, options.fratrie])
   const avecFratrie = enfants.length > 1
@@ -521,7 +524,7 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
   const carte = options.carte && contours && cadrer(contours, donnees.couleursCarte.keys())
 
   return (
-    <svg ref={svg} class="feuille" viewBox="0 0 1400 990" role="img" aria-label={`Éventail des origines de ${titre}`}>
+    <svg ref={svg} class={'feuille' + (options.italiques ? ' italiques' : '')} viewBox="0 0 1400 990" role="img" aria-label={`Éventail des origines de ${titre}`}>
       <defs>
         <pattern id="hachures" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
           <rect width="6" height="6" fill="#fff" />
@@ -594,9 +597,13 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
       </>}
 
       {/* Pied de page */}
-      <text x="40" y={options.date ? 950 : 966} font-size="8.5" class="mut">
-        <tspan class="ns">italique</tspan> : date sans source · ◆ implexe
-      </text>
+      {(options.italiques || implexes) && (
+        <text x="40" y={options.date ? 950 : 966} font-size="8.5" class="mut">
+          {options.italiques && <><tspan class="ns">italique</tspan> : date sans source</>}
+          {options.italiques && implexes && ' · '}
+          {implexes && '◆ implexe'}
+        </text>
+      )}
       {options.date && <text x="40" y="966" font-size="8.5" class="mut">Établi le {options.date}</text>}
       {adresse && (
         <g>

@@ -14,6 +14,8 @@ export interface OptionsFeuille {
   carte?: boolean
   /** Centre de l'éventail : la personne de départ avec ses frères et sœurs (mêmes père et mère) */
   fratrie?: boolean
+  /** Dates sans source en italique (avec la mention en pied de page) */
+  italiques?: boolean
 }
 
 export type Format = 'A4' | 'A3' | 'A2'

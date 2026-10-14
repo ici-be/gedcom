@@ -404,7 +404,7 @@ th:not([aria-sort]) .tri .fleche { opacity: 0.35; }
 .feuille text { font-family: "Fira Sans Condensed", "Arial Narrow", sans-serif; fill: #1f2523; }
 .feuille .pn, .feuille .disp { font-family: "Fraunces", Georgia, serif; font-weight: 500; }
 .feuille .nm { font-weight: 600; letter-spacing: 0.04em; }
-.feuille .ns, .feuille .mt { fill: #646b67; font-style: italic; }
+.feuille .ns, .feuille .mt, .feuille.italiques .nd { fill: #646b67; font-style: italic; }
 .feuille .so { fill: #a07424; font-weight: 600; font-size: 0.8em; }
 .feuille .lieu { letter-spacing: 0.07em; font-weight: 500; }
 .feuille .cap { letter-spacing: 0.16em; font-weight: 500; }
