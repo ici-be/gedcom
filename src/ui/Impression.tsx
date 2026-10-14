@@ -11,7 +11,7 @@ import type { Donnees } from '../lib/donnees'
 import { ecrire, lire } from '../lib/stockage'
 import { MODELES, type Format } from './arbres/modeles'
 
-interface Reglages { date: boolean; jour?: string; qr: boolean; papier?: Format }
+interface Reglages { date: boolean; jour?: string; qr: boolean; papier?: Format; barres?: boolean }
 
 const PAPIERS: Record<Format, [number, number]> = { A4: [210, 297], A3: [297, 420], A2: [420, 594] }
 
@@ -96,6 +96,13 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
               </label>
             )}
             <label class="case">
+              Bas de la feuille
+              <select id="impression-bas" value={reglages.barres ? 'barres' : 'carte'} onChange={(e) => setReglages({ barres: e.currentTarget.value === 'barres' })}>
+                <option value="carte">Carte des lieux de naissance</option>
+                <option value="barres">Origine par génération (barres)</option>
+              </select>
+            </label>
+            <label class="case">
               <input type="checkbox" id="impression-date" checked={reglages.date} onChange={(e) => setReglages({ date: e.currentTarget.checked })} />
               Date en pied de page
             </label>
@@ -122,7 +129,7 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
 
       <div ref={apercu} class={'apercu' + (zoom ? ' zoom' : '')}
         onPointerDown={saisir} onPointerMove={tirer} onPointerUp={lacher} onPointerCancel={lacher}>
-        <modele.Feuille d={d} options={{ date: reglages.date ? dateLongue(jour) : undefined, qr: reglages.qr && !!d.adresse }} />
+        <modele.Feuille d={d} options={{ date: reglages.date ? dateLongue(jour) : undefined, qr: reglages.qr && !!d.adresse, carte: !reglages.barres }} />
       </div>
     </section>
   )

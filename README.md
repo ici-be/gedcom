@@ -39,9 +39,11 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
 
 - **Imprimer** : des arbres prêts pour l'imprimeur ou pour un PDF. Premier modèle, l'**éventail des
   origines** (A3 paysage) : huit générations sur 220°, chaque ancêtre teinté selon sa province ou sa région
-  de naissance (reconnue grâce aux listes de localités de la carte), avec les quatre quartiers et l'origine
-  des ancêtres par génération. Les dates sans source sont en italique. En option : la date en pied de page
-  et un petit code QR vers l'arbre en ligne. D'autres modèles s'ajoutent dans `src/ui/arbres/modeles.ts`.
+  de naissance (reconnue grâce aux listes de localités de la carte), avec les quatre quartiers. En bas de la
+  feuille, au choix : la carte des provinces et départements de naissance (Belgique, France, Pays-Bas,
+  Luxembourg, Allemagne), cadrée sur ceux des ancêtres, ou l'origine des ancêtres par génération. Les dates
+  sans source sont en italique. En option : le papier (A3, ou A4 réduit), la date en pied de page et un petit
+  code QR vers l'arbre en ligne. D'autres modèles s'ajoutent dans `src/ui/arbres/modeles.ts`.
 - **Parents inconnus ou introuvables** (`#/filiation`) : le GEDCOM n'a aucun champ pour dire qu'un
   parent n'est pas à chercher. On l'écrit dans la **note de la personne** (sur Geneanet : rubrique
   « Notes » de l'enfant), qui revient dans chaque export, par une ligne « Filiation: … » (pas de `#` : la
@@ -106,6 +108,9 @@ Preact + TypeScript + Vite. La lecture du fichier se fait dans un *worker* (`src
 - `scripts/geonames.py` : fabrique `public/geo/*.json` à partir des extraits
   [GeoNames](https://download.geonames.org/export/dump/) (CC BY 4.0) :
   `python3 -I scripts/geonames.py <dossier des .zip> public/geo`
+- `scripts/contours.py` : fabrique `public/geo/contours.json` (contours simplifiés pour la carte de
+  l'éventail) à partir des [Admin 1 de Natural Earth](https://github.com/nvkelso/natural-earth-vector/blob/master/geojson/ne_10m_admin_1_states_provinces.geojson)
+  (domaine public) : `python3 -I scripts/contours.py <ne_10m_admin_1_states_provinces.geojson> public/geo/contours.json`
 - `src/ui/` : les écrans
 
 ## Publier

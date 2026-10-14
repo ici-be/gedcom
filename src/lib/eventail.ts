@@ -161,15 +161,19 @@ export function nomPays(code?: string): string | undefined {
 export const LIEU_INCONNU = 'Lieu inconnu'
 export const LIEU_NON_SITUE = 'Lieu non situé'
 
+/** Région (sans le pays) et pays d'un lieu : ceux de la localité reconnue, sinon ceux que mentionne le lieu */
+export function situerRegion(lieu: string, position: { region?: string; pays?: string } | undefined): { region?: string; pays?: string } {
+  const d = decouper(lieu)
+  return { region: position?.region ?? d.contexte.find((c) => !/\d/.test(c)), pays: position?.pays ?? d.pays }
+}
+
 /**
  * Province ou région d'un lieu : celle de la localité reconnue, sinon la mention du lieu (« Hainaut »),
  * sinon le pays. Hors du pays principal de l'arbre, le pays suit entre parenthèses.
  */
 export function regionDuLieu(lieu: string | undefined, position: { region?: string; pays?: string } | undefined, paysPrincipal?: string): string {
   if (!lieu) return LIEU_INCONNU
-  const d = decouper(lieu)
-  const pays = position?.pays ?? d.pays
-  const region = position?.region ?? d.contexte.find((c) => !/\d/.test(c))
+  const { region, pays } = situerRegion(lieu, position)
   if (!region) return nomPays(pays) ?? LIEU_NON_SITUE
   return pays && paysPrincipal && pays !== paysPrincipal ? `${region} (${nomPays(pays)})` : region
 }

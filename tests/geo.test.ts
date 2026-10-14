@@ -43,11 +43,11 @@ describe('situer', () => {
       'Cuesmes, Hainaut, Belgique', 'Malines, Anvers, Belgique', 'Saint Germain - Mons, Hainaut, Belgique',
       'Borgerhout, Anvers, Belgique', 'Paris 10e, Paris, France', 'Prague, République tchèque', 'Atlantide, Belgique', 'Belgique',
     ], charger)
-    expect(p.get('Cuesmes, Hainaut, Belgique')).toMatchObject({ lat: 50.436, qualite: 'trouve' })
+    expect(p.get('Cuesmes, Hainaut, Belgique')).toMatchObject({ lat: 50.436, qualite: 'trouve', region: 'Hainaut', codeRegion: 'BE.WHT' })
     expect(p.get('Malines, Anvers, Belgique')).toMatchObject({ lat: 51.026, qualite: 'trouve' })
     expect(p.get('Saint Germain - Mons, Hainaut, Belgique')).toMatchObject({ lat: 50.45, qualite: 'trouve' })
     expect(p.get('Borgerhout, Anvers, Belgique')).toMatchObject({ lat: 51.21, qualite: 'trouve' }) // la ville, pas le hameau
-    expect(p.get('Paris 10e, Paris, France')).toMatchObject({ lat: 48.853, qualite: 'trouve' })
+    expect(p.get('Paris 10e, Paris, France')).toMatchObject({ lat: 48.853, qualite: 'trouve', codeRegion: 'FR.75' })
     expect(p.get('Prague, République tchèque')).toMatchObject({ lat: 50.088 })
     expect(p.has('Atlantide, Belgique')).toBe(false)
     expect(p.has('Belgique')).toBe(false)

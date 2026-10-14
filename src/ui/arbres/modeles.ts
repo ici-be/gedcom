@@ -10,6 +10,8 @@ export interface OptionsFeuille {
   date?: string
   /** Code QR vers l'arbre en ligne (si son adresse est connue) */
   qr: boolean
+  /** Bas de la feuille : carte des lieux de naissance plutôt que barres par génération */
+  carte?: boolean
 }
 
 export type Format = 'A4' | 'A3' | 'A2'

@@ -20,6 +20,8 @@ export interface Position {
   region?: string
   /** Code ISO du pays de la localité */
   pays?: string
+  /** Code de la région, comme dans public/geo/contours.json (« BE.WHT », « FR.59 », « NL.06 », « LU.D ») */
+  codeRegion?: string
 }
 
 /** Forme de comparaison : minuscules, sans accents ni ponctuation */
@@ -164,13 +166,26 @@ const PROVINCES_BE: Record<string, string> = {
 
 const PREFIXE_REGION = /^(province|provincie|provincia|provinz|département|departement|région|region|canton|kanton|county of)\s+(du |de la |de l'|de l’|des |de |di |del |della |d'|d’)?/i
 
-/** « Province du Hainaut » → « Hainaut » */
-function regionLocalite(idx: Index, l: Localite): string | undefined {
-  if (idx.pays === 'monde') return undefined
-  const cle = REGION_NIVEAU_1.has(idx.pays) ? l[3] : l[3] + '.' + l[4]
-  if (idx.pays === 'BE' && PROVINCES_BE[cle]) return PROVINCES_BE[cle]
+/** Les cantons luxembourgeois regroupés dans les trois districts d'avant 2015, à l'échelle des provinces belges */
+const DISTRICTS_LU: Record<string, [string, string]> = {
+  CL: ['D', 'Diekirch'], DI: ['D', 'Diekirch'], RD: ['D', 'Diekirch'], VD: ['D', 'Diekirch'], WI: ['D', 'Diekirch'],
+  EC: ['G', 'Grevenmacher'], GR: ['G', 'Grevenmacher'], RM: ['G', 'Grevenmacher'],
+  CA: ['L', 'Luxembourg'], ES: ['L', 'Luxembourg'], LU: ['L', 'Luxembourg'], ME: ['L', 'Luxembourg'],
+}
+
+/** « Province du Hainaut » → « Hainaut », avec le code de la région (voir Position.codeRegion) */
+function regionLocalite(idx: Index, l: Localite): { region?: string; codeRegion?: string } {
+  if (idx.pays === 'monde') return {}
+  if (idx.pays === 'LU') {
+    const d = DISTRICTS_LU[l[3]]
+    return d ? { region: d[1], codeRegion: 'LU.' + d[0] } : {}
+  }
+  const niveau1 = REGION_NIVEAU_1.has(idx.pays)
+  const cle = niveau1 ? l[3] : l[3] + '.' + l[4]
+  const codeRegion = idx.pays + '.' + (niveau1 ? l[3] : l[4])
+  if (idx.pays === 'BE' && PROVINCES_BE[cle]) return { region: PROVINCES_BE[cle], codeRegion }
   const nom = idx.rep.a[cle]?.[0] ?? idx.rep.a[l[3]]?.[0]
-  return nom?.replace(PREFIXE_REGION, '').trim() || undefined
+  return { region: nom?.replace(PREFIXE_REGION, '').trim() || undefined, codeRegion }
 }
 
 function paysLocalite(idx: Index, l: Localite): string {
@@ -232,7 +247,7 @@ export async function situer(lieux: string[], charger: (fichier: string) => Prom
     const evident = retenus[0].l[5] >= 1000 && retenus.slice(1).every((x) => x.l[5] * 20 <= retenus[0].l[5])
     if (!loin || evident) {
       const l = retenus[0].l
-      positions.set(lieu, { lat: l[1], lon: l[2], qualite: 'trouve', libelle: libelleLocalite(retenus[0].idx, l), region: regionLocalite(retenus[0].idx, l), pays: paysLocalite(retenus[0].idx, l) })
+      positions.set(lieu, { lat: l[1], lon: l[2], qualite: 'trouve', libelle: libelleLocalite(retenus[0].idx, l), ...regionLocalite(retenus[0].idx, l), pays: paysLocalite(retenus[0].idx, l) })
     } else enAttente.push({ lieu, d, c: retenus })
   }
 
@@ -254,7 +269,7 @@ export async function situer(lieux: string[], charger: (fichier: string) => Prom
       const dist = (l: Localite) => (l[1] - cl) ** 2 + ((l[2] - cn) * Math.cos((cl * Math.PI) / 180)) ** 2
       choix = [...c].sort((a, b) => dist(a.l) - dist(b.l))[0]
     }
-    positions.set(lieu, { lat: choix.l[1], lon: choix.l[2], qualite: 'incertain', libelle: libelleLocalite(choix.idx, choix.l), region: regionLocalite(choix.idx, choix.l), pays: paysLocalite(choix.idx, choix.l) })
+    positions.set(lieu, { lat: choix.l[1], lon: choix.l[2], qualite: 'incertain', libelle: libelleLocalite(choix.idx, choix.l), ...regionLocalite(choix.idx, choix.l), pays: paysLocalite(choix.idx, choix.l) })
   }
   return positions
 }

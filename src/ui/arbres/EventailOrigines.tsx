@@ -8,9 +8,10 @@ import type { Donnees } from '../../lib/donnees'
 import { situerArbre, type Position } from '../../lib/geo'
 import { romain } from '../../lib/communes'
 import {
-  abregerCommune, angles, arc, LIEU_INCONNU, LIEU_NON_SITUE, places, point, prenoms, regionDuLieu, resumer, secteur,
+  abregerCommune, angles, arc, LIEU_INCONNU, LIEU_NON_SITUE, nomPays, places, point, prenoms, regionDuLieu, resumer, secteur, situerRegion,
   type Centre, type Place, type Resume,
 } from '../../lib/eventail'
+import { cadrer, chargerContours, colonnes, grouper, projeter, proportions, type Contours, type Entree, type Groupe } from '../../lib/carte-origines'
 import type { OptionsFeuille } from './modeles'
 
 const GENERATIONS = 8
@@ -192,14 +193,76 @@ function CodeQR({ url, x, y, taille }: { url: string; x: number; y: number; tail
   )
 }
 
+/** Bas de la feuille : la carte des régions de naissance, cadrée sur celles des ancêtres, et la légende en deux colonnes */
+function CarteOrigines({ contours, couleurs, groupes }: { contours: Contours; couleurs: Map<string, string>; groupes: Groupe[] }) {
+  const f = cadrer(contours, couleurs.keys())
+  if (!f) return null
+  // La carte au centre, au plus 172 de haut et 240 de large ; les colonnes de part et d'autre
+  const prop = proportions(f)
+  const w = Math.min(240, 172 * prop)
+  const h = w / prop
+  const zone = { x: 700 - w / 2, y: 796 + (172 - h) / 2, w, h }
+  const regions = projeter(contours, f, zone)
+  const parPays = new Map<string, typeof regions>()
+  for (const r of regions) { const p = r.code.slice(0, 2); parPays.set(p, [...(parPays.get(p) ?? []), r]) }
+  const [gauche, droite] = colonnes(groupes)
+  const lignes = (c: Groupe[]) => c.reduce((s, g) => s + g.lignes.length + (g.titre ? 1.5 : 0.5), 0)
+  const pas = Math.min(15, 168 / Math.max(lignes(gauche), lignes(droite)))
+  const fs = Math.min(10, pas * 0.68)
+  const colonne = (c: Groupe[], x: number, fin: boolean) => {
+    const a = fin ? 'end' : 'start'
+    const els: JSX.Element[] = []
+    let y = 806
+    for (const g of c) {
+      if (g.titre) { els.push(<text key={'t' + g.titre} x={x} y={y.toFixed(1)} font-size={Math.min(8.5, fs)} class="cap mut" text-anchor={a}>{maj(g.titre)}</text>); y += pas }
+      else y += pas * 0.5
+      for (const l of g.lignes) {
+        const cx = fin ? x - 12 : x
+        els.push(
+          <g key={g.titre + l.nom}>
+            <rect x={cx} y={(y - pas * 0.6).toFixed(1)} width="12" height={(pas * 0.73).toFixed(1)} fill={l.couleur} />
+            <text x={fin ? x - 17 : x + 17} y={y.toFixed(1)} font-size={fs} data-fs={fs} data-max="200" text-anchor={a}>{l.nom} <tspan class="mut">{l.n}</tspan></text>
+          </g>,
+        )
+        y += pas
+      }
+      y += pas * 0.5
+    }
+    return els
+  }
+  return (
+    <g>
+      <clipPath id="cadre-carte"><rect x={zone.x} y={zone.y} width={zone.w} height={zone.h} /></clipPath>
+      {/* Chaque pays : un liseré gris sous ses régions, qui ne reste visible qu'à ses frontières */}
+      <g clip-path="url(#cadre-carte)">
+        {[...parPays.entries()].map(([pays, rs]) => (
+          <g key={pays}>
+            {rs.map((r) => <path key={r.code} d={r.d} fill="none" stroke="#8b928e" stroke-width="1.6" stroke-linejoin="round" />)}
+            {rs.map((r) => <path key={r.code + 'f'} d={r.d} fill={couleurs.get(r.code) ?? '#f3f3ef'} fill-rule="evenodd" stroke="#fff" stroke-width={couleurs.has(r.code) ? 0.5 : 0.4} />)}
+          </g>
+        ))}
+      </g>
+      {colonne(gauche, zone.x - 26, true)}
+      {colonne(droite, zone.x + zone.w + 26, false)}
+    </g>
+  )
+}
+
 export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsFeuille }) {
   const svg = useRef<SVGSVGElement>(null)
   const [positions, setPositions] = useState<Map<string, Position>>()
+  const [contours, setContours] = useState<Contours>()
   useEffect(() => {
     let vivant = true
     situerArbre(d.arbre).then((p) => vivant && setPositions(p)).catch(() => {})
     return () => { vivant = false }
   }, [d.arbre])
+  useEffect(() => {
+    if (!options.carte || contours) return
+    let vivant = true
+    chargerContours().then((c) => vivant && setContours(c)).catch(() => {})
+    return () => { vivant = false }
+  }, [options.carte])
 
   const donnees = useMemo(() => {
     const pl = places(d.arbre, d.racine, GENERATIONS)
@@ -238,7 +301,23 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
       const tri = [...legende.map((x) => x.couleur)]
       return { g, connus: l.length, segments: [...segments.entries()].sort((a, b) => tri.indexOf(a[0]) - tri.indexOf(b[0])) }
     })
-    return { pl, resumes, regions, couleur, legende, ancetres: uniques.length, communes: communes.size, nbRegions, parGeneration }
+    // Pour la carte : la couleur de chaque région dessinable, et la légende groupée par pays
+    const couleursCarte = new Map<string, string>()
+    const entrees = new Map<string, Entree>()
+    let inconnus = 0
+    for (const p of uniques) {
+      const reg = regions.get(p.sosa)!
+      if (reg === LIEU_INCONNU || reg === LIEU_NON_SITUE) { inconnus++; continue }
+      const lieu = resumes.get(p.sosa)!.lieu!
+      const pos = positions?.get(lieu)
+      if (pos?.codeRegion) couleursCarte.set(pos.codeRegion, couleur(reg))
+      const e = entrees.get(reg)
+      if (e) e.n++
+      else { const s = situerRegion(lieu, pos); entrees.set(reg, { nom: s.region, pays: s.pays, couleur: couleur(reg), n: 1 }) }
+    }
+    const groupes = grouper([...entrees.values()], nomPays, AUTRES)
+    if (inconnus) groupes.push({ titre: '', lignes: [{ nom: 'Lieu inconnu ou non situé', couleur: INCONNU, n: inconnus }] })
+    return { pl, resumes, regions, couleur, legende, ancetres: uniques.length, communes: communes.size, nbRegions, parGeneration, couleursCarte, groupes }
   }, [d, positions])
 
   useLayoutEffect(() => {
@@ -300,6 +379,8 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
   const y0 = 822
   const yLegende = y0 + (GENERATIONS - 1) * 14 + 20
   const adresse = options.qr ? d.adresse : ''
+  // Sans contours (pas encore chargés) ou sans ancêtre sur la carte : les barres
+  const carte = options.carte && contours && cadrer(contours, donnees.couleursCarte.keys())
 
   return (
     <svg ref={svg} class="feuille" viewBox="0 0 1400 990" role="img" aria-label={`Éventail des origines de ${titre}`}>
@@ -342,7 +423,8 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
         ))}
       </g>
 
-      {/* Origine par génération */}
+      {/* Lieux de naissance sur la carte, ou origine par génération */}
+      {carte ? <CarteOrigines contours={contours!} couleurs={donnees.couleursCarte} groupes={donnees.groupes} /> : <>
       <text x={O.cx} y={y0 - 12} font-size="10" class="cap mut" text-anchor="middle">ORIGINE DES ANCÊTRES CONNUS, PAR GÉNÉRATION</text>
       {donnees.parGeneration.map(({ g, connus, segments }, j) => {
         const y = y0 + j * 14
@@ -371,6 +453,7 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
           </g>
         )
       })}
+      </>}
 
       {/* Pied de page */}
       <text x="40" y={options.date ? 950 : 966} font-size="8.5" class="mut">
