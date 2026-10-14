@@ -18,7 +18,7 @@ type QuelFait = 'tous' | 'naissance' | 'mariage' | 'deces'
 type QuelEtat = 'tout' | 'a-faire' | 'sans-source' | 'manquant' | 'complet'
 type Tri = 'sosa' | 'nom' | 'naissance' | 'deces' | 'score'
 /** à chercher : il manque un parent sans mention « Filiation: » · clos : un parent inconnu ou introuvable */
-type QuelsParents = 'tous' | 'a-chercher' | 'clos'
+export type QuelsParents = 'tous' | 'a-chercher' | 'clos'
 
 interface Filtres {
   recherche: string
@@ -37,6 +37,14 @@ const FILTRES: Filtres = { recherche: '', lieu: '', fait: 'tous', etat: 'a-faire
 /** Tout afficher : aucun nom, lieu, fait, état, génération ni branche imposé (le tri est gardé) */
 const SANS_FILTRE: Partial<Filtres> = { recherche: '', lieu: '', fait: 'tous', etat: 'tout', genMin: '', genMax: '', branche: '', parents: 'tous' }
 const PAR_PAGE = 100
+
+/**
+ * Prépare le tableau pour un lien venu d'une autre page : rien d'autre que les filtres donnés,
+ * enregistrés avant d'y aller (le tableau les relit en s'ouvrant)
+ */
+export function preparerPersonnes(m: { genMax?: number; parents?: QuelsParents }) {
+  ecrire('filtres', { ...FILTRES, ...SANS_FILTRE, genMax: m.genMax ? String(m.genMax) : '', parents: m.parents ?? 'tous', tri: 'sosa', sens: 1 })
+}
 
 interface Ligne {
   ind: Individu

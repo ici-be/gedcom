@@ -6,6 +6,7 @@ import { compter, generations, resumer, statistiques, type Age, type Resume, typ
 import { nomSiecle } from '../lib/communes'
 import { nombre, pourcent } from '../lib/format'
 import { ChoixPerimetre, Personne } from './commun'
+import { preparerPersonnes, type QuelsParents } from './Individus'
 import { lienMetier } from './Metiers'
 import { clePrenom, formeUsuelle } from '../lib/prenoms'
 import { sansAccents } from '../lib/metiers'
@@ -214,6 +215,13 @@ export function Statistiques({ d, perimetre, setPerimetre }: Props) {
   const derniereComplete = gens.filter((g) => g.connus === g.theoriques - g.closes).length
   const avecCloses = gensUtiles.some((g) => g.closes > 0)
 
+  // Les places vides d'une génération remontent aux ancêtres des générations précédentes dont un parent manque
+  const versPersonnes = (n: number, g: number, parents: QuelsParents, quoi: string) => (
+    n > 0
+      ? <a href="#/personnes" title={`Les ancêtres des générations 1 à ${g - 1} dont un parent est ${quoi}`}
+        onClick={() => { preparerPersonnes({ genMax: g - 1, parents }); setPerimetre('ancetres') }}>{nombre(n)}</a>
+      : nombre(n)
+  )
   const libelleSexe = (x: Sexe | 'tous') => (x === 'M' ? 'les hommes' : x === 'F' ? 'les femmes' : 'personne')
   const outilMesure = <Choix label="Mesure" options={[['moyenne', 'Moyenne'], ['mediane', 'Médiane']]} valeur={mesure} changer={setMesure} />
 
@@ -239,7 +247,7 @@ export function Statistiques({ d, perimetre, setPerimetre }: Props) {
       </div>
 
       <div class="chiffres bref">
-        <Chiffre valeur={nombre(s.personnes.length)} legende="personnes" detail={<><span class="h">{nombre(hommes)} hommes</span> · <span class="f">{nombre(femmes)} femmes</span></>} />
+        <Chiffre valeur={nombre(s.personnes.length)} legende="personnes" detail={<><span class="h">{nombre(hommes)} hommes</span><br /><span class="f">{nombre(femmes)} femmes</span></>} />
         <Chiffre valeur={ansTexte(valeur(vie, mesure))} legende={`durée de vie ${mesure === 'moyenne' ? 'moyenne' : 'médiane'}`} detail={adultes ? 'adultes (15 ans et plus)' : 'dès la naissance'} />
         <Chiffre valeur={enfants ? ans(valeur(enfants, mesure)!) : '–'} legende="enfants par couple" detail="couples avec au moins un enfant connu" />
         <Chiffre valeur={nombre(prenomsDistincts)} legende="prénoms différents" />
@@ -398,7 +406,7 @@ export function Statistiques({ d, perimetre, setPerimetre }: Props) {
                     <td>{g.theoriques.toLocaleString('fr-BE')}</td>
                     <td>{nombre(g.connus)}</td>
                     <td>{g.connus / g.theoriques >= 0.001 ? pourcent(g.connus, g.theoriques) : '< 0,1 %'}</td>
-                    {avecCloses && <><td>{g.closes ? nombre(g.closes) : '—'}</td><td>{nombre(g.theoriques - g.closes - g.connus)}</td></>}
+                    {avecCloses && <><td>{g.closes ? versPersonnes(g.closes, g.generation, 'clos', 'inconnu ou introuvable') : '—'}</td><td>{versPersonnes(g.theoriques - g.closes - g.connus, g.generation, 'a-chercher', 'à chercher')}</td></>}
                     <td>{nombre(g.distincts)}</td>
                   </tr>
                 ))}
