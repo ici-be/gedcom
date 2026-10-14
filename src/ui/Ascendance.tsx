@@ -309,13 +309,13 @@ export function Ascendance({ d, setPerimetre }: { d: Donnees; setPerimetre: (p: 
         </div>
       </Panneau>
 
-      <Panneau titre="Lignées">
-        <h3>De père en père · {a.paternelle.length} générations</h3>
+      <Panneau titre="Lignées" lien={<a href="#/lignee/paternelle">Voir chaque lignée en détail</a>}>
+        <h3><a href="#/lignee/paternelle">De père en père · {a.paternelle.length} générations</a></h3>
         <Chaine d={d} ids={a.paternelle} />
-        <h3>De mère en mère · {a.maternelle.length} générations</h3>
+        <h3><a href="#/lignee/maternelle">De mère en mère · {a.maternelle.length} générations</a></h3>
         <Chaine d={d} ids={a.maternelle} />
         {a.plusLongue.length > Math.max(a.paternelle.length, a.maternelle.length) && <>
-          <h3>La plus longue · {a.plusLongue.length} générations</h3>
+          <h3><a href="#/lignee/longue">La plus longue · {a.plusLongue.length} générations</a></h3>
           <Chaine d={d} ids={a.plusLongue} couper />
         </>}
       </Panneau>
@@ -327,7 +327,7 @@ export function Ascendance({ d, setPerimetre }: { d: Donnees; setPerimetre: (p: 
           <div class="asc-pistes">
             {a.pistes.slice(0, 12).map((p) => (
               <div class="asc-piste" key={p.id}>
-                <span class="asc-piste-g">G{p.generation}</span>
+                <a class="asc-piste-g" href={'#/lignee/' + p.sosa} title="Voir la lignée qui y mène">G{p.generation}</a>
                 <span><Nom d={d} id={p.id} /> <Annees d={d} id={p.id} /></span>
                 <small>{commune(d, p.id) ? `${commune(d, p.id)} · ` : ''}<span class="manque">{manque(p)}</span></small>
               </div>

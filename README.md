@@ -35,6 +35,11 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   de père en père, de mère en mère et la plus longue ; les pistes les plus proches ; l'implexe ; les
   noms les plus présents, les siècles de naissance et la durée d'une génération. Un enfant sans père
   dans l'arbre qui porte le nom de sa mère compte comme enfant naturel (père inconnu, pas à chercher).
+- **Lignée** (`#/lignee/paternelle`, `maternelle`, `longue` ou un numéro Sosa) : une lignée en frise
+  verticale, du plus lointain ancêtre à la personne de départ, avec les siècles en repère ; pour chacun
+  la naissance, le décès, les métiers et l'union dont naît le suivant (conjoint, âge, autres enfants) ;
+  au sommet, de quoi remonter par le père ou la mère, ou pourquoi la lignée s'arrête ; à côté, le
+  chemin des lieux et le fil des noms. On y arrive depuis les lignées et les pistes de l'Ascendance.
 - **Carte** : un cercle par lieu, d'autant plus grand qu'il y a de faits, du rouge (rien de sourcé)
   au vert (tout est sourcé). Filtres par personnes, type de fait et siècle, ou seulement les lieux qui
   ont des faits sans source. Un clic mène aux actes du lieu. Les lieux sont reconnus dans des listes de
@@ -111,6 +116,7 @@ Preact + TypeScript + Vite. La lecture du fichier se fait dans un *worker* (`src
 - `src/lib/metiers.ts` : métiers, variantes et féminins
 - `src/lib/statistiques.ts` : relevés pour les statistiques (âges, couples, calendrier, générations)
 - `src/lib/ascendance.ts` : la page Ascendance (places Sosa, branches, lignées, pistes, implexe, étapes)
+- `src/lib/lignee.ts` : une lignée détaillée, désignée par son nom ou le Sosa de son dernier ancêtre
 - `src/lib/prenoms.ts` : table des variantes de prénoms et leur forme usuelle
 - `src/lib/geo.ts` : reconnaissance des pays et des communes pour la carte
 - `scripts/geonames.py` : fabrique `public/geo/*.json` à partir des extraits
