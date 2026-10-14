@@ -41,7 +41,9 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   origines** (A3 paysage) : huit générations sur 220°, chaque ancêtre teinté selon sa province ou sa région
   de naissance (reconnue grâce aux listes de localités de la carte), avec les quatre quartiers. En bas de la
   feuille, au choix : la carte des provinces et départements de naissance (Belgique, France, Pays-Bas,
-  Luxembourg, Allemagne), cadrée sur ceux des ancêtres, ou l'origine des ancêtres par génération. Les dates
+  Luxembourg, Allemagne, Royaume-Uni, Irlande, départements d'outre-mer), cadrée sur ceux des ancêtres, ou
+  l'origine des ancêtres par génération. Les naissances sur des terres séparées par la mer (îles
+  Britanniques, chaque DOM) ont leur cartouche à droite de la carte principale. Les dates
   sans source sont en italique. En option : les frères et sœurs du Sosa 1 (mêmes père et mère) avec lui au
   centre, le papier (A3, ou A4 réduit), la date en pied de page et un petit code QR vers l'arbre en ligne. D'autres modèles s'ajoutent dans `src/ui/arbres/modeles.ts`.
 - **Parents inconnus ou introuvables** (`#/filiation`) : le GEDCOM n'a aucun champ pour dire qu'un
@@ -112,7 +114,8 @@ Preact + TypeScript + Vite. La lecture du fichier se fait dans un *worker* (`src
   à leur code postal (« Saint-Claude, 97124, Guadeloupe, France »), même suivis de « France »
 - `scripts/contours.py` : fabrique `public/geo/contours.json` (contours simplifiés pour la carte de
   l'éventail) à partir des [Admin 1 de Natural Earth](https://github.com/nvkelso/natural-earth-vector/blob/master/geojson/ne_10m_admin_1_states_provinces.geojson)
-  (domaine public) : `python3 -I scripts/contours.py <ne_10m_admin_1_states_provinces.geojson> public/geo/contours.json`
+  (domaine public) : `python3 scripts/contours.py <ne_10m_admin_1_states_provinces.geojson> public/geo/contours.json`
+  (avec shapely, pour réunir sans frontières intérieures les découpages plus fins que ceux de GeoNames)
 - `src/ui/` : les écrans
 
 ## Publier

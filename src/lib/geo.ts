@@ -213,6 +213,8 @@ function regionLocalite(idx: Index, l: Localite): { region?: string; codeRegion?
     const d = DISTRICTS_LU[l[3]]
     return d ? { region: d[1], codeRegion: 'LU.' + d[0] } : {}
   }
+  // Le Northamptonshire, coupé en deux en 2021, reste entier sur la carte (contours plus anciens)
+  if (idx.pays === 'GB' && (l[4] === 'WNH' || l[4] === 'NNH')) return { region: 'Northamptonshire', codeRegion: 'GB.J1' }
   const niveau1 = REGION_NIVEAU_1.has(idx.pays)
   const cle = niveau1 ? l[3] : l[3] + '.' + l[4]
   const codeRegion = idx.pays + '.' + (niveau1 ? l[3] : l[4])

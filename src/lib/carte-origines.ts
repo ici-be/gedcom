@@ -5,7 +5,57 @@
 export interface Contours { r: Record<string, number[][]> }
 
 /** Pays dessinés sur la carte */
-export const PAYS_CARTE = ['BE', 'FR', 'NL', 'LU', 'DE']
+export const PAYS_CARTE = ['BE', 'FR', 'NL', 'LU', 'DE', 'GB', 'IE']
+
+// ——— Terres séparées par la mer : une carte chacune ———
+
+/** Le continent, les îles Britanniques, chaque département d'outre-mer */
+export function zone(code: string): string {
+  if (code.startsWith('FR.97')) return code
+  if (code.startsWith('GB.') || code.startsWith('IE.')) return 'IB'
+  return 'C'
+}
+
+const NOMS_DOM: Record<string, string> = { 'FR.971': 'Guadeloupe', 'FR.972': 'Martinique', 'FR.973': 'Guyane', 'FR.974': 'La Réunion', 'FR.976': 'Mayotte' }
+
+export interface Zone {
+  zone: string
+  /** Régions colorées */
+  codes: string[]
+  /** Ancêtres nés dans la zone */
+  n: number
+  titre: string
+}
+
+/** Les zones des régions colorées, la plus fournie d'abord : la première fait la carte principale */
+export function zones(poids: Map<string, number>): Zone[] {
+  const parZone = new Map<string, Zone>()
+  for (const [code, n] of poids) {
+    const z = zone(code)
+    const e = parZone.get(z) ?? { zone: z, codes: [], n: 0, titre: '' }
+    e.codes.push(code)
+    e.n += n
+    parZone.set(z, e)
+  }
+  for (const z of parZone.values()) {
+    z.titre = z.zone === 'C' ? 'Europe' : z.zone === 'IB' ? (z.codes.some((c) => c.startsWith('IE.')) ? 'Îles Britanniques' : 'Royaume-Uni') : NOMS_DOM[z.zone] ?? z.zone
+  }
+  return [...parZone.values()].sort((a, b) => b.n - a.n)
+}
+
+/**
+ * Les régions à cadrer : celles des ancêtres pour la carte principale ; pour une carte secondaire,
+ * le territoire entier, qu'on le reconnaisse (la Grande-Bretagne, l'île, l'archipel)
+ */
+export function aCadrer(contours: Contours, z: Zone, principale: boolean): string[] {
+  if (principale || z.zone === 'C') return z.codes
+  if (z.zone === 'IB') {
+    const irlande = z.codes.some((c) => c.startsWith('IE.') || c.startsWith('GB.N0'))
+    const gb = z.codes.some((c) => c.startsWith('GB.') && !c.startsWith('GB.N0'))
+    return Object.keys(contours.r).filter((c) => (gb && c.startsWith('GB.') && !c.startsWith('GB.N0')) || (irlande && (c.startsWith('IE.') || c.startsWith('GB.N0'))))
+  }
+  return [z.zone]
+}
 
 let enCache: Promise<Contours> | undefined
 
