@@ -17,6 +17,8 @@ export interface Place {
   ind?: Individu
   /** Implexe : plus petit Sosa de la même personne, quand ce n'est pas celui-ci */
   dejaVu?: number
+  /** Place vide au-dessus d'un père ou d'une mère inconnus : la lignée s'arrête là pour de bon */
+  sousInconnu?: boolean
 }
 
 /** Les places Sosa 1 à 2^generations − 1 ; l'indice du tableau est le numéro Sosa */
@@ -35,8 +37,9 @@ export function places(arbre: Arbre, racine: string, generations: number): Place
     if (2 * s >= 2 ** generations) continue
     const g = p.generation + 1
     if (!p.ind) {
-      res[2 * s] = { sosa: 2 * s, generation: g, etat: 'vide' }
-      res[2 * s + 1] = { sosa: 2 * s + 1, generation: g, etat: 'vide' }
+      const sousInconnu = p.etat === 'inconnu' || p.sousInconnu || undefined
+      res[2 * s] = { sosa: 2 * s, generation: g, etat: 'vide', sousInconnu }
+      res[2 * s + 1] = { sosa: 2 * s + 1, generation: g, etat: 'vide', sousInconnu }
       continue
     }
     const etats = etatParents(arbre, p.ind)

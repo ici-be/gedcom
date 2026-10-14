@@ -26,6 +26,15 @@ test('implexe : la seconde place renvoie à la première', () => {
   expect(p[2].dejaVu).toBeUndefined()
 })
 
+test('au-dessus d’un parent inconnu, les places vides sont marquées', () => {
+  const ged = GED.replace('0 @I3@ INDI\n', '0 @I3@ INDI\n1 NOTE Filiation: père inconnu\n')
+  const p = places(lireArbre(ged), '@I1@', 5)
+  expect(p[6].etat).toBe('inconnu')
+  expect(p[12].sousInconnu).toBe(true)
+  expect(p[25].sousInconnu).toBe(true)
+  expect(p[14].sousInconnu).toBeUndefined()
+})
+
 test('résumé : années, sources, commune', () => {
   const arbre = lireArbre(GED)
   const jean = arbre.individus.get('@I2@')!

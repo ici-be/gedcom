@@ -42,7 +42,8 @@ const mesure = (l: Ligne, max: number) => ({
 
 /** Lignes courbes, centrées dans la case ; retournées dans le bas de l'éventail pour rester lisibles */
 function TexteCourbe({ id, r1, r2, a1, a2, lignes }: { id: string; r1: number; r2: number; a1: number; a2: number; lignes: Ligne[] }) {
-  const retourne = Math.abs((a1 + a2) / 2) > 95
+  // L'éventail ne descend qu'à 110° sous l'horizontale : sans retourner, les extrémités se lisent comme leurs voisines
+  const retourne = Math.abs((a1 + a2) / 2) > 135
   const H = lignes.reduce((s, l) => s + l.fs * LH, 0)
   const rm = (r1 + r2) / 2
   let cumul = 0
@@ -257,7 +258,7 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
     const r1 = RAYONS[g]
     const r2 = RAYONS[g + 1]
     const r = resumes.get(s)
-    const fond = r ? couleur(regions.get(s)!) : p.etat === 'vide' ? '#f6f6f3' : 'url(#hachures)'
+    const fond = r ? couleur(regions.get(s)!) : p.etat === 'vide' && !p.sousInconnu ? '#f6f6f3' : 'url(#hachures)'
     cases.push(<path key={s} d={secteur(O, r1, r2, a1, a2)} fill={fond} stroke="#fff" stroke-width={g >= 7 ? 0.8 : 1.4} />)
     const rm = (r1 + r2) / 2
     const ouv = (a2 - a1) * Math.PI / 180
@@ -373,7 +374,7 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
 
       {/* Pied de page */}
       <text x="40" y={options.date ? 950 : 966} font-size="8.5" class="mut">
-        <tspan class="ns">italique</tspan> : date sans source · ◆ implexe · hachures : ancêtre à trouver
+        <tspan class="ns">italique</tspan> : date sans source · ◆ implexe · hachures : ancêtre à trouver, ou lignée arrêtée par un parent inconnu
       </text>
       {options.date && <text x="40" y="966" font-size="8.5" class="mut">Établi le {options.date}</text>}
       {adresse && (
