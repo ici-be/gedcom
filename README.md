@@ -48,6 +48,14 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   orthographe ancienne, faute de frappe) se placent d'un clic ; ces positions restent dans le
   navigateur et peuvent être exportées.
 
+- **Migrations** (`#/migrations`) : où vivaient les ancêtres directs (jusqu'à la seizième génération), d'après
+  les lieux de naissance ou de baptême, de mariage et de décès ou d'inhumation situés grâce aux listes de
+  localités, sur des cartes au style de l'éventail imprimé (mêmes teintes de régions). Trois onglets :
+  **Siècles et lignées** (une carte par siècle avec les déplacements du lieu de naissance du parent à celui de
+  l'enfant, la carte d'un siècle en grand avec ses plus longs déplacements, puis le chemin d'une lignée de père
+  en père ou de mère en mère, aussi accessible depuis la page Lignée) ; **Quartiers** (le point moyen des
+  naissances de chaque génération, quartier par quartier) ; **Au fil des années** (les ancêtres en vie année par
+  année, qu'on peut faire défiler, et la distance entre parent et enfant au fil du temps).
 - **Imprimer** : des arbres prêts pour l'imprimeur ou pour un PDF. Premier modèle, l'**éventail des
   origines** (A3 paysage) : huit générations sur 220°, chaque ancêtre teinté selon sa province ou sa région
   de naissance (reconnue grâce aux listes de localités de la carte), avec les quatre quartiers. En bas de la

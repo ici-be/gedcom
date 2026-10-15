@@ -99,10 +99,16 @@ export function proportions(f: Fenetre): number {
 
 export interface Rect { x: number; y: number; w: number; h: number }
 
-/** Les chemins SVG des régions visibles dans la fenêtre, projetée dans le rectangle `r` */
-export function projeter(contours: Contours, f: Fenetre, r: Rect): { code: string; d: string }[] {
+/** Position dans le rectangle `r` d'un point (longitude, latitude), avec la projection de projeter() */
+export function projection(f: Fenetre, r: Rect): (lon: number, lat: number) => [number, number] {
   const cos = Math.cos((((f[1] + f[3]) / 2) * Math.PI) / 180)
   const k = r.w / ((f[2] - f[0]) * cos)
+  return (lon, lat) => [r.x + (lon - f[0]) * cos * k, r.y + (f[3] - lat) * k]
+}
+
+/** Les chemins SVG des régions visibles dans la fenêtre, projetée dans le rectangle `r` */
+export function projeter(contours: Contours, f: Fenetre, r: Rect): { code: string; d: string }[] {
+  const pt = projection(f, r)
   const res: { code: string; d: string }[] = []
   for (const [code, anneaux] of Object.entries(contours.r)) {
     const e = etendue(anneaux)
@@ -113,9 +119,8 @@ export function projeter(contours: Contours, f: Fenetre, r: Rect): { code: strin
       let n = 0
       let morceau = ''
       for (let i = 0; i < a.length; i += 2) {
-        const x = (r.x + (a[i] / 100 - f[0]) * cos * k).toFixed(1)
-        const y = (r.y + (f[3] - a[i + 1] / 100) * k).toFixed(1)
-        const p = x + ',' + y
+        const [x, y] = pt(a[i] / 100, a[i + 1] / 100)
+        const p = x.toFixed(1) + ',' + y.toFixed(1)
         if (p === precedent) continue
         morceau += (n ? 'L' : 'M') + p
         precedent = p

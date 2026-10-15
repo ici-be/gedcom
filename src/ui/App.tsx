@@ -10,6 +10,7 @@ import { Communes, Lieu } from './Communes'
 import { Metiers, PageMetier } from './Metiers'
 import type { Carte as TypeCarte } from './Carte'
 import type { Impression as TypeImpression } from './Impression'
+import type { Migrations as TypeMigrations } from './Migrations'
 import { Statistiques } from './Statistiques'
 import { Ascendance } from './Ascendance'
 import { Lignee } from './Lignee'
@@ -46,6 +47,7 @@ export function App() {
   const [Carte, setCarte] = useState<typeof TypeCarte | null>(null)
   // Les arbres à imprimer aussi (polices et code QR)
   const [Impression, setImpression] = useState<typeof TypeImpression | null>(null)
+  const [Migrations, setMigrations] = useState<typeof TypeMigrations | null>(null)
 
   const setRacine = (id: string) => { setRacineBrute(id); ecrire('racine', id) }
   const setAdresse = (a: string) => { setAdresseBrute(a); ecrire('adresse', a) }
@@ -126,6 +128,7 @@ export function App() {
   useEffect(() => {
     if (page === 'carte' && !Carte) import('./Carte').then((m) => setCarte(() => m.Carte))
     if (page === 'imprimer' && !Impression) import('./Impression').then((m) => setImpression(() => m.Impression))
+    if (page === 'migrations' && !Migrations) import('./Migrations').then((m) => setMigrations(() => m.Migrations))
   }, [page])
   let contenu
   if (etat === 'demarrage') contenu = null
@@ -138,6 +141,9 @@ export function App() {
   else if (page === 'carte') contenu = Carte
     ? <Carte key={route[1] ?? ''} d={donnees} perimetre={perimetre} setPerimetre={setPerimetre} focus={route[1]} />
     : <div class="attente" role="status"><span class="rouet" />Chargement de la carte…</div>
+  else if (page === 'migrations') contenu = Migrations
+    ? <Migrations d={donnees} onglet={route[1]} cle={route[2]} />
+    : <div class="attente" role="status"><span class="rouet" />Chargement des cartes…</div>
   else if (page === 'ascendance') contenu = <Ascendance d={donnees} setPerimetre={setPerimetre} />
   else if (page === 'lignee') contenu = <Lignee d={donnees} cle={route[1] || 'paternelle'} />
   else if (page === 'statistiques') contenu = <Statistiques d={donnees} perimetre={perimetre} setPerimetre={setPerimetre} />
@@ -165,6 +171,7 @@ export function App() {
               <a href="#/lieux" class={page === 'lieux' ? 'actif' : ''}>Lieux</a>
               <a href="#/metiers" class={page === 'metiers' ? 'actif' : ''}>Métiers</a>
               <a href="#/carte" class={page === 'carte' ? 'actif' : ''}>Carte</a>
+              <a href="#/migrations" class={page === 'migrations' ? 'actif' : ''}>Migrations</a>
               <a href="#/ascendance" class={page === 'ascendance' || page === 'lignee' ? 'actif' : ''}>Ascendance</a>
               <a href="#/statistiques" class={page === 'statistiques' ? 'actif' : ''}>Statistiques</a>
               <a href="#/imprimer" class={page === 'imprimer' ? 'actif' : ''}>Imprimer</a>

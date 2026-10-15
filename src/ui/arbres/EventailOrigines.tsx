@@ -11,9 +11,10 @@ import {
   abregerCommune, angles, arc, couperLignes, fratrie, GENERATIONS_RECTO, LIEU_INCONNU, LIEU_NON_SITUE, morceauxTitre, nomPays, parNom, places, point, prenoms,
   ordreRegions, regionsDesPlaces, resumer, secteur, situerRegion, type Centre, type Place, type Resume,
 } from '../../lib/eventail'
-import { aCadrer, cadrer, chargerContours, colonnes, grouper, projeter, proportions, zones, type Contours, type Entree, type Fenetre, type Groupe, type Rect, type Zone } from '../../lib/carte-origines'
+import { aCadrer, cadrer, chargerContours, colonnes, grouper, proportions, zones, type Contours, type Entree, type Fenetre, type Groupe, type Rect, type Zone } from '../../lib/carte-origines'
 import type { OptionsFeuille } from './modeles'
 import { chargerPolices, largeur, type Police } from './mesure'
+import { FondCarte } from './FondCarte'
 import { ajuster, AUTRES, couleursRegions, GRIS, INCONNU, TEINTES } from './feuille'
 
 const GENERATIONS = GENERATIONS_RECTO
@@ -243,29 +244,6 @@ function CodeQR({ url, x, y, taille }: { url: string; x: number; y: number; tail
   )
 }
 
-/** Une carte dans son rectangle : chaque pays bordé d'un liseré gris, les régions des ancêtres en couleur */
-function Carte({ id, contours, f, zone, couleurs, cadre }: { id: string; contours: Contours; f: Fenetre; zone: Rect; couleurs: Map<string, string>; cadre?: boolean }) {
-  const regions = projeter(contours, f, zone)
-  const parPays = new Map<string, typeof regions>()
-  for (const r of regions) { const p = r.code.slice(0, 2); parPays.set(p, [...(parPays.get(p) ?? []), r]) }
-  return (
-    <g>
-      <clipPath id={id}><rect x={zone.x} y={zone.y} width={zone.w} height={zone.h} /></clipPath>
-      {cadre && <rect x={zone.x} y={zone.y} width={zone.w} height={zone.h} fill="#fff" />}
-      {/* Chaque pays : un liseré gris sous ses régions, qui ne reste visible qu'à ses frontières et sur les côtes */}
-      <g clip-path={`url(#${id})`}>
-        {[...parPays.entries()].map(([pays, rs]) => (
-          <g key={pays}>
-            {rs.map((r) => <path key={r.code} d={r.d} fill="none" stroke="#8b928e" stroke-width="1.6" stroke-linejoin="round" />)}
-            {rs.map((r) => <path key={r.code + 'f'} d={r.d} fill={couleurs.get(r.code) ?? '#f3f3ef'} fill-rule="evenodd" stroke="#fff" stroke-width={couleurs.has(r.code) ? 0.5 : 0.4} />)}
-          </g>
-        ))}
-      </g>
-      {cadre && <rect x={zone.x} y={zone.y} width={zone.w} height={zone.h} fill="none" stroke="#b9bdb9" stroke-width="0.8" />}
-    </g>
-  )
-}
-
 const HAUT_CARTE = 796
 const HAUTEUR_CARTE = 172
 
@@ -329,7 +307,7 @@ function CarteOrigines({ contours, couleurs, poids, groupes }: { contours: Conto
     <g>
       {cartes.map((c, i) => (
         <g key={c.z.zone}>
-          <Carte id={'carte-' + i} contours={contours} f={c.f} zone={c.r} couleurs={couleurs} cadre={c.cartouche} />
+          <FondCarte id={'carte-' + i} contours={contours} f={c.f} zone={c.r} couleurs={couleurs} cadre={c.cartouche} />
           {c.cartouche && <text x={c.r.x} y={c.r.y - 4} font-size="7.5" class="cap mut" data-max={Math.round(Math.max(c.r.w, 84))}>{maj(c.z.titre)}</text>}
         </g>
       ))}

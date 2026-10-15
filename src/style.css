@@ -580,6 +580,52 @@ a.asc-piste-g:hover { color: var(--accent); }
   .lg-cote { position: static; }
 }
 
+/* ---------- migrations : cartes au style du bas de l'éventail, posées sur du papier blanc ---------- */
+.mg-onglets .segments { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.mg-onglets .segments a { padding: 6px 14px; border-radius: 999px; font-weight: 700; color: var(--muted); text-decoration: none; white-space: nowrap; }
+.mg-onglets .segments a.actif { background: var(--panel); color: var(--accent); box-shadow: var(--shadow); }
+.mg-entete { display: flex; flex-direction: column; gap: 6px; }
+.mg-entete .aide { margin: 0; max-width: 75ch; }
+.mg-papier { display: block; background: #fff; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; min-width: 0; }
+.mg-carte, .mg-graphe { display: block; width: 100%; height: auto; }
+.mg-siecles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; }
+.mg-siecle { display: flex; flex-direction: column; gap: 6px; text-align: left; background: none; border: 0; padding: 4px; border-radius: 10px; color: var(--fg); }
+.mg-siecle strong { font-family: var(--display); font-size: 1.15rem; }
+.mg-siecle .aide { font-size: 0.85rem; line-height: 1.35; }
+.mg-siecle:hover .mg-papier { border-color: var(--muted); }
+.mg-siecle.actif .mg-papier { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+.mg-legende { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.88rem; color: var(--muted); align-items: center; }
+.mg-legende i { display: inline-block; width: 12px; height: 10px; margin-right: 5px; vertical-align: -1px; border-radius: 1px; }
+.mg-puce { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: 0; }
+.mg-duo { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 22px; align-items: start; }
+.mg-duo.egal { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+@media (max-width: 860px) { .mg-duo, .mg-duo.egal { grid-template-columns: minmax(0, 1fr); } }
+.mg-cote { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.mg-cote h3 { margin: 0; font-size: 1.05rem; }
+.mg-cote .aide { margin: 0; }
+.mg-choix { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.mg-choix a { padding: 4px 12px; border-radius: 999px; background: var(--panel-2); color: var(--fg); text-decoration: none; font-size: 0.92rem; }
+.mg-choix a.actif { background: var(--accent); color: var(--accent-fg); font-weight: 700; }
+.mg-choix a.mg-ouvrir { background: none; color: var(--accent); font-weight: 700; margin-left: auto; }
+.mg-fil { list-style: none; margin: 0; padding: 0; max-height: 620px; overflow-y: auto; border-top: 1px solid var(--line); }
+.mg-fil li { display: grid; grid-template-columns: 2.6em minmax(0, 1fr); gap: 2px 10px; padding: 7px 4px; border-bottom: 1px solid var(--line); font-size: 0.93rem; }
+.mg-fil li:hover, .mg-fil li.actif { background: var(--panel-2); }
+.mg-gen { font-family: var(--display); color: var(--muted); text-align: right; }
+.mg-ou { grid-column: 2; font-size: 0.86rem; color: var(--muted); }
+.mg-km { color: var(--accent); }
+.mg-lecture { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.mg-lecture input { flex: 1; min-width: 160px; accent-color: var(--accent); }
+.mg-lecture .bouton { min-width: 90px; }
+.mg-annee { font-family: var(--display); font-size: 2.2rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.mg-barres { display: grid; gap: 5px; font-size: 0.88rem; }
+.mg-barres > div { display: grid; grid-template-columns: minmax(0, 10em) 1fr 3em; gap: 8px; align-items: center; }
+.mg-barres span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mg-barre { height: 10px; background: var(--panel-2); border-radius: 2px; overflow: hidden; }
+.mg-barre i { display: block; height: 100%; }
+.mg-barres .nombre { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+.mg-graphe text { font: 11px var(--body); fill: #5e6763; }
+.mg-graphe text.fort { fill: #2f5d50; font-weight: 700; }
+
 /* ---------- impression (Ctrl+P) : le titre, le rappel des filtres et le tableau, sur fond blanc ---------- */
 .filtres-imprimes { display: none; }
 @page { margin: 12mm 10mm; }

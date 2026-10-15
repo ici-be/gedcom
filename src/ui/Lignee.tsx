@@ -190,6 +190,7 @@ export function Lignee({ d, cle }: { d: Donnees; cle: string }) {
         {onglets.map(([k, t, n]) => <a key={k} href={lien(k)} class={cleActive === k ? 'actif' : ''} aria-current={cleActive === k ? 'page' : undefined}>{t}{n ? <small> {n}</small> : null}</a>)}
       </span>
       <ChoixAncetre d={d} />
+      <a href={'#/migrations/siecles/' + cleActive} class="lg-retour">Sur la carte →</a>
     </nav>
   )
 
