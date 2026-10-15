@@ -16,6 +16,7 @@ import { Ascendance } from './Ascendance'
 import { Lignee } from './Lignee'
 import { Recit } from './Recit'
 import { Filiation } from './Filiation'
+import { Introuvables } from './Introuvables'
 import { ProposerInstallation } from './Installer'
 import { ChoixRacine } from './ChoixRacine'
 
@@ -176,6 +177,7 @@ export function App() {
     ? <Impression d={donnees} id={route[1]} />
     : <div class="attente" role="status"><span class="rouet" />Préparation de l'arbre…</div>
   else if (page === 'filiation') contenu = <Filiation d={donnees} />
+  else if (page === 'introuvables') contenu = <Introuvables d={donnees} />
   else if (page === 'metiers') contenu = <Metiers d={donnees} perimetre={perimetre} setPerimetre={setPerimetre} />
   else contenu = (
     <>

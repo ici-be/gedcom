@@ -221,6 +221,8 @@ input[type="search"], input[type="url"], input[type="number"], select {
 .pastille.sans-source { background: var(--mid-bg); color: var(--mid); }
 .pastille.manquant { background: var(--ko-bg); color: var(--ko); }
 .pastille.sans-objet { background: var(--panel-2); color: var(--muted); }
+.pastille.introuvable { background: var(--panel-2); color: var(--muted); box-shadow: inset 0 0 0 1.5px var(--muted); }
+.mention-introuvable { margin-left: 6px; font-size: 0.85em; font-style: italic; color: var(--muted); }
 
 .details td { background: var(--accent-bg); }
 .fiche { display: flex; flex-direction: column; gap: 8px; padding: 4px 0 8px 22px; }
@@ -664,6 +666,9 @@ a.asc-piste-g:hover { color: var(--accent); }
 .mg-km { color: var(--accent); }
 .mg-lecture { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .mg-lecture input { flex: 1; min-width: 160px; accent-color: var(--accent); }
+.mg-lecture .mg-vitesse { display: flex; align-items: center; gap: 8px; font-size: 0.88rem; color: var(--muted); }
+.mg-lecture .mg-vitesse input { flex: none; width: 110px; min-width: 0; }
+.mg-lecture .mg-vitesse span { min-width: 4.2em; font-variant-numeric: tabular-nums; }
 .mg-lecture .bouton { min-width: 90px; }
 .mg-annee { font-family: var(--display); font-size: 2.2rem; line-height: 1; font-variant-numeric: tabular-nums; }
 .mg-barres { display: grid; gap: 5px; font-size: 0.88rem; }

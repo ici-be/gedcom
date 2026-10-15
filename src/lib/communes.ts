@@ -32,7 +32,10 @@ export interface Commune {
   nom: string
   contexte: string
   actes: Acte[]
+  /** Faits encore à sourcer : ni source, ni « Source: introuvable » */
   sansSource: number
+  introuvables: number
+  sourcees: number
 }
 
 /** « Bruxelles, Bruxelles-Capitale, Belgique » → Bruxelles + « Bruxelles-Capitale, Belgique » */
@@ -59,11 +62,13 @@ export function communes(arbre: Arbre, perimetre: Set<string> | null, avecAutres
     if (groupe === 'autres' && !avecAutres) return
     let c = parLieu.get(e.lieu)
     if (!c) {
-      c = { lieu: e.lieu, ...decouperLieu(e.lieu), actes: [], sansSource: 0 }
+      c = { lieu: e.lieu, ...decouperLieu(e.lieu), actes: [], sansSource: 0, introuvables: 0, sourcees: 0 }
       parLieu.set(e.lieu, c)
     }
     c.actes.push({ cle: cleActe(proprietaire, e), groupe, evenement: e, personnes })
-    if (!e.sources.length) c.sansSource++
+    if (e.sources.length) c.sourcees++
+    else if (e.introuvable) c.introuvables++
+    else c.sansSource++
   }
   for (const ind of arbre.individus.values()) {
     if (perimetre && !perimetre.has(ind.id)) continue

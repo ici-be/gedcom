@@ -13,6 +13,7 @@ import { decouperLieu, romain } from './communes'
 import { decouperMetiers } from './metiers'
 import { etatParents, lienDeParente, parents, type Lien } from './parente'
 import { places, type Place } from './eventail'
+import { sansMentionIntrouvable } from './introuvable'
 
 /** Un morceau de texte : du texte, une personne (lien vers son récit), un numéro Sosa, un appel de note, un lien */
 export type Morceau =
@@ -253,7 +254,7 @@ const situe = (e?: Evenement) => !!e && (!!e.date?.debut || !!e.lieu)
 /** Une note d'acte débarrassée des liens et de la mise en forme du logiciel */
 function nettoyer(t?: string): string {
   if (!t) return ''
-  const s = t
+  const s = sansMentionIntrouvable(t)
     .replace(/<[^>]+>/g, ' ')
     .replace(/\[\[(?:[^\]]*\/)?([^\]/]+)\]\]/g, '$1')
     .replace(/\S*https?:\/\/\S+/g, ' ')
@@ -367,7 +368,9 @@ function sources(p: Plume, l: string[]): Phrase | null {
 function noteActe(p: Plume, e: Evenement | undefined, sujet: Individu, epoux?: [Individu | undefined, Individu | undefined]): Phrase[] {
   if (!e) return []
   const t = nettoyer(e.note)
-  return [t ? phrase`${t}` : null, ...temoins(p, e, sujet, epoux), sources(p, e.sources)].filter((x): x is Phrase => !!x)
+  // « Source: introuvable (registres brûlés en 1914) » : dit tel quel, sauf si une source a été trouvée depuis
+  const perdu = e.introuvable && !e.sources.length ? phrase`Acte introuvable${e.introuvable.cause ? ` : ${e.introuvable.cause}` : ''}` : null
+  return [t ? phrase`${t}` : null, perdu, ...temoins(p, e, sujet, epoux), sources(p, e.sources)].filter((x): x is Phrase => !!x)
 }
 
 const ETIQUETTES: Record<string, string> = {

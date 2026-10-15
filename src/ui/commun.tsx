@@ -10,17 +10,20 @@ import { decouperLieu } from '../lib/communes'
 import { NOMS_ETATS, libelle, lienDansSource } from '../lib/format'
 import { nomComplet } from '../lib/parente'
 import { ecrire, lire } from '../lib/stockage'
+import { texteIntrouvable, type Introuvable } from '../lib/introuvable'
 
 /** Recherche sans accents ni majuscules */
 export function normaliser(s: string): string {
   return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 }
 
-const SYMBOLES: Record<Etat, string> = { source: '✓', 'sans-source': '!', manquant: '✕', 'sans-objet': '–' }
+const SYMBOLES: Record<Etat, string> = { source: '✓', 'sans-source': '!', manquant: '✕', introuvable: '∅', 'sans-objet': '–' }
 
-export function Pastille({ etat }: { etat: Etat }) {
+/** L'état d'un fait ; pour une source introuvable, la cause notée s'affiche au survol */
+export function Pastille({ etat, introuvable }: { etat: Etat; introuvable?: Introuvable }) {
+  const titre = NOMS_ETATS[etat] + (etat === 'introuvable' && introuvable?.cause ? ' : ' + introuvable.cause : '')
   return (
-    <span class={'pastille ' + etat} title={NOMS_ETATS[etat]} aria-label={NOMS_ETATS[etat]}>
+    <span class={'pastille ' + etat} title={titre} aria-label={titre}>
       {SYMBOLES[etat]}
     </span>
   )
@@ -66,12 +69,29 @@ export function DateLieu({ e, prefixe, sources }: { e?: Evenement; prefixe?: boo
   )
 }
 
+/** « source introuvable (registres brûlés en 1914) », en petit après un événement */
+export function MentionIntrouvable({ i }: { i?: Introuvable }) {
+  if (!i) return null
+  return <span class="mention-introuvable">{texteIntrouvable(i)}</span>
+}
+
+/** Bouton qui copie un texte (une mention à coller dans une note) */
+export function Copier({ texte }: { texte: string }) {
+  const [fait, setFait] = useState(false)
+  if (!navigator.clipboard) return null
+  return (
+    <button type="button" class="bouton discret" onClick={() => navigator.clipboard.writeText(texte).then(() => { setFait(true); setTimeout(() => setFait(false), 1500) })}>
+      {fait ? 'Copié' : 'Copier'}
+    </button>
+  )
+}
+
 export function CelluleFait({ f }: { f: Fait }) {
   // Sans objet : un tiret, ou l'union hors mariage (« relation ») quand il y en a une
   if (f.etat === 'sans-objet' && !f.evenement) return <span class="vide">—</span>
   return (
     <span class="fait">
-      <Pastille etat={f.etat} />
+      <Pastille etat={f.etat} introuvable={f.introuvable} />
       <DateLieu e={f.evenement} prefixe sources />
     </span>
   )

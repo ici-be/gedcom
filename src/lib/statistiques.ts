@@ -178,7 +178,7 @@ export function statistiques(d: Donnees, perimetre: Set<string> | null): Statist
     const suivi = d.suivis.get(ind.id)
     if (suivi) {
       const ajouter = (type: 'naissance' | 'mariage' | 'deces', etat: string) => {
-        if (etat === 'source' || etat === 'sans-source') s.sources.push({ type, siecle, source: etat === 'source' })
+        if (etat === 'source' || etat === 'sans-source' || etat === 'introuvable') s.sources.push({ type, siecle, source: etat === 'source' })
       }
       ajouter('naissance', suivi.naissance.etat)
       ajouter('deces', suivi.deces.etat)

@@ -17,6 +17,7 @@ import { LIEU_INCONNU, LIEU_NON_SITUE, ordreRegions, places, regionsDesPlaces, r
 import { lignee } from '../lib/lignee'
 import { parents } from '../lib/parente'
 import { nombre } from '../lib/format'
+import { ecrire, lire } from '../lib/stockage'
 import {
   anneesDeNaissance, cadreRobuste, centres, distanceKm, etapes, GENERATIONS_MIGRATIONS, lieuEn, mediane, passages, quartierDe, tranches, vies,
   type Etape, type Passage, type Point, type Vie,
@@ -510,17 +511,19 @@ function Vivante({ m, contours }: { m: Calcul; contours: Contours }) {
   const fin = new Date().getFullYear()
   const [annee, setAnnee] = useState(Math.round((debut + fin) / 2 / 10) * 10)
   const [lecture, setLecture] = useState(false)
+  // la vitesse de lecture, en années par seconde (gardée d'une visite à l'autre)
+  const [vitesse, setVitesse] = useState(() => lire('migrations.vitesse', 6))
   const minuterie = useRef<number>(undefined)
   useEffect(() => {
     if (!lecture) return
     minuterie.current = window.setInterval(() => {
       setAnnee((a) => {
-        if (a + 2 >= fin) { setLecture(false); return fin }
-        return a + 2
+        if (a + 1 >= fin) { setLecture(false); return fin }
+        return a + 1
       })
-    }, 70)
+    }, 1000 / vitesse)
     return () => clearInterval(minuterie.current)
-  }, [lecture])
+  }, [lecture, vitesse])
   const vivants = toutes.filter((v) => v.debut <= annee && annee <= v.fin)
   const lieux = vivants.map((v) => ({ v, e: lieuEn(v, annee) }))
   const parCode = new Map<string, number>()
@@ -543,6 +546,11 @@ function Vivante({ m, contours }: { m: Calcul; contours: Contours }) {
         <button type="button" class="bouton principal" id="migrations-lire" onClick={() => { if (!lecture && annee >= fin) setAnnee(debut); setLecture(!lecture) }}>{lecture ? 'Pause' : 'Lire'}</button>
         <input type="range" id="migrations-annee" min={debut} max={fin} step="1" value={annee} aria-label="Année" onInput={(e) => { setLecture(false); setAnnee(Number(e.currentTarget.value)) }} />
         <span class="mg-annee">{annee}</span>
+        <label class="mg-vitesse">
+          Vitesse
+          <input type="range" id="migrations-vitesse" min="1" max="30" step="1" value={vitesse} onInput={(e) => { const v = Number(e.currentTarget.value); setVitesse(v); ecrire('migrations.vitesse', v) }} />
+          <span>{vitesse} an{vitesse > 1 ? 's' : ''}/s</span>
+        </label>
       </div>
       <div class="mg-duo">
         <div class="mg-papier">

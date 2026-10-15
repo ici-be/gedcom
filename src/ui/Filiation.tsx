@@ -1,22 +1,12 @@
 // Parents inconnus ou introuvables : les mentions « Filiation: … » à écrire dans la note de la personne, et celles trouvées dans l'arbre.
 
-import { useMemo, useState } from 'preact/hooks'
+import { useMemo } from 'preact/hooks'
 import type { Donnees } from '../lib/donnees'
 import type { Individu } from '../lib/gedcom/arbre'
 import { MENTIONS, texteParent } from '../lib/filiation'
 import { comparerSosa, etatParents, filiationContredite, nomComplet } from '../lib/parente'
 import { nombre } from '../lib/format'
-import { Annees, Personne } from './commun'
-
-function Copier({ texte }: { texte: string }) {
-  const [fait, setFait] = useState(false)
-  if (!navigator.clipboard) return null
-  return (
-    <button type="button" class="bouton discret" onClick={() => navigator.clipboard.writeText(texte).then(() => { setFait(true); setTimeout(() => setFait(false), 1500) })}>
-      {fait ? 'Copié' : 'Copier'}
-    </button>
-  )
-}
+import { Annees, Copier, Personne } from './commun'
 
 export function Filiation({ d }: { d: Donnees }) {
   const notes = useMemo(() => {

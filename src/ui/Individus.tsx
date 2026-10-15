@@ -7,15 +7,16 @@ import type { Individu } from '../lib/gedcom/arbre'
 import type { Ancetre } from '../lib/parente'
 import { comparerSosa, dansBranche, etatParents, nomComplet, parents } from '../lib/parente'
 import { texteParent, type EtatParent } from '../lib/filiation'
-import { score, unionLibre, type Etat, type Fait, type Suivi } from '../lib/suivi'
+import { aChercher, etatEvenement, score, type Etat, type Fait, type Suivi } from '../lib/suivi'
+import { texteIntrouvable } from '../lib/introuvable'
 import { libelle, NOMS_ETATS, nombre } from '../lib/format'
 import { telecharger, versCsv } from '../lib/csv'
 import { ecrire, lire } from '../lib/stockage'
 import { LiensMetiers } from './Metiers'
-import { Annees, CelluleFait, ChoixPerimetre, DateLieu, EffacerFiltres, EnTeteTri, Pagination, Pastille, Personne, Sources, normaliser, useImpression, lignesAffichees, AvisImpression } from './commun'
+import { Annees, CelluleFait, ChoixPerimetre, DateLieu, EffacerFiltres, EnTeteTri, MentionIntrouvable, Pagination, Pastille, Personne, Sources, normaliser, useImpression, lignesAffichees, AvisImpression } from './commun'
 
 type QuelFait = 'tous' | 'naissance' | 'mariage' | 'deces'
-type QuelEtat = 'tout' | 'a-faire' | 'sans-source' | 'manquant' | 'complet'
+type QuelEtat = 'tout' | 'a-faire' | 'sans-source' | 'manquant' | 'introuvable' | 'complet'
 type Tri = 'sosa' | 'nom' | 'naissance' | 'deces' | 'score'
 /** à chercher : il manque un parent sans mention « Filiation: » · clos : un parent inconnu ou introuvable */
 export type QuelsParents = 'tous' | 'a-chercher' | 'clos'
@@ -86,9 +87,11 @@ function correspond(etats: Etat[], voulu: QuelEtat): boolean {
   switch (voulu) {
     // Avec un fait précis, seulement les personnes concernées (mariées, décédées…)
     case 'tout': return utiles.length > 0
-    case 'a-faire': return utiles.some((e) => e !== 'source')
+    // une source introuvable n'est plus à chercher
+    case 'a-faire': return utiles.some(aChercher)
     case 'sans-source': return utiles.includes('sans-source')
     case 'manquant': return utiles.includes('manquant')
+    case 'introuvable': return utiles.includes('introuvable')
     case 'complet': return utiles.length > 0 && utiles.every((e) => e === 'source')
   }
 }
@@ -124,7 +127,7 @@ export function Individus({ d, perimetre, setPerimetre }: { d: Donnees; perimetr
     f.recherche.trim() && `nom « ${f.recherche.trim()} »`,
     f.lieu.trim() && `lieu « ${f.lieu.trim()} »`,
     f.fait !== 'tous' && `fait : ${f.fait === 'deces' ? 'décès' : f.fait}`,
-    f.etat !== 'tout' && `état : ${{ 'a-faire': 'à compléter', 'sans-source': 'sans source', manquant: 'manquant', complet: 'tout sourcé' }[f.etat]}`,
+    f.etat !== 'tout' && `état : ${{ 'a-faire': 'à compléter', 'sans-source': 'sans source', manquant: 'manquant', introuvable: 'source introuvable', complet: 'tout sourcé' }[f.etat]}`,
     avecAncetres && (f.genMin || f.genMax) && `générations ${f.genMin || '…'} à ${f.genMax || '…'}`,
     avecAncetres && f.branche && `branche ${f.branche}`,
     f.parents !== 'tous' && (f.parents === 'a-chercher' ? 'parents à chercher' : 'parents inconnus ou introuvables'),
@@ -180,7 +183,7 @@ export function Individus({ d, perimetre, setPerimetre }: { d: Donnees; perimetr
   const enTete = (t: Tri, texte: string) => <EnTeteTri cle={t} texte={texte} tri={tri} trier={trier} />
 
   const exporter = () => {
-    const texteFait = (x: Fait) => [NOMS_ETATS[x.etat], x.evenement?.date?.texte ?? '', x.evenement?.lieu ?? '', x.evenement?.sources.join(' | ') ?? '']
+    const texteFait = (x: Fait) => [NOMS_ETATS[x.etat], x.evenement?.date?.texte ?? '', x.evenement?.lieu ?? '', x.evenement?.sources.join(' | ') || (x.introuvable ? texteIntrouvable(x.introuvable) : '')]
     const entetes = ['Sosa', 'Génération', 'Nom', 'Prénom', 'Naissance', 'Date', 'Lieu', 'Source', 'Mariage', 'Date', 'Lieu', 'Source', 'Décès', 'Date', 'Lieu', 'Source', 'Parents absents', 'Lien']
     const rangs = lignes.map((l) => {
       const m = l.s.mariages[0] ?? { etat: 'sans-objet' as Etat }
@@ -225,6 +228,7 @@ export function Individus({ d, perimetre, setPerimetre }: { d: Donnees; perimetr
             <option value="a-faire">À compléter</option>
             <option value="sans-source">Sans source</option>
             <option value="manquant">Manquant</option>
+            <option value="introuvable">Source introuvable</option>
             <option value="complet">Tout sourcé</option>
             <option value="tout">Tout afficher</option>
           </select>
@@ -258,7 +262,7 @@ export function Individus({ d, perimetre, setPerimetre }: { d: Donnees; perimetr
       <div class="barre-resultats">
         <span><strong>{nombre(lignes.length)}</strong> personne{lignes.length > 1 ? 's' : ''}</span>
         <span class="legende">
-          <Pastille etat="source" /> sourcé <Pastille etat="sans-source" /> sans source <Pastille etat="manquant" /> manquant
+          <Pastille etat="source" /> sourcé <Pastille etat="sans-source" /> sans source <Pastille etat="manquant" /> manquant <Pastille etat="introuvable" /> <a href="#/introuvables" title="Noter une source introuvable">introuvable</a>
         </span>
         <button type="button" class="bouton discret" onClick={exporter} disabled={!lignes.length}>Exporter en CSV</button>
       </div>
@@ -347,17 +351,17 @@ function Details({ d, ind }: { d: Donnees; ind: Individu }) {
       <ul class="evenements">
         {ind.evenements.filter((e) => e.tag !== 'OCCU').map((e, i) => (
           <li key={i}>
-            <Pastille etat={e.sources.length ? 'source' : 'sans-source'} />
-            <strong>{libelle(e)}</strong> <DateLieu e={e} /> <Sources sources={e.sources} />
+            <Pastille etat={etatEvenement(e)} introuvable={e.introuvable} />
+            <strong>{libelle(e)}</strong> <DateLieu e={e} /> <Sources sources={e.sources} />{!e.sources.length && <MentionIntrouvable i={e.introuvable} />}
           </li>
         ))}
         {unions.map((fam) => {
           const conjoint = fam.mari === ind.id ? fam.femme : fam.mari
           return fam.evenements.map((e, i) => (
             <li key={fam.id + i}>
-              <Pastille etat={e.sources.length ? 'source' : unionLibre(e) ? 'sans-objet' : 'sans-source'} />
+              <Pastille etat={etatEvenement(e)} introuvable={e.introuvable} />
               <strong>{libelle(e)}</strong>
-              {conjoint && <> avec <Personne d={d} id={conjoint} /></>} <DateLieu e={e} /> <Sources sources={e.sources} />
+              {conjoint && <> avec <Personne d={d} id={conjoint} /></>} <DateLieu e={e} /> <Sources sources={e.sources} />{!e.sources.length && <MentionIntrouvable i={e.introuvable} />}
             </li>
           ))
         })}

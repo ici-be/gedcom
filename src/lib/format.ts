@@ -27,6 +27,7 @@ export const NOMS_ETATS: Record<Etat, string> = {
   source: 'Sourcé',
   'sans-source': 'Sans source',
   manquant: 'Manquant',
+  introuvable: 'Source introuvable',
   'sans-objet': 'Sans objet',
 }
 

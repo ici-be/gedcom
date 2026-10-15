@@ -74,7 +74,8 @@ export function Carte({ d, perimetre, setPerimetre, focus }: Props) {
     const res: LieuCarte[] = []
     for (const c of toutes) {
       const actes = c.actes.filter((a) => (groupe === 'tous' || a.groupe === groupe) && (choixSiecle === SIECLES_AFFICHES || siecle(a.evenement) === choixSiecle))
-      const sansSource = actes.filter((a) => !a.evenement.sources.length).length
+      // une source notée introuvable n'est plus à chercher
+      const sansSource = actes.filter((a) => !a.evenement.sources.length && !a.evenement.introuvable).length
       if (!actes.length || (aFaire && !sansSource)) continue
       const m = manuelles[c.lieu]
       const position: Position | undefined = m ? { lat: m[0], lon: m[1], qualite: 'manuel' } : auto?.get(c.lieu)

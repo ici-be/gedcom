@@ -105,6 +105,15 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   Accents, majuscules et accords sont libres, une explication peut suivre sur la même ligne ; un parent présent dans l'arbre l'emporte sur la
   note. Effets : repère à côté du nom, filtre « Parents » (à chercher / inconnus ou introuvables) dans
   Personnes, et places « sans issue » dans la complétude de l'ascendance.
+- **Sources introuvables** (`#/introuvables`) : un acte qu'on a cherché et qui ne se trouvera pas
+  (registres brûlés, lacune…) se note dans la **note de l'événement** (naissance, baptême, mariage,
+  décès…) par une ligne `Source: introuvable`, suivie si l'on veut de la raison entre parenthèses :
+  `Source: introuvable (les archives de 1789 à 1820 ont brûlé en 1914)`. Majuscules et pluriel libres,
+  `Acte: introuvable` est reconnu aussi ; une source attachée à l'événement l'emporte sur la note.
+  Le fait prend l'état « source introuvable » (pastille ∅, raison au survol) : il n'est plus « à
+  compléter », ni compté parmi les ancêtres à sourcer, les actes à chercher par lieu ou sur la carte,
+  sans compter pour autant comme sourcé. Un filtre « Source introuvable » les retrouve, et le récit
+  cite l'acte introuvable et sa raison en note.
 
 Pour chaque événement, un badge **S** (bleu) ouvre la source en ligne ; un badge **T** (orange)
 montre une source écrite en texte.
@@ -147,6 +156,7 @@ Preact + TypeScript + Vite. La lecture du fichier se fait dans un *worker* (`src
 - `src/lib/gedcom/` : décodage, lignes GEDCOM, dates, modèle de l'arbre
 - `src/lib/parente.ts` : ancêtres (Sosa), frères et sœurs, homonymes
 - `src/lib/filiation.ts` : mentions « Filiation: … » des notes de personne
+- `src/lib/introuvable.ts` : mentions « Source: introuvable (…) » des notes d'événement
 - `src/lib/suivi.ts` : état des naissance, mariage et décès de chaque personne
 - `src/lib/communes.ts` : faits regroupés par lieu
 - `src/lib/metiers.ts` : métiers, variantes et féminins

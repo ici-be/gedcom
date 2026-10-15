@@ -5,6 +5,7 @@ import { membres, type Bilan, type Donnees, type Perimetre, type Releve } from '
 import { communes } from '../lib/communes'
 import { adresseDevinee, normaliserAdresse } from '../lib/geneanet'
 import { nombre, pourcent } from '../lib/format'
+import { aChercher } from '../lib/suivi'
 import { Barre, Personne } from './commun'
 import { CarteAccueil } from './CarteAccueil'
 import { preparerAFaire } from './Individus'
@@ -127,7 +128,7 @@ export function TableauDeBord({ d, bilan, precedent, fichier, ouvrir, setAdresse
     let aSourcer = 0
     for (const id of d.ancetres.keys()) {
       const s = d.suivis.get(id)
-      if (s && [s.naissance.etat, s.mariage, s.deces.etat].some((e) => e === 'sans-source' || e === 'manquant')) aSourcer++
+      if (s && [s.naissance.etat, s.mariage, s.deces.etat].some(aChercher)) aSourcer++
     }
     const lieux = communes(d.arbre, membres(d, 'ancetres'), false).filter((c) => c.sansSource > 0).length
     let visages = 0
@@ -179,6 +180,7 @@ export function TableauDeBord({ d, bilan, precedent, fichier, ouvrir, setAdresse
 
       <p class="astuce">Un « fait », c'est une naissance (ou un baptême), un mariage ou un décès (ou une inhumation). Il est sourcé quand au moins une source y est attachée.</p>
       <p class="astuce">Un parent qu'il ne sert à rien de chercher (enfant naturel, enfant trouvé, registres perdus) se signale dans la note de la personne : <a href="#/filiation">« Filiation: père inconnu »…</a></p>
+      <p class="astuce">Un acte qui ne se trouvera pas (registres brûlés, lacune) se signale dans la note de l'événement, pour ne plus le compter parmi les sources à chercher : <a href="#/introuvables">« Source: introuvable (les archives ont brûlé en 1914) »</a></p>
 
       <section class="panneau reglages">
         <h2>Réglages</h2>

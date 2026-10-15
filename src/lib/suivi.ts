@@ -2,9 +2,13 @@
 
 import type { Arbre, Evenement, Famille, Individu } from './gedcom/arbre'
 import { annee } from './gedcom/dates'
+import type { Introuvable } from './introuvable'
 
-/** sourcé · renseigné sans source · manquant · sans objet (pas de conjoint, personne vivante) */
-export type Etat = 'source' | 'sans-source' | 'manquant' | 'sans-objet'
+/**
+ * sourcé · renseigné sans source · manquant · introuvable (« Source: introuvable » dans la note : recherche close)
+ * · sans objet (pas de conjoint, personne vivante)
+ */
+export type Etat = 'source' | 'sans-source' | 'manquant' | 'introuvable' | 'sans-objet'
 
 export interface Fait {
   etat: Etat
@@ -13,6 +17,8 @@ export interface Fait {
   /** Pour un mariage : la famille et le conjoint */
   famille?: string
   conjoint?: string
+  /** Source notée introuvable (sur l'événement affiché ou un autre du même fait) */
+  introuvable?: Introuvable
 }
 
 export interface Suivi {
@@ -23,7 +29,12 @@ export interface Suivi {
   mariage: Etat
 }
 
-export const ORDRE_ETATS: Etat[] = ['manquant', 'sans-source', 'source', 'sans-objet']
+export const ORDRE_ETATS: Etat[] = ['manquant', 'sans-source', 'introuvable', 'source', 'sans-objet']
+
+/** Il reste une source à chercher : ni sourcé, ni introuvable, ni sans objet */
+export function aChercher(e: Etat): boolean {
+  return e === 'sans-source' || e === 'manquant'
+}
 
 export function renseigne(e: Evenement): boolean {
   return !!(e.date?.brute || e.lieu)
@@ -33,10 +44,18 @@ export function renseigne(e: Evenement): boolean {
 function fait(evenements: Evenement[], tags: string[]): Fait {
   const candidats = tags.flatMap((t) => evenements.filter((e) => e.tag === t))
   const remplis = candidats.filter((e) => renseigne(e) || e.sources.length)
-  if (!remplis.length) return { etat: 'manquant', evenement: candidats[0] }
   const avecSource = remplis.find((e) => e.sources.length)
+  // une source trouvée l'emporte sur la note
   if (avecSource) return { etat: 'source', evenement: renseigne(avecSource) ? avecSource : remplis.find(renseigne) ?? avecSource }
+  const introuvable = candidats.find((e) => e.introuvable)
+  if (introuvable) return { etat: 'introuvable', evenement: remplis[0] ?? introuvable, introuvable: introuvable.introuvable }
+  if (!remplis.length) return { etat: 'manquant', evenement: candidats[0] }
   return { etat: 'sans-source', evenement: remplis[0] }
+}
+
+/** État d'un événement seul : sourcé, introuvable, sans objet (union hors mariage) ou sans source */
+export function etatEvenement(e: Evenement): Etat {
+  return e.sources.length ? 'source' : e.introuvable ? 'introuvable' : unionLibre(e) ? 'sans-objet' : 'sans-source'
 }
 
 const UNION_LIBRE = /unmarried|union libre|concubin|non mari/i
@@ -57,7 +76,7 @@ function faitMariage(fam: Famille, ind: Individu): Fait {
   return { ...f, ...base }
 }
 
-/** Pire état d'une liste (manquant > sans source > sourcé) */
+/** Pire état d'une liste (manquant > sans source > introuvable > sourcé) */
 export function pire(etats: Etat[]): Etat {
   for (const e of ORDRE_ETATS) if (etats.includes(e)) return e
   return 'sans-objet'
@@ -105,7 +124,7 @@ export function suivi(arbre: Arbre, ind: Individu, anneeCourante = new Date().ge
   }
 }
 
-/** Nombre de faits attendus et sourcés */
+/** Nombre de faits attendus et sourcés (un fait introuvable reste attendu : il n'est pas sourcé) */
 export function score(s: Suivi): { attendus: number; sources: number } {
   const etats = [s.naissance.etat, s.deces.etat, ...s.mariages.map((m) => m.etat)].filter((e) => e !== 'sans-objet')
   return { attendus: etats.length, sources: etats.filter((e) => e === 'source').length }

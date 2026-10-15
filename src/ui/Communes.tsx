@@ -5,10 +5,12 @@ import { useEffect, useMemo, useState } from 'preact/hooks'
 import { membres, type Donnees, type Perimetre } from '../lib/donnees'
 import { communes, siecle, GROUPES, type Acte, type Commune } from '../lib/communes'
 import { libelle, nombre, pourcent } from '../lib/format'
+import { etatEvenement } from '../lib/suivi'
+import { texteIntrouvable } from '../lib/introuvable'
 import { telecharger, versCsv } from '../lib/csv'
 import { nomComplet } from '../lib/parente'
 import { ecrire, lire } from '../lib/stockage'
-import { Barre, ChoixPerimetre, EffacerFiltres, EnTeteTri, type Tri, Pagination, Pastille, Personne, Sources, normaliser, useImpression, lignesAffichees, AvisImpression } from './commun'
+import { Barre, ChoixPerimetre, EffacerFiltres, EnTeteTri, type Tri, MentionIntrouvable, Pagination, Pastille, Personne, Sources, normaliser, useImpression, lignesAffichees, AvisImpression } from './commun'
 
 type TriCommunes = 'nom' | 'total' | 'sans-source' | 'part'
 const PAR_PAGE = 100
@@ -34,7 +36,7 @@ export function Communes({ d, perimetre, setPerimetre }: { d: Donnees; perimetre
       const n = normaliser(c.lieu)
       return mots.every((m) => n.includes(m))
     })
-    const part = (c: Commune) => (c.actes.length - c.sansSource) / c.actes.length
+    const part = (c: Commune) => (c.sourcees) / c.actes.length
     // ordre croissant ; le sens choisi l'inverse au besoin, à égalité le plus grand nombre de faits d'abord
     const comparer: Record<TriCommunes, (a: Commune, b: Commune) => number> = {
       nom: (a, b) => a.nom.localeCompare(b.nom, 'fr') || a.contexte.localeCompare(b.contexte, 'fr'),
@@ -51,8 +53,8 @@ export function Communes({ d, perimetre, setPerimetre }: { d: Donnees; perimetre
 
   const exporter = () => {
     telecharger('lieux.csv', versCsv([
-      ['Commune', 'Région, pays', 'Lieu complet', 'Faits', 'Sans source', 'Sourcés'],
-      ...liste.map((c) => [c.nom, c.contexte, c.lieu, c.actes.length, c.sansSource, pourcent(c.actes.length - c.sansSource, c.actes.length)]),
+      ['Commune', 'Région, pays', 'Lieu complet', 'Faits', 'Sans source', 'Introuvables', 'Sourcés'],
+      ...liste.map((c) => [c.nom, c.contexte, c.lieu, c.actes.length, c.sansSource, c.introuvables, pourcent(c.sourcees, c.actes.length)]),
     ]))
   }
 
@@ -101,10 +103,13 @@ export function Communes({ d, perimetre, setPerimetre }: { d: Donnees; perimetre
                   {c.contexte && <span class="contexte">{c.contexte}</span>}
                 </td>
                 <td class="nombre">{nombre(c.actes.length)}</td>
-                <td class="nombre">{c.sansSource ? <strong>{nombre(c.sansSource)}</strong> : <span class="vide">0</span>}</td>
+                <td class="nombre">
+                  {c.sansSource ? <strong>{nombre(c.sansSource)}</strong> : <span class="vide">0</span>}
+                  {c.introuvables > 0 && <span class="contexte" title="Sources notées introuvables : plus à chercher">+ {nombre(c.introuvables)} introuvable{c.introuvables > 1 ? 's' : ''}</span>}
+                </td>
                 <td class="progression">
-                  <Barre n={c.actes.length - c.sansSource} total={c.actes.length} />
-                  <span>{pourcent(c.actes.length - c.sansSource, c.actes.length)}</span>
+                  <Barre n={c.sourcees} total={c.actes.length} />
+                  <span>{pourcent(c.sourcees, c.actes.length)}</span>
                 </td>
               </tr>
             ))}
@@ -135,7 +140,7 @@ export function Lieu({ d, lieu, perimetre, setPerimetre }: { d: Donnees; lieu: s
 
   const groupes = useMemo(() => {
     if (!c) return []
-    const actes = c.actes.filter((a) => (tout || !a.evenement.sources.length) && !(masquerFaits && coches.has(a.cle) && !tout))
+    const actes = c.actes.filter((a) => (tout || etatEvenement(a.evenement) === 'sans-source') && !(masquerFaits && coches.has(a.cle) && !tout))
     return GROUPES.map((g) => {
       const parSiecle = new Map<string, Acte[]>()
       for (const a of actes.filter((x) => x.groupe === g.id).sort((x, y) => (x.evenement.date?.tri || 99999999) - (y.evenement.date?.tri || 99999999))) {
@@ -159,7 +164,7 @@ export function Lieu({ d, lieu, perimetre, setPerimetre }: { d: Donnees; lieu: s
   const exporter = () => {
     const rangs = groupes.flatMap((g) => g.siecles.flatMap(([, actes]) => actes.map((a) => [
       g.titre, libelle(a.evenement), a.evenement.date?.texte ?? '', a.personnes.map((p) => { const i = d.arbre.individus.get(p); return i ? nomComplet(i) : '?' }).join(' & '),
-      a.evenement.sources.join(' | '), coches.has(a.cle) ? 'oui' : '',
+      a.evenement.sources.join(' | ') || (a.evenement.introuvable ? texteIntrouvable(a.evenement.introuvable) : ''), coches.has(a.cle) ? 'oui' : '',
     ])))
     telecharger(`${c.nom}.csv`, versCsv([['Groupe', 'Type', 'Date', 'Personne(s)', 'Source', 'Fait'], ...rangs]))
   }
@@ -175,7 +180,7 @@ export function Lieu({ d, lieu, perimetre, setPerimetre }: { d: Donnees; lieu: s
         <ChoixPerimetre valeur={perimetre} changer={setPerimetre} />
         <label class="case">
           <input type="checkbox" checked={tout} onChange={(e) => setTout(e.currentTarget.checked)} />
-          <span>Afficher aussi les faits sourcés</span>
+          <span>Afficher aussi les faits sourcés{c.introuvables > 0 && ' ou introuvables'}</span>
         </label>
         {!tout && (
           <label class="case">
@@ -186,7 +191,7 @@ export function Lieu({ d, lieu, perimetre, setPerimetre }: { d: Donnees; lieu: s
       </div>
       <div class="barre-resultats">
         <span>
-          <strong>{nombre(c.sansSource)}</strong> faits sans source sur {nombre(c.actes.length)} · <Barre n={c.actes.length - c.sansSource} total={c.actes.length} /> {pourcent(c.actes.length - c.sansSource, c.actes.length)} sourcés
+          <strong>{nombre(c.sansSource)}</strong> faits sans source sur {nombre(c.actes.length)}{c.introuvables > 0 && <>, {nombre(c.introuvables)} <a href="#/introuvables">introuvable{c.introuvables > 1 ? 's' : ''}</a></>} · <Barre n={c.sourcees} total={c.actes.length} /> {pourcent(c.sourcees, c.actes.length)} sourcés
         </span>
         <button type="button" class="bouton discret" onClick={exporter}>Exporter en CSV</button>
       </div>
@@ -203,13 +208,14 @@ export function Lieu({ d, lieu, perimetre, setPerimetre }: { d: Donnees; lieu: s
                 {actes.map((a) => (
                   <li key={a.cle} class={coches.has(a.cle) ? 'coche' : ''}>
                     <input type="checkbox" checked={coches.has(a.cle)} onChange={(e) => cocher(a.cle, e.currentTarget.checked)} aria-label="Trouvé" />
-                    <Pastille etat={a.evenement.sources.length ? 'source' : 'sans-source'} />
+                    <Pastille etat={etatEvenement(a.evenement)} introuvable={a.evenement.introuvable} />
                     <span class="date">{a.evenement.date?.texte || 'date inconnue'}</span>
                     <span class="type">{libelle(a.evenement)}</span>
                     <span class="qui">
                       {a.personnes.map((p, i) => <Fragment key={p}>{i > 0 && ' & '}<Personne d={d} id={p} annees /></Fragment>)}
                     </span>
                     <Sources sources={a.evenement.sources} />
+                    {!a.evenement.sources.length && <MentionIntrouvable i={a.evenement.introuvable} />}
                   </li>
                 ))}
               </ul>

@@ -47,7 +47,7 @@ function Ligne({ signe, titre, f, e, apres }: { signe: string; titre: string; f?
   if (!e || (!e.date && !e.lieu && !e.avere)) return null
   return (
     <div class="lg-fait">
-      {f && <Pastille etat={f.etat} />}
+      {f && <Pastille etat={f.etat} introuvable={f.introuvable} />}
       <span class="lg-signe" title={titre} aria-label={titre}>{signe}</span>
       <span>
         {e.date?.texte || (e.lieu ? '' : 'date inconnue')}
@@ -98,7 +98,7 @@ function Union({ d, m, photo }: { d: Donnees; m: Maillon; photo: boolean }) {
   return (
     <div class="lg-union">
       <div class="lg-union-ligne">
-        {m.union && e && <Pastille etat={m.union.etat} />}
+        {m.union && e && <Pastille etat={m.union.etat} introuvable={m.union.introuvable} />}
         <span class="lg-signe" title="Union" aria-label="Union">∞</span>
         <span>
           {e?.date?.texte ? <>{e.date.texte}{e.lieu ? ', ' : ''}</> : null}<Lieu lieu={e?.lieu} />

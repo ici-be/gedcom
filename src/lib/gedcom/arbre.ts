@@ -3,6 +3,7 @@
 import { enfant, lireNoeuds, valeur, type Noeud } from './lecture'
 import { lireDate, type DateGed } from './dates'
 import { lireFiliation, type Filiation } from '../filiation'
+import { lireIntrouvable, type Introuvable } from '../introuvable'
 
 export interface Evenement {
   tag: string
@@ -12,6 +13,8 @@ export interface Evenement {
   lieu?: string
   sources: string[]
   note?: string
+  /** Recherche close faute d'acte, d'après la note (« Source: introuvable (registres brûlés) ») */
+  introuvable?: Introuvable
   /** L'événement est déclaré sans date ni lieu (« 1 DEAT Y ») */
   avere: boolean
   /** Personnes citées dans l'acte (« 2 ASSO @I1@ », « 3 RELA Witness ») : témoins, parrain et marraine… */
@@ -81,16 +84,32 @@ function lireSources(n: Noeud, titres: Map<string, string>): string[] {
   return sources
 }
 
-function lireEvenement(n: Noeud, titres: Map<string, string>): Evenement {
+/** Toutes les notes d'un nœud, renvois « @N1@ » compris */
+function lireNote(n: Noeud, notes: Map<string, string>): string {
+  return n.enfants
+    .filter((e) => e.tag === 'NOTE')
+    .map((e) => {
+      const v = e.valeur.trim()
+      return /^@[^@]+@$/.test(v) ? (notes.get(v) ?? '') : e.valeur
+    })
+    .filter((t) => t.trim())
+    .join('\n')
+}
+
+function lireEvenement(n: Noeud, titres: Map<string, string>, notes: Map<string, string>): Evenement {
   const date = valeur(n, 'DATE')
   const lieu = valeur(n, 'PLAC').replace(/\s+/g, ' ')
   const type = valeur(n, 'TYPE') || (n.tag === 'OCCU' || n.tag === 'TITL' ? n.valeur.trim() : '')
-  const note = valeur(n, 'NOTE')
+  const note = lireNote(n, notes).trim()
   const e: Evenement = { tag: n.tag, sources: lireSources(n, titres), avere: n.valeur.trim().toUpperCase() === 'Y' }
   if (type) e.type = type
   if (date) e.date = lireDate(date)
   if (lieu) e.lieu = lieu
-  if (note) e.note = note
+  if (note) {
+    e.note = note
+    const i = lireIntrouvable(note)
+    if (i) e.introuvable = i
+  }
   const temoins = n.enfants
     .filter((a) => a.tag === 'ASSO' && /^@[^@]+@$/.test(a.valeur.trim()))
     .map((a) => ({ id: a.valeur.trim(), rela: valeur(a, 'RELA') }))
@@ -161,17 +180,15 @@ export function lireArbre(texte: string): Arbre {
         if (e.tag === 'FAMC') ind.famc.push(e.valeur.trim())
         else if (e.tag === 'FAMS') ind.fams.push(e.valeur.trim())
         else if (EVENEMENTS.has(e.tag)) {
-          ind.evenements.push(lireEvenement(e, titres))
+          ind.evenements.push(lireEvenement(e, titres, notes))
           if (e.tag === 'OCCU' && e.valeur.trim()) ind.metiers.push(e.valeur.trim())
-        } else if (e.tag === 'NOTE') {
-          const v = e.valeur.trim()
-          const texte = /^@[^@]+@$/.test(v) ? (notes.get(v) ?? '') : e.valeur
-          if (texte.trim()) ind.note = ind.note ? ind.note + '\n' + texte : texte
         } else if (e.tag === 'OBJE' && !ind.photo) {
           const ph = lirePhoto(e, objets)
           if (ph) ind.photo = ph
         }
       }
+      const note = lireNote(n, notes)
+      if (note) ind.note = note
       if (ind.note) {
         const f = lireFiliation(ind.note)
         if (f) ind.filiation = f
@@ -183,7 +200,7 @@ export function lireArbre(texte: string): Arbre {
         if (e.tag === 'HUSB') fam.mari = e.valeur.trim()
         else if (e.tag === 'WIFE') fam.femme = e.valeur.trim()
         else if (e.tag === 'CHIL') fam.enfants.push(e.valeur.trim())
-        else if (EVENEMENTS.has(e.tag)) fam.evenements.push(lireEvenement(e, titres))
+        else if (EVENEMENTS.has(e.tag)) fam.evenements.push(lireEvenement(e, titres, notes))
       }
       arbre.familles.set(fam.id, fam)
     }
