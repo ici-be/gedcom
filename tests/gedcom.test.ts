@@ -72,6 +72,19 @@ describe('arbre', () => {
     const b = lireArbre('0 @I1@ INDI\n1 NAME A /B/\n1 BIRT\n2 DATE 1900\n2 SOUR\n3 PAGE geneweb wiki notes: x\n')
     expect(b.individus.get('@I1@')!.evenements[0].sources).toEqual([])
   })
+  test('photo principale : visage, signature en PNG, renvoi et fichier local ignoré', () => {
+    const b = lireArbre([
+      '0 @I1@ INDI', '1 NAME A /B/', '1 OBJE', '2 FILE http://gw.geneanet.org/public/img/media/deposits/a8/medium.jpg?t=1',
+      '0 @I2@ INDI', '1 NAME C /B/', '1 OBJE', '2 FILE http://gw.geneanet.org/public/img/media/deposits/b9/medium.png?t=2',
+      '0 @I3@ INDI', '1 NAME D /B/', '1 OBJE @O1@',
+      '0 @I4@ INDI', '1 NAME E /B/', '1 OBJE', '2 FILE C:\\photos\\e.jpg',
+      '0 @O1@ OBJE', '1 FILE https://exemple.org/d', '2 FORM PNG', '',
+    ].join('\n'))
+    expect(b.individus.get('@I1@')!.photo).toEqual({ url: 'https://gw.geneanet.org/public/img/media/deposits/a8/medium.jpg?t=1', signature: false })
+    expect(b.individus.get('@I2@')!.photo?.signature).toBe(true)
+    expect(b.individus.get('@I3@')!.photo).toEqual({ url: 'https://exemple.org/d', signature: true })
+    expect(b.individus.get('@I4@')!.photo).toBeUndefined()
+  })
   test('liens familiaux complétés dans les deux sens', () => {
     const b = lireArbre('0 @I1@ INDI\n1 NAME A /B/\n0 @I2@ INDI\n1 NAME C /B/\n0 @F1@ FAM\n1 HUSB @I1@\n1 CHIL @I2@\n')
     expect(b.individus.get('@I1@')!.fams).toEqual(['@F1@'])

@@ -36,7 +36,11 @@ export interface Individu {
   note?: string
   /** Parent inconnu ou introuvable, d'après la note (« Filiation: père inconnu »…) */
   filiation?: Filiation
+  /** Photo principale en ligne (« 1 OBJE », « 2 FILE https://… ») : visage, ou signature si c'est un PNG */
+  photo?: Photo
 }
+
+export interface Photo { url: string; signature: boolean }
 
 export interface Famille {
   id: string
@@ -94,6 +98,20 @@ function lireEvenement(n: Noeud, titres: Map<string, string>): Evenement {
   return e
 }
 
+/** Photo d'un « 1 OBJE » : seules les adresses web servent (un fichier local n'est pas lisible ici). */
+function lirePhoto(n: Noeud, objets: Map<string, Noeud>): Photo | undefined {
+  const v = n.valeur.trim()
+  const o = /^@[^@]+@$/.test(v) ? objets.get(v) : n
+  const file = o && enfant(o, 'FILE')
+  const f = file?.valeur.trim() ?? ''
+  if (!file || !/^https?:\/\//i.test(f)) return undefined
+  // Geneanet écrit « http:// » mais sert ses images en https (une image http serait bloquée sur un site https)
+  const url = f.replace(/^http:\/\/((?:[\w-]+\.)*geneanet\.org\/)/i, 'https://$1')
+  // le format est sous FILE en GEDCOM 5.5.1, à côté en 5.5
+  const forme = valeur(file, 'FORM') || valeur(o, 'FORM')
+  return { url, signature: /\.png(\?|#|$)/i.test(url) || /^png$/i.test(forme) }
+}
+
 /** « Bruno /Veÿckemans/ » → prénom et nom ; les « ? » de GeneWeb deviennent vides. */
 function lireNom(n?: Noeud): { prenom: string; nom: string } {
   if (!n) return { prenom: '', nom: '' }
@@ -111,9 +129,11 @@ export function lireArbre(texte: string): Arbre {
   const noeuds = lireNoeuds(texte)
   const titres = new Map<string, string>()
   const notes = new Map<string, string>()
+  const objets = new Map<string, Noeud>()
   for (const n of noeuds) {
     if (n.tag === 'SOUR' && n.xref) titres.set(n.xref, valeur(n, 'TITL') || valeur(n, 'ABBR') || n.xref)
     else if (n.tag === 'NOTE' && n.xref) notes.set(n.xref, n.valeur)
+    else if (n.tag === 'OBJE' && n.xref) objets.set(n.xref, n)
   }
 
   const arbre: Arbre = { individus: new Map(), familles: new Map(), origine: {} }
@@ -147,6 +167,9 @@ export function lireArbre(texte: string): Arbre {
           const v = e.valeur.trim()
           const texte = /^@[^@]+@$/.test(v) ? (notes.get(v) ?? '') : e.valeur
           if (texte.trim()) ind.note = ind.note ? ind.note + '\n' + texte : texte
+        } else if (e.tag === 'OBJE' && !ind.photo) {
+          const ph = lirePhoto(e, objets)
+          if (ph) ind.photo = ph
         }
       }
       if (ind.note) {

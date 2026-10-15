@@ -500,6 +500,17 @@ a.asc-piste-g:hover { color: var(--accent); }
 /* ---------- lignée : frise verticale, du plus ancien à la personne de départ ---------- */
 .lignee { display: flex; flex-direction: column; gap: 18px; }
 .lignee .titre-ecran { display: flex; flex-direction: column; gap: 6px; }
+/* photos de l'arbre en ligne : visage en médaillon, signature à l'encre (inversée en mode sombre) */
+.photo { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 3px; flex: none; }
+.photo img { display: block; }
+.photo.portrait img { object-fit: cover; object-position: 50% 25%; border-radius: 50%; border: 2px solid var(--panel); outline: 1px solid var(--line); box-shadow: var(--shadow); background: var(--panel-2); }
+.photo.signature img { object-fit: contain; width: auto; height: auto; }
+.photo figcaption { font: italic 0.78rem/1.2 var(--display); color: var(--muted); text-align: center; max-width: 12em; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .photo.signature img { filter: invert(1) hue-rotate(180deg) brightness(0.9); }
+}
+:root[data-theme="dark"] .photo.signature img { filter: invert(1) hue-rotate(180deg) brightness(0.9); }
+@media print { :root:root .photo.signature img { filter: none; } .photo.portrait img { box-shadow: none; } }
 .lg-onglets { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
 .lg-retour { font-weight: 700; text-decoration: none; font-size: 0.9rem; }
 .lg-onglets .segments { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
@@ -526,7 +537,14 @@ a.asc-piste-g:hover { color: var(--accent); }
 .lg-noeud.vide::after { border-style: dashed; border-color: var(--clos); }
 .lg-corps { padding: 6px 0 4px; min-width: 0; }
 .lg-carte { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--c); border-radius: var(--radius); padding: 12px 16px;
-  display: flex; flex-direction: column; gap: 4px; box-shadow: var(--shadow); }
+  display: flex; gap: 14px; align-items: center; box-shadow: var(--shadow); }
+.lg-infos { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.lg-photo.portrait img { width: 72px; height: 88px; }
+.lg-photo.signature img { max-width: min(170px, 34vw); max-height: 64px; }
+.lg-case { display: inline-flex; gap: 6px; align-items: center; font-size: 0.9rem; color: var(--muted); }
+.photo.lg-mini { display: inline-block; vertical-align: middle; margin: -4px 6px -4px 0; }
+.lg-mini.portrait img { width: 26px; height: 26px; border-radius: 50%; border-width: 1px; padding: 0; }
+.lg-mini.signature img { max-height: 24px; max-width: 90px; }
 .lg-carte.racine { background: var(--accent-bg); }
 .lg-gen { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-variant-numeric: tabular-nums; }
 .lg-carte h3 { font: 600 1.2rem/1.2 var(--display); margin: 0 0 4px; }
@@ -658,6 +676,20 @@ a.asc-piste-g:hover { color: var(--accent); }
 .rc-vise { animation: rc-vise 1.6s ease-out; }
 @keyframes rc-vise { from { background: color-mix(in srgb, var(--accent) 22%, transparent); } to { background: transparent; } }
 .rc-case { display: inline-flex; gap: 6px; align-items: center; font-size: 0.9rem; }
+/* photos à côté d'une notice, comme dans les livres de famille */
+.rc-figures { float: right; display: flex; gap: 12px; align-items: flex-end; margin: 4px 0 8px 18px; }
+.rc-figures .portrait img { width: 84px; height: 104px; }
+.rc-figures .signature img { max-width: min(180px, 38vw); max-height: 70px; }
+.rc-corps .rc-figures .portrait img { width: 64px; height: 80px; }
+.rc-corps .rc-figures .signature img { max-width: min(140px, 30vw); max-height: 54px; }
+@media (max-width: 560px) {
+  .rc-figures { gap: 8px; margin-left: 12px; }
+  .rc-figures .portrait img, .rc-corps .rc-figures .portrait img { width: 52px; height: 64px; }
+  .rc-figures .signature img, .rc-corps .rc-figures .signature img { max-width: 110px; max-height: 44px; }
+  .lg-photo.portrait img { width: 52px; height: 64px; }
+}
+.rc-texte > section::after { content: ''; display: block; clear: both; }
+.rc-texte .rc-notes, .rc-texte h3 { clear: both; }
 @media print {
   .recit > .titre-ecran, .rc-reglages { display: none !important; }
   .rc-texte { border: 0; padding: 0; }
@@ -665,6 +697,7 @@ a.asc-piste-g:hover { color: var(--accent); }
   .rc-texte .rc-notes p { font-size: 8pt; }
   .rc-texte a { text-decoration: none; }
   .rc-texte h3 { break-after: avoid; }
+  .rc-figures { break-inside: avoid; }
 }
 
 /* ---------- impression (Ctrl+P) : le titre, le rappel des filtres et le tableau, sur fond blanc ---------- */

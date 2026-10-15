@@ -9,6 +9,7 @@ import { annee } from '../lib/gedcom/dates'
 import { decouperLieu } from '../lib/communes'
 import { NOMS_ETATS, libelle, lienDansSource } from '../lib/format'
 import { nomComplet } from '../lib/parente'
+import { ecrire, lire } from '../lib/stockage'
 
 /** Recherche sans accents ni majuscules */
 export function normaliser(s: string): string {
@@ -249,5 +250,33 @@ export function EnTeteTri<K extends string>({ cle, tri, trier, texte, sensInitia
         {texte}<span class="fleche" aria-hidden="true">{actif ? (tri.sens === 1 ? '▲' : '▼') : '↕'}</span>
       </button>
     </th>
+  )
+}
+
+/** Afficher les photos de l'arbre en ligne (visages et signatures) : un seul réglage pour Récit et Lignée */
+export function usePhotos(d: Donnees): { dispo: boolean; afficher: boolean; changer: (v: boolean) => void } {
+  const dispo = useMemo(() => [...d.arbre.individus.values()].some((i) => i.photo), [d])
+  const [afficher, setAfficher] = useState(() => lire('photos', true))
+  return { dispo, afficher: dispo && afficher, changer: (v) => { setAfficher(v); ecrire('photos', v) } }
+}
+
+export function CasePhotos({ p, classe }: { p: ReturnType<typeof usePhotos>; classe?: string }) {
+  if (!p.dispo) return null
+  return <label class={classe}><input type="checkbox" checked={p.afficher} onChange={(e) => p.changer(e.currentTarget.checked)} /> Photos et signatures</label>
+}
+
+/** La photo principale d'une personne, chargée depuis l'arbre en ligne ; rien si elle ne vient pas. */
+export function Photo({ ind, legende, classe }: { ind?: Individu; legende?: boolean; classe?: string }) {
+  const [ko, setKo] = useState<string>()
+  const ph = ind?.photo
+  if (!ind || !ph || ko === ph.url) return null
+  const sig = ph.signature
+  const nom = nomComplet(ind)
+  return (
+    <figure class={'photo ' + (sig ? 'signature' : 'portrait') + (classe ? ' ' + classe : '')}>
+      <img src={ph.url} alt={sig ? `Signature de ${nom}` : nom} title={sig ? `Signature de ${nom}` : nom}
+        loading="lazy" decoding="async" referrerpolicy="no-referrer" onError={() => setKo(ph.url)} />
+      {legende && <figcaption>{sig ? 'signature de ' : ''}{ind.prenom.split(/\s+/)[0] || nom}</figcaption>}
+    </figure>
   )
 }

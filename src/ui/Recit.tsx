@@ -8,9 +8,12 @@ import type { Donnees } from '../lib/donnees'
 import { MAX_ASCENDANTS, MAX_DESCENDANTS, recit, texteBrut, type Bloc, type Morceau, type Phrase } from '../lib/recit'
 import { nombre } from '../lib/format'
 import { ecrire, lire } from '../lib/stockage'
-import { ChoixPersonne } from './commun'
+import type { Individu } from '../lib/gedcom/arbre'
+import { CasePhotos, ChoixPersonne, Photo, usePhotos } from './commun'
 
 interface Reglages { asc: number; desc: number; sources: boolean }
+/** Pour les photos à côté des notices (absent : pas de photos) */
+type Qui = ((id: string) => Individu | undefined) | undefined
 
 const lien = (id: string) => '#/recit/' + encodeURIComponent(id)
 const GENERATIONS_ASC = ['aucune', 'les parents', 'jusqu’aux grands-parents', 'jusqu’aux arrière-grands-parents']
@@ -42,13 +45,14 @@ function M({ m }: { m: Morceau }) {
 
 const Texte = ({ morceaux }: { morceaux: Phrase }) => <>{morceaux.map((m, i) => <M key={i} m={m} />)}</>
 
-function Blocs({ blocs }: { blocs: Bloc[] }) {
+function Blocs({ blocs, qui }: { blocs: Bloc[]; qui: Qui }) {
   return (
     <>
       {blocs.map((b, i) => b.type === 'p'
         ? (
           <p key={i} class={b.italique ? 'rc-lit' : undefined}>
             {b.ancres?.map((s) => <span key={s} id={`rc-s${s}`} class="rc-ancre" />)}
+            {qui && b.figures && <span class="rc-figures">{b.figures.map((f) => <Photo key={f} ind={qui(f)} legende />)}</span>}
             <Texte morceaux={b.texte} />
           </p>
         )
@@ -57,7 +61,7 @@ function Blocs({ blocs }: { blocs: Bloc[] }) {
             {b.items.map((it, j) => (
               <div key={j} class="rc-item">
                 <span class="rc-marque">{it.marque}</span>
-                <div class="rc-corps"><Blocs blocs={it.blocs} /></div>
+                <div class="rc-corps"><Blocs blocs={it.blocs} qui={qui} /></div>
               </div>
             ))}
           </div>
@@ -70,6 +74,7 @@ export function Recit({ d, id }: { d: Donnees; id?: string }) {
   const [reglages, setReglagesBrut] = useState<Reglages>(() => ({ asc: 3, desc: 2, sources: false, ...lire<Partial<Reglages>>('recit', {}) }))
   const setReglages = (r: Partial<Reglages>) => { const n = { ...reglages, ...r }; setReglagesBrut(n); ecrire('recit', n) }
   const [copie, setCopie] = useState(false)
+  const photos = usePhotos(d)
   const cible = id && d.arbre.individus.has(id) ? id : d.racine
   const r = useMemo(() => recit(d, cible, reglages.asc, reglages.desc, { sources: reglages.sources }), [d, cible, reglages.asc, reglages.desc, reglages.sources])
   const mots = useMemo(() => (r ? texteBrut(r).split(/\s+/).length : 0), [r])
@@ -101,6 +106,7 @@ export function Recit({ d, id }: { d: Donnees; id?: string }) {
             {Array.from({ length: MAX_DESCENDANTS + 1 }, (_, n) => <option key={n} value={n}>{libelle(GENERATIONS_DESC, n)}</option>)}
           </select>
           <label class="rc-case"><input type="checkbox" checked={reglages.sources} onChange={(e) => setReglages({ sources: e.currentTarget.checked })} /> Sources dans les notes</label>
+          <CasePhotos p={photos} classe="rc-case" />
         </div>
         <div class="rc-ligne">
           <button type="button" class="bouton" onClick={copier}>{copie ? 'Copié' : 'Copier le texte'}</button>
@@ -114,7 +120,7 @@ export function Recit({ d, id }: { d: Donnees; id?: string }) {
           {r.parties.map((pt, i) => (
             <section key={i}>
               {i === 0 ? <h2 class="rc-titre">{pt.titre}</h2> : <h3><span class="rc-num">{pt.numero}.</span> {pt.titre}</h3>}
-              <Blocs blocs={pt.blocs} />
+              <Blocs blocs={pt.blocs} qui={photos.afficher ? (x) => d.arbre.individus.get(x) : undefined} />
               {pt.notes.length > 0 && (
                 <div class="rc-notes">
                   {pt.notes.map((n) => (

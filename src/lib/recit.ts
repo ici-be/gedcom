@@ -24,7 +24,7 @@ export type Morceau =
 export type Phrase = Morceau[]
 export interface Item { marque: string; blocs: Bloc[] }
 export type Bloc =
-  | { type: 'p'; texte: Phrase; ancres?: number[]; italique?: boolean }
+  | { type: 'p'; texte: Phrase; ancres?: number[]; italique?: boolean; figures?: string[] }
   | { type: 'liste'; items: Item[] }
 export interface Note { n: number; texte: Phrase }
 export interface Partie { numero: string; titre: string; blocs: Bloc[]; notes: Note[] }
@@ -729,7 +729,12 @@ function notice(p: Plume, ind: Individu, ctx: Contexte): Bloc[] {
     precedent = u
   })
   if (participe) phrases.push(phrase`${il(ind)} est ${participe}`)
-  paragraphes.forEach((l, i) => { if (l.length) blocs.push({ type: 'p', texte: joindre(l), ...(i === 0 && ctx.ancres ? { ancres: ctx.ancres } : {}) }) })
+  paragraphes.forEach((l, i) => {
+    if (!l.length) return
+    // Les personnes présentées dans le paragraphe, pour leurs photos : la personne et son conjoint de cette union
+    const figures = [i === 0 ? ind : undefined, us[i]?.conj].filter((x): x is Individu => !!x?.photo).map((x) => x.id)
+    blocs.push({ type: 'p', texte: joindre(l), ...(i === 0 && ctx.ancres ? { ancres: ctx.ancres } : {}), ...(figures.length ? { figures } : {}) })
+  })
 
   // Descendants détaillés
   if (ctx.profondeur > 0) {

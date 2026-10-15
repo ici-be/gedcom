@@ -11,7 +11,7 @@ import { decouperMetiers } from '../lib/metiers'
 import { nombre } from '../lib/format'
 import { nomComplet } from '../lib/parente'
 import type { Fait } from '../lib/suivi'
-import { normaliser, Pastille, Sources } from './commun'
+import { CasePhotos, normaliser, Pastille, Photo, Sources, usePhotos } from './commun'
 import { lienMetier } from './Metiers'
 
 const lien = (cle: string) => '#/lignee/' + cle
@@ -72,22 +72,25 @@ function Metiers({ d, ind }: { d: Donnees; ind: Individu }) {
   )
 }
 
-function Carte({ d, m, racine }: { d: Donnees; m: Maillon; racine?: boolean }) {
+function Carte({ d, m, racine, photo }: { d: Donnees; m: Maillon; racine?: boolean; photo: boolean }) {
   const ind = d.arbre.individus.get(m.id)!
   const s = d.suivis.get(m.id)!
   return (
     <article class={'lg-carte' + (racine ? ' racine' : '')} style={{ '--c': ind.sexe === 'F' ? 'var(--femme)' : 'var(--homme)' }}>
-      <div class="lg-gen">{racine ? 'Personne de départ' : <>Génération {m.generation} · Sosa {BigInt(m.sosa).toLocaleString('fr-BE')}</>}</div>
-      <h3><Nom d={d} id={m.id} complet /></h3>
-      <Ligne signe="°" titre="Naissance" f={s.naissance} e={s.naissance.evenement} />
-      <Ligne signe="†" titre="Décès" f={s.deces} e={s.deces.evenement} apres={m.ageDeces !== undefined ? `à ${m.ageDeces} ans` : undefined} />
-      <Metiers d={d} ind={ind} />
+      <div class="lg-infos">
+        <div class="lg-gen">{racine ? 'Personne de départ' : <>Génération {m.generation} · Sosa {BigInt(m.sosa).toLocaleString('fr-BE')}</>}</div>
+        <h3><Nom d={d} id={m.id} complet /></h3>
+        <Ligne signe="°" titre="Naissance" f={s.naissance} e={s.naissance.evenement} />
+        <Ligne signe="†" titre="Décès" f={s.deces} e={s.deces.evenement} apres={m.ageDeces !== undefined ? `à ${m.ageDeces} ans` : undefined} />
+        <Metiers d={d} ind={ind} />
+      </div>
+      {photo && <Photo ind={ind} classe="lg-photo" />}
     </article>
   )
 }
 
 /** Entre deux générations : l'union d'où naît le suivant */
-function Union({ d, m }: { d: Donnees; m: Maillon }) {
+function Union({ d, m, photo }: { d: Donnees; m: Maillon; photo: boolean }) {
   const ind = d.arbre.individus.get(m.id)
   const enfant = m.enfant ? d.arbre.individus.get(m.enfant) : undefined
   const e = m.union?.evenement
@@ -101,7 +104,7 @@ function Union({ d, m }: { d: Donnees; m: Maillon }) {
           {e?.date?.texte ? <>{e.date.texte}{e.lieu ? ', ' : ''}</> : null}<Lieu lieu={e?.lieu} />
           {e && (e.date || e.lieu) ? ' · ' : ''}
           {m.conjoint
-            ? <>avec <Nom d={d} id={m.conjoint} /> <Vie d={d} id={m.conjoint} />{' '}
+            ? <>avec {photo && <Photo ind={d.arbre.individus.get(m.conjoint)} classe="lg-mini" />}<Nom d={d} id={m.conjoint} /> <Vie d={d} id={m.conjoint} />{' '}
               {m.sosaConjoint && <a class="lg-bifurquer" href={lien(m.sosaConjoint)} title={`Suivre la lignée par ${court(d.arbre.individus.get(m.conjoint))}`}>↗ sa lignée</a>}</>
             : <span class="vide">{accord(ind, 'épouse', 'époux')} inconnu{accord(ind, 'e', '')}</span>}
           {e?.sources.length ? <> <Sources sources={e.sources} /></> : null}
@@ -174,6 +177,7 @@ export function Lignee({ d, cle }: { d: Donnees; cle: string }) {
   const longue = useMemo(() => lignee(d, 'longue'), [d])
   const pat = useMemo(() => lignee(d, 'paternelle'), [d])
   const mat = useMemo(() => lignee(d, 'maternelle'), [d])
+  const photos = usePhotos(d)
   const onglets: [string, string, number | undefined][] = [
     ['paternelle', 'De père en père', pat?.maillons.length],
     ['maternelle', 'De mère en mère', mat?.maillons.length],
@@ -190,6 +194,7 @@ export function Lignee({ d, cle }: { d: Donnees; cle: string }) {
         {onglets.map(([k, t, n]) => <a key={k} href={lien(k)} class={cleActive === k ? 'actif' : ''} aria-current={cleActive === k ? 'page' : undefined}>{t}{n ? <small> {n}</small> : null}</a>)}
       </span>
       <ChoixAncetre d={d} />
+      <CasePhotos p={photos} classe="lg-case" />
       <a href={'#/migrations/siecles/' + cleActive} class="lg-retour">Sur la carte →</a>
     </nav>
   )
@@ -231,8 +236,8 @@ export function Lignee({ d, cle }: { d: Donnees; cle: string }) {
         </div>
         <div class={'lg-noeud' + (k === 0 ? ' racine' : '')} style={{ '--c': ind(m.id).sexe === 'F' ? 'var(--femme)' : 'var(--homme)' }} />
         <div class="lg-corps">
-          <Carte d={d} m={m} racine={k === 0} />
-          {k > 0 && <Union d={d} m={m} />}
+          <Carte d={d} m={m} racine={k === 0} photo={photos.afficher} />
+          {k > 0 && <Union d={d} m={m} photo={photos.afficher} />}
         </div>
       </li>,
     )

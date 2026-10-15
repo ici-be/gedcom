@@ -40,6 +40,7 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   la naissance, le décès, les métiers et l'union dont naît le suivant (conjoint, âge, autres enfants) ;
   au sommet, de quoi remonter par le père ou la mère, ou pourquoi la lignée s'arrête ; à côté, le
   chemin des lieux et le fil des noms. On y arrive depuis les lignées et les pistes de l'Ascendance.
+  Les photos de l'arbre en ligne, s'il y en a, s'affichent sur chaque carte et à côté du conjoint.
 - **Carte** : un cercle par lieu, d'autant plus grand qu'il y a de faits, du rouge (rien de sourcé)
   au vert (tout est sourcé). Filtres par personnes, type de fait et siècle, ou seulement les lieux qui
   ont des faits sans source. Un clic mène aux actes du lieu. Les lieux sont reconnus dans des listes de
@@ -56,7 +57,8 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   En notes de bas de partie : témoins et parrains avec leur âge et leur parenté (« son oncle du côté paternel »),
   baptême, domiciles, registres, service militaire, autres unions d'un conjoint, enfant né peu après le
   mariage, parent mort peu avant, notes des actes et, au choix, les sources. Chaque nom mène au récit de cette
-  personne, chaque numéro à sa notice ; le texte se copie ou s'imprime.
+  personne, chaque numéro à sa notice ; le texte se copie ou s'imprime. Les photos de l'arbre en ligne,
+  s'il y en a, accompagnent la notice de chaque personne et de son conjoint.
 - **Migrations** (`#/migrations`) : où vivaient les ancêtres directs (jusqu'à la seizième génération), d'après
   les lieux de naissance ou de baptême, de mariage et de décès ou d'inhumation situés grâce aux listes de
   localités, sur des cartes au style de l'éventail imprimé (mêmes teintes de régions). Trois onglets :
@@ -105,6 +107,10 @@ pour eux, le lien ouvre la recherche, qui les liste tous.
 
 - Geneanet : *Mon arbre → Exporter* (https://gw.geneanet.org/my-tree/operations/export),
   « Mon arbre en ligne », format GEDCOM. Le `.zip` peut être déposé tel quel : seul le `.ged` est lu.
+  En cochant « Liens web vers les photos principales des individus », Récit et Lignée montrent ces
+  photos (case « Photos et signatures », cochée par défaut) : un JPEG en médaillon, un PNG comme une
+  signature, à l'encre claire en mode sombre. Les images viennent directement de Geneanet, qui voit
+  donc lesquelles sont demandées ; une image qui ne se charge pas est simplement omise.
 - Les autres logiciels (Heredis, Ancestris, Gramps, GeneWeb, RootsMagic…) conviennent aussi :
   GEDCOM 5.5 / 5.5.1 en UTF-8, ANSI ou ANSEL, sources en ligne ou en enregistrements `@S1@`,
   dates approximatives, calendriers julien et républicain.
