@@ -12,7 +12,7 @@ import { nomFichierArbre } from '../lib/format'
 import { ecrire, lire } from '../lib/stockage'
 import { MODELES, type Format } from './arbres/modeles'
 
-interface Reglages { date: boolean; jour?: string; qr: boolean; papier?: Format; barres?: boolean; fratrie?: boolean; italiques?: boolean; verso?: boolean }
+interface Reglages { date: boolean; jour?: string; qr: boolean; papier?: Format; barres?: boolean; fratrie?: boolean; italiques?: boolean; verso?: boolean; photos?: boolean }
 
 const PAPIERS: Record<Format, [number, number]> = { A4: [210, 297], A3: [297, 420], A2: [420, 594] }
 
@@ -76,7 +76,7 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
     addEventListener('afterprint', apres)
     return () => { removeEventListener('beforeprint', avant); removeEventListener('afterprint', apres) }
   }, [nomFichier])
-  const options = { date: reglages.date ? dateLongue(jour) : undefined, qr: reglages.qr && !!d.adresse, carte: !reglages.barres, fratrie: reglages.fratrie, italiques: reglages.italiques }
+  const options = { date: reglages.date ? dateLongue(jour) : undefined, qr: reglages.qr && !!d.adresse, carte: !reglages.barres, fratrie: reglages.fratrie, italiques: reglages.italiques, photos: reglages.photos !== false }
 
   return (
     <section class="ecran arbre-imprime">
@@ -113,17 +113,23 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
                 </select>
               </label>
             )}
-            <label class="case">
+            {modele.reglages.bas && <label class="case">
               Bas de la feuille
               <select id="impression-bas" value={reglages.barres ? 'barres' : 'carte'} onChange={(e) => setReglages({ barres: e.currentTarget.value === 'barres' })}>
                 <option value="carte">Carte des lieux de naissance</option>
                 <option value="barres">Origine par génération (barres)</option>
               </select>
-            </label>
+            </label>}
             <label class="case">
               <input type="checkbox" id="impression-fratrie" checked={!!reglages.fratrie} onChange={(e) => setReglages({ fratrie: e.currentTarget.checked })} />
-              Frères et sœurs au centre
+              {modele.reglages.fratrie}
             </label>
+            {modele.reglages.photos && (
+              <label class="case">
+                <input type="checkbox" id="impression-photos" checked={reglages.photos !== false} onChange={(e) => setReglages({ photos: e.currentTarget.checked })} />
+                Photos
+              </label>
+            )}
             <label class="case">
               <input type="checkbox" id="impression-italiques" checked={!!reglages.italiques} onChange={(e) => setReglages({ italiques: e.currentTarget.checked })} />
               Dates sans source en italique

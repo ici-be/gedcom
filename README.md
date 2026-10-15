@@ -77,7 +77,13 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   les frères et sœurs du Sosa 1 (mêmes père et mère) avec lui au centre, les dates sans source en italique, le papier (A3, ou A4 réduit), la date en pied de page et un petit code QR vers l'arbre en ligne. Au **verso**, si on le coche : les
   **128 bouts de branche**, chaque case du bord de l'éventail prolongée d'un petit éventail des générations IX à XV,
   par quartier et dans l'ordre Sosa, aux mêmes teintes de régions qu'au recto (une seconde page à l'impression,
-  recto verso retourné sur le bord court). D'autres modèles s'ajoutent dans `src/ui/arbres/modeles.ts`.
+  recto verso retourné sur le bord court). Second modèle, l'**arbre en pyramide** (A3 paysage) : l'arbre
+  traditionnel, la personne de départ en bas et huit générations en rangées, cases bleues pour les hommes et
+  roses pour les femmes ; les générations I à V en cartouches (photo ou signature, prénoms, nom, années, commune,
+  métier), VI à VIII en étiquettes verticales ; les places sans ancêtre en pointillé (« à trouver », « père
+  inconnu »). En option : les photos, et les frères et sœurs de chacun, à côté ou sous la case avec leur année
+  de naissance quand la place le permet, sinon les prénoms seuls ou « + n », et leur nombre en génération VI.
+  D'autres modèles s'ajoutent dans `src/ui/arbres/modeles.ts`.
 - **Parents inconnus ou introuvables** (`#/filiation`) : le GEDCOM n'a aucun champ pour dire qu'un
   parent n'est pas à chercher. On l'écrit dans la **note de la personne** (sur Geneanet : rubrique
   « Notes » de l'enfant), qui revient dans chaque export, par une ligne « Filiation: … » (pas de `#` : la

@@ -414,6 +414,7 @@ th:not([aria-sort]) .tri .fleche { opacity: 0.35; }
 .feuille .lieu { letter-spacing: 0.07em; font-weight: 500; }
 .feuille .cap { letter-spacing: 0.16em; font-weight: 500; }
 .feuille .mut { fill: #646b67; }
+.feuille .fr { font-style: italic; fill: #4e5552; }
 
 /* ---------- ascendance ---------- */
 .ascendance { display: flex; flex-direction: column; gap: 18px; }

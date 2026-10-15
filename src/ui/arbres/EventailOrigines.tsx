@@ -227,7 +227,7 @@ function blocAGauche(morceaux: string[], haut: number, tailles: number[], maxLig
   return { lignes: lignes.map((t, i) => ({ t, y: base(i, fs), max: Math.round(place(i, fs)) })), fs, bas: base(lignes.length - 1, fs) }
 }
 
-function CodeQR({ url, x, y, taille }: { url: string; x: number; y: number; taille: number }) {
+export function CodeQR({ url, x, y, taille }: { url: string; x: number; y: number; taille: number }) {
   const d = useMemo(() => {
     const qr = qrcode(0, 'M')
     qr.addData(url)
