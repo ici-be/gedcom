@@ -47,6 +47,13 @@ const mesure = (l: Ligne, max: number) => ({
   'font-size': l.fs, 'data-fs': l.fs, 'data-max': Math.round(max), 'data-texte': l.coupe ? l.parts.map(([t]) => t).join('') : undefined,
 })
 
+/** Largeur d'une ligne d'après les polices de la feuille (les communes sont espacées de 0,07 em) */
+function largeurLigne(l: Ligne): number {
+  const police = (c?: string): Police => (c === 'pn' ? 'prenom' : c?.includes('nm') ? 'nom' : 'texte')
+  const espaces = l.cls === 'lieu' ? 0.07 * l.fs : 0
+  return l.parts.reduce((w, [t, c]) => w + largeur(t, l.fs, police(c)) + t.length * espaces, 0)
+}
+
 /** Une boule de mariage au bord d'une case : son centre (rayon) et son rayon, et le côté de la case où elle se trouve */
 interface Obstacle { rc: number; R: number; fin: boolean }
 
@@ -67,18 +74,25 @@ function TexteCourbe({ id, r1, r2, a1, a2, lignes, obstacle }: { id: string; r1:
         const r = retourne ? rm - H / 2 + cumul + h * 0.76 : rm + H / 2 - cumul - h * 0.76
         cumul += h
         const pid = `${id}-${j}`
-        // la ligne occupe à peu près [r − 0,3 fs, r + 0,8 fs] ; si la boule est à cette hauteur, on lui laisse sa largeur
+        // la ligne occupe à peu près [r − 0,3 fs, r + 0,8 fs] ; si la boule est à cette hauteur, on lui laisse sa largeur :
+        // la ligne garde le centre de la case si elle tient avec cette place réservée des deux côtés, sinon elle s'écarte de la boule
         let b1 = a1
         let b2 = a2
+        let max = r * ((a2 - a1) * Math.PI / 180) - 8
         if (obstacle && r - l.fs * 0.3 < obstacle.rc + obstacle.R + 1 && r + l.fs * 0.8 > obstacle.rc - obstacle.R - 1) {
-          const da = ((obstacle.R + 3) / r) * (180 / Math.PI)
-          if (obstacle.fin) b2 -= da
-          else b1 += da
+          const place = obstacle.R + 3
+          if (largeurLigne(l) <= max - 2 * place) max -= 2 * place
+          else {
+            const da = (place / r) * (180 / Math.PI)
+            if (obstacle.fin) b2 -= da
+            else b1 += da
+            max -= place
+          }
         }
         return (
           <g key={j}>
             <path id={pid} d={arc(O, r, b1, b2, retourne)} fill="none" />
-            <text {...mesure(l, r * ((b2 - b1) * Math.PI / 180) - 8)} text-anchor="middle" class={l.cls}>
+            <text {...mesure(l, max)} text-anchor="middle" class={l.cls}>
               <textPath href={'#' + pid} startOffset="50%"><Morceaux parts={l.parts} /></textPath>
             </text>
           </g>
