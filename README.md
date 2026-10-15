@@ -78,7 +78,7 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   Luxembourg, Allemagne, Royaume-Uni, Irlande, départements d'outre-mer), cadrée sur ceux des ancêtres, ou
   l'origine des ancêtres par génération. Les naissances sur des terres séparées par la mer (îles
   Britanniques, chaque DOM) ont leur cartouche à droite de la carte principale. En option :
-  les mariages des générations II à V (une boule teintée selon la province du mariage, avec l'année, au pied de la jointure entre les époux, sans empiéter sur le texte de la case de leur enfant), les frères et sœurs du Sosa 1 (mêmes père et mère) avec lui au centre, les dates sans source en italique, le papier (A3, ou A4 réduit), la date en pied de page et un petit code QR vers l'arbre en ligne. Au **verso**, si on le coche : les
+  les mariages (une boule teintée selon la province du mariage au pied de la jointure entre les époux, sans empiéter sur le texte de la case de leur enfant ; avec l'année jusqu'à la génération V, plus petite et sans année jusqu'à la VIII), les frères et sœurs du Sosa 1 (mêmes père et mère) avec lui au centre, les dates sans source en italique, le papier (A3, ou A4 réduit), la date en pied de page et un petit code QR vers l'arbre en ligne. Au **verso**, si on le coche : les
   **128 bouts de branche**, chaque case du bord de l'éventail prolongée d'un petit éventail des générations IX à XV,
   par quartier et dans l'ordre Sosa, aux mêmes teintes de régions qu'au recto (une seconde page à l'impression,
   recto verso retourné sur le bord court). Second modèle, l'**arbre en pyramide** (A3 paysage) : l'arbre
