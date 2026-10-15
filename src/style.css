@@ -626,6 +626,26 @@ a.asc-piste-g:hover { color: var(--accent); }
 .mg-graphe text { font: 11px var(--body); fill: #5e6763; }
 .mg-graphe text.fort { fill: #2f5d50; font-weight: 700; }
 
+/* ---------- récit : réglages, puis le texte en colonne de lecture ---------- */
+.rc-reglages { gap: 12px; }
+.rc-ligne { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
+.rc-ligne .choix-personne { flex: 1 1 320px; }
+.rc-etiquette { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+.rc-texte { padding: clamp(18px, 4vw, 40px); }
+.rc-texte > section { max-width: 68ch; margin: 0 auto; width: 100%; }
+.rc-texte .rc-titre { font-size: clamp(1.6rem, 3.5vw, 2.1rem); margin-bottom: 4px; }
+.rc-texte h3 { font-family: var(--display); font-size: 1.25rem; margin: 26px 0 4px; }
+.rc-texte p { font-family: var(--display); font-weight: 400; font-size: 1.08rem; line-height: 1.7; margin: 10px 0; text-wrap: pretty; hyphens: auto; }
+.rc-texte p a { color: inherit; text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent); text-underline-offset: 3px; }
+.rc-texte p a:hover { color: var(--accent); }
+@media print {
+  .recit > .titre-ecran, .rc-reglages { display: none !important; }
+  .rc-texte { border: 0; padding: 0; }
+  .rc-texte p { font-size: 11pt; }
+  .rc-texte p a { text-decoration: none; }
+  .rc-texte h3 { break-after: avoid; }
+}
+
 /* ---------- impression (Ctrl+P) : le titre, le rappel des filtres et le tableau, sur fond blanc ---------- */
 .filtres-imprimes { display: none; }
 @page { margin: 12mm 10mm; }

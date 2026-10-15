@@ -48,6 +48,12 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   orthographe ancienne, faute de frappe) se placent d'un clic ; ces positions restent dans le
   navigateur et peuvent être exportées.
 
+- **Récit** (`#/recit`) : un texte suivi sur une personne choisie, ses ancêtres (jusqu'à huit générations) et ses
+  descendants (jusqu'à cinq), tiré des seuls faits de l'arbre : naissances ou baptêmes, parents, métiers,
+  mariages avec l'âge des époux, enfants, veuvages, décès avec l'âge, lieux (situés dans leur province à la
+  première mention). Chaque fait se dit de plusieurs façons et les tournures tournent pour éviter les
+  répétitions ; le même arbre donne toujours le même texte. Les générations lointaines sont résumées en une
+  phrase par personne. Chaque nom mène au récit de cette personne ; le texte se copie ou s'imprime.
 - **Migrations** (`#/migrations`) : où vivaient les ancêtres directs (jusqu'à la seizième génération), d'après
   les lieux de naissance ou de baptême, de mariage et de décès ou d'inhumation situés grâce aux listes de
   localités, sur des cartes au style de l'éventail imprimé (mêmes teintes de régions). Trois onglets :
