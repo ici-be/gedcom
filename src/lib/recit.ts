@@ -1,29 +1,40 @@
-// Récit : un texte suivi sur une personne, ses ancêtres et ses descendants, tiré des seuls faits de l'arbre
-// (naissances ou baptêmes, métiers, mariages, enfants, décès ou inhumations, lieux et âges).
-// Chaque fait se dit de plusieurs façons ; le choix tourne sans reprendre deux fois de suite la même tournure,
-// et dépend seulement de la personne racontée : le même arbre donne toujours le même texte.
+// Récit : une notice généalogique suivie, à la manière des ouvrages de famille. La personne choisie, ses
+// descendants en listes numérotées (1., a), i.…), puis ses ancêtres génération par génération, chaque couple
+// en une notice : « Philippe Veyckemans [64], musicien, fils de… Né le… à Bruxelles, il y mourut… Il s'était
+// marié… avec Thérèse Ternat [65], dentellière, âgée de 27 ans… Le couple a eu… ».
+// Ce qui alourdirait le texte part en notes de bas de section : témoins, parrains, domiciles, registres,
+// service militaire, autres unions d'un conjoint, baptême, enfant né peu après le mariage, sources.
+// Le texte ne dépend que de l'arbre : le même arbre donne toujours le même récit.
 
 import type { Donnees } from './donnees'
 import type { Evenement, Famille, Individu } from './gedcom/arbre'
 import type { DateGed } from './gedcom/dates'
-import { decouperLieu } from './communes'
+import { decouperLieu, romain } from './communes'
 import { decouperMetiers } from './metiers'
-import { etatParents, parents } from './parente'
+import { etatParents, lienDeParente, parents, type Lien } from './parente'
 import { places, type Place } from './eventail'
-import type { Fait } from './suivi'
 
-/** Un morceau de texte, ou le nom d'une personne (pour en faire un lien) */
-export type Morceau = string | { id: string; t: string }
+/** Un morceau de texte : du texte, une personne (lien vers son récit), un numéro Sosa, un appel de note, un lien */
+export type Morceau =
+  | string
+  | { id: string; t: string; gras?: boolean }
+  | { sosa: number; ancre: boolean }
+  | { appel: number }
+  | { url: string; t: string }
 export type Phrase = Morceau[]
-export interface Partie { titre: string; paragraphes: Phrase[] }
+export interface Item { marque: string; blocs: Bloc[] }
+export type Bloc =
+  | { type: 'p'; texte: Phrase; ancres?: number[]; italique?: boolean }
+  | { type: 'liste'; items: Item[] }
+export interface Note { n: number; texte: Phrase }
+export interface Partie { numero: string; titre: string; blocs: Bloc[]; notes: Note[] }
 export interface Recit { titre: string; parties: Partie[]; ancetres: number; descendants: number }
+export interface Options { sources?: boolean }
 
 export const MAX_ASCENDANTS = 8
 export const MAX_DESCENDANTS = 5
-/** Au-delà, les couples d'ancêtres sont résumés en quelques phrases */
-const ASC_DETAILLES = 3
 
-// ——— Le choix des tournures ———
+// ——— Le choix des tournures (rare ici : le style des notices est volontairement régulier) ———
 
 function hacher(s: string): number {
   let h = 2166136261
@@ -31,37 +42,39 @@ function hacher(s: string): number {
   return h >>> 0
 }
 
-type Option<T> = (() => T) | false
-
-/** L'état de la rédaction : tournures déjà prises, personnes et lieux déjà présentés */
 class Plume {
   private derniers = new Map<string, number>()
   private comptes = new Map<string, number>()
-  /** Personnes déjà nommées en entier */
-  vus = new Set<string>()
   /** Communes déjà situées (avec leur province) */
   lieux = new Set<string>()
-  /** Dans le paragraphe en cours : la dernière commune citée et le sujet de la dernière phrase */
-  dernierLieu?: string
-  sujet?: string
-  constructor(private graine: string, readonly d: Donnees) {}
+  /** Notes de la partie en cours, numérotées pour tout le récit */
+  notes: Note[] = []
+  private n = 0
+  /** Numéro Sosa des ancêtres, et ceux qui ont leur notice dans le récit */
+  sosas = new Map<string, number>()
+  notices = new Set<number>()
+  descendants = 0
+  constructor(private graine: string, readonly d: Donnees, readonly options: Options) {}
 
-  /** Une tournure parmi celles proposées ; chacune est une fonction, seule la retenue est écrite */
-  choisir<T>(cle: string, options: Option<T>[]): T {
-    const l = options.filter((o): o is () => T => o !== false)
+  /** Une tournure parmi plusieurs, sans reprendre deux fois de suite la même */
+  choisir<T>(cle: string, options: T[]): T {
     const n = (this.comptes.get(cle) ?? 0) + 1
     this.comptes.set(cle, n)
-    let i = hacher(`${this.graine}|${cle}|${n}`) % l.length
-    if (l.length > 1 && i === this.derniers.get(cle)) i = (i + 1) % l.length
+    let i = hacher(`${this.graine}|${cle}|${n}`) % options.length
+    if (options.length > 1 && i === this.derniers.get(cle)) i = (i + 1) % options.length
     this.derniers.set(cle, i)
-    const res = l[i]()
-    if (Array.isArray(res) && typeof res[0] === 'string') this.debut = res[0]
-    return res
+    return options[i]
   }
-  /** Début de la dernière phrase tournée, pour ne pas commencer deux phrases de suite pareil */
-  debut = ''
 
-  paragraphe() { this.dernierLieu = undefined; this.sujet = undefined }
+  /** Un appel de note réunissant ces phrases (rien si elles sont toutes vides) */
+  appel(segments: (Phrase | null | undefined)[]): Morceau[] {
+    const l = segments.filter((s): s is Phrase => !!s && s.length > 0)
+    if (!l.length) return []
+    this.n++
+    this.notes.push({ n: this.n, texte: joindre(l) })
+    return [{ appel: this.n }]
+  }
+
   ind(id?: string): Individu | undefined { return id ? this.d.arbre.individus.get(id) : undefined }
   suivi(ind: Individu) { return this.d.suivis.get(ind.id) }
   famille(id?: string): Famille | undefined { return id ? this.d.arbre.familles.get(id) : undefined }
@@ -73,66 +86,75 @@ const fem = (ind: Individu | undefined) => ind?.sexe === 'F'
 const g = (ind: Individu | undefined, m: string, f: string) => (fem(ind) ? f : m)
 const il = (ind: Individu | undefined) => g(ind, 'il', 'elle')
 const MOTS = ['zéro', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf', 'dix', 'onze', 'douze', 'treize', 'quatorze', 'quinze', 'seize']
-const enLettres = (n: number) => MOTS[n] ?? String(n)
-const ORDINAUX = ['', 'première', 'deuxième', 'troisième', 'quatrième', 'cinquième', 'sixième', 'septième', 'huitième', 'neuvième', 'dixième']
+const enLettres = (n: number, f = false) => (n === 1 && f ? 'une' : MOTS[n] ?? String(n))
+const ORDINAUX = ['', 'premier', 'deuxième', 'troisième', 'quatrième', 'cinquième', 'sixième', 'septième', 'huitième', 'neuvième', 'dixième']
 const capitale = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 const minuscule = (s: string) => (/^[A-ZÀ-Ý][a-zà-ÿ]/.test(s) ? s.charAt(0).toLowerCase() + s.slice(1) : s)
 const prenomUsuel = (ind: Individu) => ind.prenom.split(/\s+/)[0] || ind.prenom || ind.nom || '?'
-const metiersDe = (ind: Individu) => [...new Set(ind.metiers.flatMap(decouperMetiers).map(minuscule))]
+const nomComplet = (ind: Individu) => [ind.prenom, ind.nom].filter(Boolean).join(' ') || '?'
 
-function enumerer(l: Morceau[][], et = ' et '): Morceau[] {
+/** « ménagère » (mère au foyer) ne se comprend plus guère tel quel */
+const METIERS_RELUS: [RegExp, string][] = [[/^m[ée]nag[èe]re$/i, 'femme au foyer']]
+function metiersDe(ind: Individu): string[] {
+  const l = ind.metiers.flatMap(decouperMetiers).map(minuscule).map((m) => METIERS_RELUS.find(([r]) => r.test(m))?.[1] ?? m)
+  return [...new Set(l)]
+}
+
+function enumerer(l: Morceau[][], et = ' et ', virgule = ', '): Morceau[] {
   const res: Morceau[] = []
-  l.forEach((x, i) => { if (i) res.push(i === l.length - 1 ? et : ', '); res.push(...x) })
+  l.forEach((x, i) => { if (i) res.push(i === l.length - 1 ? et : virgule); res.push(...x) })
   return res
 }
 
-/** Assemble une phrase : morceaux vides ôtés, espaces et ponctuation remis en ordre, majuscule et point */
-function phrase(s: TemplateStringsArray, ...v: (Morceau | Morceau[] | undefined | false)[]): Phrase {
+const estTexte = (m: Morceau | undefined): m is string => typeof m === 'string'
+const debutVoyelle = (m: Morceau | undefined) => !!m && typeof m === 'object' && 't' in m && /^[AEIOUYÀÂÉÈÊÎÔÛH]/.test(m.t)
+
+/** Assemble une phrase : morceaux vides ôtés, espaces et ponctuation remis en ordre, élisions, majuscule et point */
+function phrase(s: TemplateStringsArray, ...v: (Morceau | Morceau[] | undefined | false | null)[]): Phrase {
   const brut: Morceau[] = []
   s.forEach((t, i) => {
     brut.push(t)
     const x = v[i]
-    if (x === undefined || x === false || x === '') return
+    if (x === undefined || x === false || x === null || x === '') return
     if (Array.isArray(x)) brut.push(...x)
     else brut.push(x)
   })
   const res: Morceau[] = []
   for (const m of brut) {
-    if (typeof m === 'string' && typeof res[res.length - 1] === 'string') res[res.length - 1] += m
+    if (estTexte(m) && estTexte(res[res.length - 1])) res[res.length - 1] += m
     else res.push(m)
   }
   for (let i = 0; i < res.length; i++) {
     const m = res[i]
-    if (typeof m !== 'string') continue
-    let t = m.replace(/\s+/g, ' ').replace(/\s+([,.)])/g, '$1').replace(/\(\s+/g, '(').replace(/,\s*([,.;])/g, '$1')
+    if (!estTexte(m)) continue
+    let t = m.replace(/\s+/g, ' ').replace(/\s+([,.)])/g, '$1').replace(/\(\s+/g, '(').replace(/,\s*([,.;:])/g, '$1')
     if (i === 0) t = t.trimStart()
     if (i === res.length - 1) t = t.trimEnd()
-    res[i] = t
-  }
-  // Élision : « d’environ », « d’Anne-Marie »
-  for (let i = 0; i < res.length; i++) {
-    const m = res[i]
-    if (typeof m !== 'string') continue
-    let t = m.replace(/(?<![\p{L}’'-])([Dd])e (?=[aeiouyàâéèêîôûAEIOUYÀÂÉÈÊÎÔÛ])/gu, '$1’')
+    // Un appel de note se colle au mot qui le précède
     const suivant = res[i + 1]
-    if (typeof suivant === 'object' && /^[AEIOUYÀÂÉÈÊÎÔÛH]/.test(suivant.t)) t = t.replace(/(?<![\p{L}’'-])([Dd])e $/u, '$1’')
+    if (suivant && typeof suivant === 'object' && 'appel' in suivant) t = t.trimEnd()
+    // Élision : « d’environ », « d’Anne-Marie », « qu’il »
+    t = t.replace(/(?<![\p{L}’'-])([Dd])e (?=[aeiouyàâéèêîôûAEIOUYÀÂÉÈÊÎÔÛ])/gu, '$1’')
+    if (debutVoyelle(suivant)) t = t.replace(/(?<![\p{L}’'-])([Dd])e $/u, '$1’')
     res[i] = t
   }
-  if (typeof res[0] === 'string') res[0] = capitale(res[0])
+  if (estTexte(res[0])) res[0] = capitale(res[0])
   const dernier = res[res.length - 1]
-  if (typeof dernier === 'string') res[res.length - 1] = dernier.replace(/[,;]$/, '')
-  if (typeof res[res.length - 1] !== 'string' || !/[.!?]$/.test(res[res.length - 1] as string)) res.push('.')
+  if (estTexte(dernier)) res[res.length - 1] = dernier.replace(/[,;]$/, '')
+  const fin = res[res.length - 1]
+  if (!estTexte(fin) || !/[.!?:]$/.test(fin)) res.push('.')
   return res.filter((m) => m !== '')
 }
 
-/** Les phrases d'un paragraphe, mises bout à bout */
+/** Des phrases mises bout à bout */
 function joindre(l: Phrase[]): Phrase {
   return l.flatMap((ph, i) => (i ? [' ', ...ph] : ph))
 }
 
-// ——— Dates, lieux, âges ———
+// ——— Dates, lieux, âges, durées ———
 
 const INCERTAINES = new Set(['avant', 'après', 'entre', 'de', 'jusqu’à'])
+const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre']
 
 /** « le 3 mars 1702 », « en mars 1702 », « en 1702 », « vers 1702 », « avant 1702 », « entre 1700 et 1702 » */
 export function quand(dt?: DateGed): string {
@@ -141,7 +163,6 @@ export function quand(dt?: DateGed): string {
   if (dt.qualif === 'entre' && dt.fin) return `entre ${j.annee} et ${dt.fin.annee}`
   if (dt.qualif === 'avant' || dt.qualif === 'après') return `${dt.qualif} ${j.annee}`
   if (dt.qualif === 'vers' || dt.qualif === 'estimé' || dt.qualif === 'calculé') return `vers ${j.annee}`
-  const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre']
   if (j.jour && j.mois) return `le ${j.jour === 1 ? '1er' : j.jour} ${MOIS[j.mois - 1]} ${j.annee}`
   if (j.mois) return `en ${MOIS[j.mois - 1]} ${j.annee}`
   return `en ${j.annee}`
@@ -154,13 +175,13 @@ function annee(dt?: DateGed): string {
   return (dt.qualif && dt.qualif !== 'de' ? 'v. ' : '') + dt.debut.annee
 }
 
-/** « à Malines (Anvers) » la première fois, « à Malines » ensuite, une autre tournure juste après la même commune */
-function lieu(p: Plume, e?: Evenement): string {
+const commune = (e?: Evenement) => (e?.lieu ? decouperLieu(e.lieu).nom : '')
+
+/** « à Malines (Anvers) » la première fois, « à Malines » ensuite ; jamais de province dans les notes */
+function lieu(p: Plume, e?: Evenement, simple = false): string {
   if (!e?.lieu) return ''
   const { nom, contexte } = decouperLieu(e.lieu)
-  if (p.dernierLieu === nom) return p.choisir('meme-lieu', [() => 'au même endroit', () => 'dans la même commune', () => `à ${nom} également`, () => 'là aussi'])
-  p.dernierLieu = nom
-  if (p.lieux.has(nom)) return `à ${nom}`
+  if (simple || p.lieux.has(nom)) return `à ${nom}`
   p.lieux.add(nom)
   const region = contexte.split(',')[0]?.trim()
   return region && region !== nom ? `à ${nom} (${region})` : `à ${nom}`
@@ -168,7 +189,7 @@ function lieu(p: Plume, e?: Evenement): string {
 
 export interface Age { n: number; approx: boolean }
 
-/** Âge entre deux dates, si elles le permettent (approché quand il manque le mois ou que la date est « vers ») */
+/** Âge en années entre deux dates, si elles le permettent (approché quand il manque le mois ou que la date est « vers ») */
 export function age(a?: DateGed, b?: DateGed): Age | undefined {
   if (!a?.debut || !b?.debut || INCERTAINES.has(a.qualif) || INCERTAINES.has(b.qualif)) return undefined
   let n = b.debut.annee - a.debut.annee
@@ -179,405 +200,633 @@ export function age(a?: DateGed, b?: DateGed): Age | undefined {
 }
 
 const ans = (a: Age) => `${a.approx ? 'environ ' : ''}${a.n} an${a.n > 1 ? 's' : ''}`
+
+interface Ecart { jours?: number; mois?: number; approx: boolean }
+
+/** L'écart entre deux dates, au jour près quand elles sont complètes */
+function ecart(a?: DateGed, b?: DateGed): Ecart | undefined {
+  if (!a?.debut || !b?.debut || INCERTAINES.has(a.qualif) || INCERTAINES.has(b.qualif)) return undefined
+  const x = a.debut, y = b.debut
+  const approx = !!a.qualif || !!b.qualif
+  if (x.jour && x.mois && y.jour && y.mois) {
+    const jours = Math.round((Date.UTC(y.annee, y.mois - 1, y.jour) - Date.UTC(x.annee, x.mois - 1, x.jour)) / 86400000)
+    const mois = (y.annee - x.annee) * 12 + (y.mois - x.mois) - (y.jour < x.jour ? 1 : 0)
+    return jours < 0 ? undefined : { jours, mois, approx }
+  }
+  if (x.mois && y.mois) {
+    const mois = (y.annee - x.annee) * 12 + (y.mois - x.mois)
+    return mois < 0 ? undefined : { mois, approx: true }
+  }
+  const mois = (y.annee - x.annee) * 12
+  return mois < 0 ? undefined : { mois, approx: true }
+}
+
+/** « à l’âge de 44 ans », « à l’âge de 10 mois », « à l’âge de 32 jours » */
+function aLAge(naissance?: DateGed, deces?: DateGed): string {
+  const e = ecart(naissance, deces)
+  if (!e || e.mois === undefined) return ''
+  if (e.jours === 0) return ', le jour même de sa naissance'
+  if (e.jours !== undefined && e.jours < 60) return `à l’âge de ${e.jours} jour${e.jours > 1 ? 's' : ''}`
+  const env = e.approx ? 'environ ' : ''
+  if (e.mois < 24 && e.jours !== undefined) return `à l’âge de ${env}${e.mois} mois`
+  const a = age(naissance, deces)
+  return a && (a.n >= 2 || !a.approx) ? `à l’âge de ${ans(a)}` : ''
+}
+
+/** « cinq jours », « trois semaines », « deux mois », « un an » */
+function duree(a?: DateGed, b?: DateGed): string {
+  const e = ecart(a, b)
+  if (!e || e.mois === undefined) return ''
+  const dire = (n: number, mot: string, f = false, pluriel = mot + 's') => `${enLettres(n, f)} ${n > 1 ? pluriel : mot}`
+  if (e.jours !== undefined) {
+    if (e.jours === 0) return ''
+    if (e.jours < 14) return dire(e.jours, 'jour')
+    if (e.jours < 60) return dire(Math.round(e.jours / 7), 'semaine', true)
+  }
+  if (e.approx && e.mois < 12) return ''
+  if (e.mois < 12 || (e.mois < 24 && e.mois !== 12)) return dire(e.mois, 'mois', false, 'mois')
+  return dire(Math.floor(e.mois / 12), 'an')
+}
+
 const situe = (e?: Evenement) => !!e && (!!e.date?.debut || !!e.lieu)
+
+/** Une note d'acte débarrassée des liens et de la mise en forme du logiciel */
+function nettoyer(t?: string): string {
+  if (!t) return ''
+  const s = t
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\[\[(?:[^\]]*\/)?([^\]/]+)\]\]/g, '$1')
+    .replace(/\S*https?:\/\/\S+/g, ' ')
+    .split('\n')
+    .map((l) => l.replace(/\s+/g, ' ').trim())
+    .filter((l) => l && !/^(annexes?|sources?|voir|lien|liens|image)\s*:?\s*$/i.test(l) && !/^filiation\s*:/i.test(l))
+    .join(' ')
+    .replace(/\s+([,.;:])/g, '$1')
+    .trim()
+  return s.replace(/[:\s]+$/, '').length > 2 ? s.replace(/[:\s]+$/, '') : ''
+}
 
 // ——— Les personnes ———
 
-/** Le nom à la première rencontre (prénoms et nom), le prénom ensuite */
-function nom(p: Plume, ind: Individu): Morceau {
-  if (p.vus.has(ind.id)) return { id: ind.id, t: prenomUsuel(ind) }
-  p.vus.add(ind.id)
-  return { id: ind.id, t: [ind.prenom, ind.nom].filter(Boolean).join(' ') || '?' }
+function personne(ind: Individu, gras = false): Morceau {
+  return gras ? { id: ind.id, t: nomComplet(ind), gras } : { id: ind.id, t: nomComplet(ind) }
 }
 
-/** Sujet d'une phrase : le pronom quand on parle encore de la même personne (pas à chaque fois), sinon son nom */
-function sujet(p: Plume, ind: Individu): Morceau {
-  const meme = p.sujet === ind.id
-  p.sujet = ind.id
-  if (meme && p.choisir('pronom', [() => true, () => true, () => false])) return il(ind)
-  return nom(p, ind)
+/** Le numéro Sosa entre crochets, pour un ancêtre */
+function sosa(p: Plume, ind: Individu): Morceau[] {
+  const s = p.sosas.get(ind.id)
+  return s ? [' ', { sosa: s, ancre: p.notices.has(s) }] : []
 }
 
-/** Nom suivi des années : « Jean (1802–1870) » */
-function avecAnnees(p: Plume, ind: Individu): Morceau[] {
+/** « (1765–1842) », « (1883) », « († 1842) » */
+function annees(p: Plume, ind: Individu): string {
   const s = p.suivi(ind)
   const n = annee(s?.naissance.evenement?.date)
   const m = s?.deces.etat === 'sans-objet' ? '' : annee(s?.deces.evenement?.date)
-  return [nom(p, ind), n || m ? ` (${n || '?'}${m ? '–' + m : ''})` : '']
+  if (n && m) return ` (${n}–${m})`
+  if (n) return ` (${n})`
+  return m ? ` († ${m})` : ''
 }
 
-function naissance(p: Plume, ind: Individu): Phrase | null {
-  const e = p.suivi(ind)?.naissance.evenement
-  if (!situe(e)) return null
-  const Q = quand(e!.date), L = lieu(p, e)
-  if (e!.tag === 'BAPM' || e!.tag === 'CHR') {
-    const b = g(ind, 'baptisé', 'baptisée')
-    return p.choisir('bapteme', [
-      () => phrase`${sujet(p, ind)} est ${b} ${Q} ${L}`,
-      () => phrase`${sujet(p, ind)} reçoit le baptême ${Q} ${L}`,
-      !!L && !!Q && (() => phrase`${Q}, ${sujet(p, ind)} est ${b} ${L}`),
-    ])
-  }
-  return p.choisir('naissance', [
-    () => phrase`${sujet(p, ind)} naît ${Q} ${L}`,
-    () => phrase`${sujet(p, ind)} voit le jour ${Q} ${L}`,
-    () => phrase`${sujet(p, ind)} est ${g(ind, 'né', 'née')} ${Q} ${L}`,
-    !!L && !!Q && (() => phrase`${Q}, ${sujet(p, ind)} naît ${L}`),
-    !!L && (() => phrase`C’est ${L} que naît ${sujet(p, ind)}, ${Q}`),
-  ])
+/** Un parent nommé dans une filiation : prénom usuel, nom s'il diffère de celui de l'enfant, numéro Sosa, années */
+function parentCite(p: Plume, x: Individu, enfant: Individu): Morceau[] {
+  const t = x.nom && x.nom === enfant.nom ? prenomUsuel(x) : [prenomUsuel(x), x.nom].filter(Boolean).join(' ')
+  return [{ id: x.id, t }, ...sosa(p, x), annees(p, x)]
 }
 
-function filiation(p: Plume, ind: Individu): Phrase | null {
-  const { pere, mere } = parents(p.d.arbre, ind)
+/** « fils de Philippe [64] (1820–1865) et de Thérèse Ternat [65] (1819–1894) » */
+function filiation(p: Plume, ind: Individu): Morceau[] {
+  const nomme = (x?: Individu) => (x && /[^?\s]/.test(x.prenom + x.nom) ? x : undefined)
+  const { pere: p0, mere: m0 } = parents(p.d.arbre, ind)
+  const pere = nomme(p0), mere = nomme(m0)
   const etats = etatParents(p.d.arbre, ind)
-  const fils = g(ind, 'le fils', 'la fille')
-  if (pere && mere) {
-    return p.choisir('filiation', [
-      () => phrase`${sujet(p, ind)} est ${fils} de ${nom(p, pere)} et de ${nom(p, mere)}`,
-      () => { p.sujet = undefined; return phrase`Ses parents sont ${nom(p, pere)} et ${nom(p, mere)}` },
-      () => phrase`${sujet(p, ind)} a pour parents ${nom(p, pere)} et ${nom(p, mere)}`,
-    ])
-  }
-  if (pere || mere) {
-    const autre = pere ? (etats.mere === 'inconnu' ? ', de mère inconnue' : '') : (etats.pere === 'inconnu' ? ', de père inconnu' : '')
-    return phrase`${sujet(p, ind)} est ${fils} de ${nom(p, (pere ?? mere)!)}${autre}`
-  }
-  if (etats.pere === 'inconnu' && etats.mere === 'inconnu') return phrase`Ses parents ne sont pas connus`
-  return null
+  const fils = g(ind, 'fils', 'fille')
+  if (pere && mere) return [`${fils} de `, ...parentCite(p, pere, ind), ' et de ', ...parentCite(p, mere, ind)]
+  if (pere) return [`${fils} de `, ...parentCite(p, pere, ind), etats.mere === 'inconnu' ? ' et de mère inconnue' : '']
+  if (mere) return [`${fils} `, etats.pere === 'inconnu' ? 'de père inconnu et ' : '', 'de ', ...parentCite(p, mere, ind)]
+  return []
 }
 
-function metiers(p: Plume, ind: Individu): Phrase | null {
-  const l = metiersDe(ind).slice(0, 3)
-  if (!l.length) return null
-  const t = enumerer(l.map((m) => [m]))
-  const le = g(ind, 'le', 'la')
-  return p.choisir('metier', [
-    () => phrase`${sujet(p, ind)} est ${t}`,
-    () => { p.sujet = ind.id; return phrase`Les actes ${le} disent ${t}` },
-    () => { p.sujet = ind.id; return phrase`On ${le} trouve ${t} dans les actes` },
-    () => (l.length > 1 ? phrase`${sujet(p, ind)} est tour à tour ${t}` : phrase`${sujet(p, ind)} exerce le métier de ${t}`),
-    p.sujet === ind.id && (() => phrase`De son état, ${il(ind)} est ${t}`),
-  ])
+// ——— Ce qui part en note ———
+
+const possessif = (l: Lien) => (l.fem && !/^[aeiouéèh]/i.test(l.terme) ? 'sa' : 'son')
+const ROLES: Record<string, [string, string]> = { godp: ['parrain', 'marraine'], godparent: ['parrain', 'marraine'] }
+
+/** Témoins, parrain et marraine d'un acte : nom, âge ce jour-là, parenté avec la personne (ou avec l'un des époux) */
+function temoins(p: Plume, e: Evenement, sujet: Individu, epoux?: [Individu | undefined, Individu | undefined]): Phrase[] {
+  const parRole = new Map<string, Morceau[][]>()
+  for (const t of e.temoins ?? []) {
+    const x = p.ind(t.id)
+    if (!x) continue
+    const rela = t.rela.toLowerCase()
+    const role = ROLES[rela] ? ROLES[rela][fem(x) ? 1 : 0] : /witness|t[ée]moin/.test(rela) || !rela ? 'témoin' : minuscule(t.rela)
+    const a = age(p.suivi(x)?.naissance.evenement?.date, e.date)
+    let lien = ''
+    if (epoux) {
+      for (const [conj, qui] of [[epoux[0], 'de l’époux'], [epoux[1], 'de l’épouse']] as const) {
+        const l = conj ? lienDeParente(p.d.arbre, conj, x, false) : undefined
+        if (l) { lien = `${l.terme} ${qui}`; break }
+      }
+      if (!lien) {
+        for (const [conj, qui] of [[epoux[0], 'de l’époux'], [epoux[1], 'de l’épouse']] as const) {
+          const l = conj ? lienDeParente(p.d.arbre, conj, x) : undefined
+          if (l && l.terme !== 'mari' && l.terme !== 'épouse') { lien = `${l.terme} ${qui}`; break }
+        }
+      }
+    } else {
+      const l = lienDeParente(p.d.arbre, sujet, x)
+      if (l) lien = `${possessif(l)} ${l.terme}${l.cote ? ` du côté ${l.cote}` : ''}`
+    }
+    const l = parRole.get(role) ?? []
+    l.push([{ id: x.id, t: nomComplet(x) }, a && !a.approx ? `, ${ans(a)}` : '', lien ? `, ${lien}` : ''])
+    parRole.set(role, l)
+  }
+  const res: Phrase[] = []
+  const parrains = ['parrain', 'marraine'].filter((r) => parRole.has(r))
+  if (parrains.length) {
+    res.push(phrase`${enumerer(parrains.map((r) => [`${r} : `, ...enumerer(parRole.get(r)!, ' ; ', ' ; ')]), ' ; ', ' ; ')}`)
+  }
+  for (const [role, l] of parRole) {
+    if (role === 'parrain' || role === 'marraine') continue
+    res.push(phrase`${role}${l.length > 1 && role === 'témoin' ? 's' : ''} : ${enumerer(l, ' ; ', ' ; ')}`)
+  }
+  return res
 }
 
-/** Le mariage `m` de `ind` ; `rang` : 0 pour le premier ; `precedent` : le conjoint d'avant */
-function mariage(p: Plume, ind: Individu, m: Fait, rang: number, precedent?: Individu): Phrase | null {
-  const conj = p.ind(m.conjoint)
-  if (!conj) return null
-  const e = m.evenement
-  const Q = quand(e?.date), L = lieu(p, e)
-  const aSujet = age(p.suivi(ind)?.naissance.evenement?.date, e?.date)
-  const aConj = age(p.suivi(conj)?.naissance.evenement?.date, e?.date)
-  const C = (): Morceau[] => (aConj && !aSujet ? [nom(p, conj), `, alors ${g(conj, 'âgé', 'âgée')} de ${ans(aConj)},`] : [nom(p, conj)])
-  if (rang > 0) {
-    const mort = precedent ? p.suivi(precedent)?.deces.evenement?.date?.tri : undefined
-    const veuf = mort && e?.date?.tri && mort <= e.date.tri ? g(ind, 'Veuf', 'Veuve') + ', ' : ''
-    const noces = rang === 1 ? 'En secondes noces' : `En ${ORDINAUX[rang + 1]?.replace('ième', 'ièmes') ?? 'nouvelles'} noces`
-    return p.choisir('remariage', [
-      () => phrase`${veuf}${sujet(p, ind)} se remarie ${Q} ${L} avec ${C()}`,
-      () => phrase`${noces}, ${sujet(p, ind)} épouse ${C()} ${Q} ${L}`,
-    ])
+/** Les sources d'un acte, en liens courts (le nom du site) */
+function sources(p: Plume, l: string[]): Phrase | null {
+  if (!p.options.sources || !l.length) return null
+  const m = [...new Set(l)].map((s): Morceau[] => {
+    const u = /https?:\/\/(?:www\.)?([^/\s]+)\S*/.exec(s)
+    return u ? [{ url: u[0], t: u[1] }] : [s]
+  })
+  return phrase`Source${m.length > 1 ? 's' : ''} : ${enumerer(m, ' ; ', ' ; ')}`
+}
+
+/** Ce qu'un acte apporte en note : sa note, ses témoins, ses sources */
+function noteActe(p: Plume, e: Evenement | undefined, sujet: Individu, epoux?: [Individu | undefined, Individu | undefined]): Phrase[] {
+  if (!e) return []
+  const t = nettoyer(e.note)
+  return [t ? phrase`${t}` : null, ...temoins(p, e, sujet, epoux), sources(p, e.sources)].filter((x): x is Phrase => !!x)
+}
+
+const ETIQUETTES: Record<string, string> = {
+  IMMI: 'Immigration', EMIG: 'Émigration', NATU: 'Naturalisation', GRAD: 'Diplôme', EDUC: 'Études', RETI: 'Retraite',
+  CONF: 'Confirmation', FCOM: 'Première communion', ORDN: 'Ordination', WILL: 'Testament', PROB: 'Succession',
+  ADOP: 'Adoption', BARM: 'Bar-mitsva', BASM: 'Bat-mitsva', BLES: 'Bénédiction', CHRA: 'Baptême adulte', TITL: 'Titre',
+  CENS: 'Recensement',
+}
+const TYPES: [RegExp, string][] = [[/^award$/i, 'Distinction'], [/^illness$/i, 'Maladie'], [/^deed$/i, 'Acte'], [/^census$/i, 'Recensement']]
+const IGNORES = /document à|ancestral file|^alive$|unmarried|^marr|^marriage$|other fact|^misc$/i
+const MILITAIRE: [RegExp, string][] = [[/service/i, 'service'], [/mobili/i, 'mobilisation'], [/discharge|lib[ée]r/i, 'libération'], [/distinction|award/i, 'distinction']]
+
+/** Domiciles, registres, service militaire et autres faits d'une personne ou d'un couple, en une note */
+function faits(p: Plume, evenements: Evenement[], prefixeDomicile: string): Phrase[] {
+  const domiciles = new Map<string, string[]>()
+  const registres = new Map<string, Map<string, string[]>>()
+  const militaire: string[] = []
+  const autres: Phrase[] = []
+  for (const e of evenements) {
+    if (['BIRT', 'BAPM', 'CHR', 'DEAT', 'BURI', 'CREM', 'OCCU', 'MARR', 'MARB', 'MARC', 'MARL', 'MARS', 'ENGA', 'DIV', 'DIVF', 'ANUL', 'SEP'].includes(e.tag)) continue
+    const type = (e.type ?? '').trim()
+    if ((e.tag === 'EVEN' || e.tag === 'FACT') && IGNORES.test(type)) continue
+    const an = e.date?.debut ? annee(e.date) : ''
+    if (e.tag === 'RESI' || /residence|domicile/i.test(type)) {
+      const cle = [nettoyer(e.note), commune(e)].filter(Boolean).join(', ')
+      if (!cle && !an) continue
+      const l = domiciles.get(cle) ?? []
+      if (an && !l.includes(an)) l.push(an)
+      domiciles.set(cle, l)
+    } else if (e.tag === 'MILI' || /milit/i.test(type)) {
+      const quoi = MILITAIRE.find(([r]) => r.test(type))?.[1] ?? (e.tag === 'MILI' ? 'service' : minuscule(type))
+      militaire.push([quoi, quand(e.date), lieu(p, e, true)].filter(Boolean).join(' '))
+    } else if (e.tag === 'CENS' || /registre|recensement/i.test(type)) {
+      const etiquette = e.tag === 'CENS' ? 'Recensement' : type
+      const m = registres.get(etiquette) ?? new Map<string, string[]>()
+      const c = commune(e)
+      const l = m.get(c) ?? []
+      if (an && !l.includes(an)) l.push(an)
+      m.set(c, l)
+      registres.set(etiquette, m)
+    } else {
+      const etiquette = (e.tag === 'EVEN' || e.tag === 'FACT') ? TYPES.find(([r]) => r.test(type))?.[1] ?? type : ETIQUETTES[e.tag] ?? type
+      if (!etiquette) continue
+      const titre = e.tag === 'TITL' && e.type ? `Titre : ${e.type}` : etiquette
+      const note = nettoyer(e.note)
+      autres.push(phrase`${titre} ${quand(e.date)} ${lieu(p, e, true)}${note ? ` : ${note}` : ''}`)
+    }
   }
-  if (!e || (!situe(e) && !e.avere)) {
-    return p.choisir('union', [
-      () => phrase`${sujet(p, ind)} s’unit à ${nom(p, conj)}`,
-      () => phrase`${sujet(p, ind)} partage sa vie avec ${nom(p, conj)}`,
-      () => { p.sujet = ind.id; return phrase`${g(ind, 'Sa compagne', 'Son compagnon')} est ${nom(p, conj)}` },
-    ])
+  const res: Phrase[] = []
+  const avecAnnees = (c: string, l: string[]) => (l.length ? `${c}${c ? ' ' : ''}(${l.join(', ')})` : c)
+  if (domiciles.size) res.push(phrase`${prefixeDomicile} : ${[...domiciles].map(([c, l]) => avecAnnees(c, l)).join(' — ')}`)
+  if (militaire.length) res.push(phrase`Militaire : ${militaire.join(' ; ')}`)
+  for (const [etiquette, m] of registres) res.push(phrase`${etiquette} : ${[...m].map(([c, l]) => avecAnnees(c, l)).join(' — ')}`)
+  return [...res, ...autres]
+}
+
+/** La note attachée au nom d'une personne : domiciles, registres, militaire, note personnelle courte, sources */
+function notePersonne(p: Plume, ind: Individu): Phrase[] {
+  const res = faits(p, ind.evenements, 'Domicile')
+  const n = ind.note && !/<|\[\[|^(TITLE|HEAD)=/m.test(ind.note) ? nettoyer(ind.note) : ''
+  if (n && n.length <= 500) res.push(phrase`${n}`)
+  const s = sources(p, ind.sources)
+  if (s) res.push(s)
+  return res
+}
+
+// ——— Naissance, décès ———
+
+const naissanceDe = (p: Plume, ind: Individu) => {
+  const e = p.suivi(ind)?.naissance.evenement
+  return situe(e) ? e : undefined
+}
+const decesDe = (p: Plume, ind: Individu) => {
+  const s = p.suivi(ind)
+  return s?.deces.etat !== 'sans-objet' && situe(s?.deces.evenement) ? s!.deces.evenement : undefined
+}
+const premier = (ind: Individu, tags: string[]) => ind.evenements.find((e) => tags.includes(e.tag) && situe(e))
+
+/** La note de la naissance : baptême (date, lieu), parrain et marraine, témoins, note et sources */
+function noteNaissance(p: Plume, ind: Individu, e: Evenement): Phrase[] {
+  const res = noteActe(p, e, ind)
+  if (e.tag === 'BIRT') {
+    const b = premier(ind, ['BAPM', 'CHR'])
+    if (b) {
+      const baptise = g(ind, 'Baptisé', 'Baptisée')
+      const d = duree(e.date, b.date)
+      const memeJour = e.date?.tri && e.date.tri === b.date?.tri && e.date.debut?.jour
+      const q = memeJour ? 'le jour même' : d ? `${d} plus tard` : quand(b.date)
+      const ailleurs = commune(b) && commune(b) !== commune(e) ? lieu(p, b, true) : ''
+      if (q || ailleurs) res.unshift(phrase`${baptise} ${q} ${ailleurs}`)
+      res.push(...noteActe(p, b, ind))
+    }
   }
-  return p.choisir('mariage', [
-    () => phrase`${sujet(p, ind)} épouse ${C()} ${Q} ${L}`,
-    () => phrase`${sujet(p, ind)} se marie ${Q} ${L} avec ${C()}`,
-    !!aSujet && (() => phrase`À ${ans(aSujet!)}, ${sujet(p, ind)} épouse ${nom(p, conj)} ${Q} ${L}`),
-    !!Q && (() => phrase`${Q}, ${sujet(p, ind)} prend pour ${g(ind, 'épouse', 'époux')} ${C()} ${L}`),
-    () => { p.sujet = ind.id; return phrase`Le mariage de ${nom(p, ind)} avec ${C()} est célébré ${Q} ${L}` },
-  ])
+  return res
+}
+
+/** « Né le 11 novembre 1820 à Bruxelles¹ » (participe, sans sujet) */
+function ne(p: Plume, ind: Individu, e: Evenement, simple = false): Morceau[] {
+  const v = e.tag === 'BIRT' ? g(ind, 'né', 'née') : g(ind, 'baptisé', 'baptisée')
+  return [`${v} ${quand(e.date)} ${lieu(p, e, simple)}`.replace(/\s+/g, ' ').trim(), ...(simple ? [] : p.appel(noteNaissance(p, ind, e)))]
+}
+
+interface Fin {
+  e: Evenement
+  /** Mort dans la commune de naissance */
+  meme: boolean
+  /** « le 5 juillet 1865 à Bruxelles à l’âge de 44 ans », sans le lieu quand c'est la commune de naissance */
+  quoi: Morceau[]
+  /** Inhumation ou incinération : participe, lieu, même commune que le décès */
+  tombe?: { v: string; L: string; meme: boolean }
+}
+
+/** La fin de vie d'une personne : décès (ou, à défaut, inhumation), âge, inhumation, note */
+function fin(p: Plume, ind: Individu, simple = false): Fin | null {
+  const e = decesDe(p, ind)
+  if (!e) return null
+  const n = naissanceDe(p, ind)
+  const tombe = e.tag === 'DEAT' ? premier(ind, ['BURI', 'CREM']) : undefined
+  const notes = simple ? [] : p.appel([...noteActe(p, e, ind), ...(tombe ? noteActe(p, tombe, ind) : [])])
+  const meme = e.tag === 'DEAT' && !!commune(e) && commune(e) === commune(n)
+  const quoi: Morceau[] = [`${quand(e.date)} ${meme ? '' : lieu(p, e, simple)} ${aLAge(n?.date, e.date)}`.replace(/\s+/g, ' ').trim(), ...notes]
+  const t = tombe && commune(tombe)
+    ? { v: tombe.tag === 'CREM' ? g(ind, 'incinéré', 'incinérée') : g(ind, 'inhumé', 'inhumée'), L: lieu(p, tombe, simple), meme: commune(tombe) === commune(e) }
+    : undefined
+  return { e, meme, quoi, tombe: t }
+}
+
+/** Après le sujet : « y mourut le 5 juillet 1865 à l’âge de 44 ans² », « est décédé le… à Uccle… » */
+function mort(p: Plume, ind: Individu, f: Fin): Morceau[] {
+  if (f.e.tag !== 'DEAT') return [`a été ${f.e.tag === 'CREM' ? g(ind, 'incinéré', 'incinérée') : g(ind, 'inhumé', 'inhumée')} `, ...f.quoi]
+  const decede = `est ${g(ind, 'décédé', 'décédée')}`
+  const verbe = f.meme ? p.choisir('y-mourut', ['y mourut', `y ${decede}`]) : p.choisir('mourut', [decede, 'mourut'])
+  const t = f.tombe ? (f.tombe.meme ? ` et y a été ${f.tombe.v}` : ` et a été ${f.tombe.v} ${f.tombe.L}`) : ''
+  return [verbe + ' ', ...f.quoi, t]
+}
+
+/** Après la naissance d'un conjoint : « où elle mourut le… », « , décédée le… à… » */
+function mortApposee(p: Plume, ind: Individu, f: Fin): Morceau[] {
+  if (f.e.tag !== 'DEAT') return [`, ${f.e.tag === 'CREM' ? g(ind, 'incinéré', 'incinérée') : g(ind, 'inhumé', 'inhumée')} `, ...f.quoi]
+  const t = f.tombe ? `, ${f.tombe.v} ${f.tombe.meme ? 'dans la même commune' : f.tombe.L}` : ''
+  if (f.meme) return [` où ${il(ind)} ${p.choisir('ou-mourut', ['mourut', `est ${g(ind, 'décédé', 'décédée')}`])} `, ...f.quoi, t]
+  return [`, ${g(ind, 'décédé', 'décédée')} `, ...f.quoi, t]
+}
+
+// ——— Unions et enfants ———
+
+interface Union { fam: Famille; conj?: Individu; e?: Evenement; marie: boolean }
+
+/** Les unions d'une personne, dans l'ordre des dates */
+function unions(p: Plume, ind: Individu): Union[] {
+  const res: Union[] = []
+  for (const m of p.suivi(ind)?.mariages ?? []) {
+    const fam = p.famille(m.famille)
+    if (!fam) continue
+    const e = m.evenement
+    const libre = !!e && (e.tag === 'EVEN' || e.tag === 'FACT') && /unmarried|union libre|concubin|non mari/i.test(e.type ?? '')
+    const marie = !libre && !!e && (situe(e) || e.avere || ['MARR', 'MARB', 'MARC', 'MARL'].includes(e.tag))
+    res.push({ fam, conj: p.ind(m.conjoint), e, marie })
+  }
+  const tri = (u: Union) => u.e?.date?.tri || naissancesTri(p, u.fam) || 99999999
+  return res.sort((a, b) => tri(a) - tri(b))
+}
+
+function naissancesTri(p: Plume, f: Famille): number {
+  const l = enfantsDe(p, f).map((c) => naissanceDe(p, c)?.date?.tri).filter((t): t is number => !!t)
+  return l.length ? Math.min(...l) : 0
 }
 
 function enfantsDe(p: Plume, f?: Famille): Individu[] {
   if (!f) return []
-  const tri = (c: Individu) => p.suivi(c)?.naissance.evenement?.date?.tri || 99999999
+  const tri = (c: Individu) => naissanceDe(p, c)?.date?.tri || 99999999
   return f.enfants.map((c) => p.ind(c)).filter((c): c is Individu => !!c).sort((a, b) => tri(a) - tri(b))
 }
 
-/** Le nombre d'enfants d'une union, avec leurs noms si `noms` */
-function enfants(p: Plume, f: Famille | undefined, noms: boolean): Phrase | null {
-  const l = enfantsDe(p, f)
-  const n = l.length
-  if (!n) return null
-  p.sujet = undefined
-  const liste = (): Morceau[] => (noms ? enumerer(l.map((c) => avecAnnees(p, c))) : [])
-  if (n === 1) {
-    const un = g(l[0], 'un fils', 'une fille')
-    return p.choisir('enfant-unique', [
-      () => phrase`De cette union naît ${un}${noms ? [', ', ...liste()] : ''}`,
-      () => phrase`On ne leur connaît qu’${un}${noms ? [', ', ...liste()] : ''}`,
-    ])
-  }
-  const N = enLettres(n)
-  const suite = () => (noms ? [' : ', ...liste()] : '')
-  return p.choisir('enfants', [
-    () => phrase`De cette union naissent ${N} enfants${suite()}`,
-    !p.debut.startsWith('Le couple') && (() => phrase`Le couple a ${N} enfants${suite()}`),
-    () => phrase`On leur connaît ${N} enfants${suite()}`,
-    () => phrase`${capitale(N)} enfants naissent de ce mariage${suite()}`,
-  ])
+/** « six garçons et une fille », dans l'ordre du premier né */
+function compte(l: Individu[]): string {
+  const groupes = new Map<string, number>()
+  for (const c of l) groupes.set(c.sexe, (groupes.get(c.sexe) ?? 0) + 1)
+  const mots: Record<string, [string, string, boolean]> = { M: ['garçon', 'garçons', false], F: ['fille', 'filles', true], '?': ['enfant', 'enfants', false] }
+  const parts = [...groupes].map(([s, n]) => `${enLettres(n, mots[s][2])} ${n > 1 ? mots[s][1] : mots[s][0]}`)
+  return parts.length > 1 ? parts.slice(0, -1).join(', ') + ' et ' + parts[parts.length - 1] : parts[0]
 }
 
-function deces(p: Plume, ind: Individu): Phrase | null {
-  const s = p.suivi(ind)
-  const e = s?.deces.evenement
-  if (!e || s?.deces.etat === 'sans-objet' || !situe(e)) return null
-  const Q = quand(e.date), L = lieu(p, e)
-  const a = age(s?.naissance.evenement?.date, e.date)
-  const meme = p.sujet === ind.id
-  if (e.tag === 'BURI' || e.tag === 'CREM') {
-    const v = e.tag === 'BURI' ? g(ind, 'inhumé', 'inhumée') : g(ind, 'incinéré', 'incinérée')
-    return phrase`${sujet(p, ind)} est ${v} ${Q} ${L}${a ? `, à ${ans(a)}` : ''}`
-  }
-  if (a && a.n === 0) {
-    return p.choisir('mort-enfant', [
-      () => phrase`${sujet(p, ind)} meurt en bas âge, ${Q} ${L}`,
-      () => phrase`${sujet(p, ind)} ne vit que quelques mois et s’éteint ${Q} ${L}`,
-    ])
-  }
-  // Veuvage : le dernier conjoint, mort au moins deux ans plus tôt
-  const conj = p.ind(s?.mariages.at(-1)?.conjoint)
-  const mc = conj ? p.suivi(conj)?.deces.evenement?.date : undefined
-  const veuf = mc?.debut && e.date?.debut && !INCERTAINES.has(mc.qualif) && e.date.debut.annee - mc.debut.annee >= 2
-    ? `${g(ind, 'Veuf', 'Veuve')} depuis ${mc.debut.annee}, ` : ''
-  return p.choisir('deces', [
-    () => phrase`${veuf}${sujet(p, ind)} meurt ${Q} ${L}${a ? `, à ${ans(a)}` : ''}`,
-    () => phrase`${veuf}${sujet(p, ind)} s’éteint ${Q} ${L}${a ? ` à l’âge de ${ans(a)}` : ''}`,
-    () => phrase`${veuf}${sujet(p, ind)} décède ${Q} ${L}${a ? `, ${g(ind, 'âgé', 'âgée')} de ${ans(a)}` : ''}`,
-    !!a && (() => phrase`${sujet(p, ind)} a ${ans(a!)} lorsqu’${il(ind)} meurt ${Q} ${L}`),
-    meme && (() => phrase`Sa mort survient ${Q} ${L}${a ? ` ; ${il(ind)} avait ${ans(a)}` : ''}`),
-  ])
+/** « Marie-Ange (1979), Corentine (1981) et Bruno Veÿckemans [1] (1982) » : le nom en entier au dernier et à l'enfant de la lignée */
+function listeEnfants(p: Plume, l: Individu[], ligne?: string): Morceau[] {
+  return enumerer(l.map((c, i) => {
+    if (c.id === ligne) return [personne(c, true), ...sosa(p, c), annees(p, c)]
+    const entier = i === l.length - 1 || (i > 0 && c.nom !== l[i - 1].nom)
+    return [{ id: c.id, t: entier ? nomComplet(c) : c.prenom || nomComplet(c) }, annees(p, c)]
+  }))
 }
 
-/** Une personne en une phrase (naissance, métier, mariage, décès), pour les générations lointaines */
-function resume(p: Plume, ind: Individu, avecMariage: boolean): Phrase {
-  const s = p.suivi(ind)
-  const n = s?.naissance.evenement
-  const m = s?.deces.etat === 'sans-objet' ? undefined : s?.deces.evenement
-  const met = metiersDe(ind)[0]
-  const S = sujet(p, ind)
-  const appositions: Morceau[][] = []
-  if (situe(n)) appositions.push([`${n!.tag === 'BIRT' ? g(ind, 'né', 'née') : g(ind, 'baptisé', 'baptisée')} ${quand(n!.date)} ${lieu(p, n)}`])
-  if (met) appositions.push([met])
-  const verbes: Morceau[][] = []
-  const union = avecMariage ? s?.mariages[0] : undefined
-  const conj = p.ind(union?.conjoint)
-  if (conj) verbes.push(['épouse ', nom(p, conj), ` ${quand(union?.evenement?.date)} ${lieu(p, union?.evenement)}`])
-  if (situe(m)) {
-    const a = age(n?.date, m!.date)
-    const v = p.choisir('meurt', [() => 'meurt', () => 's’éteint', () => 'décède'])
-    verbes.push([a?.n === 0 ? `meurt en bas âge ${quand(m!.date)} ${lieu(p, m)}` : `${v} ${quand(m!.date)} ${lieu(p, m)}${a ? ` à ${ans(a)}` : ''}`])
+const AUTOUR_DU_MARIAGE: Record<string, string> = { ENGA: 'Fiançailles', MARB: 'Publication des bans', MARC: 'Contrat de mariage', MARL: 'Licence de mariage', MARS: 'Accord avant mariage' }
+
+/** La note d'un mariage : acte, domicile du couple, enfant né peu après, parent mort peu avant, fiançailles, contrat */
+function noteMariage(p: Plume, u: Union, mari?: Individu, femme?: Individu): Phrase[] {
+  const res = noteActe(p, u.e, (mari ?? femme)!, [mari, femme])
+  const d = u.e?.date
+  for (const e of u.fam.evenements) {
+    if (e === u.e) continue
+    const quoi = AUTOUR_DU_MARIAGE[e.tag]
+    if (quoi && situe(e)) res.push(phrase`${quoi} ${quand(e.date)} ${lieu(p, e, true)}`)
   }
-  if (!appositions.length && !verbes.length) {
-    return p.choisir('inconnu', [() => phrase`On ne sait presque rien de ${S}`, () => phrase`${S} reste mal ${g(ind, 'connu', 'connue')}`])
+  res.push(...faits(p, u.fam.evenements, 'Domicile du couple'))
+  if (d?.debut?.jour && !d.qualif) {
+    const l = enfantsDe(p, u.fam)
+    const avant = l.filter((c) => { const t = naissanceDe(p, c)?.date?.tri; return !!t && t < d.tri })
+    if (avant.length) {
+      res.push(phrase`Le couple avait déjà ${avant.length === 1 ? g(avant[0], 'un fils', 'une fille') : `${enLettres(avant.length)} enfants`} à son mariage`)
+    } else {
+      const pr = l.map((c) => naissanceDe(p, c)?.date).find((x) => x?.debut?.jour)
+      const e = ecart(d, pr)
+      if (pr && e?.jours !== undefined && e.jours < 245) res.push(phrase`Un premier enfant naîtra ${duree(d, pr)} plus tard`)
+    }
+    for (const [x, qui] of [[mari, 'de l’époux'], [femme, 'de l’épouse']] as const) {
+      if (!x) continue
+      const { pere, mere } = parents(p.d.arbre, x)
+      for (const par of [pere, mere]) {
+        const dd = par ? decesDe(p, par)?.date : undefined
+        const e = ecart(dd, d)
+        if (!par || !dd?.debut?.jour || !e?.jours || e.jours > 366) continue
+        res.push(phrase`${g(par, 'Le père', 'La mère')} ${qui}, ${{ id: par.id, t: nomComplet(par) }}${annees(p, par)}, était ${g(par, 'décédé', 'décédée')} ${duree(dd, d)} auparavant`)
+      }
+    }
   }
-  if (!verbes.length) return phrase`${S}, ${enumerer(appositions, ', ')}`
-  if (!appositions.length) return phrase`${S} ${enumerer(verbes)}`
-  return phrase`${S}, ${enumerer(appositions, ', ')}, ${enumerer(verbes)}`
+  return res
 }
 
-// ——— Les parties du récit ———
+/** Le conjoint dans la phrase du mariage : nom, métiers, parents, âge, naissance, décès ; ses autres unions en note */
+function conjoint(p: Plume, u: Union, ageSujet: Age | undefined, simple: boolean): Morceau[] {
+  const c = u.conj!
+  const res: Morceau[] = [personne(c, !simple), ...sosa(p, c)]
+  if (!simple) res.push(...p.appel([...autresUnions(p, c, u.fam), ...notePersonne(p, c)]))
+  const m = metiersDe(c)
+  if (m.length) res.push(', ', m.join(', '))
+  const f = filiation(p, c)
+  if (f.length) res.push(', ', ...f)
+  const n = naissanceDe(p, c)
+  const a = u.marie ? age(n?.date, u.e?.date) : undefined
+  if (a) res.push(a.n === ageSujet?.n && a.approx === ageSujet.approx ? `, ${il(c)} aussi ${g(c, 'âgé', 'âgée')} de ${ans(a)}` : `, ${g(c, 'âgé', 'âgée')} de ${ans(a)}`)
+  if (n) res.push(', ', ...ne(p, c, n, simple))
+  const fn = fin(p, c, simple)
+  if (fn) res.push(...(n ? mortApposee(p, c, fn) : mortApposee(p, c, { ...fn, meme: false })))
+  return res
+}
 
-/** Le portrait de la personne racontée : naissance, parents et métier, puis unions et enfants, puis décès */
-function portrait(p: Plume, ind: Individu): Phrase[] {
-  const debut = [naissance(p, ind), filiation(p, ind), metiers(p, ind)].filter((x): x is Phrase => !!x)
-  p.paragraphe()
-  const suite: Phrase[] = []
-  let precedent: Individu | undefined
-  p.suivi(ind)?.mariages.forEach((m, i) => {
-    const ph = mariage(p, ind, m, i, precedent)
-    if (ph) suite.push(ph)
-    const e = enfants(p, p.famille(m.famille), true)
-    if (e) suite.push(e)
-    precedent = p.ind(m.conjoint)
+/** En note : les autres unions d'un conjoint (« Thérèse s’était mariée une seconde fois… ») */
+function autresUnions(p: Plume, c: Individu, fam: Famille): Phrase[] {
+  const l = unions(p, c)
+  if (l.length < 2) return []
+  const ici = l.findIndex((u) => u.fam.id === fam.id)
+  return l.flatMap((u, i) => {
+    if (i === ici || !u.conj) return []
+    const rang = l.length === 2 ? (i < ici ? 'une première fois' : 'une seconde fois') : `une ${i === 0 ? 'première' : ORDINAUX[i + 1]} fois`
+    const a = age(naissanceDe(p, c)?.date, u.e?.date)
+    const ph = u.marie
+      ? phrase`${prenomUsuel(c)} s’était ${g(c, 'marié', 'mariée')} ${rang} ${quand(u.e?.date)} ${lieu(p, u.e, true)}${a ? `, alors qu’${il(c)} avait ${ans(a)}` : ''}, avec ${conjoint(p, u, a, true)}`
+      : phrase`${prenomUsuel(c)} a aussi partagé la vie de ${conjoint(p, u, undefined, true)}`
+    const enf = enfantsDe(p, u.fam)
+    return enf.length ? [ph, phrase`Le couple a eu ${compte(enf)} : ${listeEnfants(p, enf)}`] : [ph]
   })
-  const fin = deces(p, ind)
-  if (fin) suite.push(fin)
-  const res = [debut, suite].filter((x) => x.length).map(joindre)
-  return res.length ? res : [resume(p, ind, false)]
 }
 
-const TITRES_ASC = ['', 'Ses parents', 'Ses grands-parents', 'Ses arrière-grands-parents', 'Ses trisaïeuls']
-const titreAsc = (n: number) => TITRES_ASC[n] ?? `${capitale(ORDINAUX[n + 1] ?? n + 1 + 'e')} génération`
+// ——— Les notices ———
 
-/** Un couple d'ancêtres (places 2k et 2k+1), présenté depuis leur enfant de la lignée */
-function couple(p: Plume, pl: Place[], k: number, detail: boolean): Phrase | null {
-  p.paragraphe()
+interface Contexte {
+  /** Générations de descendants encore à détailler en listes (0 : enfants cités en une ligne) */
+  profondeur: number
+  /** Rang d'imbrication des listes (1., a), i.…) */
+  niveau: number
+  /** Donner les parents dans la notice */
+  filiation: boolean
+  /** L'enfant de la lignée, mis en gras dans la liste des enfants */
+  ligne?: string
+  ancres?: number[]
+}
+
+const LETTRES = 'abcdefghijklmnopqrstuvwxyz'
+const GRECQUES = 'αβγδεζηθικλμνξοπρστυφχψω'
+function marque(niveau: number, i: number): string {
+  switch (niveau % 5) {
+    case 0: return `${i + 1}.`
+    case 1: return `${LETTRES[i] ?? i + 1})`
+    case 2: return `${romain(i + 1).toLowerCase()}.`
+    case 3: return `${LETTRES[i]?.toUpperCase() ?? i + 1}.`
+    default: return `${GRECQUES[i] ?? i + 1})`
+  }
+}
+const LITS = ['premier', 'deuxième', 'troisième', 'quatrième', 'cinquième', 'sixième']
+
+/** La notice d'une personne : en-tête, vie, unions, enfants (en ligne ou en liste détaillée) */
+function notice(p: Plume, ind: Individu, ctx: Contexte): Bloc[] {
+  const blocs: Bloc[] = []
+  // En-tête : « Philippe Isidore Veyckemans [64], musicien¹, fils de… »
+  const tete: Morceau[] = [personne(ind, true), ...sosa(p, ind)]
+  const m = metiersDe(ind)
+  const appel = p.appel(notePersonne(p, ind))
+  if (m.length) tete.push(', ', m.join(', '), ...appel)
+  else tete.push(...appel)
+  if (ctx.filiation) {
+    const f = filiation(p, ind)
+    if (f.length) tete.push(', ', ...f)
+  }
+  const phrases: Phrase[] = [phrase`${tete}`]
+  // Vie : « Né le… à…, il y mourut le… à l’âge de… »
+  const n = naissanceDe(p, ind)
+  const neM = n ? ne(p, ind, n) : null
+  const fn = fin(p, ind)
+  let participe: Morceau[] | null = null
+  if (neM && fn) phrases.push(phrase`${neM}, ${il(ind)} ${mort(p, ind, fn)}`)
+  else if (neM) participe = neM
+  else if (fn) phrases.push(phrase`${il(ind)} ${mort(p, ind, { ...fn, meme: false })}`)
+  const decede = !!fn
+  // Unions
+  const us = unions(p, ind)
+  const maries = us.filter((u) => u.marie && u.conj)
+  const paragraphes: Phrase[][] = [phrases]
+  let precedent: Union | undefined
+  us.forEach((u, i) => {
+    const courant = i === 0 ? phrases : []
+    if (i > 0) paragraphes.push(courant)
+    const enf = enfantsDe(p, u.fam)
+    if (u.conj) {
+      const aS = age(n?.date, u.e?.date)
+      const k = maries.indexOf(u)
+      let rang = ''
+      if (u.marie && maries.length > 1) {
+        if (k === 0) rang = ' une première fois'
+        else if (k === maries.length - 1) rang = ` en ${k === 1 ? 'secondes' : ORDINAUX[k + 1] + 's'} et dernières noces`
+        else rang = ` une ${ORDINAUX[k + 1]} fois`
+      }
+      // Remarié après un veuvage
+      const morte = precedent?.conj ? decesDe(p, precedent.conj)?.date : undefined
+      const veuvage = morte && u.e?.date && morte.tri && u.e.date.tri > morte.tri ? duree(morte, u.e.date) : ''
+      const temps = decede ? 's’était' : 's’est'
+      const verbe = u.marie ? `${temps} ${g(ind, 'marié', 'mariée')}` : `${temps} ${g(ind, 'allié', 'alliée')}`
+      const acte = u.marie ? p.appel(noteMariage(p, u, fem(ind) ? u.conj : ind, fem(ind) ? ind : u.conj)) : []
+      const corps: Morceau[] = [
+        `${verbe}${rang} ${quand(u.e?.date)} ${u.marie ? lieu(p, u.e) : ''}`, ...acte,
+        aS && u.marie ? `, alors qu’${il(ind)} avait ${ans(aS)},` : '', ' avec ', ...conjoint(p, u, u.marie ? aS : undefined, false),
+      ]
+      const debut = veuvage ? `après ${veuvage} de veuvage, ` : ''
+      if (i === 0 && participe) { courant.push(phrase`${participe}, ${debut}${il(ind)} ${corps}`); participe = null }
+      else courant.push(phrase`${debut}${il(ind)} ${corps}`)
+      const div = u.fam.evenements.find((e) => ['DIV', 'DIVF', 'ANUL', 'SEP'].includes(e.tag))
+      if (div) {
+        const quoi = div.tag === 'ANUL' ? 'Leur mariage a été annulé' : div.tag === 'SEP' ? 'Ils se sont séparés' : 'Ils ont divorcé'
+        courant.push(phrase`${quoi} ${quand(div.date)}`)
+      }
+    } else if (i === 0 && participe) {
+      courant.push(phrase`${il(ind)} est ${participe}`)
+      participe = null
+    }
+    if (enf.length) {
+      const qui = u.conj ? 'Le couple a eu' : `${capitale(il(ind))} a eu`
+      if (ctx.profondeur > 0) courant.push(phrase`${qui} ${compte(enf)} :`)
+      else courant.push(phrase`${qui} ${compte(enf)} : ${listeEnfants(p, enf, ctx.ligne)}`)
+    }
+    precedent = u
+  })
+  if (participe) phrases.push(phrase`${il(ind)} est ${participe}`)
+  paragraphes.forEach((l, i) => { if (l.length) blocs.push({ type: 'p', texte: joindre(l), ...(i === 0 && ctx.ancres ? { ancres: ctx.ancres } : {}) }) })
+
+  // Descendants détaillés
+  if (ctx.profondeur > 0) {
+    const avecEnfants = us.filter((u) => enfantsDe(p, u.fam).length)
+    const lits = us.length > 1 && avecEnfants.length > 0
+    us.forEach((u, i) => {
+      const enf = enfantsDe(p, u.fam)
+      if (lits) blocs.push({ type: 'p', italique: true, texte: [`Du ${LITS[i] ?? `${i + 1}e`} lit : ${enf.length ? '' : 'sans postérité'}`.trimEnd()] })
+      if (!enf.length) return
+      p.descendants += enf.length
+      blocs.push({
+        type: 'liste',
+        items: enf.map((c, j) => ({ marque: marque(ctx.niveau, j), blocs: notice(p, c, { profondeur: ctx.profondeur - 1, niveau: ctx.niveau + 1, filiation: false }) })),
+      })
+    })
+  }
+  return blocs
+}
+
+/** Le couple d'ancêtres des places 2k et 2k+1, en une notice menée par le père (ou la mère s'il est inconnu) */
+function noticeCouple(p: Plume, pl: Place[], k: number): Bloc[] {
   const enfant = pl[k]?.ind
   const H = pl[2 * k], F = pl[2 * k + 1]
   const h = H?.ind, f = F?.ind
-  if (!enfant || (!h && !f)) return null
-  const fils = g(enfant, 'le fils', 'la fille')
-  // Implexe : déjà raconté plus haut
+  if (!enfant || pl[k].dejaVu || (!h && !f)) return []
   if ((h && H.dejaVu) || (f && F.dejaVu)) {
-    const qui = h && f ? [nom(p, h), ' et ', nom(p, f)] : [nom(p, (h ?? f)!)]
-    const deja = h && f ? 'déjà rencontrés' : g(h ?? f, 'déjà rencontré', 'déjà rencontrée')
-    return phrase`${nom(p, enfant)} est ${fils} de ${qui}, ${deja} plus haut dans cette ascendance`
+    const qui = [h && [personne(h, true), ' ', { sosa: 2 * k, ancre: false }], f && [personne(f, true), ' ', { sosa: 2 * k + 1, ancre: false }]].filter(Boolean) as Morceau[][]
+    const deja = [H.dejaVu, F.dejaVu].filter((x): x is number => !!x)
+    const renvois = enumerer(deja.map((s) => [{ sosa: s, ancre: p.notices.has(s) }]))
+    return [{ type: 'p', ancres: [2 * k, 2 * k + 1], texte: phrase`${enumerer(qui)}, ${qui.length > 1 ? 'déjà présentés' : g(h ?? f, 'déjà présenté', 'déjà présentée')} plus haut : voir ${renvois}` }]
   }
-  const res: Phrase[] = []
-  const etats = etatParents(p.d.arbre, enfant)
-  const cote = k === 2 ? 'Du côté paternel, ' : k === 3 ? 'Du côté maternel, ' : ''
-  // Les parents de la personne racontée sont déjà nommés dans son portrait
-  if (k === 1 && h && f) {
-    // rien à rappeler
-  } else if (h && f) {
-    res.push(p.choisir('couple', [
-      () => phrase`${cote}${nom(p, enfant)} est ${fils} de ${nom(p, h)} et de ${nom(p, f)}`,
-      () => phrase`${cote}les parents de ${nom(p, enfant)} se nomment ${nom(p, h)} et ${nom(p, f)}`,
-      () => phrase`${cote}${nom(p, h)} et ${nom(p, f)} sont les parents de ${nom(p, enfant)}`,
-      () => phrase`${cote}${nom(p, enfant)} a pour parents ${nom(p, h)} et ${nom(p, f)}`,
-    ]))
-  } else {
-    const autre = h ? (etats.mere === 'inconnu' ? ' ; sa mère est inconnue' : ' ; sa mère reste à identifier') : (etats.pere === 'inconnu' ? ' ; son père est inconnu' : ' ; son père reste à identifier')
-    res.push(phrase`${cote}${nom(p, enfant)} est ${fils} de ${nom(p, (h ?? f)!)}${autre}`)
-  }
-  p.sujet = undefined
-  const fam = enfant.famc.map((id) => p.famille(id)).find(Boolean)
-  const union = h ? p.suivi(h)?.mariages.find((m) => m.famille === fam?.id) : undefined
-  const e = union?.evenement
-  if (!detail) {
-    for (const x of [h, f]) if (x) res.push(resume(p, x, false))
-    if (h && f && situe(e)) { p.sujet = undefined; res.push(phrase`Ils se marient ${quand(e!.date)} ${lieu(p, e)}`) }
-    const en = enfants(p, fam, false)
-    if (en) res.push(en)
-    return joindre(res)
-  }
-  for (const x of [h, f]) {
-    if (!x) continue
-    for (const ph of [naissance(p, x), metiers(p, x)]) if (ph) res.push(ph)
-  }
-  if (h && f && situe(e)) {
-    const ah = age(p.suivi(h)?.naissance.evenement?.date, e!.date), af = age(p.suivi(f)?.naissance.evenement?.date, e!.date)
-    const ages = ah && af ? ` ; il a ${ans(ah)}, elle ${ans(af)}` : ''
-    const Q = quand(e!.date), L = lieu(p, e)
-    p.sujet = undefined
-    res.push(p.choisir('mariage-couple', [
-      () => phrase`Ils se marient ${Q} ${L}${ages}`,
-      () => phrase`Leur mariage a lieu ${Q} ${L}${ages}`,
-      !!Q && (() => phrase`${Q}, ${nom(p, h)} épouse ${nom(p, f)} ${L}${ages}`),
-      () => phrase`Le couple s’unit ${Q} ${L}${ages}`,
-    ]))
-  }
-  const en = enfants(p, fam, false)
-  if (en) res.push(en)
-  for (const x of [h, f]) {
-    if (!x) continue
-    const autres = (p.suivi(x)?.mariages ?? []).filter((m) => m.famille !== fam?.id).map((m) => p.ind(m.conjoint)).filter((c): c is Individu => !!c)
-    if (!autres.length) continue
-    const qui = () => enumerer(autres.map((c) => [nom(p, c)]))
-    res.push(p.choisir('autres-unions', [
-      () => phrase`${sujet(p, x)} connaît aussi une autre union, avec ${qui()}`,
-      () => phrase`${sujet(p, x)} a également été ${g(x, 'marié', 'mariée')} à ${qui()}`,
-    ]))
-  }
-  for (const x of [h, f]) {
-    if (!x) continue
-    const ph = deces(p, x)
-    if (ph) res.push(ph)
-  }
-  return joindre(res)
+  const tete = h ?? f!
+  return notice(p, tete, { profondeur: 0, niveau: 0, filiation: true, ligne: enfant.id, ancres: [2 * k, 2 * k + 1] })
 }
 
-/** Un enfant de la personne racontée, en détail */
-function descendant(p: Plume, ind: Individu): Phrase {
-  p.paragraphe()
-  const res: Phrase[] = []
-  for (const ph of [naissance(p, ind), metiers(p, ind)]) if (ph) res.push(ph)
-  let precedent: Individu | undefined
-  p.suivi(ind)?.mariages.forEach((m, i) => {
-    const ph = mariage(p, ind, m, i, precedent)
-    if (ph) res.push(ph)
-    const e = enfants(p, p.famille(m.famille), false)
-    if (e) res.push(e)
-    precedent = p.ind(m.conjoint)
-  })
-  const fin = deces(p, ind)
-  if (fin) res.push(fin)
-  return res.length ? joindre(res) : resume(p, ind, false)
-}
+const TITRES_ASC = ['Ses parents', 'Ses grands-parents', 'Ses arrière-grands-parents', 'Ses trisaïeuls']
+const titreAsc = (n: number) => TITRES_ASC[n - 1] ?? `${capitale(ORDINAUX[n + 1] ?? n + 1 + 'e')} génération`
 
-const TITRES_DESC = ['', 'Ses enfants', 'Ses petits-enfants', 'Ses arrière-petits-enfants']
-const titreDesc = (n: number) => TITRES_DESC[n] ?? `${capitale(ORDINAUX[n] ?? n + 'e')} génération de descendants`
-
-function enfantsTous(p: Plume, ind: Individu): Individu[] {
-  return (p.suivi(ind)?.mariages ?? []).flatMap((m) => enfantsDe(p, p.famille(m.famille)))
-}
-
-/** Le récit complet : la personne, `ascendants` générations d'ancêtres, `descendants` générations de descendants */
-export function recit(d: Donnees, id: string, ascendants: number, descendants: number): Recit | null {
+/** Le récit complet : la personne et `descendants` générations de descendants, puis `ascendants` générations d'ancêtres */
+export function recit(d: Donnees, id: string, ascendants: number, descendants: number, options: Options = {}): Recit | null {
   const ind = d.arbre.individus.get(id)
   if (!ind) return null
-  const p = new Plume(id, d)
-  const titre = [ind.prenom, ind.nom].filter(Boolean).join(' ') || '?'
-  const parties: Partie[] = [{ titre, paragraphes: portrait(p, ind) }]
+  const p = new Plume(id, d, options)
+  const asc = Math.min(Math.max(0, ascendants), MAX_ASCENDANTS)
+  const desc = Math.min(Math.max(0, descendants), MAX_DESCENDANTS)
+  // Les numéros Sosa jusqu'à la génération au-dessus de la dernière racontée (pour les « fils de… »)
+  const pl = places(d.arbre, id, asc + 2)
+  for (let s = 1; s < pl.length; s++) {
+    const x = pl[s]?.ind
+    if (x && !pl[s].dejaVu && !p.sosas.has(x.id)) p.sosas.set(x.id, s)
+  }
+  if (asc === 0) p.sosas.clear()
+  for (let s = 1; s < 2 ** (asc + 1); s++) if (pl[s]?.ind && !pl[s].dejaVu) p.notices.add(s)
+
+  const titre = nomComplet(ind)
+  const parties: Partie[] = []
+  const blocs = notice(p, ind, { profondeur: desc, niveau: 0, filiation: true, ancres: [1] })
+  parties.push({ numero: 'I', titre, blocs, notes: p.notes })
 
   let nbAnc = 0
-  const asc = Math.min(Math.max(0, ascendants), MAX_ASCENDANTS)
-  if (asc > 0) {
-    const pl = places(d.arbre, id, asc + 1)
-    for (let gen = 1; gen <= asc; gen++) {
-      const paragraphes: Phrase[] = []
-      for (let k = 2 ** (gen - 1); k < 2 ** gen; k++) {
-        const ph = couple(p, pl, k, gen <= ASC_DETAILLES)
-        if (ph) paragraphes.push(ph)
-        for (const s of [2 * k, 2 * k + 1]) if (pl[s]?.ind && !pl[s].dejaVu) nbAnc++
-      }
-      if (!paragraphes.length) break
-      parties.push({ titre: titreAsc(gen), paragraphes })
+  for (let gen = 1; gen <= asc; gen++) {
+    p.notes = []
+    const blocs: Bloc[] = []
+    for (let k = 2 ** (gen - 1); k < 2 ** gen; k++) {
+      blocs.push(...noticeCouple(p, pl, k))
+      for (const s of [2 * k, 2 * k + 1]) if (pl[s]?.ind && !pl[s].dejaVu) nbAnc++
     }
+    if (!blocs.length) break
+    parties.push({ numero: romain(gen + 1), titre: titreAsc(gen), blocs, notes: p.notes })
   }
-
-  let nbDesc = 0
-  const desc = Math.min(Math.max(0, descendants), MAX_DESCENDANTS)
-  let generation: Individu[] = [ind]
-  const vus = new Set<string>([ind.id])
-  for (let gen = 1; gen <= desc; gen++) {
-    const paragraphes: Phrase[] = []
-    const suivants: Individu[] = []
-    for (const parent of generation) {
-      const l = enfantsTous(p, parent).filter((c) => !vus.has(c.id))
-      if (!l.length) continue
-      l.forEach((c) => vus.add(c.id))
-      nbDesc += l.length
-      suivants.push(...l)
-      if (gen === 1) {
-        for (const c of l) paragraphes.push(descendant(p, c))
-        continue
-      }
-      p.paragraphe()
-      const N = enLettres(l.length)
-      const es = l.length > 1 ? 'enfants' : 'enfant'
-      if (gen === 2) {
-        const intro = p.choisir('intro-desc', [
-          () => phrase`${nom(p, parent)} a ${N} ${es}`,
-          l.length > 1 && (() => phrase`Les enfants de ${nom(p, parent)} sont au nombre de ${N}`),
-          () => phrase`Du côté de ${nom(p, parent)}, on compte ${N} ${es}`,
-        ])
-        paragraphes.push(joindre([intro, ...l.map((c) => { p.sujet = undefined; return resume(p, c, true) })]))
-      } else {
-        const liste = () => enumerer(l.map((c) => avecAnnees(p, c)))
-        paragraphes.push(p.choisir('liste-desc', [
-          () => phrase`${nom(p, parent)} a pour ${es} ${liste()}`,
-          () => phrase`De ${nom(p, parent)} descendent ${liste()}`,
-          () => phrase`${capitale(es)} de ${nom(p, parent)} : ${liste()}`,
-        ]))
-      }
-    }
-    if (!paragraphes.length) break
-    parties.push({ titre: titreDesc(gen), paragraphes })
-    generation = suivants
-  }
-  return { titre, parties, ancetres: nbAnc, descendants: nbDesc }
+  return { titre, parties, ancetres: nbAnc, descendants: p.descendants }
 }
 
-/** Le récit en texte brut (pour le copier) */
+// ——— Le texte brut (pour le copier) ———
+
+const EXPOSANTS = '⁰¹²³⁴⁵⁶⁷⁸⁹'
+const exposant = (n: number) => String(n).split('').map((c) => EXPOSANTS[Number(c)]).join('')
+
+export function texteMorceaux(l: Phrase): string {
+  return l.map((m) => (typeof m === 'string' ? m : 'appel' in m ? exposant(m.appel) : 'sosa' in m ? `[${m.sosa}]` : m.t)).join('')
+}
+
+function texteBlocs(blocs: Bloc[], retrait: string): string[] {
+  return blocs.flatMap((b) => {
+    if (b.type === 'p') return [retrait + texteMorceaux(b.texte)]
+    return b.items.flatMap((it) => {
+      const [premier, ...reste] = texteBlocs(it.blocs, retrait + '    ')
+      return [`${retrait}${it.marque} ${(premier ?? '').trimStart()}`, ...reste]
+    })
+  })
+}
+
+/** Le récit en texte brut, notes à la fin de chaque partie */
 export function texteBrut(r: Recit): string {
-  const t = (l: Phrase) => l.map((m) => (typeof m === 'string' ? m : m.t)).join('')
-  return r.parties.map((pt) => [pt.titre, ...pt.paragraphes.map(t)].join('\n\n')).join('\n\n\n')
+  return r.parties.map((pt) => {
+    const l = [`${pt.numero}. ${pt.titre}`, ...texteBlocs(pt.blocs, '')]
+    if (pt.notes.length) l.push('———', pt.notes.map((n) => `${n.n}. ${texteMorceaux(n.texte)}`).join('\n'))
+    return l.join('\n\n')
+  }).join('\n\n\n')
 }

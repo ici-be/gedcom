@@ -14,7 +14,11 @@ export interface Evenement {
   note?: string
   /** L'événement est déclaré sans date ni lieu (« 1 DEAT Y ») */
   avere: boolean
+  /** Personnes citées dans l'acte (« 2 ASSO @I1@ », « 3 RELA Witness ») : témoins, parrain et marraine… */
+  temoins?: Temoin[]
 }
+
+export interface Temoin { id: string; rela: string }
 
 export interface Individu {
   id: string
@@ -83,6 +87,10 @@ function lireEvenement(n: Noeud, titres: Map<string, string>): Evenement {
   if (date) e.date = lireDate(date)
   if (lieu) e.lieu = lieu
   if (note) e.note = note
+  const temoins = n.enfants
+    .filter((a) => a.tag === 'ASSO' && /^@[^@]+@$/.test(a.valeur.trim()))
+    .map((a) => ({ id: a.valeur.trim(), rela: valeur(a, 'RELA') }))
+  if (temoins.length) e.temoins = temoins
   return e
 }
 

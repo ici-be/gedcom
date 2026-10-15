@@ -635,14 +635,35 @@ a.asc-piste-g:hover { color: var(--accent); }
 .rc-texte > section { max-width: 68ch; margin: 0 auto; width: 100%; }
 .rc-texte .rc-titre { font-size: clamp(1.6rem, 3.5vw, 2.1rem); margin-bottom: 4px; }
 .rc-texte h3 { font-family: var(--display); font-size: 1.25rem; margin: 26px 0 4px; }
-.rc-texte p { font-family: var(--display); font-weight: 400; font-size: 1.08rem; line-height: 1.7; margin: 10px 0; text-wrap: pretty; hyphens: auto; }
-.rc-texte p a { color: inherit; text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent); text-underline-offset: 3px; }
-.rc-texte p a:hover { color: var(--accent); }
+.rc-texte p { font-family: var(--display); font-weight: 400; font-size: 1.06rem; line-height: 1.65; margin: 10px 0; text-align: justify; hyphens: auto; }
+.rc-texte a { color: inherit; text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--accent) 35%, transparent); text-underline-offset: 3px; }
+.rc-texte a:hover { color: var(--accent); }
+.rc-texte .rc-gras { font-weight: 700; }
+.rc-texte .rc-sosa { font-weight: 700; text-decoration: none; font-variant-numeric: lining-nums; }
+.rc-texte a.rc-sosa:hover { color: var(--accent); }
+.rc-texte .rc-appel { font-size: 0.68em; line-height: 0; margin-left: 1px; }
+.rc-texte .rc-appel a { text-decoration: none; color: var(--accent); padding: 0 1px; }
+.rc-texte .rc-num { font-variant-numeric: lining-nums; color: var(--muted); }
+.rc-texte .rc-lit { font-style: italic; margin: 8px 0 2px; }
+.rc-ancre { scroll-margin-top: 90px; }
+.rc-liste { margin: 4px 0 4px clamp(10px, 3vw, 28px); }
+.rc-item { display: grid; grid-template-columns: 2.2em 1fr; align-items: baseline; }
+.rc-marque { font-family: var(--display); font-size: 1.06rem; font-variant-numeric: lining-nums; }
+.rc-corps > p:first-child { margin-top: 6px; }
+.rc-notes { margin: 18px 0 30px; padding-top: 8px; position: relative; }
+.rc-notes::before { content: ''; position: absolute; top: 0; left: 0; width: 9em; border-top: 1px solid var(--line, #ccc); }
+.rc-texte .rc-notes p { display: grid; grid-template-columns: 2.6em 1fr; font-size: 0.82rem; line-height: 1.45; margin: 3px 0; text-align: left; hyphens: manual; }
+.rc-notes .rc-num-note { text-decoration: none; color: var(--muted); font-variant-numeric: tabular-nums lining-nums; }
+.rc-notes p, .rc-texte sup a { scroll-margin-top: 90px; }
+.rc-vise { animation: rc-vise 1.6s ease-out; }
+@keyframes rc-vise { from { background: color-mix(in srgb, var(--accent) 22%, transparent); } to { background: transparent; } }
+.rc-case { display: inline-flex; gap: 6px; align-items: center; font-size: 0.9rem; }
 @media print {
   .recit > .titre-ecran, .rc-reglages { display: none !important; }
   .rc-texte { border: 0; padding: 0; }
-  .rc-texte p { font-size: 11pt; }
-  .rc-texte p a { text-decoration: none; }
+  .rc-texte p, .rc-marque { font-size: 11pt; }
+  .rc-texte .rc-notes p { font-size: 8pt; }
+  .rc-texte a { text-decoration: none; }
   .rc-texte h3 { break-after: avoid; }
 }
 
