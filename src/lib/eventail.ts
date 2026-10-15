@@ -3,7 +3,7 @@
 import type { Arbre, Evenement, Individu } from './gedcom/arbre'
 import type { DateGed } from './gedcom/dates'
 import { etatParents } from './parente'
-import type { Suivi } from './suivi'
+import type { Fait, Suivi } from './suivi'
 import { decouper } from './geo'
 
 /** connu · parent inconnu ou introuvable (note Filiation) · à chercher · vide (au-dessus d'une place sans personne) */
@@ -194,15 +194,34 @@ export const GENERATIONS_RECTO = 8
  * le recto et le verso précisent donc les mêmes pays.
  */
 export function regionsDesPlaces(resumes: Map<number, Resume>, positions?: Map<string, { region?: string; pays?: string }>): Map<number, string> {
+  const pp = paysPrincipal(resumes, positions)
+  const regions = new Map<number, string>()
+  for (const [s, r] of resumes) regions.set(s, regionDuLieu(r.lieu, r.lieu ? positions?.get(r.lieu) : undefined, pp))
+  return regions
+}
+
+/** Le pays le plus fréquent parmi les naissances du recto */
+export function paysPrincipal(resumes: Map<number, Resume>, positions?: Map<string, { region?: string; pays?: string }>): string | undefined {
   const freqPays = new Map<string, number>()
   for (const [s, r] of resumes) {
     const pays = s < 2 ** GENERATIONS_RECTO && r.lieu ? positions?.get(r.lieu)?.pays : undefined
     if (pays) freqPays.set(pays, (freqPays.get(pays) ?? 0) + 1)
   }
-  const paysPrincipal = [...freqPays.entries()].sort((a, b) => b[1] - a[1])[0]?.[0]
-  const regions = new Map<number, string>()
-  for (const [s, r] of resumes) regions.set(s, regionDuLieu(r.lieu, r.lieu ? positions?.get(r.lieu) : undefined, paysPrincipal))
-  return regions
+  return [...freqPays.entries()].sort((a, b) => b[1] - a[1])[0]?.[0]
+}
+
+/**
+ * Le mariage des parents d'une place (dans la famille où elle est enfant), s'il a une date ou un lieu ;
+ * rien pour une union hors mariage
+ */
+export function mariageDesParents(pl: Place[], sosa: number, suivis: Map<string, Suivi>): Fait | undefined {
+  const enfant = pl[sosa]?.ind
+  const parent = pl[2 * sosa]?.ind ?? pl[2 * sosa + 1]?.ind
+  if (!enfant || !parent) return undefined
+  const fam = enfant.famc.find((f) => parent.fams.includes(f))
+  const m = fam ? suivis.get(parent.id)?.mariages.find((x) => x.famille === fam) : undefined
+  if (!m?.evenement || m.etat === 'sans-objet') return undefined
+  return anneeCourte(m.evenement)?.replace(/^\?$/, '') || m.evenement.lieu ? m : undefined
 }
 
 /**

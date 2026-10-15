@@ -1,15 +1,17 @@
 // Éventail des origines : huit générations sur 220°, chaque case teintée selon la province de naissance.
+// En option, le mariage de chaque couple des générations II à V : une boule teintée selon la province du mariage,
+// avec l'année, au pied de la jointure entre les deux époux, là où ils rejoignent leur enfant.
 // Feuille A3 paysage (1 unité = 0,3 mm).
 
-import type { JSX } from 'preact'
+import { Fragment, type JSX } from 'preact'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/hooks'
 import qrcode from 'qrcode-generator'
 import type { Donnees } from '../../lib/donnees'
 import { situerArbre, type Position } from '../../lib/geo'
 import { romain } from '../../lib/communes'
 import {
-  abregerCommune, angles, arc, couperLignes, fratrie, GENERATIONS_RECTO, LIEU_INCONNU, LIEU_NON_SITUE, morceauxTitre, nomPays, parNom, places, point, prenoms,
-  ordreRegions, regionsDesPlaces, resumer, secteur, situerRegion, type Centre, type Place, type Resume,
+  abregerCommune, angles, anneeCourte, arc, couperLignes, fratrie, GENERATIONS_RECTO, LIEU_INCONNU, LIEU_NON_SITUE, mariageDesParents, morceauxTitre, nomPays,
+  parNom, paysPrincipal, places, point, prenoms, ordreRegions, regionDuLieu, regionsDesPlaces, resumer, secteur, situerRegion, type Centre, type Place, type Resume,
 } from '../../lib/eventail'
 import { aCadrer, cadrer, chargerContours, colonnes, grouper, proportions, zones, type Contours, type Entree, type Fenetre, type Groupe, type Rect, type Zone } from '../../lib/carte-origines'
 import type { OptionsFeuille } from './modeles'
@@ -21,6 +23,10 @@ const GENERATIONS = GENERATIONS_RECTO
 const OUVERTURE = 220
 const O: Centre = { cx: 700, cy: 690 }
 const RAYONS = [0, 96, 176, 254, 330, 408, 486, 566, 636]
+/** Rayon de la boule du mariage, selon la génération des époux (1 : les parents) ; au-delà de la génération V, les cases sont trop étroites */
+const BOULES = [0, 17, 15, 13.5, 12]
+/** Espace laissé entre la boule et le texte de la case de l'enfant */
+const JEU = 2.5
 
 
 type Morceau = [string, string?]
@@ -39,8 +45,14 @@ const mesure = (l: Ligne, max: number) => ({
   'font-size': l.fs, 'data-fs': l.fs, 'data-max': Math.round(max), 'data-texte': l.coupe ? l.parts.map(([t]) => t).join('') : undefined,
 })
 
-/** Lignes courbes, centrées dans la case ; retournées dans le bas de l'éventail pour rester lisibles */
-function TexteCourbe({ id, r1, r2, a1, a2, lignes }: { id: string; r1: number; r2: number; a1: number; a2: number; lignes: Ligne[] }) {
+/** Une boule de mariage au bord d'une case : son centre (rayon) et son rayon, et le côté de la case où elle se trouve */
+interface Obstacle { rc: number; R: number; fin: boolean }
+
+/**
+ * Lignes courbes, centrées dans la case ; retournées dans le bas de l'éventail pour rester lisibles.
+ * Une ligne à hauteur d'une boule de mariage se centre sur ce qui reste de la case.
+ */
+function TexteCourbe({ id, r1, r2, a1, a2, lignes, obstacle }: { id: string; r1: number; r2: number; a1: number; a2: number; lignes: Ligne[]; obstacle?: Obstacle }) {
   // L'éventail ne descend qu'à 110° sous l'horizontale : sans retourner, les extrémités se lisent comme leurs voisines
   const retourne = Math.abs((a1 + a2) / 2) > 135
   const H = lignes.reduce((s, l) => s + l.fs * LH, 0)
@@ -53,10 +65,18 @@ function TexteCourbe({ id, r1, r2, a1, a2, lignes }: { id: string; r1: number; r
         const r = retourne ? rm - H / 2 + cumul + h * 0.76 : rm + H / 2 - cumul - h * 0.76
         cumul += h
         const pid = `${id}-${j}`
+        // la ligne occupe à peu près [r − 0,3 fs, r + 0,8 fs] ; si la boule est à cette hauteur, on lui laisse sa largeur
+        let b1 = a1
+        let b2 = a2
+        if (obstacle && r - l.fs * 0.3 < obstacle.rc + obstacle.R + 1 && r + l.fs * 0.8 > obstacle.rc - obstacle.R - 1) {
+          const da = ((obstacle.R + 3) / r) * (180 / Math.PI)
+          if (obstacle.fin) b2 -= da
+          else b1 += da
+        }
         return (
           <g key={j}>
-            <path id={pid} d={arc(O, r, a1, a2, retourne)} fill="none" />
-            <text {...mesure(l, r * ((a2 - a1) * Math.PI / 180) - 8)} text-anchor="middle" class={l.cls}>
+            <path id={pid} d={arc(O, r, b1, b2, retourne)} fill="none" />
+            <text {...mesure(l, r * ((b2 - b1) * Math.PI / 180) - 8)} text-anchor="middle" class={l.cls}>
               <textPath href={'#' + pid} startOffset="50%"><Morceaux parts={l.parts} /></textPath>
             </text>
           </g>
@@ -376,10 +396,22 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
       if (e) e.n++
       else { const s = situerRegion(lieu, pos); entrees.set(reg, { nom: s.region, pays: s.pays, couleur: couleur(reg), n: 1 }) }
     }
+    // Le mariage de chaque couple assez large pour une boule : année et teinte de la province du mariage
+    const mariages = new Map<number, { annee: string; sourcee: boolean; couleur: string }>()
+    if (options.mariages) {
+      const pp = paysPrincipal(resumes, positions)
+      for (let k = 1; k < 2 ** (BOULES.length - 1); k++) {
+        const m = mariageDesParents(pl, k, d.suivis)
+        if (!m?.evenement) continue
+        const lieu = m.evenement.lieu
+        const reg = regionDuLieu(lieu, lieu ? positions?.get(lieu) : undefined, pp)
+        mariages.set(k, { annee: anneeCourte(m.evenement)?.replace(/^\?$/, '') || '∞', sourcee: m.etat === 'source', couleur: couleur(reg) })
+      }
+    }
     const groupes = grouper([...entrees.values()], nomPays, AUTRES)
     if (inconnus) groupes.push({ titre: '', lignes: [{ nom: 'Lieu inconnu ou non situé', couleur: INCONNU, n: inconnus }] })
-    return { pl, resumes, regions, couleur, legende, ancetres: uniques.length, communes: communes.size, nbRegions, parGeneration, couleursCarte, poidsCarte, groupes }
-  }, [d, positions])
+    return { pl, resumes, regions, couleur, legende, ancetres: uniques.length, communes: communes.size, nbRegions, parGeneration, couleursCarte, poidsCarte, groupes, mariages }
+  }, [d, positions, options.mariages])
 
   useLayoutEffect(() => {
     if (!svg.current) return
@@ -389,7 +421,7 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
     return () => { vivant = false }
   })
 
-  const { pl, resumes, regions, couleur } = donnees
+  const { pl, resumes, regions, couleur, mariages } = donnees
   // Une même personne à deux places de l'éventail
   const implexes = pl.some((p) => p?.dejaVu)
   const enfants = useMemo(() => !options.fratrie ? [] : fratrie(d.arbre, d.racine, (ind) => d.suivis.get(ind.id)?.naissance.evenement)
@@ -397,6 +429,20 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
   const avecFratrie = enfants.length > 1
   const cases: JSX.Element[] = []
   const textes: JSX.Element[] = []
+  const boules: JSX.Element[] = []
+  // Jusqu'où monte le texte de chaque case (rayon) : la boule des parents ne doit pas descendre plus bas.
+  // Au centre, le prénom de la personne de départ, ou la fratrie qui remplit le cercle.
+  const hautTexte = new Map<number, number>([[1, avecFratrie ? RAYONS[1] - 6 : 44]])
+  // La boule du couple dont `k` est l'enfant : posée sur le bord intérieur de l'anneau des époux,
+  // elle ne descend dans la case de l'enfant que de la marge laissée au-dessus de son texte
+  const boule = (k: number) => {
+    const g = Math.floor(Math.log2(k)) + 1
+    if (!mariages.has(k) || g >= BOULES.length) return undefined
+    const R = BOULES[g]
+    const marge = RAYONS[g] - (hautTexte.get(k) ?? RAYONS[g])
+    const plonge = Math.min(Math.max(marge - JEU, 0), R * 0.6)
+    return { rc: RAYONS[g] + R - plonge, R, a: angles(2 * k, OUVERTURE).a2, g }
+  }
   for (let s = 2; s < 2 ** GENERATIONS; s++) {
     const p = pl[s]
     const { a1, a2, generation: g } = angles(s, OUVERTURE)
@@ -414,9 +460,26 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
     if (!lignes.length) continue
     // Hauteur : l'épaisseur de l'anneau pour un texte courbe, la largeur de la case côté centre pour un texte en rayon
     lignes = caser(lignes, courbe ? r2 - r1 - 6 : (r1 + 4.5) * ouv - 3)
+    const H = lignes.reduce((t, l) => t + l.fs * LH, 0)
+    hautTexte.set(s, courbe ? rm + H / 2 : r2 - 4.5)
+    // le mari a la boule du couple à la fin de sa case, l'épouse au début
+    const b = boule(s >> 1)
     textes.push(courbe
-      ? <TexteCourbe key={s} id={`c${s}`} r1={r1} r2={r2} a1={a1} a2={a2} lignes={lignes} />
+      ? <TexteCourbe key={s} id={`c${s}`} r1={r1} r2={r2} a1={a1} a2={a2} lignes={lignes} obstacle={b && { rc: b.rc, R: b.R, fin: s % 2 === 0 }} />
       : <TexteRayon key={s} r1={r1} r2={r2} a1={a1} a2={a2} lignes={lignes} />)
+  }
+  for (const [k, m] of mariages) {
+    const b = boule(k)
+    if (!b) continue
+    const [x, y] = point(O, b.rc, b.a)
+    const fs = Math.max(7.2, b.R * 0.6)
+    boules.push(
+      <g key={k}>
+        <circle cx={x} cy={y} r={b.R} fill={m.couleur} stroke="#fff" stroke-width="2.4" />
+        <circle cx={x} cy={y} r={b.R - 1.2} fill="none" stroke={GRIS} stroke-width="0.6" stroke-opacity="0.55" />
+        <text x={x} y={(y + fs * 0.36).toFixed(1)} font-size={fs} data-fs={fs} data-max={Math.round(2 * b.R - 5)} text-anchor="middle" class={'an' + (m.sourcee ? '' : ' nd')}>{m.annee}</text>
+      </g>,
+    )
   }
 
   const R = RAYONS[GENERATIONS]
@@ -466,6 +529,7 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
       <rect width="1400" height="990" fill="#fff" />
       <g>{cases}</g>
       <g>{textes}</g>
+      <g>{boules}</g>
       {quartiers}
 
       {/* Centre : la personne de départ */}
@@ -535,11 +599,13 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
       </>}
 
       {/* Pied de page */}
-      {(options.italiques || implexes) && (
+      {(options.italiques || implexes || boules.length > 0) && (
         <text x="40" y={options.date ? 950 : 966} font-size="8.5" class="mut">
-          {options.italiques && <><tspan class="ns">italique</tspan> : date sans source</>}
-          {options.italiques && implexes && ' · '}
-          {implexes && '◆ implexe'}
+          {[
+            boules.length > 0 && <>● année du mariage, teinte de la province où il a eu lieu</>,
+            options.italiques && <><tspan class="ns">italique</tspan> : date sans source</>,
+            implexes && '◆ implexe',
+          ].filter(Boolean).map((x, i) => <Fragment key={i}>{i > 0 && ' · '}{x}</Fragment>)}
         </text>
       )}
       {options.date && <text x="40" y="966" font-size="8.5" class="mut">Établi le {options.date}</text>}

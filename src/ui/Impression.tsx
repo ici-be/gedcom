@@ -12,7 +12,7 @@ import { nomFichierArbre } from '../lib/format'
 import { ecrire, lire } from '../lib/stockage'
 import { MODELES, type Format } from './arbres/modeles'
 
-interface Reglages { date: boolean; jour?: string; qr: boolean; papier?: Format; barres?: boolean; fratrie?: boolean; italiques?: boolean; verso?: boolean; photos?: boolean }
+interface Reglages { date: boolean; jour?: string; qr: boolean; papier?: Format; barres?: boolean; fratrie?: boolean; italiques?: boolean; verso?: boolean; photos?: boolean; mariages?: boolean }
 
 const PAPIERS: Record<Format, [number, number]> = { A4: [210, 297], A3: [297, 420], A2: [420, 594] }
 
@@ -76,7 +76,7 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
     addEventListener('afterprint', apres)
     return () => { removeEventListener('beforeprint', avant); removeEventListener('afterprint', apres) }
   }, [nomFichier])
-  const options = { date: reglages.date ? dateLongue(jour) : undefined, qr: reglages.qr && !!d.adresse, carte: !reglages.barres, fratrie: reglages.fratrie, italiques: reglages.italiques, photos: reglages.photos !== false }
+  const options = { date: reglages.date ? dateLongue(jour) : undefined, qr: reglages.qr && !!d.adresse, carte: !reglages.barres, fratrie: reglages.fratrie, italiques: reglages.italiques, photos: reglages.photos !== false, mariages: reglages.mariages !== false }
 
   return (
     <section class="ecran arbre-imprime">
@@ -123,6 +123,10 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
             <label class="case">
               <input type="checkbox" id="impression-fratrie" checked={!!reglages.fratrie} onChange={(e) => setReglages({ fratrie: e.currentTarget.checked })} />
               {modele.reglages.fratrie}
+            </label>
+            <label class="case">
+              <input type="checkbox" id="impression-mariages" checked={reglages.mariages !== false} onChange={(e) => setReglages({ mariages: e.currentTarget.checked })} />
+              {modele.reglages.mariages}
             </label>
             {modele.reglages.photos && (
               <label class="case">

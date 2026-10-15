@@ -452,6 +452,7 @@ th:not([aria-sort]) .tri .fleche { opacity: 0.35; }
 .feuille .mut { fill: #646b67; }
 .feuille .fr { font-style: italic; fill: #4e5552; }
 /* mariage posé sur le trait qui monte vers les parents : un liseré blanc l'en détache */
+.feuille .an { font-weight: 600; font-variant-numeric: tabular-nums; }
 .feuille .mar { paint-order: stroke; stroke: #fff; stroke-width: 3px; stroke-linejoin: round; }
 
 /* ---------- ascendance ---------- */

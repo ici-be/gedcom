@@ -10,7 +10,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/ho
 import type { Donnees } from '../../lib/donnees'
 import type { Individu, Photo } from '../../lib/gedcom/arbre'
 import { decouperLieu, romain } from '../../lib/communes'
-import { abregerCommune, anneeCourte, fratrie, places, prenoms, resumer, type Place, type Resume } from '../../lib/eventail'
+import { abregerCommune, anneeCourte, fratrie, mariageDesParents, places, prenoms, resumer, type Place, type Resume } from '../../lib/eventail'
 import type { OptionsFeuille } from './modeles'
 import { chargerPolices, largeur } from './mesure'
 import { ajuster } from './feuille'
@@ -187,20 +187,16 @@ export function Pyramide({ d, options }: { d: Donnees; options: OptionsFeuille }
     // Le mariage des parents de chaque place des premières générations, d'après la famille où elle est enfant
     const mariages = new Map<number, Mariage>()
     for (const p of pl) {
-      if (!p?.ind || p.generation >= TAILLES_MARIAGE.length) continue
-      const parent = pl[2 * p.sosa]?.ind ?? pl[2 * p.sosa + 1]?.ind
-      if (!parent) continue
-      const fam = p.ind.famc.find((f) => parent.fams.includes(f))
-      const m = fam ? d.suivis.get(parent.id)?.mariages.find((x) => x.famille === fam) : undefined
-      // une union hors mariage n'a pas de date de mariage à montrer
-      if (!m?.evenement || m.etat === 'sans-objet') continue
+      if (!options.mariages || !p?.ind || p.generation >= TAILLES_MARIAGE.length) continue
+      const m = mariageDesParents(pl, p.sosa, d.suivis)
+      if (!m?.evenement) continue
       const annee = anneeCourte(m.evenement)?.replace(/^\?$/, '') || undefined
       const commune = m.evenement.lieu ? abregerCommune(decouperLieu(m.evenement.lieu).nom) : undefined
-      if (annee || commune) mariages.set(p.sosa, { annee, commune, sourcee: m.etat === 'source' })
+      mariages.set(p.sosa, { annee, commune, sourcee: m.etat === 'source' })
     }
     const uniques = pl.filter((p) => p?.ind && !p.dejaVu && p.sosa > 1).length
     return { pl, resumes, freres, uniques, naissance, mariages }
-  }, [d])
+  }, [d, options.mariages])
 
   useLayoutEffect(() => {
     if (!svg.current) return
