@@ -101,7 +101,7 @@ export function Annees({ ind }: { ind: Individu }) {
   const n = annee(ind.evenements.find((e) => e.tag === 'BIRT' && e.date)?.date ?? ind.evenements.find((e) => (e.tag === 'BAPM' || e.tag === 'CHR') && e.date)?.date)
   const d = annee(ind.evenements.find((e) => e.tag === 'DEAT' && e.date)?.date ?? ind.evenements.find((e) => e.tag === 'BURI' && e.date)?.date)
   if (n === undefined && d === undefined) return null
-  return <span class="annees">{n ?? '?'}{d !== undefined ? '–' + d : ''}</span>
+  return <span class="annees">{n === undefined ? '† ' + d : d === undefined ? n : `${n}–${d}`}</span>
 }
 
 /** Nom de la personne, avec lien vers sa fiche en ligne si l'adresse de l'arbre est connue */

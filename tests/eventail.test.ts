@@ -1,7 +1,7 @@
-import { expect, test } from 'vitest'
+import { describe, expect, test } from 'vitest'
 import { lireArbre } from '../src/lib/gedcom/arbre'
 import { suivi } from '../src/lib/suivi'
-import { abregerCommune, angles, anglesDepuis, couperLignes, enumerer, fratrie, LIEU_INCONNU, morceauxTitre, ordreRegions, places, prenoms, regionDuLieu, resumer } from '../src/lib/eventail'
+import { abregerCommune, angles, anglesDepuis, couperLignes, enumerer, fratrie, LIEU_INCONNU, morceauxAnnees, morceauxTitre, ordreRegions, places, prenoms, regionDuLieu, resumer } from '../src/lib/eventail'
 import type { Place } from '../src/lib/eventail'
 import { GED } from './exemple'
 
@@ -42,7 +42,7 @@ test('résumé : années, sources, commune', () => {
   const r = resumer(jean, suivi(arbre, jean))
   expect(r.naissance).toBe('v. 1950')
   expect(r.naissanceSourcee).toBe(false)
-  expect(r.deces).toBe('?')
+  expect(r.deces).toBeUndefined() // « 1 DEAT Y » : décédé, date inconnue, rien d'écrit
   expect(r.commune).toBe('Malines')
 })
 
@@ -119,4 +119,14 @@ test('régions : celles du recto d’abord, celles du verso ensuite, chacune par
   // au verso : beaucoup de Limbourg, du Hainaut, et un implexe qui ne compte pas
   mettre(300, 'Limbourg'); mettre(301, 'Limbourg'); mettre(302, 'Hainaut'); mettre(303, 'Anvers', 2); mettre(304, 'Anvers', 2)
   expect(ordreRegions(pl, regions)).toEqual(['Namur', 'Hainaut', 'Limbourg'])
+})
+
+describe('années sur les arbres', () => {
+  const r = (n?: string, d?: string) => ({ prenom: '', nom: '', naissance: n, deces: d, naissanceSourcee: true, decesSourcee: false, vivant: false })
+  test('jamais de « ? »', () => {
+    expect(morceauxAnnees(r('1774', '1842')).map(([t]) => t).join('')).toBe('1774 – 1842')
+    expect(morceauxAnnees(r('1774')).map(([t]) => t).join('')).toBe('1774')
+    expect(morceauxAnnees(r(undefined, '1842')).map(([t]) => t).join('')).toBe('† 1842')
+    expect(morceauxAnnees(r())).toEqual([])
+  })
 })

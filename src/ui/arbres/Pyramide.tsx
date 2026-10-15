@@ -10,7 +10,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/ho
 import type { Donnees } from '../../lib/donnees'
 import type { Individu, Photo } from '../../lib/gedcom/arbre'
 import { decouperLieu, romain } from '../../lib/communes'
-import { abregerCommune, anneeCourte, fratrie, mariageDesParents, places, prenoms, resumer, type Place, type Resume } from '../../lib/eventail'
+import { abregerCommune, anneeCourte, morceauxAnnees, fratrie, mariageDesParents, places, prenoms, resumer, type Place, type Resume } from '../../lib/eventail'
 import type { OptionsFeuille } from './modeles'
 import { chargerPolices, largeur } from './mesure'
 import { ajuster } from './feuille'
@@ -53,12 +53,6 @@ function Morceaux({ parts }: { parts: Morceau[] }) {
   return <>{parts.map(([t, c], i) => <tspan key={i} class={c}>{t}</tspan>)}</>
 }
 
-function annees(r: Resume): Morceau[] {
-  const n = r.naissance ?? '?'
-  const cn = r.naissanceSourcee ? undefined : 'nd'
-  if (r.vivant) return [[n, cn]]
-  return [[n, cn], [' – '], [r.deces ?? '?', r.decesSourcee ? undefined : 'nd']]
-}
 
 /** Réduit toutes les lignes si leur hauteur dépasse la place */
 function caser(lignes: Ligne[], hauteur: number): Ligne[] {
@@ -76,7 +70,7 @@ function lignesCartouche(g: number, r: Resume, implexe: boolean): Ligne[] {
   const l: Ligne[] = []
   if (pn) l.push({ fs: T[0], parts: [[pn, 'pn']] })
   l.push({ fs: T[1], parts: nm })
-  if (r.naissance || r.deces) l.push({ fs: T[2], parts: annees(r) })
+  if (r.naissance || r.deces) l.push({ fs: T[2], parts: morceauxAnnees(r) })
   if (r.commune) l.push({ fs: T[3], parts: [[maj(abregerCommune(r.commune))]], cls: 'lieu' })
   if (T[4] && r.metier) l.push({ fs: T[4], parts: [[r.metier]], cls: 'mt' })
   return l
@@ -85,7 +79,7 @@ function lignesCartouche(g: number, r: Resume, implexe: boolean): Ligne[] {
 /** Le texte d'une étiquette verticale : de plus en plus court vers le haut */
 function lignesEtiquette(g: number, r: Resume, implexe: boolean, freres: string): Ligne[] {
   const nom: Morceau[] = [[(prenoms(r.prenom, 1) ? prenoms(r.prenom, 1) + ' ' : ''), 'pn'], [maj(r.nom || '?'), 'nm'], ...(implexe ? [[' ◆', 'so'] as Morceau] : [])]
-  const dates = r.naissance || r.deces ? annees(r) : []
+  const dates = r.naissance || r.deces ? morceauxAnnees(r) : []
   if (g === 7) return [{ fs: 6.8, parts: [...nom, ...(dates.length ? [['  '] as Morceau, ...dates.map(([t, c]) => [t, (c ?? '') + ' mut'] as Morceau)] : [])] }]
   if (g === 6) return [{ fs: 7.4, parts: nom }, ...(dates.length ? [{ fs: 6.6, parts: dates }] : [])]
   const l: Ligne[] = [{ fs: 8.4, parts: nom }]

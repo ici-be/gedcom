@@ -34,7 +34,7 @@ function Vie({ d, id }: { d: Donnees; id: string }) {
   const n = s?.naissance.evenement?.date?.texte
   const m = s?.deces.evenement?.date?.texte
   if (!n && !m) return null
-  return <span class="annees">{n ?? '?'}{m ? ' – ' + m : ''}</span>
+  return <span class="annees">{!n ? '† ' + m : m ? `${n} – ${m}` : n}</span>
 }
 
 function Lieu({ lieu }: { lieu?: string }) {

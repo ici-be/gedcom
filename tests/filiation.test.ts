@@ -88,3 +88,42 @@ test('enfant qui porte le nom de sa mère, sans père : père inconnu', () => {
   expect(luc(sansPere).pere).toBe('a-chercher')
   expect(luc(sansPere.replace('1 NAME Anne /?/', '1 NAME Anne /Dupont/'))).toEqual({ pere: 'inconnu', mere: 'connu' })
 })
+
+// Geneanet impose deux parents : « ?? /??/ » tient la place de celui qu'on ne connaît pas
+const FICTIF = `0 @I1@ INDI
+1 NAME Paul /Maes/
+1 NOTE Filiation: père inconnu
+1 FAMC @F1@
+0 @I2@ INDI
+1 NAME ?? /??/
+1 SEX M
+1 DEAT Y
+1 FAMS @F1@
+0 @I3@ INDI
+1 NAME Anna /Maes/
+1 SEX F
+1 FAMS @F1@
+0 @I4@ INDI
+1 NAME ?? /Cambier/
+1 SEX M
+1 FAMS @F2@
+0 @F1@ FAM
+1 HUSB @I2@
+1 WIFE @I3@
+1 CHIL @I1@
+0 @F2@ FAM
+1 HUSB @I4@
+`
+
+describe('parent fictif « ?? /??/ »', () => {
+  const a = lireArbre(FICTIF)
+  test('retiré de l’arbre, la note s’applique', () => {
+    expect(a.individus.has('@I2@')).toBe(false)
+    expect(a.familles.get('@F1@')!.mari).toBeUndefined()
+    expect(etatParents(a, a.individus.get('@I1@')!)).toEqual({ pere: 'inconnu', mere: 'connu' })
+    expect(filiationContredite(a, a.individus.get('@I1@')!)).toEqual([])
+  })
+  test('un nom de famille connu en fait une vraie personne', () => {
+    expect(a.individus.get('@I4@')!.nom).toBe('Cambier')
+  })
+})

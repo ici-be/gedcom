@@ -78,6 +78,17 @@ export function anneeCourte(e?: Evenement): string | undefined {
   return (QUALIFS[e!.date!.qualif] ?? '') + a
 }
 
+const connue = (a?: string) => (a && a !== '?' ? a : undefined)
+
+/** « 1774 – 1842 », « 1774 », « † 1842 » ou rien, jamais de « ? » ; `nd` : date sans source (en italique si l'option est cochée) */
+export function morceauxAnnees(r: Resume): [string, string?][] {
+  const n: [string, string?] | undefined = r.naissance ? [r.naissance, r.naissanceSourcee ? undefined : 'nd'] : undefined
+  const d: [string, string?] | undefined = r.deces ? [r.deces, r.decesSourcee ? undefined : 'nd'] : undefined
+  if (n && d) return [n, [' – '], d]
+  if (n) return [n]
+  return d ? [['† '], d] : []
+}
+
 export function resumer(ind: Individu, s: Suivi): Resume {
   const n = s.naissance.evenement
   const d = s.deces.evenement
@@ -85,8 +96,9 @@ export function resumer(ind: Individu, s: Suivi): Resume {
   return {
     prenom: ind.prenom,
     nom: ind.nom,
-    naissance: anneeCourte(n),
-    deces: vivant ? undefined : anneeCourte(d) ?? '?',
+    // une date inconnue (« 1 DEAT Y », lieu sans date) ne s'écrit pas : pas de « ? » sur les arbres
+    naissance: connue(anneeCourte(n)),
+    deces: vivant ? undefined : connue(anneeCourte(d)),
     naissanceSourcee: s.naissance.etat === 'source',
     decesSourcee: s.deces.etat === 'source',
     vivant,

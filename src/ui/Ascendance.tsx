@@ -27,7 +27,7 @@ function Annees({ d, id, lieu }: { d: Donnees; id: string; lieu?: boolean }) {
   const n = annee(s?.naissance.evenement?.date)
   const m = annee(s?.deces.evenement?.date)
   const c = lieu ? commune(d, id) : undefined
-  const ans = n === undefined && m === undefined ? '' : `${n ?? '?'}${m !== undefined ? '–' + m : ''}`
+  const ans = n === undefined ? (m === undefined ? '' : '† ' + m) : m === undefined ? String(n) : `${n}–${m}`
   if (!ans && !c) return null
   return <span class="annees">{[ans, c].filter(Boolean).join(', ')}</span>
 }

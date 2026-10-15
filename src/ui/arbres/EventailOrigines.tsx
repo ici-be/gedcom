@@ -10,7 +10,7 @@ import type { Donnees } from '../../lib/donnees'
 import { situerArbre, type Position } from '../../lib/geo'
 import { romain } from '../../lib/communes'
 import {
-  abregerCommune, angles, anneeCourte, arc, couperLignes, fratrie, GENERATIONS_RECTO, LIEU_INCONNU, LIEU_NON_SITUE, mariageDesParents, morceauxTitre, nomPays,
+  abregerCommune, morceauxAnnees, angles, anneeCourte, arc, couperLignes, fratrie, GENERATIONS_RECTO, LIEU_INCONNU, LIEU_NON_SITUE, mariageDesParents, morceauxTitre, nomPays,
   parNom, paysPrincipal, places, point, prenoms, ordreRegions, regionDuLieu, regionsDesPlaces, resumer, secteur, situerRegion, type Centre, type Place, type Resume,
 } from '../../lib/eventail'
 import { aCadrer, cadrer, chargerContours, colonnes, grouper, proportions, zones, type Contours, type Entree, type Fenetre, type Groupe, type Rect, type Zone } from '../../lib/carte-origines'
@@ -115,13 +115,6 @@ function TexteRayon({ r1, r2, a1, a2, lignes, obstacle }: { r1: number; r2: numb
   )
 }
 
-function annees(r: Resume): Morceau[] {
-  const n = r.naissance ?? '?'
-  // nd : date sans source, en italique si l'option est cochée (classe « italiques » de la feuille)
-  const cn = r.naissanceSourcee ? undefined : 'nd'
-  if (r.vivant) return [[n, cn]]
-  return [[n, cn], [' – '], [r.deces ?? '?', r.decesSourcee ? undefined : 'nd']]
-}
 
 /** Prénoms (deux au plus) puis nom sur une seconde ligne, ou « Prénom NOM » sur une seule */
 function nom(r: Resume, fs: number, opts: { fsNom?: number; implexe?: boolean } = {}): Ligne[] {
@@ -150,12 +143,15 @@ function lignesCase(p: Place, r: Resume, implexe: boolean, largeur: number): Lig
   const g = p.generation
   const lieu = r.commune ? maj(abregerCommune(r.commune)) : ''
   const l = (fs: number, parts: Morceau[], cls?: string): Ligne[] => (parts.some(([t]) => t) ? [{ fs, parts, cls }] : [])
-  if (g === 1) return [...nom(r, 16, { fsNom: 13.5, implexe }), ...l(11, annees(r)), ...l(10, [[lieu]], 'lieu'), ...metier(r.metier, 10.5, largeur)]
-  if (g === 2) return [...nom(r, 13, { fsNom: 11.5, implexe }), ...l(10, annees(r)), ...l(9.5, [[lieu]], 'lieu'), ...metier(r.metier, 9.5, largeur)]
-  if (g === 3) return [...nom(r, 11.5, { fsNom: 10, implexe }), ...l(9.5, annees(r)), ...l(9, [[lieu]], 'lieu'), ...metier(r.metier, 9, largeur)]
-  if (g === 4) return [...nom(r, 10, { fsNom: 9.2, implexe }), ...l(8.8, annees(r)), ...l(8.3, [[lieu]], 'lieu'), ...metier(r.metier, 8.3, largeur)]
-  if (g === 5) return [...nom(r, 9, { implexe }), ...l(8.3, annees(r)), ...l(7.8, [[lieu]], 'lieu'), ...metier(r.metier, 7.8, largeur)]
-  if (g === 6) return [...nom(r, 8, { implexe }), ...l(7.2, [...annees(r), ...(lieu ? [[' · ' + lieu, 'lieu'] as Morceau] : [])])]
+  if (g === 1) return [...nom(r, 16, { fsNom: 13.5, implexe }), ...l(11, morceauxAnnees(r)), ...l(10, [[lieu]], 'lieu'), ...metier(r.metier, 10.5, largeur)]
+  if (g === 2) return [...nom(r, 13, { fsNom: 11.5, implexe }), ...l(10, morceauxAnnees(r)), ...l(9.5, [[lieu]], 'lieu'), ...metier(r.metier, 9.5, largeur)]
+  if (g === 3) return [...nom(r, 11.5, { fsNom: 10, implexe }), ...l(9.5, morceauxAnnees(r)), ...l(9, [[lieu]], 'lieu'), ...metier(r.metier, 9, largeur)]
+  if (g === 4) return [...nom(r, 10, { fsNom: 9.2, implexe }), ...l(8.8, morceauxAnnees(r)), ...l(8.3, [[lieu]], 'lieu'), ...metier(r.metier, 8.3, largeur)]
+  if (g === 5) return [...nom(r, 9, { implexe }), ...l(8.3, morceauxAnnees(r)), ...l(7.8, [[lieu]], 'lieu'), ...metier(r.metier, 7.8, largeur)]
+  if (g === 6) {
+    const ans = morceauxAnnees(r)
+    return [...nom(r, 8, { implexe }), ...l(7.2, [...ans, ...(lieu ? [[(ans.length ? ' · ' : '') + lieu, 'lieu'] as Morceau] : [])])]
+  }
   return nom(r, 7.4, { implexe })
 }
 
@@ -547,7 +543,7 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
         <g text-anchor="middle">
           <text x={O.cx} y={O.cy - 22} font-size="26" class="pn" data-max="170">{p1.prenom}</text>
           <text x={O.cx} y={O.cy - 2} font-size="13" class="nm" data-max="170">{maj(p1.nom)}</text>
-          <text x={O.cx} y={O.cy + 19} font-size="11"><Morceaux parts={annees(p1)} /></text>
+          <text x={O.cx} y={O.cy + 19} font-size="11"><Morceaux parts={morceauxAnnees(p1)} /></text>
           {p1.commune && <text x={O.cx} y={O.cy + 34} font-size="9.5" class="lieu" data-max="150">{maj(abregerCommune(p1.commune))}</text>}
         </g>
       )}

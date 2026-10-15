@@ -144,6 +144,15 @@ function lireNom(n?: Noeud): { prenom: string; nom: string } {
   return { prenom, nom }
 }
 
+/**
+ * Nommé « ?? /??/ » (ou « ? ? »), sans rien d'autre qu'un décès déclaré.
+ * Un inconnu qui a à la fois des parents et une famille fait le lien entre deux générations : on le garde.
+ */
+function fictif(ind: Individu, nom: string): boolean {
+  return /^[\s?/]*\?[\s?/]*$/.test(nom) && !(ind.famc.length && ind.fams.length) && !ind.sources.length && !ind.note && !ind.photo && !ind.metiers.length &&
+    ind.evenements.every((e) => !e.date?.brute && !e.lieu && !e.sources.length && !e.note)
+}
+
 export function lireArbre(texte: string): Arbre {
   const noeuds = lireNoeuds(texte)
   const titres = new Map<string, string>()
@@ -156,6 +165,7 @@ export function lireArbre(texte: string): Arbre {
   }
 
   const arbre: Arbre = { individus: new Map(), familles: new Map(), origine: {} }
+  const nomsBruts = new Map<string, string>()
   for (const n of noeuds) {
     if (n.tag === 'HEAD') {
       const sour = enfant(n, 'SOUR')
@@ -166,6 +176,7 @@ export function lireArbre(texte: string): Arbre {
       }
     } else if (n.tag === 'INDI' && n.xref) {
       const sexe = valeur(n, 'SEX').toUpperCase()
+      nomsBruts.set(n.xref, valeur(n, 'NAME'))
       const ind: Individu = {
         id: n.xref,
         ...lireNom(enfant(n, 'NAME')),
@@ -204,6 +215,17 @@ export function lireArbre(texte: string): Arbre {
       }
       arbre.familles.set(fam.id, fam)
     }
+  }
+
+  // Parent fictif : Geneanet impose deux parents, on met alors « ?? /??/ » pour celui qu'on ne connaît pas.
+  // Sans date, lieu, source, note ni photo, ce n'est personne : on le retire, et la note « Filiation: » s'applique.
+  for (const ind of arbre.individus.values()) {
+    if (fictif(ind, nomsBruts.get(ind.id) ?? '')) arbre.individus.delete(ind.id)
+  }
+  for (const fam of arbre.familles.values()) {
+    if (fam.mari && !arbre.individus.has(fam.mari)) delete fam.mari
+    if (fam.femme && !arbre.individus.has(fam.femme)) delete fam.femme
+    fam.enfants = fam.enfants.filter((id) => arbre.individus.has(id))
   }
 
   // Liens manquants d'un côté seulement (certains logiciels n'écrivent que FAM → CHIL)
