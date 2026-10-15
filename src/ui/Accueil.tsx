@@ -1,10 +1,13 @@
 // Accueil : déposer son fichier, puis le bilan de l'arbre et les réglages.
 
-import { useRef, useState } from 'preact/hooks'
-import type { Bilan, Donnees, Releve } from '../lib/donnees'
+import { useMemo, useRef, useState } from 'preact/hooks'
+import { membres, type Bilan, type Donnees, type Perimetre, type Releve } from '../lib/donnees'
+import { communes } from '../lib/communes'
 import { adresseDevinee, normaliserAdresse } from '../lib/geneanet'
 import { nombre, pourcent } from '../lib/format'
-import { Barre, ChoixPersonne, Personne } from './commun'
+import { Barre, Personne } from './commun'
+import { CarteAccueil } from './CarteAccueil'
+import { preparerAFaire } from './Individus'
 
 export function Depot({ ouvrir, compact }: { ouvrir: (f: File) => void; compact?: boolean }) {
   const [survol, setSurvol] = useState(false)
@@ -22,9 +25,9 @@ export function Depot({ ouvrir, compact }: { ouvrir: (f: File) => void; compact?
     >
       <input ref={champ} type="file" accept=".ged,.zip,.GED,.ZIP" hidden onChange={(e) => choisir(e.currentTarget.files)} />
       {!compact && <p class="depot-titre">Déposez ici votre export GEDCOM</p>}
-      <p>{compact ? 'Déposez un export plus récent ici, ou ' : 'Le fichier .ged, ou directement le .zip téléchargé depuis Geneanet. '}
-        <button type="button" class="bouton" onClick={() => champ.current?.click()}>Choisir un fichier</button>
-      </p>
+      {compact
+        ? <p><button type="button" class="bouton" onClick={() => champ.current?.click()}>Mettre à jour le fichier</button> <span class="aide">ou déposez le nouvel export ici</span></p>
+        : <p>Le fichier .ged, ou directement le .zip téléchargé depuis Geneanet. <button type="button" class="bouton" onClick={() => champ.current?.click()}>Choisir un fichier</button></p>}
     </div>
   )
 }
@@ -73,23 +76,29 @@ function Carte({ titre, valeur, detail, barre }: { titre: string; valeur: string
   )
 }
 
-function Progres({ releves }: { releves: Releve[] }) {
-  if (releves.length < 2) return null
-  const dernier = releves[releves.length - 1]
-  const precedent = releves[releves.length - 2]
+/** Les progrès depuis l'import précédent du même arbre ; les chiffres des ancêtres seulement pour la même personne de départ */
+function Progres({ d, bilan, precedent }: { d: Donnees; bilan: Bilan; precedent?: Releve }) {
+  if (!precedent) return null
   const diff = (f: (b: Bilan) => number) => {
-    const n = f(dernier.bilan) - f(precedent.bilan)
+    const n = f(bilan) - f(precedent.bilan)
     return (n > 0 ? '+' : n < 0 ? '−' : '') + nombre(Math.abs(n))
   }
+  const memeRacine = precedent.racine === d.racine
+  const lignes: [string, (b: Bilan) => number][] = [
+    ...(memeRacine ? [['faits sourcés chez les ancêtres', (b: Bilan) => b.faitsAncetres.sources], ['ancêtres', (b: Bilan) => b.ancetres]] as [string, (b: Bilan) => number][] : []),
+    ['faits sourcés dans tout l’arbre', (b) => b.faits.sources],
+    ['personnes', (b) => b.individus],
+  ]
+  const rien = lignes.every(([, f]) => f(bilan) === f(precedent.bilan))
   return (
     <section class="panneau">
       <h2>Depuis l'export du {new Date(precedent.date).toLocaleDateString('fr-BE')}</h2>
-      <ul class="progres">
-        <li><strong>{diff((b) => b.faitsAncetres.sources)}</strong> faits sourcés chez les ancêtres</li>
-        <li><strong>{diff((b) => b.faits.sources)}</strong> faits sourcés dans tout l'arbre</li>
-        <li><strong>{diff((b) => b.ancetres)}</strong> ancêtres</li>
-        <li><strong>{diff((b) => b.individus)}</strong> personnes</li>
-      </ul>
+      {rien ? <p class="aide">Aucun changement dans les chiffres.</p> : (
+        <ul class="progres">
+          {lignes.map(([t, f]) => <li key={t}><strong>{diff(f)}</strong> {t}</li>)}
+        </ul>
+      )}
+      {!memeRacine && <p class="aide">La personne de départ a changé depuis : seuls les chiffres de tout l’arbre sont comparés.</p>}
     </section>
   )
 }
@@ -97,15 +106,15 @@ function Progres({ releves }: { releves: Releve[] }) {
 interface PropsTableau {
   d: Donnees
   bilan: Bilan
-  releves: Releve[]
+  precedent?: Releve
   fichier: { nom: string; importe: string }
   ouvrir: (f: File) => void
-  setRacine: (id: string) => void
   setAdresse: (a: string) => void
+  setPerimetre: (p: Perimetre) => void
   oublier: () => void
 }
 
-export function TableauDeBord({ d, bilan, releves, fichier, ouvrir, setRacine, setAdresse, oublier }: PropsTableau) {
+export function TableauDeBord({ d, bilan, precedent, fichier, ouvrir, setAdresse, setPerimetre, oublier }: PropsTableau) {
   const [saisie, setSaisie] = useState(d.adresse)
   const devinee = adresseDevinee(d.arbre.origine)
   const racine = d.arbre.individus.get(d.racine)
@@ -114,11 +123,33 @@ export function TableauDeBord({ d, bilan, releves, fichier, ouvrir, setRacine, s
     setSaisie(n)
     setAdresse(n)
   }
+  const chiffres = useMemo(() => {
+    let aSourcer = 0
+    for (const id of d.ancetres.keys()) {
+      const s = d.suivis.get(id)
+      if (s && [s.naissance.etat, s.mariage, s.deces.etat].some((e) => e === 'sans-source' || e === 'manquant')) aSourcer++
+    }
+    const lieux = communes(d.arbre, membres(d, 'ancetres'), false).filter((c) => c.sansSource > 0).length
+    let visages = 0
+    let signatures = 0
+    let chezAncetres = 0
+    for (const ind of d.arbre.individus.values()) {
+      if (!ind.photo) continue
+      if (ind.photo.signature) signatures++
+      else visages++
+      if (d.ancetres.has(ind.id)) chezAncetres++
+    }
+    return { aSourcer, lieux, visages, signatures, chezAncetres }
+  }, [d])
+  const photos = chiffres.visages + chiffres.signatures
   return (
-    <section class="ecran">
-      <header class="titre-ecran">
-        <h1>{racine ? <>Arbre de {racine.prenom} {racine.nom}</> : 'Votre arbre'}</h1>
-        <p class="sous-titre">{fichier.nom} · chargé le {new Date(fichier.importe).toLocaleString('fr-BE', { dateStyle: 'long', timeStyle: 'short' })}</p>
+    <section class="ecran accueil">
+      <header class="titre-ecran accueil-tete">
+        <div>
+          <h1>{racine ? <>Arbre de {racine.prenom} {racine.nom}</> : 'Votre arbre'}</h1>
+          <p class="sous-titre">{fichier.nom} · chargé le {new Date(fichier.importe).toLocaleString('fr-BE', { dateStyle: 'long', timeStyle: 'short' })}</p>
+        </div>
+        <Depot ouvrir={ouvrir} compact />
       </header>
 
       <div class="cartes">
@@ -128,23 +159,30 @@ export function TableauDeBord({ d, bilan, releves, fichier, ouvrir, setRacine, s
           detail={`${nombre(bilan.faits.sources)} faits sur ${nombre(bilan.faits.attendus)}`} />
         <Carte titre="Ancêtres" valeur={nombre(bilan.ancetres)} detail={`sur ${bilan.generations} générations`} />
         <Carte titre="Personnes" valeur={nombre(bilan.individus)} detail={`${nombre(bilan.familles)} familles`} />
+        {photos > 0 && <Carte titre="Photos et signatures" valeur={nombre(photos)}
+          detail={`${nombre(chiffres.visages)} visage${chiffres.visages > 1 ? 's' : ''} · ${nombre(chiffres.signatures)} signature${chiffres.signatures > 1 ? 's' : ''} · ${nombre(chiffres.chezAncetres)} chez les ancêtres`} />}
       </div>
+
+      <nav class="raccourcis">
+        <a class="bouton principal" href="#/personnes" onClick={() => { setPerimetre('ancetres'); preparerAFaire() }}>
+          <strong>{nombre(chiffres.aSourcer)}</strong> ancêtres à sourcer
+        </a>
+        <a class="bouton" href="#/lieux" onClick={() => setPerimetre('ancetres')}>
+          <strong>{nombre(chiffres.lieux)}</strong> lieux à dépouiller
+        </a>
+      </nav>
+
+      <div class="accueil-duo">
+        <CarteAccueil d={d} />
+        <Progres d={d} bilan={bilan} precedent={precedent} />
+      </div>
+
       <p class="astuce">Un « fait », c'est une naissance (ou un baptême), un mariage ou un décès (ou une inhumation). Il est sourcé quand au moins une source y est attachée.</p>
       <p class="astuce">Un parent qu'il ne sert à rien de chercher (enfant naturel, enfant trouvé, registres perdus) se signale dans la note de la personne : <a href="#/filiation">« Filiation: père inconnu »…</a></p>
 
-      <nav class="raccourcis">
-        <a class="bouton principal" href="#/personnes">Voir les ancêtres à sourcer</a>
-        <a class="bouton" href="#/lieux">Voir les lieux à dépouiller</a>
-      </nav>
-
-      <Progres releves={releves} />
-
       <section class="panneau reglages">
         <h2>Réglages</h2>
-        <div class="reglage">
-          <h3>Personne de départ (Sosa 1)</h3>
-          <ChoixPersonne d={d} valeur={d.racine} choisir={setRacine} />
-        </div>
+        <p class="aide">La personne de départ (Sosa 1) se change en haut de chaque page.</p>
         <div class="reglage">
           <h3>Adresse de l'arbre en ligne</h3>
           <p class="aide">Pour que chaque nom ouvre la fiche correspondante sur Geneanet (ou sur un autre site GeneWeb).</p>
@@ -159,7 +197,6 @@ export function TableauDeBord({ d, bilan, releves, fichier, ouvrir, setRacine, s
         </div>
         <div class="reglage">
           <h3>Fichier</h3>
-          <Depot ouvrir={ouvrir} compact />
           <p class="aide">
             <button type="button" class="lien danger" onClick={() => { if (confirm('Effacer le fichier et les réglages gardés dans ce navigateur ?')) oublier() }}>
               Oublier mon arbre sur cet appareil

@@ -79,4 +79,21 @@ export function bilan(d: Donnees): Bilan {
   }
 }
 
-export interface Releve { date: string; fichier: string; bilan: Bilan }
+/**
+ * Le bilan d'un import. `racine` et `base` disent de quoi il parle : on ne compare que deux relevés du même arbre,
+ * et les chiffres des ancêtres seulement pour la même personne de départ. `v` : version du calcul du bilan
+ * (un relevé fait par une version plus ancienne ne se compare pas).
+ */
+export interface Releve { date: string; fichier: string; bilan: Bilan; racine?: string; base?: string; v?: number }
+
+export const VERSION_BILAN = 2
+
+/** L'arbre d'où vient le fichier : la base Geneanet, ou le nom du fichier sans sa date */
+export function baseDuFichier(arbre: Arbre, fichier: string): string {
+  return arbre.origine.base || fichier.replace(/[_ -]?\d{4}-\d{2}-\d{2}.*$/, '').replace(/\.(ged|zip)$/i, '').toLowerCase()
+}
+
+/** Le relevé auquel comparer l'arbre ouvert : le dernier fait avant cet import, sur le même arbre */
+export function relevePrecedent(releves: Releve[], importe: string, base: string): Releve | undefined {
+  return releves.filter((r) => r.v === VERSION_BILAN && r.base === base && r.date < importe).at(-1)
+}

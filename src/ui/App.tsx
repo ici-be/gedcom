@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import type { Arbre } from '../lib/gedcom/arbre'
-import { bilan as faireBilan, calculer, type Perimetre, type Releve } from '../lib/donnees'
+import { baseDuFichier, bilan as faireBilan, calculer, relevePrecedent, VERSION_BILAN, type Perimetre, type Releve } from '../lib/donnees'
 import { charger } from '../lib/chargement'
 import { adresseDevinee } from '../lib/geneanet'
 import { ecrire, garderFichier, lire, lireFichier, oublierFichier, oublierTout } from '../lib/stockage'
@@ -17,6 +17,7 @@ import { Lignee } from './Lignee'
 import { Recit } from './Recit'
 import { Filiation } from './Filiation'
 import { ProposerInstallation } from './Installer'
+import { ChoixRacine } from './ChoixRacine'
 
 interface Fichier { nom: string; importe: string; arbre: Arbre }
 
@@ -92,6 +93,28 @@ export function App() {
     }
   }
 
+  // Un nouvel export se dépose n'importe où dans la page, quelle qu'elle soit
+  const [glisse, setGlisse] = useState(false)
+  const ouvrirRef = useRef(ouvrir)
+  ouvrirRef.current = ouvrir
+  useEffect(() => {
+    const avecFichier = (e: DragEvent) => !!e.dataTransfer?.types.includes('Files')
+    const dessus = (e: DragEvent) => { if (avecFichier(e)) { e.preventDefault(); setGlisse(true) } }
+    const quitte = (e: DragEvent) => { if (!e.relatedTarget) setGlisse(false) }
+    const lache = (e: DragEvent) => {
+      if (!avecFichier(e)) return
+      e.preventDefault()
+      setGlisse(false)
+      const f = e.dataTransfer?.files[0]
+      // la zone de dépôt de l'accueil s'en occupe elle-même
+      if (f && !(e.target as Element | null)?.closest?.('.depot')) ouvrirRef.current(f)
+    }
+    addEventListener('dragover', dessus)
+    addEventListener('dragleave', quitte)
+    addEventListener('drop', lache)
+    return () => { removeEventListener('dragover', dessus); removeEventListener('dragleave', quitte); removeEventListener('drop', lache) }
+  }, [])
+
   const oublier = async () => {
     await oublierFichier()
     oublierTout()
@@ -120,7 +143,7 @@ export function App() {
   useEffect(() => {
     if (!bilan || !fichier || !nouveauReleve.current) return
     nouveauReleve.current = false
-    const n = [...releves, { date: fichier.importe, fichier: fichier.nom, bilan }].slice(-50)
+    const n = [...releves, { date: fichier.importe, fichier: fichier.nom, bilan, racine: racineEffective, base: baseDuFichier(fichier.arbre, fichier.nom), v: VERSION_BILAN }].slice(-50)
     setReleves(n)
     ecrire('releves', n)
   }, [bilan])
@@ -157,7 +180,7 @@ export function App() {
   else contenu = (
     <>
       {erreur && <p class="erreur" role="alert">{erreur}</p>}
-      <TableauDeBord d={donnees} bilan={bilan} releves={releves} fichier={fichier} ouvrir={ouvrir} setRacine={setRacine} setAdresse={setAdresse} oublier={oublier} />
+      <TableauDeBord d={donnees} bilan={bilan} precedent={relevePrecedent(releves, fichier.importe, baseDuFichier(fichier.arbre, fichier.nom))} fichier={fichier} ouvrir={ouvrir} setAdresse={setAdresse} setPerimetre={setPerimetre} oublier={oublier} />
     </>
   )
 
@@ -180,6 +203,7 @@ export function App() {
               <a href="#/imprimer" class={page === 'imprimer' ? 'actif' : ''}>Imprimer</a>
             </nav>
           )}
+          {donnees && <ChoixRacine d={donnees} setRacine={setRacine} />}
         </div>
       </header>
       <main class="page">{contenu}</main>
@@ -187,6 +211,7 @@ export function App() {
         Vos données restent dans votre navigateur. · <a href="https://github.com/ici-be/gedcom" target="_blank" rel="noopener noreferrer">Code source</a>
       </footer>
       <ProposerInstallation />
+      {glisse && <div class="depot-global" aria-hidden="true"><p>Déposez le fichier pour {fichier ? 'mettre l’arbre à jour' : 'l’ouvrir'}</p></div>}
     </>
   )
 }

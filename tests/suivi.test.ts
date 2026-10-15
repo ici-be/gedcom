@@ -5,6 +5,7 @@ import { score, suivi } from '../src/lib/suivi'
 import { communes, decouperLieu } from '../src/lib/communes'
 import { adresseDevinee, lienGeneWeb, normaliserAdresse } from '../src/lib/geneanet'
 import { versCsv } from '../src/lib/csv'
+import { baseDuFichier, relevePrecedent, VERSION_BILAN } from '../src/lib/donnees'
 import { GED } from './exemple'
 
 const a = lireArbre(GED)
@@ -107,4 +108,19 @@ describe('liens GeneWeb', () => {
 
 test('CSV', () => {
   expect(versCsv([['a', 'b;c'], [1, 'd"e']])).toBe('﻿a;"b;c"\r\n1;"d""e"')
+})
+
+describe('relevés', () => {
+  const b = { individus: 1, familles: 0, ancetres: 0, generations: 0, faits: { attendus: 0, sources: 0 }, faitsAncetres: { attendus: 0, sources: 0 } }
+  test('base : la base Geneanet, sinon le nom du fichier sans sa date', () => {
+    const a = (base?: string) => ({ individus: new Map(), familles: new Map(), origine: { base } })
+    expect(baseDuFichier(a('dupont.gwb'), 'x.ged')).toBe('dupont.gwb')
+    expect(baseDuFichier(a(), 'Dupont_2026-10-13.ged')).toBe('dupont')
+  })
+  test('on compare au dernier relevé du même arbre, fait avant cet import et par ce calcul', () => {
+    const r = (date: string, base: string, v?: number) => ({ date, fichier: '', bilan: b, base, racine: '@I1@', v })
+    const releves = [r('2026-10-01', 'a.gwb', VERSION_BILAN), r('2026-10-05', 'a.gwb'), r('2026-10-06', 'b.gwb', VERSION_BILAN), r('2026-10-15', 'a.gwb', VERSION_BILAN)]
+    expect(relevePrecedent(releves, '2026-10-15', 'a.gwb')?.date).toBe('2026-10-01')
+    expect(relevePrecedent(releves, '2026-10-01', 'a.gwb')).toBeUndefined()
+  })
 })

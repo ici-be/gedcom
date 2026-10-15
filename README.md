@@ -8,8 +8,12 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
 ## Ce que fait le site
 
 - **Accueil** : part des faits sourcés chez les ancêtres et dans tout l'arbre, nombre d'ancêtres et
-  de générations, progrès depuis l'export précédent. Réglages : personne de départ (Sosa 1) et adresse
-  de l'arbre en ligne.
+  de générations, photos et signatures ; le nombre d'ancêtres à sourcer et de lieux à dépouiller ; une carte
+  des provinces et départements de naissance des ancêtres (plus foncés qu'il y en est né, un point par commune) ;
+  les progrès depuis l'export précédent du même arbre (les chiffres des ancêtres seulement si la personne de
+  départ n'a pas changé). Un nouvel export se dépose n'importe où sur la page, ou par « Mettre à jour le
+  fichier » en haut de l'accueil. Réglage : adresse de l'arbre en ligne. La personne de départ (Sosa 1) se
+  change en haut de chaque page.
 - **Personnes** : naissance (ou baptême), mariage(s) et décès (ou inhumation) de chaque personne, avec
   leur état : ✓ sourcé, ! renseigné sans source, ✕ manquant. Les ancêtres sont numérotés
   (Sosa, génération, implexe). Filtres : ancêtres seuls / avec leurs frères et sœurs / tout l'arbre,

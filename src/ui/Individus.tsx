@@ -46,6 +46,11 @@ export function preparerPersonnes(m: { genMax?: number; parents?: QuelsParents }
   ecrire('filtres', { ...FILTRES, ...SANS_FILTRE, genMax: m.genMax ? String(m.genMax) : '', parents: m.parents ?? 'tous', tri: 'sosa', sens: 1 })
 }
 
+/** Le tableau tel qu'il s'ouvre par défaut : les personnes à compléter, par numéro Sosa */
+export function preparerAFaire() {
+  ecrire('filtres', FILTRES)
+}
+
 interface Ligne {
   ind: Individu
   s: Suivi
