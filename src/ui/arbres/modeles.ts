@@ -3,6 +3,7 @@
 
 import type { FunctionComponent } from 'preact'
 import type { Donnees } from '../../lib/donnees'
+import { BoutsDeBranche } from './BoutsDeBranche'
 import { EventailOrigines } from './EventailOrigines'
 
 export interface OptionsFeuille {
@@ -30,6 +31,8 @@ export interface Modele {
   papier: { format: Format; orientation: 'portrait' | 'landscape' }
   generations: number
   Feuille: FunctionComponent<{ d: Donnees; options: OptionsFeuille }>
+  /** Une seconde feuille, à imprimer au dos de la première (même papier) */
+  verso?: { titre: string; description: string; Feuille: FunctionComponent<{ d: Donnees; options: OptionsFeuille }> }
 }
 
 export const MODELES: Modele[] = [
@@ -41,5 +44,10 @@ export const MODELES: Modele[] = [
     papier: { format: 'A3', orientation: 'landscape' },
     generations: 8,
     Feuille: EventailOrigines,
+    verso: {
+      titre: 'Les 128 bouts de branche',
+      description: 'chaque case du bord de l’éventail prolongée d’un petit éventail des générations IX à XV',
+      Feuille: BoutsDeBranche,
+    },
   },
 ]

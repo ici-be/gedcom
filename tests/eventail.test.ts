@@ -1,7 +1,8 @@
 import { expect, test } from 'vitest'
 import { lireArbre } from '../src/lib/gedcom/arbre'
 import { suivi } from '../src/lib/suivi'
-import { abregerCommune, angles, couperLignes, enumerer, fratrie, LIEU_INCONNU, morceauxTitre, places, prenoms, regionDuLieu, resumer } from '../src/lib/eventail'
+import { abregerCommune, angles, anglesDepuis, couperLignes, enumerer, fratrie, LIEU_INCONNU, morceauxTitre, ordreRegions, places, prenoms, regionDuLieu, resumer } from '../src/lib/eventail'
+import type { Place } from '../src/lib/eventail'
 import { GED } from './exemple'
 
 test('places Sosa : personnes, parents à chercher, cases vides au-dessus', () => {
@@ -95,4 +96,27 @@ test('lignes : sur une ligne si possible, puis entre les morceaux, puis entre le
   expect(couperLignes(['Pierre et Paul', 'Dupont'], [1], 3, mesurer, place(10)).lignes).toEqual(['Pierre et', 'Paul', 'Dupont'])
   const c = couperLignes(['Anticonstitutionnellement'], [2, 1], 3, mesurer, place(10))
   expect(c).toMatchObject({ fs: 1, tient: false })
+})
+
+test('verso : l’éventail d’une branche part de son ancêtre', () => {
+  expect(anglesDepuis(128, 256, 220)).toEqual({ a1: -110, a2: 0, profondeur: 1 })
+  expect(anglesDepuis(128, 257, 220)).toEqual({ a1: 0, a2: 110, profondeur: 1 })
+  // Sosa 131 · 4 + 3 : dernière place des grands-parents de 131
+  const a = anglesDepuis(131, 131 * 4 + 3, 220)
+  expect([a.a1, a.a2, a.profondeur]).toEqual([55, 110, 2])
+})
+
+test('régions : celles du recto d’abord, celles du verso ensuite, chacune par fréquence', () => {
+  const pl: Place[] = []
+  const regions = new Map<number, string>()
+  const mettre = (s: number, r: string, dejaVu?: number) => {
+    pl[s] = { sosa: s, generation: Math.floor(Math.log2(s)), etat: 'connu', ind: {} as Place['ind'], dejaVu }
+    regions.set(s, r)
+  }
+  mettre(1, 'Liège')
+  mettre(2, 'Hainaut'); mettre(3, 'Namur'); mettre(4, 'Namur')
+  mettre(5, LIEU_INCONNU)
+  // au verso : beaucoup de Limbourg, du Hainaut, et un implexe qui ne compte pas
+  mettre(300, 'Limbourg'); mettre(301, 'Limbourg'); mettre(302, 'Hainaut'); mettre(303, 'Anvers', 2); mettre(304, 'Anvers', 2)
+  expect(ordreRegions(pl, regions)).toEqual(['Namur', 'Hainaut', 'Limbourg'])
 })

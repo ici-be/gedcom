@@ -8,23 +8,19 @@ import type { Donnees } from '../../lib/donnees'
 import { situerArbre, type Position } from '../../lib/geo'
 import { romain } from '../../lib/communes'
 import {
-  abregerCommune, angles, arc, couperLignes, fratrie, LIEU_INCONNU, LIEU_NON_SITUE, morceauxTitre, nomPays, parNom, places, point, prenoms,
-  regionDuLieu, resumer, secteur, situerRegion, type Centre, type Place, type Resume,
+  abregerCommune, angles, arc, couperLignes, fratrie, GENERATIONS_RECTO, LIEU_INCONNU, LIEU_NON_SITUE, morceauxTitre, nomPays, parNom, places, point, prenoms,
+  ordreRegions, regionsDesPlaces, resumer, secteur, situerRegion, type Centre, type Place, type Resume,
 } from '../../lib/eventail'
 import { aCadrer, cadrer, chargerContours, colonnes, grouper, projeter, proportions, zones, type Contours, type Entree, type Fenetre, type Groupe, type Rect, type Zone } from '../../lib/carte-origines'
 import type { OptionsFeuille } from './modeles'
 import { chargerPolices, largeur, type Police } from './mesure'
+import { ajuster, AUTRES, couleursRegions, GRIS, INCONNU, TEINTES } from './feuille'
 
-const GENERATIONS = 8
+const GENERATIONS = GENERATIONS_RECTO
 const OUVERTURE = 220
 const O: Centre = { cx: 700, cy: 690 }
 const RAYONS = [0, 96, 176, 254, 330, 408, 486, 566, 636]
-const GRIS = '#3c4441'
 
-// Teintes claires, distinctes en case de quelques millimètres, sous un texte noir
-const TEINTES = ['#d9cbe3', '#cbe0c4', '#ecdba8', '#c4dfe0', '#e7c3b3', '#c3d0e6', '#d6dcae', '#efc2c8', '#e3d3bf', '#d3bfa6']
-const AUTRES = '#dcdcd5'
-const INCONNU = '#efefea'
 
 type Morceau = [string, string?]
 /** `coupe` : texte abrégé par « … » plutôt que trop resserré */
@@ -148,34 +144,6 @@ const LIBELLES: Record<string, (sosa: number) => string> = {
   inconnu: (s) => (s % 2 ? 'mère inconnue' : 'père inconnu'),
   introuvable: () => 'introuvable',
   'a-chercher': () => 'à trouver',
-}
-
-/**
- * Les textes trop longs pour leur case sont rapetissés (textLength n'est pas suivi partout sur un textPath) ;
- * ceux marqués data-texte (métiers) sont plutôt abrégés par « … » quand il faudrait trop les rapetisser.
- */
-function ajuster(svg: SVGSVGElement) {
-  for (const t of svg.querySelectorAll<SVGTextElement>('text[data-max]')) {
-    t.dataset.fs ??= t.getAttribute('font-size') ?? ''
-    const fs = Number(t.dataset.fs)
-    t.setAttribute('font-size', String(fs))
-    const noeud = t.dataset.texte !== undefined ? t.querySelector('tspan')?.firstChild : null
-    if (noeud instanceof Text) noeud.data = t.dataset.texte!
-    const max = Number(t.dataset.max)
-    const long = t.getComputedTextLength()
-    if (long <= max) continue
-    const k = max / long
-    if (noeud instanceof Text && k < 0.8) {
-      t.setAttribute('font-size', (fs * 0.85).toFixed(2))
-      let texte = t.dataset.texte!
-      while (texte.length > 1 && t.getComputedTextLength() > max) {
-        texte = texte.slice(0, -1).trimEnd()
-        noeud.data = texte + '…'
-      }
-      continue
-    }
-    t.setAttribute('font-size', (fs * k * 0.98).toFixed(2))
-  }
 }
 
 interface Bout { t: string; cls?: string; police: Police; k?: number; dx?: number }
@@ -394,25 +362,13 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
     const pl = places(d.arbre, d.racine, GENERATIONS)
     const resumes = new Map<number, Resume>()
     for (const p of pl) if (p?.ind) resumes.set(p.sosa, resumer(p.ind, d.suivis.get(p.ind.id)!))
-    // Pays le plus fréquent parmi les naissances : les autres pays seront précisés
-    const freqPays = new Map<string, number>()
-    for (const r of resumes.values()) {
-      const pays = r.lieu ? positions?.get(r.lieu)?.pays : undefined
-      if (pays) freqPays.set(pays, (freqPays.get(pays) ?? 0) + 1)
-    }
-    const paysPrincipal = [...freqPays.entries()].sort((a, b) => b[1] - a[1])[0]?.[0]
-    const regions = new Map<number, string>()
-    for (const [s, r] of resumes) regions.set(s, regionDuLieu(r.lieu, r.lieu ? positions?.get(r.lieu) : undefined, paysPrincipal))
-    // Couleurs par ordre de fréquence (une personne vue deux fois compte une fois)
-    const freq = new Map<string, number>()
-    for (const p of pl) if (p?.ind && !p.dejaVu && p.sosa > 1) { const reg = regions.get(p.sosa)!; freq.set(reg, (freq.get(reg) ?? 0) + 1) }
-    const ordre = [...freq.entries()].filter(([r]) => r !== LIEU_INCONNU && r !== LIEU_NON_SITUE).sort((a, b) => b[1] - a[1]).map(([r]) => r)
-    const couleurs = new Map<string, string>()
-    ordre.slice(0, TEINTES.length).forEach((r, i) => couleurs.set(r, TEINTES[i]))
+    const regions = regionsDesPlaces(resumes, positions)
+    const ordre = ordreRegions(pl, regions)
+    const couleurs = couleursRegions(ordre)
     const couleur = (reg: string) => couleurs.get(reg) ?? (reg === LIEU_INCONNU || reg === LIEU_NON_SITUE ? INCONNU : AUTRES)
     const legende: { nom: string; couleur: string }[] = ordre.slice(0, TEINTES.length).map((r) => ({ nom: r, couleur: couleurs.get(r)! }))
     if (ordre.length > TEINTES.length) legende.push({ nom: 'Autres régions', couleur: AUTRES })
-    if (freq.has(LIEU_INCONNU) || freq.has(LIEU_NON_SITUE)) legende.push({ nom: 'Lieu inconnu ou non situé', couleur: INCONNU })
+    if (pl.some((p) => p?.ind && !p.dejaVu && p.sosa > 1 && [LIEU_INCONNU, LIEU_NON_SITUE].includes(regions.get(p.sosa)!))) legende.push({ nom: 'Lieu inconnu ou non situé', couleur: INCONNU })
 
     const uniques = pl.filter((p) => p?.ind && !p.dejaVu && p.sosa > 1)
     const communes = new Set<string>()

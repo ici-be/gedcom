@@ -11,7 +11,7 @@ import type { Donnees } from '../lib/donnees'
 import { ecrire, lire } from '../lib/stockage'
 import { MODELES, type Format } from './arbres/modeles'
 
-interface Reglages { date: boolean; jour?: string; qr: boolean; papier?: Format; barres?: boolean; fratrie?: boolean; italiques?: boolean }
+interface Reglages { date: boolean; jour?: string; qr: boolean; papier?: Format; barres?: boolean; fratrie?: boolean; italiques?: boolean; verso?: boolean }
 
 const PAPIERS: Record<Format, [number, number]> = { A4: [210, 297], A3: [297, 420], A2: [420, 594] }
 
@@ -28,8 +28,10 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
   useLayoutEffect(() => {
     const el = apercu.current
     if (!zoom || !el) return
+    // avec le verso, deux feuilles l'une sous l'autre : on centre la première
+    const feuille = el.querySelector('svg.feuille')
     el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2
-    el.scrollTop = (el.scrollHeight - el.clientHeight) / 2
+    el.scrollTop = ((feuille?.getBoundingClientRect().height ?? el.scrollHeight) - el.clientHeight) / 2
     el.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
   }, [zoom])
   // Agrandi, la feuille se déplace en la tirant à la souris (au doigt, le défilement natif suffit)
@@ -54,12 +56,15 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
   }
   const setReglages = (r: Partial<Reglages>) => { const n = { ...reglages, ...r }; setReglagesBrut(n); ecrire('impression', n) }
   const jour = reglages.jour || aujourdHui()
+  const verso = reglages.verso && modele.verso
   // Le format prévu par le modèle, ou un plus petit pour une imprimante de bureau
   const formats = (['A4', 'A3', 'A2'] as Format[]).filter((f) => PAPIERS[f][0] <= PAPIERS[modele.papier.format][0])
   const format = reglages.papier && formats.includes(reglages.papier) ? reglages.papier : modele.papier.format
   const orientation = modele.papier.orientation === 'landscape' ? 'paysage' : 'portrait'
   const [court, long] = PAPIERS[format]
   const [largeur, hauteur] = modele.papier.orientation === 'landscape' ? [long, court] : [court, long]
+
+  const options = { date: reglages.date ? dateLongue(jour) : undefined, qr: reglages.qr && !!d.adresse, carte: !reglages.barres, fratrie: reglages.fratrie, italiques: reglages.italiques }
 
   return (
     <section class="ecran arbre-imprime">
@@ -85,6 +90,7 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
             <h2>{modele.titre}</h2>
             <p class="aide">{modele.description}</p>
             <p class="aide">Prévu pour du {modele.papier.format} {orientation} · {modele.generations} générations</p>
+            {modele.verso && <p class="aide">Au verso, si on le souhaite : {modele.verso.titre.toLocaleLowerCase('fr')}, {modele.verso.description}.</p>}
           </div>
           <div class="options-impression">
             {formats.length > 1 && (
@@ -110,6 +116,12 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
               <input type="checkbox" id="impression-italiques" checked={!!reglages.italiques} onChange={(e) => setReglages({ italiques: e.currentTarget.checked })} />
               Dates sans source en italique
             </label>
+            {modele.verso && (
+              <label class="case" title={modele.verso.description}>
+                <input type="checkbox" id="impression-verso" checked={!!reglages.verso} onChange={(e) => setReglages({ verso: e.currentTarget.checked })} />
+                Verso : {modele.verso.titre.toLocaleLowerCase('fr')}
+              </label>
+            )}
             <label class="case">
               <input type="checkbox" id="impression-date" checked={reglages.date} onChange={(e) => setReglages({ date: e.currentTarget.checked })} />
               Date en pied de page
@@ -126,7 +138,7 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
           </div>
           <div class="ligne">
             <button type="button" class="bouton principal" onClick={() => window.print()}>Imprimer</button>
-            <span class="aide">Dans la fenêtre d'impression : papier {format} {orientation}, marges « aucune », échelle « par défaut » (100 %), graphiques d'arrière-plan activés. Pour un PDF, choisir « Enregistrer au format PDF ».</span>
+            <span class="aide">Dans la fenêtre d'impression : papier {format} {orientation}, marges « aucune », échelle « par défaut » (100 %), graphiques d'arrière-plan activés.{verso && ' Avec le verso, recto verso retourné sur le bord court.'} Pour un PDF, choisir « Enregistrer au format PDF ».</span>
           </div>
         </section>
         <div class="ligne apercu-outils">
@@ -137,7 +149,8 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
 
       <div ref={apercu} class={'apercu' + (zoom ? ' zoom' : '')}
         onPointerDown={saisir} onPointerMove={tirer} onPointerUp={lacher} onPointerCancel={lacher}>
-        <modele.Feuille d={d} options={{ date: reglages.date ? dateLongue(jour) : undefined, qr: reglages.qr && !!d.adresse, carte: !reglages.barres, fratrie: reglages.fratrie, italiques: reglages.italiques }} />
+        <modele.Feuille d={d} options={options} />
+        {verso && <verso.Feuille d={d} options={options} />}
       </div>
     </section>
   )

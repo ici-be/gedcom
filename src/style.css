@@ -403,6 +403,8 @@ th:not([aria-sort]) .tri .fleche { opacity: 0.35; }
 .apercu.zoom { max-height: calc(100vh - 32px); cursor: grab; }
 .apercu.zoom.glisse { cursor: grabbing; user-select: none; }
 .apercu.zoom svg.feuille { width: 260%; }
+/* le verso sous le recto, séparés d'un trait de coupe ; une page chacun à l'impression */
+.apercu svg.feuille + svg.feuille { border-top: 12px solid var(--bg); }
 /* textes de la feuille : couleurs fixes, c'est du papier */
 .feuille text { font-family: "Fira Sans Condensed", "Arial Narrow", sans-serif; fill: #1f2523; }
 .feuille .pn, .feuille .disp { font-family: "Fraunces", Georgia, serif; font-weight: 500; }
@@ -632,6 +634,7 @@ a.asc-piste-g:hover { color: var(--accent); }
   .arbre-imprime > .titre-ecran, .arbre-imprime > .outils-impression { display: none !important; }
   .arbre-imprime .apercu { overflow: visible; max-height: none; box-shadow: none; border-radius: 0; }
   .arbre-imprime svg.feuille { display: block; }
+  .arbre-imprime svg.feuille + svg.feuille { border-top: 0; break-before: page; }
   body:has(.arbre-imprime) .page { padding: 0; }
   .groupe h2 { font-size: 11pt; }
   .actes li { padding: 2px 0; break-inside: avoid; }

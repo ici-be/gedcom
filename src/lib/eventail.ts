@@ -144,6 +144,14 @@ export function angles(sosa: number, ouverture: number): { a1: number; a2: numbe
   return { a1, a2: a1 + ouverture / n, generation }
 }
 
+/** Angles de la place `sosa` dans un éventail qui part de son ascendant `racine` (profondeur 1 : ses parents) */
+export function anglesDepuis(racine: number, sosa: number, ouverture: number): { a1: number; a2: number; profondeur: number } {
+  const profondeur = Math.floor(Math.log2(sosa)) - Math.floor(Math.log2(racine))
+  const n = 2 ** profondeur
+  const a1 = -ouverture / 2 + ((sosa - racine * n) * ouverture) / n
+  return { a1, a2: a1 + ouverture / n, profondeur }
+}
+
 // ——— Régions de naissance ———
 
 let nomsPays: Intl.DisplayNames | undefined
@@ -176,6 +184,43 @@ export function regionDuLieu(lieu: string | undefined, position: { region?: stri
   const { region, pays } = situerRegion(lieu, position)
   if (!region) return nomPays(pays) ?? LIEU_NON_SITUE
   return pays && paysPrincipal && pays !== paysPrincipal ? `${region} (${nomPays(pays)})` : region
+}
+
+/** Générations de l'éventail au recto ; le verso prend la suite */
+export const GENERATIONS_RECTO = 8
+
+/**
+ * Région de naissance de chaque place connue. Le pays principal est le plus fréquent parmi les naissances du recto :
+ * le recto et le verso précisent donc les mêmes pays.
+ */
+export function regionsDesPlaces(resumes: Map<number, Resume>, positions?: Map<string, { region?: string; pays?: string }>): Map<number, string> {
+  const freqPays = new Map<string, number>()
+  for (const [s, r] of resumes) {
+    const pays = s < 2 ** GENERATIONS_RECTO && r.lieu ? positions?.get(r.lieu)?.pays : undefined
+    if (pays) freqPays.set(pays, (freqPays.get(pays) ?? 0) + 1)
+  }
+  const paysPrincipal = [...freqPays.entries()].sort((a, b) => b[1] - a[1])[0]?.[0]
+  const regions = new Map<number, string>()
+  for (const [s, r] of resumes) regions.set(s, regionDuLieu(r.lieu, r.lieu ? positions?.get(r.lieu) : undefined, paysPrincipal))
+  return regions
+}
+
+/**
+ * Les régions par fréquence (une personne vue deux fois compte une fois, la personne de départ pas du tout) :
+ * celles du recto d'abord, puis celles qui n'apparaissent qu'au-delà. Les teintes suivent cet ordre,
+ * si bien qu'une région garde sa couleur des deux côtés de la feuille.
+ */
+export function ordreRegions(pl: Place[], regions: Map<number, string>): string[] {
+  const parFrequence = (de: number, a: number) => {
+    const freq = new Map<string, number>()
+    for (let s = de; s < Math.min(a, pl.length); s++) {
+      const r = pl[s]?.ind && !pl[s].dejaVu ? regions.get(s) : undefined
+      if (r && r !== LIEU_INCONNU && r !== LIEU_NON_SITUE) freq.set(r, (freq.get(r) ?? 0) + 1)
+    }
+    return [...freq.entries()].sort((x, y) => y[1] - x[1]).map(([r]) => r)
+  }
+  const recto = parFrequence(2, 2 ** GENERATIONS_RECTO)
+  return [...recto, ...parFrequence(2 ** GENERATIONS_RECTO, pl.length).filter((r) => !recto.includes(r))]
 }
 
 // ——— Fratrie et titre ———

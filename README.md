@@ -55,7 +55,10 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   Luxembourg, Allemagne, Royaume-Uni, Irlande, départements d'outre-mer), cadrée sur ceux des ancêtres, ou
   l'origine des ancêtres par génération. Les naissances sur des terres séparées par la mer (îles
   Britanniques, chaque DOM) ont leur cartouche à droite de la carte principale. En option :
-  les frères et sœurs du Sosa 1 (mêmes père et mère) avec lui au centre, les dates sans source en italique, le papier (A3, ou A4 réduit), la date en pied de page et un petit code QR vers l'arbre en ligne. D'autres modèles s'ajoutent dans `src/ui/arbres/modeles.ts`.
+  les frères et sœurs du Sosa 1 (mêmes père et mère) avec lui au centre, les dates sans source en italique, le papier (A3, ou A4 réduit), la date en pied de page et un petit code QR vers l'arbre en ligne. Au **verso**, si on le coche : les
+  **128 bouts de branche**, chaque case du bord de l'éventail prolongée d'un petit éventail des générations IX à XV,
+  par quartier et dans l'ordre Sosa, aux mêmes teintes de régions qu'au recto (une seconde page à l'impression,
+  recto verso retourné sur le bord court). D'autres modèles s'ajoutent dans `src/ui/arbres/modeles.ts`.
 - **Parents inconnus ou introuvables** (`#/filiation`) : le GEDCOM n'a aucun champ pour dire qu'un
   parent n'est pas à chercher. On l'écrit dans la **note de la personne** (sur Geneanet : rubrique
   « Notes » de l'enfant), qui revient dans chaque export, par une ligne « Filiation: … » (pas de `#` : la
