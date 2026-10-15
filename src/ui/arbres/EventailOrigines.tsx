@@ -469,8 +469,6 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
       </g>
     )
   })
-  const [px, py] = point(O, 470, -110)
-  const [mx, my] = point(O, 470, 110)
   const x0 = 452
   const W = 496
   const y0 = 822
@@ -503,9 +501,15 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
         </g>
       )}
 
-      {/* Côtés, le long des bras */}
-      <text font-size="11" class="cap mut" text-anchor="middle" transform={`translate(${px},${py}) rotate(-20) translate(0,22)`}>CÔTÉ PATERNEL</text>
-      <text font-size="11" class="cap mut" text-anchor="middle" transform={`translate(${mx},${my}) rotate(20) translate(0,22)`}>CÔTÉ MATERNEL</text>
+      {/* Numéro de chaque génération, le long des deux bras de l'éventail */}
+      {RAYONS.slice(1, -1).map((r1, i) => {
+        const g = i + 1
+        const rm = (r1 + RAYONS[g + 1]) / 2
+        return [-1, 1].map((cote) => {
+          const [x, y] = point(O, rm, (cote * OUVERTURE) / 2)
+          return <text key={`${g}${cote}`} font-size="9.5" class="disp mut" text-anchor="middle" transform={`translate(${x},${y}) rotate(${cote * 20}) translate(0,12)`}>{romain(g + 1)}</text>
+        })
+      })}
 
       {/* Titre et chiffres */}
       <text x={MARGE_GAUCHE} y="64" font-size="11" class="cap mut">ASCENDANCE</text>
