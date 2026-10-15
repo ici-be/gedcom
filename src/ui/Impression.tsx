@@ -6,8 +6,9 @@ import '@fontsource/fira-sans-condensed/latin-400.css'
 import '@fontsource/fira-sans-condensed/latin-400-italic.css'
 import '@fontsource/fira-sans-condensed/latin-500.css'
 import '@fontsource/fira-sans-condensed/latin-600.css'
-import { useLayoutEffect, useRef, useState } from 'preact/hooks'
+import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks'
 import type { Donnees } from '../lib/donnees'
+import { nomFichierArbre } from '../lib/format'
 import { ecrire, lire } from '../lib/stockage'
 import { MODELES, type Format } from './arbres/modeles'
 
@@ -64,6 +65,17 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
   const [court, long] = PAPIERS[format]
   const [largeur, hauteur] = modele.papier.orientation === 'landscape' ? [long, court] : [court, long]
 
+  // Le navigateur nomme le PDF d'après le titre de la page : on le change le temps de l'impression
+  const racine = d.arbre.individus.get(d.racine)
+  const nomFichier = nomFichierArbre(racine?.prenom ?? '', racine?.nom ?? '', jour)
+  useEffect(() => {
+    let titre = document.title
+    const avant = () => { titre = document.title; document.title = nomFichier }
+    const apres = () => { document.title = titre }
+    addEventListener('beforeprint', avant)
+    addEventListener('afterprint', apres)
+    return () => { removeEventListener('beforeprint', avant); removeEventListener('afterprint', apres) }
+  }, [nomFichier])
   const options = { date: reglages.date ? dateLongue(jour) : undefined, qr: reglages.qr && !!d.adresse, carte: !reglages.barres, fratrie: reglages.fratrie, italiques: reglages.italiques }
 
   return (
@@ -138,7 +150,7 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
           </div>
           <div class="ligne">
             <button type="button" class="bouton principal" onClick={() => window.print()}>Imprimer</button>
-            <span class="aide">Dans la fenêtre d'impression : papier {format} {orientation}, marges « aucune », échelle « par défaut » (100 %), graphiques d'arrière-plan activés.{verso && ' Avec le verso, recto verso retourné sur le bord court.'} Pour un PDF, choisir « Enregistrer au format PDF ».</span>
+            <span class="aide">Dans la fenêtre d'impression : papier {format} {orientation}, marges « aucune », échelle « par défaut » (100 %), graphiques d'arrière-plan activés.{verso && ' Avec le verso, recto verso retourné sur le bord court.'} Pour un PDF, choisir « Enregistrer au format PDF » : il s’appellera {nomFichier}.pdf.</span>
           </div>
         </section>
         <div class="ligne apercu-outils">

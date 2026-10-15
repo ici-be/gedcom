@@ -50,3 +50,9 @@ export function pourcent(n: number, total: number): string {
 export function nombre(n: number): string {
   return n.toLocaleString('fr-BE')
 }
+
+/** Nom proposé pour le PDF d'un arbre imprimé : « Genealogie_Bruno_Veyckemans_2026-10-15 » (sans accents ni espaces) */
+export function nomFichierArbre(prenom: string, nom: string, jour: string): string {
+  const propre = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9-]+/g, '_').replace(/^_+|_+$/g, '')
+  return ['Genealogie', propre(prenom.split(/\s+/)[0] ?? ''), propre(nom), jour].filter(Boolean).join('_')
+}
