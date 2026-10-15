@@ -1,13 +1,15 @@
 // Arbre en pyramide : la personne de départ en bas, chaque génération une rangée plus haut, huit générations.
 // Cases bleues ou roses selon le sexe ; les cinq premières générations en cartouches (photo, nom, dates, lieu, métier),
 // les trois suivantes en étiquettes verticales. Frères et sœurs sous chaque cartouche, avec leurs années si la place le permet.
+// Au-dessus de chaque case des quatre premières générations, sur le trait qui monte vers les parents : leur mariage
+// (« ∞ 1752 », et la commune si elle tient). Plus haut, les étiquettes verticales ne laissent pas la place.
 // Feuille A3 paysage (1 unité = 0,3 mm), comme l'éventail.
 
 import type { JSX } from 'preact'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/hooks'
 import type { Donnees } from '../../lib/donnees'
 import type { Individu, Photo } from '../../lib/gedcom/arbre'
-import { romain } from '../../lib/communes'
+import { decouperLieu, romain } from '../../lib/communes'
 import { abregerCommune, anneeCourte, fratrie, places, prenoms, resumer, type Place, type Resume } from '../../lib/eventail'
 import type { OptionsFeuille } from './modeles'
 import { chargerPolices, largeur } from './mesure'
@@ -15,6 +17,8 @@ import { ajuster } from './feuille'
 import { CodeQR } from './EventailOrigines'
 
 const GENERATIONS = 8
+/** Mariage des parents au-dessus des cases des générations 0 à 3 (taille du texte) */
+const TAILLES_MARIAGE = [9, 8.5, 8, 7.5]
 const X0 = 40
 const LARG = 1320
 const LH = 1.18
@@ -43,6 +47,7 @@ const maj = (s: string) => s.toLocaleUpperCase('fr')
 
 type Morceau = [string, string?]
 interface Ligne { fs: number; parts: Morceau[]; cls?: string }
+interface Mariage { annee?: string; commune?: string; sourcee: boolean }
 
 function Morceaux({ parts }: { parts: Morceau[] }) {
   return <>{parts.map(([t, c], i) => <tspan key={i} class={c}>{t}</tspan>)}</>
@@ -179,8 +184,22 @@ export function Pyramide({ d, options }: { d: Donnees; options: OptionsFeuille }
       resumes.set(p.sosa, resumer(p.ind, d.suivis.get(p.ind.id)!))
       freres.set(p.sosa, fratrie(d.arbre, p.ind.id, naissance).filter((x) => x !== p.ind))
     }
+    // Le mariage des parents de chaque place des premières générations, d'après la famille où elle est enfant
+    const mariages = new Map<number, Mariage>()
+    for (const p of pl) {
+      if (!p?.ind || p.generation >= TAILLES_MARIAGE.length) continue
+      const parent = pl[2 * p.sosa]?.ind ?? pl[2 * p.sosa + 1]?.ind
+      if (!parent) continue
+      const fam = p.ind.famc.find((f) => parent.fams.includes(f))
+      const m = fam ? d.suivis.get(parent.id)?.mariages.find((x) => x.famille === fam) : undefined
+      // une union hors mariage n'a pas de date de mariage à montrer
+      if (!m?.evenement || m.etat === 'sans-objet') continue
+      const annee = anneeCourte(m.evenement)?.replace(/^\?$/, '') || undefined
+      const commune = m.evenement.lieu ? abregerCommune(decouperLieu(m.evenement.lieu).nom) : undefined
+      if (annee || commune) mariages.set(p.sosa, { annee, commune, sourcee: m.etat === 'source' })
+    }
     const uniques = pl.filter((p) => p?.ind && !p.dejaVu && p.sosa > 1).length
-    return { pl, resumes, freres, uniques, naissance }
+    return { pl, resumes, freres, uniques, naissance, mariages }
   }, [d])
 
   useLayoutEffect(() => {
@@ -191,7 +210,7 @@ export function Pyramide({ d, options }: { d: Donnees; options: OptionsFeuille }
     return () => { vivant = false }
   })
 
-  const { pl, resumes, freres, naissance } = donnees
+  const { pl, resumes, freres, naissance, mariages } = donnees
   const implexes = pl.some((p) => p?.dejaVu)
   const estImplexe = (p: Place) => !!p.dejaVu || pl.some((q) => q?.dejaVu === p.sosa)
   const photoDe = (p: Place) => (options.photos && p.ind?.photo && !ratees.has(p.ind.photo.url) ? p.ind.photo : undefined)
@@ -230,6 +249,19 @@ export function Pyramide({ d, options }: { d: Donnees; options: OptionsFeuille }
         ? `M${P.cx} ${P.y + P.h}V${yb}H${M.cx}V${M.y + M.h}M${cx} ${yb}V${y}`
         : `M${P.x + P.w} ${yb}H${M.x}M${cx} ${yb}V${y}`
       traits.push(<path key={'t' + s} d={d} fill="none" stroke="#9aa19d" stroke-width="1" />)
+
+      // Le mariage des parents, juste au-dessus de la case, sur le trait ; la commune seulement si elle tient
+      const m = mariages.get(s)
+      if (m) {
+        const fs = TAILLES_MARIAGE[g]
+        const max = w - 6
+        const parts: Morceau[] = [['∞ ', 'mut'], ...(m.annee ? [[m.annee, m.sourcee ? undefined : 'nd'] as Morceau] : [])]
+        const lieu = (m.annee ? ' · ' : '') + (m.commune ?? '')
+        if (m.commune && (!m.annee || largeur(parts.map(([t]) => t).join('') + lieu, fs) <= max)) parts.push([lieu, 'mut'])
+        if (parts.length > 1) {
+          textes.push(<text key={'m' + s} x={cx.toFixed(1)} y={(y - 4).toFixed(1)} font-size={fs} data-fs={fs} data-max={Math.round(max)} text-anchor="middle" class="mar"><Morceaux parts={parts} /></text>)
+        }
+      }
     }
 
     if (!r) {
@@ -303,6 +335,7 @@ export function Pyramide({ d, options }: { d: Donnees; options: OptionsFeuille }
   const titre = p1 ? [prenoms(p1.prenom, 2), p1.nom].filter(Boolean).join(' ') : 'Ascendance'
   const adresse = options.qr ? d.adresse : ''
   const legende = [
+    mariages.size > 0 && '∞ mariage des parents',
     options.fratrie && 'en italique sous les cases : frères et sœurs',
     options.italiques && 'date en italique : sans source',
     implexes && '◆ implexe',
