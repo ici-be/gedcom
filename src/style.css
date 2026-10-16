@@ -725,6 +725,7 @@ a.asc-piste-g:hover { color: var(--accent); }
 .ev-titre .icone-evt { color: var(--accent); }
 .ev-h1 { display: flex; align-items: center; gap: 10px; }
 .ev-h1 .icone-evt { width: 0.9em; height: 0.9em; color: var(--accent); }
+.ev-entete .sous-titre { max-width: none; }
 .ev-traces p { margin: 0; }
 .ev-traces ul { margin: 4px 0 0; padding-left: 1.2em; }
 .ev-tableau .ev-date { white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--muted); }

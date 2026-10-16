@@ -209,7 +209,7 @@ export function PageEvenement({ d, id }: { d: Donnees; id: string }) {
   return (
     <section class="ecran">
       <p class="retour"><a href="#/evenements">‹ Tous les événements</a></p>
-      <header class="titre-ecran">
+      <header class="titre-ecran ev-entete">
         <h1 class="ev-h1"><IconeEvenement type={ev.type} />{capitale(ev.t)}</h1>
         <p class="sous-titre">
           {NOMS_TYPES[ev.type]} · {datesEvenement(ev)}
