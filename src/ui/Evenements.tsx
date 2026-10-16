@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from 'preact/hooks'
 import type { Donnees } from '../lib/donnees'
 import { decouper, situerArbre, type Position } from '../lib/geo'
 import { decouperLieu, nomSiecle, numeroSiecle } from '../lib/communes'
-import { chargerEvenements, datesEvenement, indexer, MOIS, NOMS_TYPES, ponctuel, tracesDeces, type Index, type Trace, type TypeEvenement } from '../lib/evenements'
+import { chargerEvenements, datesEvenement, indexer, moisEvenement, NOMS_TYPES, ponctuel, tracesDeces, type EvenementHistorique, type Index, type Trace, type TypeEvenement } from '../lib/evenements'
 import { nombre } from '../lib/format'
 import { nomComplet } from '../lib/parente'
 import { lire } from '../lib/stockage'
@@ -163,34 +163,42 @@ function nomsZones(z: string[]): string {
   return [...pays].map(([p, entier]) => (noms?.of(p) ?? p) + (entier ? '' : ' (en partie)')).join(', ')
 }
 
-/** « de juin 1815 », « d’août 1815 » */
-const duMois = (t: Trace) => (/^[aeiou]/.test(MOIS[t.mois - 1]) ? 'd’' : 'de ') + `${MOIS[t.mois - 1]} ${t.annee}`
+/** « de » ou « d’ » devant un nom : « d’Anderlecht », « d’août 1815 », « de Waterloo » */
+const de = (x: string) => (/^[aeiouyhàâéèêîôû]/i.test(x) ? 'd’' : 'de ') + x
+/** « de novembre 1792 », « de mars à décembre 1832 » */
+const deMois = (ev: EvenementHistorique) => { const m = moisEvenement(ev); return /^d(e |’)/.test(m) ? m : de(m) }
 
-/** Les actes en ligne d'un mois de registre : « l’acte de décès de Jean Dupont », « l’acte d’inhumation de… » */
+/** Les actes en ligne d'une commune : pendant l'événement, « par l’acte de décès de Jean Dupont (2 décembre 1792) » ;
+ * sinon, de part et d'autre, « à feuilleter depuis l’acte de décès de… (9 mars 1790) ou celui de… (21 août 1798) » */
 function Actes({ d, t }: { d: Donnees; t: Trace }) {
-  return <>{t.actes.map((a, i) => {
+  const pendant = t.actes.some((a) => a.pendant)
+  return <>{pendant ? 'par ' : 'à feuilleter depuis '}{t.actes.map((a, i) => {
     const ind = d.arbre.individus.get(a.id)
+    const quoi = i === 0 ? `l’acte ${a.tag === 'BURI' ? 'd’inhumation' : 'de décès'}` : 'celui'
     return (
       <Fragment key={a.url}>
         {i > 0 && (i === t.actes.length - 1 ? ' ou ' : ', ')}
-        <a href={a.url} target="_blank" rel="noopener noreferrer">l’acte {a.tag === 'BURI' ? 'd’inhumation' : 'de décès'}{ind ? ` de ${nomComplet(ind)}` : ''}</a>
+        <a href={a.url} target="_blank" rel="noopener noreferrer">{quoi}{ind ? ` de ${nomComplet(ind)}` : ''}</a> ({a.date})
       </Fragment>
     )
   })}</>
 }
 
-/** Sous la description : les registres de décès où l'événement a pu laisser des traces, par l'acte en ligne d'une personne de l'arbre */
-function Traces({ d, traces }: { d: Donnees; traces: Trace[] }) {
+const aDistance = (t: Trace) => t.km === undefined ? '' : t.km < 1 ? ' (sur place)' : ` (à ${Math.round(t.km)} km)`
+
+/** Sous la description : les registres de décès où l'événement a pu laisser des traces, des communes les plus proches
+ * aux plus lointaines, avec les actes en ligne de personnes de l'arbre qui y mènent */
+function Traces({ d, ev, traces }: { d: Donnees; ev: EvenementHistorique; traces: Trace[] }) {
   if (!traces.length) return null
   if (traces.length === 1) {
     const t = traces[0]
-    return <p class="sous-titre ev-traces">On en trouvera peut-être des traces dans les actes de décès de {decouperLieu(t.lieu).nom} {duMois(t)}, par <Actes d={d} t={t} />.</p>
+    return <p class="sous-titre ev-traces">On en trouvera peut-être des traces dans les actes de décès {de(decouperLieu(t.lieu).nom)}{aDistance(t)} {deMois(ev)}, <Actes d={d} t={t} />.</p>
   }
   return (
     <div class="sous-titre ev-traces">
-      <p>On en trouvera peut-être des traces dans les actes de décès de ces communes et de ces mois :</p>
+      <p>On en trouvera peut-être des traces dans les actes de décès {deMois(ev)} de ces communes :</p>
       <ul>
-        {traces.map((t) => <li key={t.lieu + t.annee + t.mois}>{decouperLieu(t.lieu).nom}, {MOIS[t.mois - 1]} {t.annee} : <Actes d={d} t={t} /></li>)}
+        {traces.map((t) => <li key={t.lieu}>{decouperLieu(t.lieu).nom}{aDistance(t)}, <Actes d={d} t={t} /></li>)}
       </ul>
     </div>
   )
@@ -219,7 +227,7 @@ export function PageEvenement({ d, id }: { d: Donnees; id: string }) {
           {' · '}<a href={wikipedia(ev.t, ev.w)} target="_blank" rel="noopener noreferrer">Wikipédia</a>
           {/^Q\d+$/.test(ev.id) && <> · <a href={`https://www.wikidata.org/wiki/${ev.id}`} target="_blank" rel="noopener noreferrer">Wikidata</a></>}
         </p>
-        <Traces d={d} traces={traces} />
+        <Traces d={d} ev={ev} traces={traces} />
       </header>
       <div class="barre-resultats"><span>{nombre(l.length)} personne{l.length > 1 ? 's' : ''} de l'arbre</span></div>
       <div class="tableau-conteneur">

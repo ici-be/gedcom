@@ -76,8 +76,11 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   (`#/evenements/Q48314`) : les personnes de l'arbre qui l'ont connu, leur âge, leur commune et la distance ;
   pour un événement meurtrier daté au mois près (ni guerre ni régime, moins de deux ans), la page signale aussi les
   actes de décès où il a peut-être laissé des traces : « On en trouvera peut-être des traces dans les actes de décès
-  de Waterloo de juin 1815, par l'acte de décès de Pierre Martin », d'après les décès et inhumations de l'arbre
-  datés au mois près, pendant l'événement ou le mois qui suit, près du lieu ou dans la zone, avec une source en ligne ;
+  d'Anderlecht (à 1 km) de novembre 1792, à feuilleter depuis l'acte de décès de Jean Dupont (9 mars 1790) ou celui
+  de Marie Lebrun (21 août 1798) », d'après les décès et inhumations de l'arbre datés au mois près, dont une source
+  est un lien : ceux de l'événement et du mois qui suit, à défaut (événement ponctuel) le plus proche avant et le plus
+  proche après, à dix ans au plus, qui ouvrent le même registre. Cinq communes au plus, les plus proches d'abord :
+  traverser tout le rayon de l'événement compte comme dix ans d'écart ;
   `#/evenements` les liste tous, par siècle.
 - **Migrations** (`#/migrations`) : où vivaient les ancêtres directs (jusqu'à la seizième génération), d'après
   les lieux de naissance ou de baptême, de mariage et de décès ou d'inhumation situés grâce aux listes de

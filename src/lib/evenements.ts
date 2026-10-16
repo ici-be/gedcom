@@ -246,13 +246,23 @@ const MEURTRIERS: TypeEvenement[] = ['bataille', 'siege', 'bombardement', 'massa
 const APRES_MOIS = 1
 /** Au-delà de deux ans, un mois de registre ne dit plus rien de l'événement */
 const DUREE_TRACES_MAX = 2
+/** Un acte de la commune jusqu'à dix ans avant ou après ouvre encore le bon registre, à feuilleter jusqu'à la date */
+const ECART_REGISTRE = 10
+/** Le lieu compte plus que la date : traverser tout le rayon de l'événement coûte autant que dix ans d'écart */
+const POIDS_DISTANCE = 10
+/** Communes proposées, au plus */
+const TRACES_MAX = 5
+/** Actes proposés par commune, au plus */
+const ACTES_MAX = 3
 
-export interface ActeEnLigne { id: string; tag: 'DEAT' | 'BURI'; url: string }
-/** Les actes de décès d'une commune pour un mois, dont l'arbre a l'adresse en ligne */
-export interface Trace { lieu: string; annee: number; mois: number; actes: ActeEnLigne[] }
+export interface ActeEnLigne { id: string; tag: 'DEAT' | 'BURI'; url: string; tri: number; date: string; /** Daté de l'événement ou du mois qui suit */ pendant: boolean }
+/** Les actes de décès d'une commune pendant l'événement, et les actes en ligne qui y mènent */
+export interface Trace { lieu: string; km?: number; actes: ActeEnLigne[] }
 
-/** Les mois de registres de décès, avec un acte en ligne, où l'événement a pu laisser des traces : décès ou inhumations
- * datés au jour ou au mois près, pendant l'événement ou le mois qui suit, près du lieu (ponctuel) ou dans la zone (étendu) */
+/** Les registres de décès où l'événement a pu laisser des traces, des plus proches aux plus lointains : pour chaque commune
+ * près du lieu (ponctuel) ou dans la zone (étendu), les décès et inhumations de l'arbre dont une source est un lien,
+ * datés pendant l'événement ou le mois qui suit ; à défaut, pour un événement ponctuel, les plus proches avant et après,
+ * qui ouvrent le même registre */
 export function tracesDeces(d: Donnees, positions: Map<string, Position>, ev: EvenementHistorique): Trace[] {
   if (!MEURTRIERS.includes(ev.type) || ev.p < 10) return []
   const debut = triDe(ev.d)
@@ -261,24 +271,54 @@ export function tracesDeces(d: Donnees, positions: Map<string, Position>, ev: Ev
   let [af, mf] = [anneeTri(f), Math.floor(f / 100) % 100 + APRES_MOIS]
   if (mf > 12) { af++; mf -= 12 }
   const fin = af * 10000 + mf * 100 + 31
-  const res = new Map<string, Trace>()
+  const ecart = ponctuel(ev) ? ECART_REGISTRE * 10000 : 0
+  const parLieu = new Map<string, { km?: number; actes: ActeEnLigne[] }>()
   for (const ind of d.arbre.individus.values()) {
     for (const e of ind.evenements) {
       if ((e.tag !== 'DEAT' && e.tag !== 'BURI') || !e.lieu || !e.date?.debut?.mois || e.date.qualif !== '') continue
-      if (e.date.tri < debut || e.date.tri > fin) continue
+      const tri = e.date.tri
+      if (tri < debut - ecart || tri > fin + ecart) continue
       const url = e.sources.map((s) => /https?:\/\/\S+/.exec(s)?.[0]).find(Boolean)
       if (!url) continue
       const pos = positions.get(e.lieu)
       if (!pos) continue
-      if (ponctuel(ev) ? distanceKm(pos, { lat: ev.lat!, lon: ev.lon! }) > (ev.r ?? 10) : !dansZone(ev, { tri: e.date.tri, lieu: e.lieu, pos, pays: pos.pays ?? decouper(e.lieu).pays })) continue
-      const { annee, mois } = e.date.debut
-      const cle = `${e.lieu}|${annee}|${mois}`
-      const t = res.get(cle) ?? { lieu: e.lieu, annee, mois, actes: [] }
-      if (!t.actes.some((a) => a.url === url)) t.actes.push({ id: ind.id, tag: e.tag, url })
-      res.set(cle, t)
+      let km: number | undefined
+      if (ponctuel(ev)) {
+        km = distanceKm(pos, { lat: ev.lat!, lon: ev.lon! })
+        if (km > (ev.r ?? 10)) continue
+      } else if (!dansZone(ev, { tri, lieu: e.lieu, pos, pays: pos.pays ?? decouper(e.lieu).pays })) continue
+      const x = parLieu.get(e.lieu) ?? { km, actes: [] }
+      if (!x.actes.some((a) => a.url === url)) x.actes.push({ id: ind.id, tag: e.tag, url, tri, date: e.date.texte, pendant: tri >= debut && tri <= fin })
+      parLieu.set(e.lieu, x)
     }
   }
-  return [...res.values()].sort((a, b) => a.annee - b.annee || a.mois - b.mois || a.lieu.localeCompare(b.lieu))
+  // Écart en années à la période de l'événement
+  const ans = (tri: number) => (tri < debut ? debut - tri : tri > fin ? tri - fin : 0) / 10000
+  const res: (Trace & { score: number })[] = []
+  for (const [lieu, x] of parLieu) {
+    const pendant = x.actes.filter((a) => a.pendant).sort((a, b) => a.tri - b.tri)
+    let actes: ActeEnLigne[]
+    if (pendant.length) actes = pendant.slice(0, ACTES_MAX)
+    else {
+      // Le plus proche avant et le plus proche après : deux entrées dans le registre, de part et d'autre de la date
+      const avant = x.actes.filter((a) => a.tri < debut).sort((a, b) => b.tri - a.tri)[0]
+      const apres = x.actes.filter((a) => a.tri > fin).sort((a, b) => a.tri - b.tri)[0]
+      actes = [avant, apres].filter((a): a is ActeEnLigne => !!a)
+    }
+    const score = (x.km !== undefined ? (x.km / (ev.r ?? 10)) * POIDS_DISTANCE : 0) + Math.min(...actes.map((a) => ans(a.tri)))
+    res.push({ lieu, km: x.km, actes, score })
+  }
+  return res.sort((a, b) => a.score - b.score || a.lieu.localeCompare(b.lieu)).slice(0, TRACES_MAX).map(({ score: _, ...t }) => t)
+}
+
+/** Les mois d'un événement : « novembre 1792 », « de mars à décembre 1832 », « de décembre 1794 à février 1795 » */
+export function moisEvenement(ev: EvenementHistorique): string {
+  const [a, m] = ev.d.split('-').map(Number)
+  const [b, n] = (ev.f && ev.f.length >= 7 ? ev.f : ev.d).split('-').map(Number)
+  const nom = (x: number) => MOIS[x - 1]
+  if (a === b && m === n) return `${nom(m)} ${a}`
+  const de = /^[aeiou]/.test(nom(m)) ? 'd’' : 'de '
+  return a === b ? `${de}${nom(m)} à ${nom(n)} ${b}` : `${de}${nom(m)} ${a} à ${nom(n)} ${b}`
 }
 
 /** Les plus marquants pour le récit : trois au plus, dont deux étendus, puis remis dans l'ordre des dates */

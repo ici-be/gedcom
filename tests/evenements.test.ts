@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
 import { lireArbre } from '../src/lib/gedcom/arbre'
 import { calculer } from '../src/lib/donnees'
-import { datesEvenement, indexer, lieuA, marquants, tracesDeces, triDe, type EvenementHistorique, type Jalon } from '../src/lib/evenements'
+import { datesEvenement, indexer, lieuA, marquants, moisEvenement, tracesDeces, triDe, type EvenementHistorique, type Jalon } from '../src/lib/evenements'
 import type { Position } from '../src/lib/geo'
 import { recit, texteBrut } from '../src/lib/recit'
 
@@ -89,7 +89,7 @@ test('qui a connu quoi, et la phrase du récit', () => {
   expect(texteBrut(recit(d, '@I1@', 0, 0)!)).not.toContain('Waterloo, où')
 })
 
-test('traces : les actes de décès en ligne pendant l’événement, près du lieu', () => {
+test('traces : les actes de décès en ligne, les communes proches d’abord', () => {
   const ged = `0 HEAD
 1 CHAR UTF-8
 0 @I1@ INDI
@@ -121,12 +121,45 @@ test('traces : les actes de décès en ligne pendant l’événement, près du l
 1 DEAT
 2 DATE 30 JUN 1815
 2 PLAC Waterloo, Brabant wallon, Belgique
+0 @I6@ INDI
+1 NAME Marc /Durant/
+1 DEAT
+2 DATE 3 MAR 1811
+2 PLAC Nivelles, Brabant wallon, Belgique
+2 SOUR https://example.org/nivelles-1811
+0 @I7@ INDI
+1 NAME Luc /Durant/
+1 DEAT
+2 DATE 9 SEP 1806
+2 PLAC Nivelles, Brabant wallon, Belgique
+2 SOUR https://example.org/nivelles-1806
+0 @I8@ INDI
+1 NAME Léa /Durant/
+1 DEAT
+2 DATE 4 FEB 1819
+2 PLAC Nivelles, Brabant wallon, Belgique
+2 SOUR https://example.org/nivelles-1819
+0 @I9@ INDI
+1 NAME Eva /Durant/
+1 DEAT
+2 DATE 4 FEB 1830
+2 PLAC Nivelles, Brabant wallon, Belgique
+2 SOUR https://example.org/nivelles-1830
 0 TRLR`
   const d = calculer(lireArbre(ged), '@I1@', '')
-  const positions = new Map([['Waterloo, Brabant wallon, Belgique', WATERLOO], ['Paris, Paris, France', PARIS]])
+  const NIVELLES: Position = { lat: 50.598, lon: 4.328, qualite: 'trouve', pays: 'BE', codeRegion: 'BE.WBR' }
+  const positions = new Map([['Waterloo, Brabant wallon, Belgique', WATERLOO], ['Paris, Paris, France', PARIS], ['Nivelles, Brabant wallon, Belgique', NIVELLES]])
   const t = tracesDeces(d, positions, BATAILLE)
-  expect(t.map((x) => [x.annee, x.mois, x.actes.map((a) => a.id)])).toEqual([[1815, 6, ['@I1@']], [1815, 7, ['@I2@']]])
-  expect(t[1].actes[0]).toEqual({ id: '@I2@', tag: 'BURI', url: 'https://agatha.arch.be/xyz' })
+  // Waterloo : les actes pendant la bataille et le mois qui suit, pas celui d'avant ; Paris est trop loin
+  // Nivelles : aucun pendant, le plus proche avant et le plus proche après (à moins de dix ans)
+  expect(t.map((x) => [x.lieu.split(',')[0], x.actes.map((a) => a.id)])).toEqual([['Waterloo', ['@I1@', '@I2@']], ['Nivelles', ['@I6@', '@I8@']]])
+  expect(t[0].actes[1]).toMatchObject({ id: '@I2@', tag: 'BURI', url: 'https://agatha.arch.be/xyz', pendant: true })
+  expect(t[1].actes[0].pendant).toBe(false)
+  // bataille à Nivelles même : ses actes de quatre ans plus tôt passent avant ceux du jour à Waterloo, à 14 km
+  const A_NIVELLES: EvenementHistorique = { ...BATAILLE, lat: NIVELLES.lat, lon: NIVELLES.lon, r: 20 }
+  expect(tracesDeces(d, positions, A_NIVELLES).map((x) => x.lieu.split(',')[0])).toEqual(['Nivelles', 'Waterloo'])
   // une révolution ne fait pas chercher dans les registres de décès
   expect(tracesDeces(d, positions, { ...BELGE, d: '1815-06-01', f: '1815-07-01' })).toEqual([])
+  expect(moisEvenement(BATAILLE)).toBe('juin 1815')
+  expect(moisEvenement(CHOLERA)).toBe('de mars à décembre 1832')
 })
