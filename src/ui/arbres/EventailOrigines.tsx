@@ -1,6 +1,6 @@
 // Éventail des origines : huit générations sur 220°, chaque case teintée selon la province de naissance.
 // En option, le mariage de chaque couple : une boule teintée selon la province du mariage, au pied de la jointure
-// entre les deux époux, là où ils rejoignent leur enfant ; avec l'année jusqu'à la génération V, plus petite et sans année au-delà.
+// entre les deux époux, là où ils rejoignent leur enfant ; avec l'année jusqu'à la génération VI, plus petite et sans année au-delà.
 // Feuille A3 paysage (1 unité = 0,3 mm).
 
 import { Fragment, type JSX } from 'preact'
@@ -24,9 +24,9 @@ const OUVERTURE = 220
 const O: Centre = { cx: 700, cy: 690 }
 const RAYONS = [0, 96, 176, 254, 330, 408, 486, 566, 636]
 /** Rayon de la boule du mariage, selon la génération des époux (1 : les parents) */
-const BOULES = [0, 17, 15, 13.5, 12, 7, 5, 3.5]
-/** Dernière génération des époux dont la boule porte l'année (V) ; au-delà, la couleur seule */
-const BOULES_AVEC_ANNEE = 4
+const BOULES = [0, 17, 15, 13.5, 12, 10, 5, 3.5]
+/** Dernière génération des époux dont la boule porte l'année (VI) ; au-delà, la couleur seule */
+const BOULES_AVEC_ANNEE = 5
 /** Espace laissé entre la boule et le texte de la case de l'enfant */
 const JEU = 2.5
 
@@ -488,10 +488,10 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
     const b = boule(k)
     if (!b) continue
     const [x, y] = point(O, b.rc, b.a)
-    const fs = Math.max(7.2, b.R * 0.6)
+    const fs = Math.max(6.6, b.R * 0.6)
     const annee = b.g <= BOULES_AVEC_ANNEE
     // liseré et filet à l'échelle de la boule
-    const lisere = annee ? 2.4 : Math.max(0.9, b.R * 0.24)
+    const lisere = annee ? Math.min(2.4, b.R * 0.2) : Math.max(0.9, b.R * 0.24)
     boules.push(
       <g key={k}>
         <circle cx={x} cy={y} r={b.R} fill={m.couleur} stroke="#fff" stroke-width={lisere} />
@@ -621,7 +621,7 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
       {(options.italiques || implexes || boules.length > 0) && (
         <text x="40" y={options.date ? 950 : 966} font-size="8.5" class="mut">
           {[
-            boules.length > 0 && <>● mariage : teinte de la province où il a eu lieu, année jusqu’à la génération V</>,
+            boules.length > 0 && <>● mariage : teinte de la province où il a eu lieu, année jusqu’à la génération VI</>,
             options.italiques && <><tspan class="ns">italique</tspan> : date sans source</>,
             implexes && '◆ implexe',
           ].filter(Boolean).map((x, i) => <Fragment key={i}>{i > 0 && ' · '}{x}</Fragment>)}
