@@ -14,14 +14,16 @@ import { decouperMetiers } from './metiers'
 import { etatParents, lienDeParente, parents, type Lien } from './parente'
 import { places, type Place } from './eventail'
 import { sansMentionIntrouvable } from './introuvable'
+import { marquants, periode, ponctuel, quandEvenement, type Vecu } from './evenements'
 
-/** Un morceau de texte : du texte, une personne (lien vers son récit), un numéro Sosa, un appel de note, un lien */
+/** Un morceau de texte : du texte, une personne (lien vers son récit), un numéro Sosa, un appel de note, un lien, un événement historique */
 export type Morceau =
   | string
   | { id: string; t: string; gras?: boolean }
   | { sosa: number; ancre: boolean }
   | { appel: number }
   | { url: string; t: string }
+  | { evt: string; t: string; type: string }
 export type Phrase = Morceau[]
 export interface Item { marque: string; blocs: Bloc[] }
 export type Bloc =
@@ -30,7 +32,11 @@ export type Bloc =
 export interface Note { n: number; texte: Phrase }
 export interface Partie { numero: string; titre: string; blocs: Bloc[]; notes: Note[] }
 export interface Recit { titre: string; parties: Partie[]; ancetres: number; descendants: number }
-export interface Options { sources?: boolean }
+export interface Options {
+  sources?: boolean
+  /** Événements historiques connus par chaque personne (absent : le récit n'en parle pas) */
+  evenements?: Map<string, Vecu[]>
+}
 
 export const MAX_ASCENDANTS = 8
 export const MAX_DESCENDANTS = 5
@@ -634,6 +640,58 @@ function autresUnions(p: Plume, c: Individu, fam: Famille): Phrase[] {
   })
 }
 
+// ——— Les événements historiques ———
+
+/** Le verbe de l'événement, au singulier et au pluriel (« les bombardements de Milan… commencèrent ») */
+const VERBES_EVT: Record<string, [string, string]> = {
+  bataille: ['se livra', 'se livrèrent'], incendie: ['éclata', 'éclatèrent'], explosion: ['se produisit', 'se produisirent'],
+  inondation: ['survint', 'survinrent'], seisme: ['survint', 'survinrent'],
+}
+
+/** « alors qu’il avait 24 ans » ; `qui` : « il », « elle » ou un prénom */
+function alorsQue(qui: string, age?: number): string {
+  if (age === undefined) return ''
+  const que = /^[aeiouyhàâéèêîôû]/i.test(qui) ? 'qu’' : 'que '
+  return age < 1 ? `, alors ${que}${qui} n’avait pas un an,` : `, alors ${que}${qui} avait ${age} an${age > 1 ? 's' : ''},`
+}
+
+/**
+ * Ce qu'une personne et ses conjoints ont connu : chaque bataille, siège ou incendie en une phrase
+ * (« Le 18 juin 1815, alors qu’il avait 24 ans, la bataille de Waterloo se livra à 4 km de Waterloo, où il vivait. »),
+ * épidémies, guerres et régimes ensemble (« Il connut aussi la Révolution française (1789-1799)… »).
+ * Un conjoint n'a que ce que la personne n'a pas connu elle-même.
+ */
+function evenementsVecus(p: Plume, ind: Individu, conjoints: Individu[]): Phrase[] {
+  const toutes = p.options.evenements
+  if (!toutes) return []
+  const res: Phrase[] = []
+  const siens = new Set((toutes.get(ind.id) ?? []).map((v) => v.ev.id))
+  for (const x of [ind, ...conjoints]) {
+    const l = marquants((toutes.get(x.id) ?? []).filter((v) => x === ind || !siens.has(v.ev.id)))
+    if (!l.length) continue
+    const nomme = x !== ind
+    let premier = true
+    const sujet = () => { const s = nomme && premier ? prenomUsuel(x) : il(x); premier = false; return s }
+    for (const v of l.filter((v) => ponctuel(v.ev))) {
+      const evt: Morceau = { evt: v.ev.id, t: v.ev.t, type: v.ev.type }
+      const [un, plusieurs] = v.ev.f && v.ev.f !== v.ev.d ? ['commença', 'commencèrent'] : VERBES_EVT[v.ev.type] ?? ['eut lieu', 'eurent lieu']
+      const verbe = v.ev.t.startsWith('les ') ? plusieurs : un
+      const qui = sujet()
+      const commune = decouperLieu(v.lieu).nom
+      const ou = `${(v.km ?? 0) < 3 ? `à ${commune}` : `à ${Math.round(v.km!)} km de ${commune}`}, où ${il(x)} vivait${v.probable ? ' sans doute' : ''}`
+      res.push(phrase`${quandEvenement(v.ev)}${alorsQue(qui, v.age)} ${evt} ${verbe} ${ou}`)
+    }
+    const etendus = l.filter((v) => !ponctuel(v.ev))
+    if (etendus.length) {
+      const items = etendus.map((v): Morceau[] => [{ evt: v.ev.id, t: v.ev.t, type: v.ev.type }, /\d{4}/.test(v.ev.t) ? '' : ` (${periode(v.ev)})`])
+      const verbe = p.choisir('connut', ['connut', 'vécut', 'traversa'])
+      const doute = etendus.every((v) => v.probable) ? ' sans doute' : ''
+      res.push(phrase`${capitale(sujet())} ${verbe}${doute}${etendus.length < l.length ? ' aussi' : ''} ${enumerer(items)}`)
+    }
+  }
+  return res
+}
+
 // ——— Les notices ———
 
 interface Contexte {
@@ -732,6 +790,14 @@ function notice(p: Plume, ind: Individu, ctx: Contexte): Bloc[] {
     precedent = u
   })
   if (participe) phrases.push(phrase`${il(ind)} est ${participe}`)
+  // Les événements historiques, à la fin de la notice (avant l'annonce des enfants détaillés en liste)
+  const histoire = evenementsVecus(p, ind, maries.map((u) => u.conj!))
+  if (histoire.length) {
+    const l = paragraphes[paragraphes.length - 1]
+    const derniere = l[l.length - 1]
+    const fin = derniere?.[derniere.length - 1]
+    l.splice(ctx.profondeur > 0 && estTexte(fin) && fin.endsWith(':') ? l.length - 1 : l.length, 0, ...histoire)
+  }
   paragraphes.forEach((l, i) => {
     if (!l.length) return
     // Les personnes présentées dans le paragraphe, pour leurs photos : la personne et son conjoint de cette union

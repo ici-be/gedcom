@@ -10,8 +10,9 @@ import { nombre } from '../lib/format'
 import { ecrire, lire } from '../lib/stockage'
 import type { Individu } from '../lib/gedcom/arbre'
 import { CasePhotos, ChoixPersonne, Photo, usePhotos } from './commun'
+import { IconeEvenement, lienEvenement, useEvenements } from './Evenements'
 
-interface Reglages { asc: number; desc: number; sources: boolean }
+interface Reglages { asc: number; desc: number; sources: boolean; evenements: boolean }
 /** Pour les photos à côté des notices (absent : pas de photos) */
 type Qui = ((id: string) => Individu | undefined) | undefined
 
@@ -40,6 +41,7 @@ function M({ m }: { m: Morceau }) {
       : <span class="rc-sosa">[{m.sosa}]</span>
   }
   if ('url' in m) return <a href={m.url} target="_blank" rel="noopener noreferrer">{m.t}</a>
+  if ('evt' in m) return <a href={lienEvenement(m.evt)} class="rc-evt" title="Toutes les personnes de l’arbre qui l’ont connu"><IconeEvenement type={m.type} />{m.t}</a>
   return <a href={lien(m.id)} class={m.gras ? 'rc-gras' : undefined} title="Faire le récit de cette personne">{m.t}</a>
 }
 
@@ -71,12 +73,17 @@ function Blocs({ blocs, qui }: { blocs: Bloc[]; qui: Qui }) {
 }
 
 export function Recit({ d, id }: { d: Donnees; id?: string }) {
-  const [reglages, setReglagesBrut] = useState<Reglages>(() => ({ asc: 3, desc: 2, sources: false, ...lire<Partial<Reglages>>('recit', {}) }))
+  const [reglages, setReglagesBrut] = useState<Reglages>(() => ({ asc: 3, desc: 2, sources: false, evenements: false, ...lire<Partial<Reglages>>('recit', {}) }))
   const setReglages = (r: Partial<Reglages>) => { const n = { ...reglages, ...r }; setReglagesBrut(n); ecrire('recit', n) }
   const [copie, setCopie] = useState(false)
   const photos = usePhotos(d)
   const cible = id && d.arbre.individus.has(id) ? id : d.racine
-  const r = useMemo(() => recit(d, cible, reglages.asc, reglages.desc, { sources: reglages.sources }), [d, cible, reglages.asc, reglages.desc, reglages.sources])
+  const ev = useEvenements(d, reglages.evenements)
+  const parPersonne = ev?.etat === 'pret' ? ev.index.parPersonne : undefined
+  const r = useMemo(
+    () => recit(d, cible, reglages.asc, reglages.desc, { sources: reglages.sources, evenements: parPersonne }),
+    [d, cible, reglages.asc, reglages.desc, reglages.sources, parPersonne],
+  )
   const mots = useMemo(() => (r ? texteBrut(r).split(/\s+/).length : 0), [r])
 
   const copier = () => {
@@ -106,11 +113,15 @@ export function Recit({ d, id }: { d: Donnees; id?: string }) {
             {Array.from({ length: MAX_DESCENDANTS + 1 }, (_, n) => <option key={n} value={n}>{libelle(GENERATIONS_DESC, n)}</option>)}
           </select>
           <label class="rc-case"><input type="checkbox" checked={reglages.sources} onChange={(e) => setReglages({ sources: e.currentTarget.checked })} /> Sources dans les notes</label>
+          <label class="rc-case"><input type="checkbox" checked={reglages.evenements} onChange={(e) => setReglages({ evenements: e.currentTarget.checked })} /> Événements historiques</label>
           <CasePhotos p={photos} classe="rc-case" />
         </div>
         <div class="rc-ligne">
           <button type="button" class="bouton" onClick={copier}>{copie ? 'Copié' : 'Copier le texte'}</button>
           <button type="button" class="bouton" onClick={() => window.print()}>Imprimer</button>
+          {ev?.etat === 'attente' && <span class="aide">Recherche des événements…</span>}
+          {ev?.etat === 'erreur' && <span class="aide">La liste des événements n'a pas pu être chargée.</span>}
+          {ev?.etat === 'pret' && <a class="aide" href="#/evenements">Tous les événements de l’arbre</a>}
           {r && <span class="aide">{nombre(mots)} mots · {nombre(r.ancetres)} ancêtres et {nombre(r.descendants)} descendants évoqués</span>}
         </div>
       </section>

@@ -15,6 +15,7 @@ import { Statistiques } from './Statistiques'
 import { Ascendance } from './Ascendance'
 import { Lignee } from './Lignee'
 import { Recit } from './Recit'
+import { ListeEvenements, PageEvenement } from './Evenements'
 import { Filiation } from './Filiation'
 import { Introuvables } from './Introuvables'
 import { ProposerInstallation } from './Installer'
@@ -170,6 +171,8 @@ export function App() {
     ? <Migrations d={donnees} onglet={route[1]} cle={route[2]} />
     : <div class="attente" role="status"><span class="rouet" />Chargement des cartes…</div>
   else if (page === 'recit') contenu = <Recit d={donnees} id={route[1]} />
+  else if (page === 'evenements' && route[1]) contenu = <PageEvenement d={donnees} id={route[1]} />
+  else if (page === 'evenements') contenu = <ListeEvenements d={donnees} />
   else if (page === 'ascendance') contenu = <Ascendance d={donnees} setPerimetre={setPerimetre} />
   else if (page === 'lignee') contenu = <Lignee d={donnees} cle={route[1] || 'paternelle'} />
   else if (page === 'statistiques') contenu = <Statistiques d={donnees} perimetre={perimetre} setPerimetre={setPerimetre} />
@@ -200,7 +203,7 @@ export function App() {
               <a href="#/carte" class={page === 'carte' ? 'actif' : ''}>Carte</a>
               <a href="#/migrations" class={page === 'migrations' ? 'actif' : ''}>Migrations</a>
               <a href="#/ascendance" class={page === 'ascendance' || page === 'lignee' ? 'actif' : ''}>Ascendance</a>
-              <a href="#/recit" class={page === 'recit' ? 'actif' : ''}>Récit</a>
+              <a href="#/recit" class={page === 'recit' || page === 'evenements' ? 'actif' : ''}>Récit</a>
               <a href="#/statistiques" class={page === 'statistiques' ? 'actif' : ''}>Statistiques</a>
               <a href="#/imprimer" class={page === 'imprimer' ? 'actif' : ''}>Imprimer</a>
             </nav>

@@ -66,6 +66,15 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   mariage, parent mort peu avant, notes des actes et, au choix, les sources. Chaque nom mène au récit de cette
   personne, chaque numéro à sa notice ; le texte se copie ou s'imprime. Les photos de l'arbre en ligne,
   s'il y en a, accompagnent la notice de chaque personne et de son conjoint.
+  En cochant **Événements historiques**, chaque notice dit aussi ce que la personne et son conjoint ont connu près
+  de chez eux, trois événements au plus : « Le 18 juin 1815, alors qu'il avait 24 ans, la bataille de Waterloo se
+  livra à 4 km de Waterloo, où il vivait. Il connut aussi la révolution belge (1830-1831)… ». Batailles, sièges,
+  bombardements, incendies, inondations, explosions et séismes à moins de 5 à 80 km selon leur nature et leur ampleur ; épidémies,
+  famines, hivers, guerres et changements de régime du pays ou de la province (pas avant six ans). Le lieu de vie à
+  une date vient des actes les plus proches (les siens, ceux de ses mariages, la naissance de ses enfants), « sans
+  doute » quand aucun n'est à moins de trois ans. Chaque événement, avec son icône, mène à sa page
+  (`#/evenements/Q48314`) : les personnes de l'arbre qui l'ont connu, leur âge, leur commune et la distance ;
+  `#/evenements` les liste tous, par siècle.
 - **Migrations** (`#/migrations`) : où vivaient les ancêtres directs (jusqu'à la seizième génération), d'après
   les lieux de naissance ou de baptême, de mariage et de décès ou d'inhumation situés grâce aux listes de
   localités, sur des cartes au style de l'éventail imprimé (mêmes teintes de régions). Trois onglets :
@@ -173,6 +182,13 @@ Preact + TypeScript + Vite. La lecture du fichier se fait dans un *worker* (`src
   `python3 -I scripts/geonames.py <dossier des .zip> public/geo [codes des pays à refaire]`. Les
   départements d'outre-mer (Guadeloupe, Martinique…) ont leur propre fichier et sont reconnus à leur nom ou
   à leur code postal (« Saint-Claude, 97124, Guadeloupe, France »), même suivis de « France »
+- `scripts/evenements.py` : fabrique `public/evenements.json`, les événements historiques des récits :
+  `python3 -I scripts/evenements.py public/evenements.json`. Les événements ponctuels (batailles, sièges,
+  incendies…) sont lus dans [Wikidata](https://query.wikidata.org/) (CC0) pour l'Europe de l'Ouest de 1500 à 1960,
+  avec un titre français et au moins deux ou trois articles Wikipédia ; les événements étendus (épidémies, guerres,
+  régimes) sont dans `scripts/evenements-etendus.json`, par pays ou province (codes de `public/geo/` : `BE`,
+  `BE.WHT`, `FR.59`, `NL.11`)
+- `src/lib/evenements.ts` : lieu de vie à une date et événements connus par chaque personne
 - `scripts/contours.py` : fabrique `public/geo/contours.json` (contours simplifiés pour la carte de
   l'éventail) à partir des [Admin 1 de Natural Earth](https://github.com/nvkelso/natural-earth-vector/blob/master/geojson/ne_10m_admin_1_states_provinces.geojson)
   (domaine public) : `python3 scripts/contours.py <ne_10m_admin_1_states_provinces.geojson> public/geo/contours.json`

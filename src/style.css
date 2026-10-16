@@ -718,6 +718,15 @@ a.asc-piste-g:hover { color: var(--accent); }
 .rc-notes p, .rc-texte sup a { scroll-margin-top: 90px; }
 .rc-vise { animation: rc-vise 1.6s ease-out; }
 @keyframes rc-vise { from { background: color-mix(in srgb, var(--accent) 22%, transparent); } to { background: transparent; } }
+.rc-texte a.rc-evt { white-space: nowrap; text-decoration-style: dotted; }
+.rc-texte a.rc-evt .icone-evt { width: 0.95em; height: 0.95em; vertical-align: -0.1em; margin-right: 0.18em; color: var(--accent); }
+.icone-evt { width: 1.1em; height: 1.1em; flex: none; }
+.ev-titre { display: inline-flex; align-items: center; gap: 6px; }
+.ev-titre .icone-evt { color: var(--accent); }
+.ev-h1 { display: flex; align-items: center; gap: 10px; }
+.ev-h1 .icone-evt { width: 0.9em; height: 0.9em; color: var(--accent); }
+.tableau.evenements .ev-date { white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--muted); }
+.tableau.evenements .ev-siecle td { font-family: var(--display); font-weight: 600; background: var(--panel-2); }
 .rc-case { display: inline-flex; gap: 6px; align-items: center; font-size: 0.9rem; }
 /* photos à côté d'une notice, comme dans les livres de famille */
 .rc-figures { float: right; display: flex; gap: 12px; align-items: flex-end; margin: 4px 0 8px 18px; }

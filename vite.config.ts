@@ -31,7 +31,11 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
         // les listes de localités ne sont téléchargées que pour les pays de l'arbre, puis gardées
-        runtimeCaching: [{ urlPattern: /\/geo\/[\w]+\.json$/, handler: 'StaleWhileRevalidate', options: { cacheName: 'lieux' } }],
+        runtimeCaching: [
+          { urlPattern: /\/geo\/[\w]+\.json$/, handler: 'StaleWhileRevalidate', options: { cacheName: 'lieux' } },
+          // les événements historiques, seulement si on les demande dans le récit
+          { urlPattern: /\/evenements\.json$/, handler: 'StaleWhileRevalidate', options: { cacheName: 'evenements' } },
+        ],
       },
     }),
   ],
