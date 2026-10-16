@@ -121,7 +121,7 @@ export function ListeEvenements({ d }: { d: Donnees }) {
           </div>
           <div class="barre-resultats"><span>{nombre(lignes.length)} événement{lignes.length > 1 ? 's' : ''}</span></div>
           <div class="tableau-conteneur">
-            <table class="tableau evenements">
+            <table class="tableau ev-tableau">
               <thead><tr><th>Date</th><th>Événement</th><th class="nombre">Personnes</th></tr></thead>
               <tbody>
                 {lignes.map((x, i) => {
@@ -186,7 +186,7 @@ export function PageEvenement({ d, id }: { d: Donnees; id: string }) {
       </header>
       <div class="barre-resultats"><span>{nombre(l.length)} personne{l.length > 1 ? 's' : ''} de l'arbre</span></div>
       <div class="tableau-conteneur">
-        <table class="tableau evenements">
+        <table class="tableau ev-tableau">
           <thead><tr><th>Sosa</th><th>Personne</th><th>Âge</th><th>Où elle vivait</th>{ponctuel(ev) && <th class="nombre">Distance</th>}<th>Récit</th></tr></thead>
           <tbody>
             {l.map((v) => {
