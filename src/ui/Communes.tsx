@@ -10,6 +10,8 @@ import { texteIntrouvable } from '../lib/introuvable'
 import { telecharger, versCsv } from '../lib/csv'
 import { nomComplet } from '../lib/parente'
 import { ecrire, lire } from '../lib/stockage'
+import { decouper, situerArbre, type Position } from '../lib/geo'
+import { lectures } from '../lib/lectures'
 import { Barre, ChoixPerimetre, EffacerFiltres, EnTeteTri, type Tri, MentionIntrouvable, Pagination, Pastille, Personne, Sources, normaliser, useImpression, lignesAffichees, AvisImpression } from './commun'
 
 type TriCommunes = 'nom' | 'total' | 'sans-source' | 'part'
@@ -131,6 +133,12 @@ export function Lieu({ d, lieu, perimetre, setPerimetre }: { d: Donnees; lieu: s
   const toutes = useCommunes(d, perimetre, autres)
   const c = toutes.find((x) => x.lieu === lieu)
   const coches = useMemo(() => new Set(faits), [faits])
+  const [position, setPosition] = useState<Position | undefined>()
+  useEffect(() => {
+    let vivant = true
+    situerArbre(d.arbre).then((p) => vivant && setPosition(p.get(lieu))).catch(() => {})
+    return () => { vivant = false }
+  }, [d, lieu])
 
   const cocher = (cle: string, oui: boolean) => {
     const n = oui ? [...faits, cle] : faits.filter((x) => x !== cle)
@@ -222,6 +230,29 @@ export function Lieu({ d, lieu, perimetre, setPerimetre }: { d: Donnees; lieu: s
             </div>
           ))}
         </section>
+      ))}
+
+      <Lectures lieu={lieu} position={position} />
+    </section>
+  )
+}
+
+/** Où chercher des livres sur l'histoire de la commune, ses habitants, la vie d'autrefois */
+function Lectures({ lieu, position }: { lieu: string; position?: Position }) {
+  const decoupe = decouper(lieu)
+  const rayons = lectures(decoupe.commune, position?.pays ?? decoupe.pays, position?.codeRegion)
+  if (!rayons.length) return null
+  return (
+    <section class="groupe lectures">
+      <h2>Lire sur {decoupe.commune}</h2>
+      <p class="astuce">Histoire du lieu, monographies, bulletins des cercles d'histoire, livres anciens : chaque lien lance la recherche sur le site indiqué.</p>
+      {rayons.map((r) => (
+        <div key={r.titre} class="siecle">
+          <h3>{r.titre}</h3>
+          <ul>
+            {r.lectures.map((l) => <li key={l.url}><a href={l.url} target="_blank" rel="noopener">{l.titre}</a> <span class="astuce">— {l.detail}</span></li>)}
+          </ul>
+        </div>
       ))}
     </section>
   )

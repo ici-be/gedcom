@@ -21,7 +21,10 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   Un clic sur ▸ montre tous les événements et leurs sources. Export CSV.
 - **Lieux** : pour chaque commune, le nombre de faits et ceux qui n'ont pas de source ; puis la liste
   des actes à chercher, par type et par siècle, avec une case à cocher quand un acte est trouvé.
-  Export CSV.
+  Export CSV. En bas de la page d'un lieu, « Lire sur… » : des recherches toutes prêtes sur la commune
+  dans les catalogues (Unicat, KBR, BnF, SUDOC, WorldCat), les bibliothèques numériques (Gallica, Delpher,
+  Google Livres, Internet Archive, Persée) et les ouvrages de référence (Tarlier et Wauters pour le Brabant,
+  Vander Maelen, Jourdain et Van Stalle, inventaire du patrimoine flamand, Wikipédia), selon le pays et la province.
 - **Métiers** : les professions, avec le nombre de personnes (hommes, femmes), l'époque et les
   communes principales ; puis une page par métier avec chaque personne, la mention exacte (date, lieu,
   source) et ses autres métiers. « Cultivateur, échevin » compte pour deux métiers. Les formes
