@@ -151,6 +151,22 @@ export function App() {
   }, [bilan])
 
   const page = route[0] || ''
+
+  // Le titre de l'onglet suit celui de la page (son h1, ou un data-titre plus précis), y compris quand il arrive après coup
+  const principal = useRef<HTMLElement>(null)
+  useEffect(() => {
+    const el = principal.current
+    if (!el) return
+    const maj = () => {
+      const t = (el.querySelector('[data-titre]')?.getAttribute('data-titre') ?? el.querySelector('h1')?.textContent ?? '').replace(/\s+/g, ' ').trim()
+      const titre = t && t !== 'Lignées' ? `${t} · Lignées` : 'Lignées'
+      if (document.title !== titre) document.title = titre
+    }
+    maj()
+    const obs = new MutationObserver(maj)
+    obs.observe(el, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['data-titre'] })
+    return () => obs.disconnect()
+  }, [])
   useEffect(() => {
     if (page === 'carte' && !Carte) import('./Carte').then((m) => setCarte(() => m.Carte))
     if (page === 'imprimer' && !Impression) import('./Impression').then((m) => setImpression(() => m.Impression))
@@ -211,7 +227,7 @@ export function App() {
           {donnees && <ChoixRacine d={donnees} setRacine={setRacine} />}
         </div>
       </header>
-      <main class="page">{contenu}</main>
+      <main class="page" ref={principal}>{contenu}</main>
       <footer class="pied">
         Vos données restent dans votre navigateur. · <a href="https://github.com/ici-be/gedcom" target="_blank" rel="noopener noreferrer">Code source</a>
       </footer>

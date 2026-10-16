@@ -9,6 +9,7 @@ import { MAX_ASCENDANTS, MAX_DESCENDANTS, recit, texteBrut, type Bloc, type Morc
 import { nombre } from '../lib/format'
 import { ecrire, lire } from '../lib/stockage'
 import type { Individu } from '../lib/gedcom/arbre'
+import { nomComplet } from '../lib/parente'
 import { CasePhotos, ChoixPersonne, Photo, usePhotos } from './commun'
 import { IconeEvenement, lienEvenement, useEvenements } from './Evenements'
 
@@ -94,7 +95,7 @@ export function Recit({ d, id }: { d: Donnees; id?: string }) {
   return (
     <section class="ecran recit">
       <header class="titre-ecran">
-        <h1>Récit</h1>
+        <h1 data-titre={`Récit de ${nomComplet(d.arbre.individus.get(cible)!)}`}>Récit</h1>
         <p class="sous-titre">Une notice à la manière des livres de famille : la personne et ses descendants, puis ses ancêtres génération par génération, avec témoins, domiciles et registres en notes. Chaque nom mène au récit de cette personne ; chaque numéro entre crochets, à sa notice.</p>
       </header>
 
