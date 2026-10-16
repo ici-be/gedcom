@@ -74,6 +74,10 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   une date vient des actes les plus proches (les siens, ceux de ses mariages, la naissance de ses enfants), « sans
   doute » quand aucun n'est à moins de trois ans. Chaque événement, avec son icône, mène à sa page
   (`#/evenements/Q48314`) : les personnes de l'arbre qui l'ont connu, leur âge, leur commune et la distance ;
+  pour un événement meurtrier daté au mois près (ni guerre ni régime, moins de deux ans), la page signale aussi les
+  actes de décès où il a peut-être laissé des traces : « On en trouvera peut-être des traces dans les actes de décès
+  de Waterloo de juin 1815, par l'acte de décès de Pierre Martin », d'après les décès et inhumations de l'arbre
+  datés au mois près, pendant l'événement ou le mois qui suit, près du lieu ou dans la zone, avec une source en ligne ;
   `#/evenements` les liste tous, par siècle.
 - **Migrations** (`#/migrations`) : où vivaient les ancêtres directs (jusqu'à la seizième génération), d'après
   les lieux de naissance ou de baptême, de mariage et de décès ou d'inhumation situés grâce aux listes de

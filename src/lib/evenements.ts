@@ -214,6 +214,8 @@ export interface Index {
   /** Par événement, du plus proche au plus lointain */
   parEvenement: Map<string, Vecu[]>
   liste: EvenementHistorique[]
+  /** Les lieux situés de l'arbre */
+  positions: Map<string, Position>
 }
 
 /** Tous les événements connus par les personnes de l'arbre */
@@ -233,7 +235,50 @@ export function indexer(d: Donnees, positions: Map<string, Position>, liste: Eve
     }
   }
   for (const l of parEvenement.values()) l.sort((a, b) => (a.km ?? 0) - (b.km ?? 0) || (a.age ?? 0) - (b.age ?? 0))
-  return { parPersonne, parEvenement, liste: triee }
+  return { parPersonne, parEvenement, liste: triee, positions }
+}
+
+// ——— Où chercher des traces : les actes de décès en ligne ———
+
+/** Les événements qui font des morts (les guerres et les régimes durent trop pour qu'un mois de registre parle d'eux) */
+const MEURTRIERS: TypeEvenement[] = ['bataille', 'siege', 'bombardement', 'massacre', 'incendie', 'inondation', 'seisme', 'explosion', 'epidemie', 'famine', 'hiver']
+/** Les décès enregistrés jusqu'à un mois après la fin : blessés, corps retrouvés, inhumations */
+const APRES_MOIS = 1
+/** Au-delà de deux ans, un mois de registre ne dit plus rien de l'événement */
+const DUREE_TRACES_MAX = 2
+
+export interface ActeEnLigne { id: string; tag: 'DEAT' | 'BURI'; url: string }
+/** Les actes de décès d'une commune pour un mois, dont l'arbre a l'adresse en ligne */
+export interface Trace { lieu: string; annee: number; mois: number; actes: ActeEnLigne[] }
+
+/** Les mois de registres de décès, avec un acte en ligne, où l'événement a pu laisser des traces : décès ou inhumations
+ * datés au jour ou au mois près, pendant l'événement ou le mois qui suit, près du lieu (ponctuel) ou dans la zone (étendu) */
+export function tracesDeces(d: Donnees, positions: Map<string, Position>, ev: EvenementHistorique): Trace[] {
+  if (!MEURTRIERS.includes(ev.type) || ev.p < 10) return []
+  const debut = triDe(ev.d)
+  const f = triDe(ev.f ?? ev.d, true)
+  if (anneeTri(f) - anneeTri(debut) >= DUREE_TRACES_MAX) return []
+  let [af, mf] = [anneeTri(f), Math.floor(f / 100) % 100 + APRES_MOIS]
+  if (mf > 12) { af++; mf -= 12 }
+  const fin = af * 10000 + mf * 100 + 31
+  const res = new Map<string, Trace>()
+  for (const ind of d.arbre.individus.values()) {
+    for (const e of ind.evenements) {
+      if ((e.tag !== 'DEAT' && e.tag !== 'BURI') || !e.lieu || !e.date?.debut?.mois || e.date.qualif !== '') continue
+      if (e.date.tri < debut || e.date.tri > fin) continue
+      const url = e.sources.map((s) => /https?:\/\/\S+/.exec(s)?.[0]).find(Boolean)
+      if (!url) continue
+      const pos = positions.get(e.lieu)
+      if (!pos) continue
+      if (ponctuel(ev) ? distanceKm(pos, { lat: ev.lat!, lon: ev.lon! }) > (ev.r ?? 10) : !dansZone(ev, { tri: e.date.tri, lieu: e.lieu, pos, pays: pos.pays ?? decouper(e.lieu).pays })) continue
+      const { annee, mois } = e.date.debut
+      const cle = `${e.lieu}|${annee}|${mois}`
+      const t = res.get(cle) ?? { lieu: e.lieu, annee, mois, actes: [] }
+      if (!t.actes.some((a) => a.url === url)) t.actes.push({ id: ind.id, tag: e.tag, url })
+      res.set(cle, t)
+    }
+  }
+  return [...res.values()].sort((a, b) => a.annee - b.annee || a.mois - b.mois || a.lieu.localeCompare(b.lieu))
 }
 
 /** Les plus marquants pour le récit : trois au plus, dont deux étendus, puis remis dans l'ordre des dates */
@@ -249,7 +294,7 @@ export function marquants(l: Vecu[], max = 3): Vecu[] {
   return choisis.sort((a, b) => triDe(a.ev.d) - triDe(b.ev.d))
 }
 
-const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre']
+export const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre']
 
 /** « le 18 juin 1815 », « en juin 1815 », « en 1815 » */
 export function quandEvenement(e: EvenementHistorique): string {

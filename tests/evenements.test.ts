@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
 import { lireArbre } from '../src/lib/gedcom/arbre'
 import { calculer } from '../src/lib/donnees'
-import { datesEvenement, indexer, lieuA, marquants, triDe, type EvenementHistorique, type Jalon } from '../src/lib/evenements'
+import { datesEvenement, indexer, lieuA, marquants, tracesDeces, triDe, type EvenementHistorique, type Jalon } from '../src/lib/evenements'
 import type { Position } from '../src/lib/geo'
 import { recit, texteBrut } from '../src/lib/recit'
 
@@ -87,4 +87,46 @@ test('qui a connu quoi, et la phrase du récit', () => {
   expect(brut).toMatch(/Il (connut|vécut|traversa) aussi la révolution belge \(1830-1831\) et l’épidémie de choléra de 1832\./)
   // sans l'option, rien
   expect(texteBrut(recit(d, '@I1@', 0, 0)!)).not.toContain('Waterloo, où')
+})
+
+test('traces : les actes de décès en ligne pendant l’événement, près du lieu', () => {
+  const ged = `0 HEAD
+1 CHAR UTF-8
+0 @I1@ INDI
+1 NAME Pierre /Martin/
+1 DEAT
+2 DATE 25 JUN 1815
+2 PLAC Waterloo, Brabant wallon, Belgique
+2 SOUR https://www.familysearch.org/ark:/61903/3:1:ABC
+0 @I2@ INDI
+1 NAME Anne /Martin/
+1 BURI
+2 DATE JUL 1815
+2 PLAC Waterloo, Brabant wallon, Belgique
+2 SOUR Registre paroissial https://agatha.arch.be/xyz
+0 @I3@ INDI
+1 NAME Louis /Martin/
+1 DEAT
+2 DATE 2 JUN 1815
+2 PLAC Waterloo, Brabant wallon, Belgique
+2 SOUR https://example.org/avant
+0 @I4@ INDI
+1 NAME Jules /Martin/
+1 DEAT
+2 DATE 20 JUN 1815
+2 PLAC Paris, Paris, France
+2 SOUR https://example.org/loin
+0 @I5@ INDI
+1 NAME Paul /Martin/
+1 DEAT
+2 DATE 30 JUN 1815
+2 PLAC Waterloo, Brabant wallon, Belgique
+0 TRLR`
+  const d = calculer(lireArbre(ged), '@I1@', '')
+  const positions = new Map([['Waterloo, Brabant wallon, Belgique', WATERLOO], ['Paris, Paris, France', PARIS]])
+  const t = tracesDeces(d, positions, BATAILLE)
+  expect(t.map((x) => [x.annee, x.mois, x.actes.map((a) => a.id)])).toEqual([[1815, 6, ['@I1@']], [1815, 7, ['@I2@']]])
+  expect(t[1].actes[0]).toEqual({ id: '@I2@', tag: 'BURI', url: 'https://agatha.arch.be/xyz' })
+  // une révolution ne fait pas chercher dans les registres de décès
+  expect(tracesDeces(d, positions, { ...BELGE, d: '1815-06-01', f: '1815-07-01' })).toEqual([])
 })
