@@ -2,3 +2,5 @@ node_modules/
 dist/
 *.ged
 *.zip
+.cle-partage
+

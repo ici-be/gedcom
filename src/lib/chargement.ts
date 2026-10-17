@@ -1,4 +1,5 @@
 import type { Arbre } from './gedcom/arbre'
+import { telecharger, type CibleDistante } from './distant'
 import Lecteur from './chargement.worker?worker'
 
 export interface Charge { nom: string; octets: Uint8Array; arbre: Arbre }
@@ -18,4 +19,10 @@ export function charger(nom: string, octets: Uint8Array): Promise<Charge> {
     }
     w.postMessage({ nom, octets })
   })
+}
+
+/** Télécharge un .ged ou un .zip distant (chiffré ou non) et l'analyse comme un fichier déposé */
+export async function chargerUrl(cible: string | CibleDistante): Promise<Charge> {
+  const { nom, octets } = await telecharger(cible)
+  return charger(nom, octets)
 }

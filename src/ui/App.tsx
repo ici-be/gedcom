@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import type { Arbre } from '../lib/gedcom/arbre'
 import { baseDuFichier, bilan as faireBilan, calculer, relevePrecedent, VERSION_BILAN, type Perimetre, type Releve } from '../lib/donnees'
-import { charger } from '../lib/chargement'
+import { charger, chargerUrl } from '../lib/chargement'
+import { parametreDistant } from '../lib/distant'
 import { adresseDevinee } from '../lib/geneanet'
 import { ecrire, garderFichier, lire, lireFichier, oublierFichier, oublierTout } from '../lib/stockage'
 import { Bienvenue, TableauDeBord } from './Accueil'
@@ -63,8 +64,34 @@ export function App() {
     return () => removeEventListener('hashchange', changer)
   }, [])
 
-  // Au lancement : reprendre le dernier fichier gardé dans le navigateur
+  // Au lancement : ouvrir le fichier passé dans l'adresse (?cle=, #cle=, ?url= ou ?gist=), sinon reprendre le dernier gardé dans le navigateur
   useEffect(() => {
+    const distant = parametreDistant(location.search, location.hash)
+    if (distant) {
+      const hashPropre = /^#\/?(?:cle|url|gist)=/.test(location.hash) ? '' : location.hash.replace(/\?.*$/, '')
+      history.replaceState(null, '', location.pathname + hashPropre)
+      setRoute(lireRoute())
+      setEtat('lecture')
+      chargerUrl(distant).then(async (c) => {
+        const importe = new Date().toISOString()
+        await garderFichier({ nom: c.nom, importe, octets: c.octets })
+        nouveauReleve.current = true
+        setFichier({ nom: c.nom, importe, arbre: c.arbre })
+        setEtat('pret')
+      }).catch(async (e) => {
+        setErreur(e instanceof Error ? e.message : String(e))
+        const g = await lireFichier()
+        if (!g) { setEtat('vide'); return }
+        try {
+          const c = await charger(g.nom, g.octets)
+          setFichier({ nom: g.nom, importe: g.importe, arbre: c.arbre })
+          setEtat('pret')
+        } catch {
+          setEtat('vide')
+        }
+      })
+      return
+    }
     lireFichier().then(async (g) => {
       if (!g) { setEtat('vide'); return }
       setEtat('lecture')

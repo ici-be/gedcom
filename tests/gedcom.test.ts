@@ -4,6 +4,7 @@ import { decoder, lireNoeuds } from '../src/lib/gedcom/lecture'
 import { lireDate } from '../src/lib/gedcom/dates'
 import { lireArbre } from '../src/lib/gedcom/arbre'
 import { estZip, gedDuZip } from '../src/lib/zip'
+import { chiffrer, dechiffrer, encoderCle, extraireIdGist, parametreDistant, telecharger, urlDansAdresse } from '../src/lib/distant'
 import { GED } from './exemple'
 
 describe('dates', () => {
@@ -112,3 +113,50 @@ describe('zip', () => {
     expect(() => gedDuZip(zipSync({ 'a.txt': strToU8('x') }))).toThrow(/Aucun fichier/)
   })
 })
+
+describe('distant', () => {
+  test('extraction du paramètre ?url= ou ?gist= dans search ou hash', () => {
+    expect(urlDansAdresse('?url=https%3A%2F%2Fexemple.org%2Farbre.zip')).toBe('https://exemple.org/arbre.zip')
+    expect(urlDansAdresse('', '#/?gist=0123456789abcdef0123456789abcdef')).toBe('0123456789abcdef0123456789abcdef')
+    expect(urlDansAdresse('')).toBeNull()
+  })
+  test('reconnaissance d’un Gist GitHub (URL ou identifiant)', () => {
+    const id = '0123456789abcdef0123456789abcdef'
+    expect(extraireIdGist(id)).toBe(id)
+    expect(extraireIdGist(`https://gist.github.com/utilisateur/${id}`)).toBe(id)
+    expect(extraireIdGist(`https://gist.githubusercontent.com/utilisateur/${id}/raw/arbre.ged`)).toBeNull()
+  })
+  test('téléchargement depuis un Gist via l’API GitHub', async () => {
+    const id = '0123456789abcdef0123456789abcdef'
+    const fauxFetch = (async (url: string) => {
+      expect(url).toBe(`https://api.github.com/gists/${id}`)
+      return new Response(JSON.stringify({
+        files: { 'famille.ged': { filename: 'famille.ged', raw_url: 'https://gist.githubusercontent.com/raw/famille.ged', content: GED, truncated: false } },
+      }), { status: 200 })
+    }) as unknown as typeof fetch
+    const r = await telecharger(`https://gist.github.com/u/${id}`, fauxFetch)
+    expect(r.nom).toBe('famille.ged')
+    expect(decoder(r.octets)).toBe(GED)
+  })
+  test('téléchargement direct d’une archive .zip par URL', async () => {
+    const z = zipSync({ 'arbre.ged': strToU8(GED) })
+    const fauxFetch = (async () => new Response(z, { status: 200 })) as unknown as typeof fetch
+    const r = await telecharger('https://gist.githubusercontent.com/u/id/raw/export.zip', fauxFetch)
+    expect(r.nom).toBe('export.zip')
+    expect(gedDuZip(r.octets).nom).toBe('arbre.ged')
+  })
+  test('chiffrement et déchiffrement AES-GCM avec #cle=', async () => {
+    const cle = encoderCle(crypto.getRandomValues(new Uint8Array(32)))
+    const cible = parametreDistant('', `#cle=${cle}`)
+    expect(cible).toEqual({ url: './arbre.enc', cle })
+    const z = zipSync({ 'bveyckemans.ged': strToU8(GED) })
+    const enc = await chiffrer(z, cle)
+    const fauxFetch = (async () => new Response(enc as BodyInit, { status: 200 })) as unknown as typeof fetch
+    const r = await telecharger(cible!, fauxFetch)
+    expect(gedDuZip(r.octets).nom).toBe('bveyckemans.ged')
+    expect(decoder(gedDuZip(r.octets).octets)).toBe(GED)
+    const mauvaiseCle = encoderCle(crypto.getRandomValues(new Uint8Array(32)))
+    await expect(dechiffrer(enc, mauvaiseCle)).rejects.toThrow(/incorrecte/)
+  })
+})
+
