@@ -1,4 +1,7 @@
-// Téléchargement et déchiffrement (AES-GCM) d'un fichier .ged ou .zip distant (?cle=, ?url= ou ?gist=).
+// Téléchargement et déchiffrement (AES-GCM) d'un fichier .ged ou .zip distant (?cle=, ?url= ou ?gist=),
+// ainsi que le choix de la personne de départ (?sosa= ou ?racine=).
+
+import type { Arbre } from './gedcom/arbre'
 
 export interface CibleDistante {
   url: string
@@ -49,20 +52,76 @@ export async function dechiffrer(octets: Uint8Array, cleTexte: string): Promise<
   }
 }
 
-export function parametreDistant(search: string, hash = ''): CibleDistante | null {
+function extraireSourcesParams(search: string, hash = ''): URLSearchParams[] {
   const sources: string[] = []
   if (search) sources.push(search)
   if (hash.includes('?')) sources.push(hash.slice(hash.indexOf('?')))
-  else if (/^#\/?(?:cle|url|gist)=/.test(hash)) sources.push('?' + hash.replace(/^#\/?/, ''))
+  else if (/^#\/?(?:cle|url|gist|sosa|racine)=/.test(hash)) sources.push('?' + hash.replace(/^#\/?/, ''))
+  return sources.map((s) => new URLSearchParams(s))
+}
 
-  for (const source of sources) {
-    const params = new URLSearchParams(source)
+export function parametreDistant(search: string, hash = ''): CibleDistante | null {
+  for (const params of extraireSourcesParams(search, hash)) {
     const cle = params.get('cle')?.trim() || undefined
     const url = params.get('url')?.trim() || params.get('gist')?.trim()
     if (url) return { url, cle }
     if (cle) return { url: './arbre.enc', cle }
   }
   return null
+}
+
+/** Personne de départ (Sosa 1) demandée dans l'URL via ?sosa= ou ?racine= (ou dans #cle=...&sosa=...) */
+export function racineDansAdresse(search: string, hash = ''): string | null {
+  for (const params of extraireSourcesParams(search, hash)) {
+    const s = params.get('sosa')?.trim() || params.get('racine')?.trim()
+    if (s) return s
+  }
+  return null
+}
+
+const norm = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+
+/** Trouve un individu dans l'arbre par identifiant GEDCOM (@I1@, I1, 1) ou par nom/prénom (et année éventuelle) */
+export function trouverIndividu(arbre: Arbre, requete: string): string | null {
+  const q = requete.trim()
+  if (!q) return null
+  if (arbre.individus.has(q)) return q
+  const maj = q.toUpperCase()
+  if (arbre.individus.has(`@${maj}@`)) return `@${maj}@`
+  if (/^\d+$/.test(q) && arbre.individus.has(`@I${q}@`)) return `@I${q}@`
+
+  const jetons = norm(q).split(/[\s,+_;-]+/).filter(Boolean)
+  if (!jetons.length) return null
+  const annees = jetons.filter((j) => /^\d{4}$/.test(j)).map(Number)
+  const mots = jetons.filter((j) => !/^\d{4}$/.test(j))
+  if (!mots.length) return null
+
+  let meilleur: { id: string; score: number } | null = null
+  for (const ind of arbre.individus.values()) {
+    const p = norm(ind.prenom).trim()
+    const n = norm(ind.nom).trim()
+    const complet = `${p} ${n}`.trim()
+    const motsIndividu = complet.split(/[\s'-]+/).filter(Boolean)
+
+    if (!mots.every((m) => complet.includes(m))) continue
+    if (annees.length > 0) {
+      const evAnnees = ind.evenements.map((e) => e.date?.debut?.annee).filter((a): a is number => a !== undefined)
+      if (!annees.every((a) => evAnnees.includes(a))) continue
+    }
+
+    let score = 0
+    if (mots.every((m) => motsIndividu.includes(m))) score += 10
+    const motsNom = n.split(/[\s'-]+/).filter(Boolean)
+    if (motsNom.length > 0 && motsNom.every((mn) => mots.includes(mn))) score += 5
+    const premierPrenom = p.split(/[\s'-]+/)[0]
+    if (premierPrenom && mots.includes(premierPrenom)) score += 5
+    if (motsIndividu.length === mots.length && score >= 10) score += 3
+
+    if (!meilleur || score > meilleur.score) {
+      meilleur = { id: ind.id, score }
+    }
+  }
+  return meilleur?.id ?? null
 }
 
 export function urlDansAdresse(search: string, hash = ''): string | null {

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import type { Arbre } from '../lib/gedcom/arbre'
 import { baseDuFichier, bilan as faireBilan, calculer, relevePrecedent, VERSION_BILAN, type Perimetre, type Releve } from '../lib/donnees'
 import { charger, chargerUrl } from '../lib/chargement'
-import { parametreDistant } from '../lib/distant'
+import { parametreDistant, racineDansAdresse, trouverIndividu } from '../lib/distant'
 import { adresseDevinee } from '../lib/geneanet'
 import { ecrire, garderFichier, lire, lireFichier, oublierFichier, oublierTout } from '../lib/stockage'
 import { Bienvenue, TableauDeBord } from './Accueil'
@@ -58,8 +58,21 @@ export function App() {
   const setAdresse = (a: string) => { setAdresseBrute(a); ecrire('adresse', a) }
   const setPerimetre = (p: Perimetre) => { setPerimetreBrut(p); ecrire('perimetre', p) }
 
+  const arbreRef = useRef<Arbre | null>(null)
+  arbreRef.current = fichier?.arbre ?? null
+
   useEffect(() => {
-    const changer = () => { setRoute(lireRoute()); window.scrollTo({ top: 0 }) }
+    const changer = () => {
+      const sosa = racineDansAdresse('', location.hash)
+      if (sosa && arbreRef.current) {
+        const id = trouverIndividu(arbreRef.current, sosa)
+        if (id) setRacine(id)
+        const hashPropre = /^#\/?(?:cle|url|gist|sosa|racine)=/.test(location.hash) ? '' : location.hash.replace(/\?.*$/, '')
+        history.replaceState(null, '', location.pathname + hashPropre)
+      }
+      setRoute(lireRoute())
+      window.scrollTo({ top: 0 })
+    }
     addEventListener('hashchange', changer)
     return () => removeEventListener('hashchange', changer)
   }, [])
@@ -67,14 +80,23 @@ export function App() {
   // Au lancement : ouvrir le fichier passé dans l'adresse (?cle=, #cle=, ?url= ou ?gist=), sinon reprendre le dernier gardé dans le navigateur
   useEffect(() => {
     const distant = parametreDistant(location.search, location.hash)
-    if (distant) {
-      const hashPropre = /^#\/?(?:cle|url|gist)=/.test(location.hash) ? '' : location.hash.replace(/\?.*$/, '')
+    const sosaDemande = racineDansAdresse(location.search, location.hash)
+    const appliquerSosa = (arbre: Arbre) => {
+      if (!sosaDemande) return
+      const id = trouverIndividu(arbre, sosaDemande)
+      if (id) setRacine(id)
+    }
+    if (distant || sosaDemande) {
+      const hashPropre = /^#\/?(?:cle|url|gist|sosa|racine)=/.test(location.hash) ? '' : location.hash.replace(/\?.*$/, '')
       history.replaceState(null, '', location.pathname + hashPropre)
       setRoute(lireRoute())
+    }
+    if (distant) {
       setEtat('lecture')
       chargerUrl(distant).then(async (c) => {
         const importe = new Date().toISOString()
         await garderFichier({ nom: c.nom, importe, octets: c.octets })
+        appliquerSosa(c.arbre)
         nouveauReleve.current = true
         setFichier({ nom: c.nom, importe, arbre: c.arbre })
         setEtat('pret')
@@ -84,6 +106,7 @@ export function App() {
         if (!g) { setEtat('vide'); return }
         try {
           const c = await charger(g.nom, g.octets)
+          appliquerSosa(c.arbre)
           setFichier({ nom: g.nom, importe: g.importe, arbre: c.arbre })
           setEtat('pret')
         } catch {
@@ -97,6 +120,7 @@ export function App() {
       setEtat('lecture')
       try {
         const c = await charger(g.nom, g.octets)
+        appliquerSosa(c.arbre)
         setFichier({ nom: g.nom, importe: g.importe, arbre: c.arbre })
         setEtat('pret')
       } catch {

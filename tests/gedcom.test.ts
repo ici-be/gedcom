@@ -4,7 +4,7 @@ import { decoder, lireNoeuds } from '../src/lib/gedcom/lecture'
 import { lireDate } from '../src/lib/gedcom/dates'
 import { lireArbre } from '../src/lib/gedcom/arbre'
 import { estZip, gedDuZip } from '../src/lib/zip'
-import { chiffrer, dechiffrer, encoderCle, extraireIdGist, parametreDistant, telecharger, urlDansAdresse } from '../src/lib/distant'
+import { chiffrer, dechiffrer, encoderCle, extraireIdGist, parametreDistant, racineDansAdresse, telecharger, trouverIndividu, urlDansAdresse } from '../src/lib/distant'
 import { GED } from './exemple'
 
 describe('dates', () => {
@@ -158,5 +158,18 @@ describe('distant', () => {
     const mauvaiseCle = encoderCle(crypto.getRandomValues(new Uint8Array(32)))
     await expect(dechiffrer(enc, mauvaiseCle)).rejects.toThrow(/incorrecte/)
   })
+  test('choix de la personne de départ (Sosa 1) dans l’adresse par nom ou identifiant', () => {
+    expect(racineDansAdresse('?sosa=Marie+Lambert')).toBe('Marie Lambert')
+    expect(racineDansAdresse('', '#cle=abc&sosa=Jean+Dupont')).toBe('Jean Dupont')
+    expect(racineDansAdresse('', '#sosa=@I3@')).toBe('@I3@')
+    const a = lireArbre(GED)
+    expect(trouverIndividu(a, '@I3@')).toBe('@I3@')
+    expect(trouverIndividu(a, 'I3')).toBe('@I3@')
+    expect(trouverIndividu(a, '3')).toBe('@I3@')
+    expect(trouverIndividu(a, 'Marie Lambert')).toBe('@I3@')
+    expect(trouverIndividu(a, 'lambert marie')).toBe('@I3@')
+    expect(trouverIndividu(a, 'Jean Dupont')).toBe('@I2@')
+  })
 })
+
 
