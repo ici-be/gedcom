@@ -130,3 +130,49 @@ describe('années sur les arbres', () => {
     expect(morceauxAnnees(r())).toEqual([])
   })
 })
+
+describe('thèmes et photos de la pyramide', async () => {
+  const { THEMES_PYRAMIDE, trouverThemePyramide, cadrePortrait } = await import('../src/ui/arbres/Pyramide')
+  test('thème par défaut et thèmes par sexe', () => {
+    expect(trouverThemePyramide().id).toBe('quartiers')
+    expect(trouverThemePyramide('inconnu').id).toBe('quartiers')
+    const herbier = trouverThemePyramide('herbier')
+    expect(herbier.case(2, 'M')).not.toEqual(herbier.case(3, 'F'))
+    expect(herbier.case(2, 'M')).not.toEqual(trouverThemePyramide('classique').case(2, 'M'))
+  })
+  test('quatre quartiers, générations et gravure', () => {
+    expect(THEMES_PYRAMIDE.length).toBeGreaterThanOrEqual(8)
+    const q = trouverThemePyramide('quartiers')
+    // Sosa 8 et 9 sont tous deux dans le premier quartier (Sosa 4) ; Sosa 10 est dans le deuxième (Sosa 5)
+    expect(q.case(8, 'M')).toEqual(q.case(4, 'M'))
+    expect(q.case(9, 'F')).toEqual(q.case(4, 'M'))
+    expect(q.case(10, 'M')).toEqual(q.case(5, 'F'))
+    expect(q.case(4, 'M')).not.toEqual(q.case(5, 'F'))
+    const gen = trouverThemePyramide('generations')
+    expect(gen.case(2, 'M')).toEqual(gen.case(3, 'F'))
+    expect(gen.case(2, 'M')).not.toEqual(gen.case(4, 'M'))
+    const gravure = trouverThemePyramide('gravure')
+    expect(gravure.case(2, 'M')).toEqual(gravure.case(3, 'F'))
+  })
+  test('forme des portraits et bords arrondis (hors signatures)', () => {
+    // Par défaut : carré à bords arrondis
+    const defaut = cadrePortrait(0, 250, 60, false)
+    expect(defaut.wp).toBe(defaut.hp)
+    expect(defaut.rx).toBeGreaterThan(0)
+    // Portrait carré : largeur === hauteur, coins vifs ou arrondis
+    const carreVif = cadrePortrait(0, 250, 60, false, 'carree', false)
+    const carreArrondi = cadrePortrait(0, 250, 60, false, 'carree', true)
+    expect(carreVif.wp).toBe(carreVif.hp)
+    expect(carreVif.rx).toBe(0)
+    expect(carreArrondi.rx).toBeGreaterThan(0)
+    // Portrait rectangulaire : plus haut que large, coins vifs ou arrondis
+    const rectVif = cadrePortrait(0, 250, 60, false, 'rectangulaire', false)
+    const rectArrondi = cadrePortrait(0, 250, 60, false, 'rectangulaire', true)
+    expect(rectVif.wp).toBeLessThan(rectVif.hp)
+    expect(rectVif.rx).toBe(0)
+    expect(rectArrondi.rx).toBeGreaterThan(0)
+    // Signature : dimensions inchangées quelles que soient la forme et l'option d'arrondi
+    expect(cadrePortrait(0, 250, 60, true, 'carree', true)).toEqual(cadrePortrait(0, 250, 60, true, 'ovale', false))
+    expect(cadrePortrait(4, 76, 88, true, 'rectangulaire', true)).toEqual(cadrePortrait(4, 76, 88, true, 'ovale', false))
+  })
+})

@@ -10,9 +10,24 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks'
 import type { Donnees } from '../lib/donnees'
 import { nomFichierArbre } from '../lib/format'
 import { ecrire, lire } from '../lib/stockage'
-import { MODELES, type Format } from './arbres/modeles'
+import { MODELES, type Format, type FormePhoto } from './arbres/modeles'
+import { FORMES_PHOTO, THEMES_PYRAMIDE, trouverThemePyramide } from './arbres/Pyramide'
 
-interface Reglages { date: boolean; jour?: string; qr: boolean; papier?: Format; barres?: boolean; fratrie?: boolean; italiques?: boolean; verso?: boolean; photos?: boolean; mariages?: boolean }
+interface Reglages {
+  date: boolean
+  jour?: string
+  qr: boolean
+  papier?: Format
+  barres?: boolean
+  theme?: string
+  fratrie?: boolean
+  italiques?: boolean
+  verso?: boolean
+  photos?: boolean
+  formePhoto?: FormePhoto
+  bordsArrondis?: boolean
+  mariages?: boolean
+}
 
 const PAPIERS: Record<Format, [number, number]> = { A4: [210, 297], A3: [297, 420], A2: [420, 594] }
 
@@ -76,7 +91,26 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
     addEventListener('afterprint', apres)
     return () => { removeEventListener('beforeprint', avant); removeEventListener('afterprint', apres) }
   }, [nomFichier])
-  const options = { date: reglages.date ? dateLongue(jour) : undefined, qr: reglages.qr && !!d.adresse, carte: !reglages.barres, fratrie: reglages.fratrie, italiques: reglages.italiques, photos: reglages.photos !== false, mariages: reglages.mariages !== false }
+  const themeChoisi = trouverThemePyramide(reglages.theme)
+  const theme = themeChoisi.id
+  const fratrie = reglages.fratrie !== false
+  const photosActives = reglages.photos !== false
+  const formePhoto: FormePhoto = FORMES_PHOTO.some((f) => f.id === reglages.formePhoto) ? reglages.formePhoto! : 'carree'
+  const bordsArrondis = reglages.bordsArrondis !== false
+  const options = {
+    date: reglages.date ? dateLongue(jour) : undefined,
+    qr: reglages.qr && !!d.adresse,
+    carte: !reglages.barres,
+    theme,
+    fratrie,
+    italiques: reglages.italiques,
+    photos: photosActives,
+    formePhoto,
+    bordsArrondis,
+    mariages: reglages.mariages !== false,
+  }
+  const themesSexe = THEMES_PYRAMIDE.filter((t) => t.famille === 'sexe')
+  const themesAutres = THEMES_PYRAMIDE.filter((t) => t.famille === 'autre')
 
   return (
     <section class="ecran arbre-imprime">
@@ -104,59 +138,121 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
             <p class="aide">Prévu pour du {modele.papier.format} {orientation} · {modele.generations} générations</p>
             {modele.verso && <p class="aide">Au verso, si on le souhaite : {modele.verso.titre.toLocaleLowerCase('fr')}, {modele.verso.description}.</p>}
           </div>
-          <div class="options-impression">
-            {formats.length > 1 && (
-              <label class="case">
-                Papier
-                <select id="impression-papier" value={format} onChange={(e) => setReglages({ papier: e.currentTarget.value as Format })}>
-                  {formats.map((f) => <option key={f} value={f}>{f} {orientation} ({(modele.papier.orientation === 'landscape' ? [...PAPIERS[f]].reverse() : PAPIERS[f]).join(' × ')} mm){f !== modele.papier.format ? ', réduit' : ''}</option>)}
-                </select>
-              </label>
-            )}
-            {modele.reglages.bas && <label class="case">
-              Bas de la feuille
-              <select id="impression-bas" value={reglages.barres ? 'barres' : 'carte'} onChange={(e) => setReglages({ barres: e.currentTarget.value === 'barres' })}>
-                <option value="carte">Carte des lieux de naissance</option>
-                <option value="barres">Origine par génération (barres)</option>
-              </select>
-            </label>}
-            <label class="case">
-              <input type="checkbox" id="impression-fratrie" checked={!!reglages.fratrie} onChange={(e) => setReglages({ fratrie: e.currentTarget.checked })} />
-              {modele.reglages.fratrie}
-            </label>
-            <label class="case">
-              <input type="checkbox" id="impression-mariages" checked={reglages.mariages !== false} onChange={(e) => setReglages({ mariages: e.currentTarget.checked })} />
-              {modele.reglages.mariages}
-            </label>
+          <div class="options-impression groupes-options">
+            <div class="groupe-options">
+              <span class="groupe-options-titre">Feuille et style</span>
+              <div class="groupe-options-corps">
+                {formats.length > 1 && (
+                  <label class="case">
+                    Papier
+                    <select id="impression-papier" value={format} onChange={(e) => setReglages({ papier: e.currentTarget.value as Format })}>
+                      {formats.map((f) => <option key={f} value={f}>{f} {orientation} ({(modele.papier.orientation === 'landscape' ? [...PAPIERS[f]].reverse() : PAPIERS[f]).join(' × ')} mm){f !== modele.papier.format ? ', réduit' : ''}</option>)}
+                    </select>
+                  </label>
+                )}
+                {modele.reglages.bas && (
+                  <label class="case">
+                    Bas de la feuille
+                    <select id="impression-bas" value={reglages.barres ? 'barres' : 'carte'} onChange={(e) => setReglages({ barres: e.currentTarget.value === 'barres' })}>
+                      <option value="carte">Carte des lieux de naissance</option>
+                      <option value="barres">Origine par génération (barres)</option>
+                    </select>
+                  </label>
+                )}
+                {modele.reglages.theme && (
+                  <label class="case">
+                    Thème de couleurs
+                    <select id="impression-theme" value={theme} onChange={(e) => setReglages({ theme: e.currentTarget.value })}>
+                      <optgroup label="Sans distinction de sexe">
+                        {themesAutres.map((t) => <option key={t.id} value={t.id}>{t.titre}</option>)}
+                      </optgroup>
+                      <optgroup label="Deux teintes (homme / femme)">
+                        {themesSexe.map((t) => <option key={t.id} value={t.id}>{t.titre}</option>)}
+                      </optgroup>
+                    </select>
+                    <span class="pastilles-theme" aria-hidden="true">
+                      {themeChoisi.apercu.map((c, i) => (
+                        <i key={i} class="pastille-theme" style={{ background: c.fond, borderColor: c.trait }} />
+                      ))}
+                    </span>
+                  </label>
+                )}
+                {modele.verso && (
+                  <label class="case" title={modele.verso.description}>
+                    <input type="checkbox" id="impression-verso" checked={!!reglages.verso} onChange={(e) => setReglages({ verso: e.currentTarget.checked })} />
+                    Verso : {modele.verso.titre.toLocaleLowerCase('fr')}
+                  </label>
+                )}
+              </div>
+            </div>
+
+            <div class="groupe-options">
+              <span class="groupe-options-titre">Contenu</span>
+              <div class="groupe-options-corps">
+                <label class="case">
+                  <input type="checkbox" id="impression-mariages" checked={reglages.mariages !== false} onChange={(e) => setReglages({ mariages: e.currentTarget.checked })} />
+                  {modele.reglages.mariages}
+                </label>
+                <label class="case">
+                  <input type="checkbox" id="impression-fratrie" checked={fratrie} onChange={(e) => setReglages({ fratrie: e.currentTarget.checked })} />
+                  {modele.reglages.fratrie}
+                </label>
+                <label class="case">
+                  <input type="checkbox" id="impression-italiques" checked={!!reglages.italiques} onChange={(e) => setReglages({ italiques: e.currentTarget.checked })} />
+                  Dates sans source en italique
+                </label>
+              </div>
+            </div>
+
             {modele.reglages.photos && (
-              <label class="case">
-                <input type="checkbox" id="impression-photos" checked={reglages.photos !== false} onChange={(e) => setReglages({ photos: e.currentTarget.checked })} />
-                Photos
-              </label>
+              <div class="groupe-options">
+                <span class="groupe-options-titre">Photos</span>
+                <div class="groupe-options-corps">
+                  <div class="option-groupee">
+                    <label class="case">
+                      <input type="checkbox" id="impression-photos" checked={photosActives} onChange={(e) => setReglages({ photos: e.currentTarget.checked })} />
+                      Afficher les photos et signatures
+                    </label>
+                    {photosActives && (
+                      <>
+                        <label class="case">
+                          Forme des portraits
+                          <select id="impression-forme-photo" value={formePhoto} onChange={(e) => setReglages({ formePhoto: e.currentTarget.value as FormePhoto })}>
+                            {FORMES_PHOTO.map((f) => <option key={f.id} value={f.id}>{f.titre}</option>)}
+                          </select>
+                        </label>
+                        <label class={'case' + (formePhoto === 'ovale' ? ' inactif' : '')} title={formePhoto === 'ovale' ? 'S’applique aux portraits carrés ou rectangulaires' : undefined}>
+                          <input type="checkbox" id="impression-photo-arrondie" checked={bordsArrondis} disabled={formePhoto === 'ovale'} onChange={(e) => setReglages({ bordsArrondis: e.currentTarget.checked })} />
+                          Avec bords arrondis
+                        </label>
+                        <span class="aide">(les signatures gardent leur forme)</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
             )}
-            <label class="case">
-              <input type="checkbox" id="impression-italiques" checked={!!reglages.italiques} onChange={(e) => setReglages({ italiques: e.currentTarget.checked })} />
-              Dates sans source en italique
-            </label>
-            {modele.verso && (
-              <label class="case" title={modele.verso.description}>
-                <input type="checkbox" id="impression-verso" checked={!!reglages.verso} onChange={(e) => setReglages({ verso: e.currentTarget.checked })} />
-                Verso : {modele.verso.titre.toLocaleLowerCase('fr')}
-              </label>
-            )}
-            <label class="case">
-              <input type="checkbox" id="impression-date" checked={reglages.date} onChange={(e) => setReglages({ date: e.currentTarget.checked })} />
-              Date en pied de page
-            </label>
-            {reglages.date && (
-              <input type="date" id="impression-jour" value={jour} aria-label="Date imprimée"
-                onInput={(e) => setReglages({ jour: e.currentTarget.value || undefined })} />
-            )}
-            <label class="case">
-              <input type="checkbox" id="impression-qr" checked={reglages.qr && !!d.adresse} disabled={!d.adresse} onChange={(e) => setReglages({ qr: e.currentTarget.checked })} />
-              Code QR vers l'arbre en ligne
-            </label>
-            {!d.adresse && <span class="aide">Indiquez d'abord l'adresse de l'arbre en ligne dans les <a href="#/">réglages de l'accueil</a>.</span>}
+
+            <div class="groupe-options">
+              <span class="groupe-options-titre">Pied de page</span>
+              <div class="groupe-options-corps">
+                <div class="option-groupee">
+                  <label class="case">
+                    <input type="checkbox" id="impression-date" checked={reglages.date} onChange={(e) => setReglages({ date: e.currentTarget.checked })} />
+                    Date en pied de page
+                  </label>
+                  {reglages.date && (
+                    <input type="date" id="impression-jour" value={jour} aria-label="Date imprimée"
+                      onInput={(e) => setReglages({ jour: e.currentTarget.value || undefined })} />
+                  )}
+                </div>
+                <label class="case">
+                  <input type="checkbox" id="impression-qr" checked={reglages.qr && !!d.adresse} disabled={!d.adresse} onChange={(e) => setReglages({ qr: e.currentTarget.checked })} />
+                  Code QR vers l'arbre en ligne
+                </label>
+                {!d.adresse && <span class="aide">Indiquez d'abord l'adresse de l'arbre en ligne dans les <a href="#/">réglages de l'accueil</a>.</span>}
+              </div>
+            </div>
           </div>
           <div class="ligne">
             <button type="button" class="bouton principal" onClick={() => window.print()}>Imprimer</button>

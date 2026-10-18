@@ -7,6 +7,8 @@ import { BoutsDeBranche } from './BoutsDeBranche'
 import { EventailOrigines } from './EventailOrigines'
 import { Pyramide } from './Pyramide'
 
+export type FormePhoto = 'ovale' | 'carree' | 'rectangulaire'
+
 export interface OptionsFeuille {
   /** Date imprimée en pied de page (« 13 octobre 2026 »), ou rien */
   date?: string
@@ -18,10 +20,16 @@ export interface OptionsFeuille {
   fratrie?: boolean
   /** Photos de l'arbre en ligne dans les cases */
   photos?: boolean
+  /** Forme des portraits dans les cases (hors signatures) */
+  formePhoto?: FormePhoto
+  /** Bords arrondis pour les portraits carrés ou rectangulaires */
+  bordsArrondis?: boolean
   /** Mariage des parents : année (et lieu) sur la pyramide, boule teintée sur l'éventail */
   mariages?: boolean
   /** Dates sans source en italique (avec la mention en pied de page) */
   italiques?: boolean
+  /** Thème de couleurs (sur la pyramide) */
+  theme?: string
 }
 
 export type Format = 'A4' | 'A3' | 'A2'
@@ -36,7 +44,7 @@ export interface Modele {
   papier: { format: Format; orientation: 'portrait' | 'landscape' }
   generations: number
   /** Réglages propres au modèle ; le libellé de la case « frères et sœurs » */
-  reglages: { bas?: boolean; photos?: boolean; fratrie: string; mariages: string }
+  reglages: { bas?: boolean; theme?: boolean; photos?: boolean; fratrie: string; mariages: string }
   Feuille: FunctionComponent<{ d: Donnees; options: OptionsFeuille }>
   /** Une seconde feuille, à imprimer au dos de la première (même papier) */
   verso?: { titre: string; description: string; Feuille: FunctionComponent<{ d: Donnees; options: OptionsFeuille }> }
@@ -50,7 +58,7 @@ export const MODELES: Modele[] = [
     forme: 'eventail',
     papier: { format: 'A3', orientation: 'landscape' },
     generations: 8,
-    reglages: { bas: true, fratrie: 'Frères et sœurs au centre', mariages: 'Mariages : année, teinte de la province' },
+    reglages: { bas: true, fratrie: 'Frères et sœurs du Sosa 1 (au centre)', mariages: 'Mariages des parents (boule teintée et année)' },
     Feuille: EventailOrigines,
     verso: {
       titre: 'Les 128 bouts de branche',
@@ -61,11 +69,11 @@ export const MODELES: Modele[] = [
   {
     id: 'pyramide',
     titre: 'Arbre en pyramide',
-    description: 'L’arbre traditionnel : la personne de départ en bas, huit générations en rangées, cases bleues pour les hommes et roses pour les femmes, les cinq premières générations en cartouches avec photo.',
+    description: 'L’arbre traditionnel : la personne de départ en bas, huit générations en rangées, les cinq premières en cartouches avec photo, en plusieurs thèmes de couleurs.',
     forme: 'arbre',
     papier: { format: 'A3', orientation: 'landscape' },
     generations: 8,
-    reglages: { photos: true, fratrie: 'Frères et sœurs de chacun', mariages: 'Mariages : année et commune' },
+    reglages: { theme: true, photos: true, fratrie: 'Frères et sœurs de chacun (sous ou à côté de la case)', mariages: 'Mariages des parents (année et commune au-dessus de la case)' },
     Feuille: Pyramide,
   },
 ]

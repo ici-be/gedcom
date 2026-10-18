@@ -430,8 +430,17 @@ th:not([aria-sort]) .tri .fleche { opacity: 0.35; }
 .modeles a.actif { border-color: var(--accent); color: var(--accent); font-weight: 700; }
 .modele-choisi { display: flex; flex-direction: column; gap: 4px; }
 .options-impression { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; }
+.options-impression.groupes-options { flex-direction: column; align-items: stretch; gap: 10px; border-top: 1px solid var(--line); padding-top: 14px; }
+.groupe-options { display: grid; grid-template-columns: 8.5rem 1fr; gap: 6px 16px; align-items: center; }
+.groupe-options-titre { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+.groupe-options-corps { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; }
+.option-groupee { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; background: var(--panel-2); padding: 6px 12px; border-radius: 8px; }
+.pastilles-theme { display: inline-flex; gap: 4px; align-items: center; }
+.pastille-theme { display: inline-block; width: 14px; height: 14px; border-radius: 4px; border: 1.5px solid; }
 .options-impression .case { display: inline-flex; align-items: center; gap: 6px; }
+.options-impression .case.inactif { opacity: 0.5; }
 .options-impression input[type="date"], .options-impression select { font: inherit; padding: 4px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--fg); }
+@media (max-width: 640px) { .groupe-options { grid-template-columns: 1fr; gap: 4px; } }
 .ligne .aide { flex: 1 1 280px; align-self: center; }
 .apercu-outils { align-items: center; justify-content: space-between; }
 .apercu { overflow: auto; border-radius: 6px; box-shadow: var(--shadow); background: #fff; }

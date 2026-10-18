@@ -11,7 +11,7 @@ import type { Donnees } from '../../lib/donnees'
 import type { Individu, Photo } from '../../lib/gedcom/arbre'
 import { decouperLieu, romain } from '../../lib/communes'
 import { abregerCommune, anneeCourte, morceauxAnnees, fratrie, mariageDesParents, places, prenoms, resumer, type Place, type Resume } from '../../lib/eventail'
-import type { OptionsFeuille } from './modeles'
+import type { FormePhoto, OptionsFeuille } from './modeles'
 import { chargerPolices, largeur } from './mesure'
 import { ajuster } from './feuille'
 import { CodeQR } from './EventailOrigines'
@@ -36,7 +36,88 @@ const RANGEES: Rangee[] = [
   { y: 22, h: 130, w: (s) => s * 0.9, vertical: true },
 ]
 
-const COULEURS = { M: { trait: '#3d6fb4', fond: '#eef3fa' }, F: { trait: '#c4547a', fond: '#fbeff3' }, '?': { trait: '#8b928e', fond: '#f4f4f1' } }
+export interface CouleurCase { trait: string; fond: string }
+export interface ThemePyramide {
+  id: string
+  titre: string
+  famille: 'sexe' | 'autre'
+  apercu: CouleurCase[]
+  lien: string
+  case: (sosa: number, sexe?: 'M' | 'F' | '?') => CouleurCase
+}
+
+export const FORMES_PHOTO: { id: FormePhoto; titre: string }[] = [
+  { id: 'ovale', titre: 'Ovale' },
+  { id: 'carree', titre: 'Carrée' },
+  { id: 'rectangulaire', titre: 'Rectangulaire' },
+]
+
+function parSexe(id: string, titre: string, M: CouleurCase, F: CouleurCase, inconnu: CouleurCase, lien = '#9aa19d'): ThemePyramide {
+  return { id, titre, famille: 'sexe', apercu: [M, F], lien, case: (_s, sexe) => (sexe === 'M' ? M : sexe === 'F' ? F : inconnu) }
+}
+
+const QUARTIERS: CouleurCase[] = [
+  { trait: '#6b4f86', fond: '#f3eef8' },
+  { trait: '#a3502f', fond: '#faf0eb' },
+  { trait: '#4d7a45', fond: '#eef5ec' },
+  { trait: '#2f6f7a', fond: '#ebf4f6' },
+]
+
+const TONS_GENERATIONS: CouleurCase[] = [
+  { trait: '#2f5d50', fond: '#e9f2ee' },
+  { trait: '#386b68', fond: '#ebf4f3' },
+  { trait: '#3b6480', fond: '#edf3f7' },
+  { trait: '#4d5c82', fond: '#eff1f7' },
+  { trait: '#68527d', fond: '#f3eff7' },
+  { trait: '#874c62', fond: '#f7eef2' },
+  { trait: '#9c5a3c', fond: '#f9f0eb' },
+  { trait: '#9e7432', fond: '#f9f3e6' },
+]
+
+export const THEMES_PYRAMIDE: ThemePyramide[] = [
+  parSexe('classique', 'Bleu et rose', { trait: '#3d6fb4', fond: '#eef3fa' }, { trait: '#c4547a', fond: '#fbeff3' }, { trait: '#8b928e', fond: '#f4f4f1' }),
+  parSexe('herbier', 'Sauge et terre cuite', { trait: '#2f6b58', fond: '#ebf3ef' }, { trait: '#b85a3a', fond: '#fbf0eb' }, { trait: '#848b86', fond: '#f3f4f1' }, '#98a19c'),
+  parSexe('archives', 'Ardoise et ocre', { trait: '#3b536b', fond: '#edf1f6' }, { trait: '#a87524', fond: '#faf3e4' }, { trait: '#83878b', fond: '#f3f3f1' }, '#999d9f'),
+  parSexe('velours', 'Forêt et prune', { trait: '#2d5a48', fond: '#ebf3ef' }, { trait: '#893d5a', fond: '#f8eef2' }, { trait: '#858886', fond: '#f3f3f1' }, '#999c9a'),
+  parSexe('sepia', 'Sépia et ambre', { trait: '#6e5036', fond: '#f4ede3' }, { trait: '#a16232', fond: '#fbf1e4' }, { trait: '#8c8277', fond: '#f4f1ec' }, '#a69b8e'),
+  {
+    id: 'quartiers',
+    titre: 'Quatre quartiers (branches des grands-parents)',
+    famille: 'autre',
+    apercu: QUARTIERS,
+    lien: '#9aa19d',
+    case: (s) => {
+      if (s <= 1) return { trait: '#2f5d50', fond: '#eaf2ee' }
+      if (s === 2) return { trait: '#4d5d73', fond: '#eef1f5' }
+      if (s === 3) return { trait: '#8c6239', fond: '#f8f1e8' }
+      const g = Math.floor(Math.log2(s))
+      return QUARTIERS[(s >> (g - 2)) - 4] ?? QUARTIERS[0]
+    },
+  },
+  {
+    id: 'generations',
+    titre: 'Par génération (dégradé de I à VIII)',
+    famille: 'autre',
+    apercu: [TONS_GENERATIONS[0], TONS_GENERATIONS[2], TONS_GENERATIONS[5], TONS_GENERATIONS[7]],
+    lien: '#9aa19d',
+    case: (s) => TONS_GENERATIONS[Math.min(TONS_GENERATIONS.length - 1, Math.floor(Math.log2(Math.max(1, s))))],
+  },
+  {
+    id: 'gravure',
+    titre: 'Gravure (ivoire et encre)',
+    famille: 'autre',
+    apercu: [{ trait: '#4a524e', fond: '#f8f6f0' }],
+    lien: '#9aa19d',
+    case: () => ({ trait: '#4a524e', fond: '#f8f6f0' }),
+  },
+]
+
+export const THEME_DEFAUT = 'quartiers'
+
+export function trouverThemePyramide(id = THEME_DEFAUT): ThemePyramide {
+  return THEMES_PYRAMIDE.find((t) => t.id === id) ?? THEMES_PYRAMIDE.find((t) => t.id === THEME_DEFAUT)!
+}
+
 const LIBELLES: Record<string, (sosa: number) => string> = {
   inconnu: (s) => (s % 2 ? 'mère inconnue' : 'père inconnu'),
   introuvable: () => 'introuvable',
@@ -148,15 +229,34 @@ function Bloc({ lignes, x, yc, max, ancre = 'middle' }: { lignes: Ligne[]; x: nu
   )
 }
 
-/** Visage dans un ovale, ou signature telle quelle ; rien si l'image ne vient pas */
-function Portrait({ id, photo, x, y, w, h, rate }: { id: string; photo: Photo; x: number; y: number; w: number; h: number; rate: () => void }) {
+/** Dimensions et arrondi d'une photo dans un cartouche ; les signatures gardent leurs dimensions propres */
+export function cadrePortrait(g: number, w: number, h: number, signature: boolean, forme: FormePhoto = 'carree', arrondi = true) {
+  if (signature) return g === 4 ? { wp: w - 8, hp: 20, rx: 0 } : { wp: Math.min(78, w * 0.34), hp: h - 10, rx: 0 }
+  const hp = g === 4 ? (forme === 'carree' ? 28 : 30) : forme === 'carree' ? Math.min(h - 10, Math.round(w * 0.34)) : h - 10
+  const wp = g === 4 ? (forme === 'carree' ? 28 : 24) : forme === 'carree' ? hp : (h - 10) * 0.78
+  const rx = forme === 'ovale' || !arrondi ? 0 : Math.round(Math.min(wp, hp) * 0.18 * 10) / 10
+  return { wp, hp, rx }
+}
+
+/** Visage en médaillon (ovale, carré ou rectangulaire, coins vifs ou arrondis), ou signature telle quelle ; rien si l'image ne vient pas */
+function Portrait({ id, photo, x, y, w, h, forme = 'carree', rx = 0, rate }: { id: string; photo: Photo; x: number; y: number; w: number; h: number; forme?: FormePhoto; rx?: number; rate: () => void }) {
   if (photo.signature) return <image href={photo.url} x={x} y={y} width={w} height={h} preserveAspectRatio="xMidYMid meet" onError={rate} />
+  if (forme === 'ovale') {
+    return (
+      <g>
+        <clipPath id={id}><ellipse cx={x + w / 2} cy={y + h / 2} rx={w / 2} ry={h / 2} /></clipPath>
+        <ellipse cx={x + w / 2} cy={y + h / 2} rx={w / 2} ry={h / 2} fill="#e8e4dc" />
+        <image href={photo.url} x={x} y={y} width={w} height={h} preserveAspectRatio="xMidYMin slice" clip-path={`url(#${id})`} onError={rate} />
+        <ellipse cx={x + w / 2} cy={y + h / 2} rx={w / 2} ry={h / 2} fill="none" stroke="#fff" stroke-width="1.2" />
+      </g>
+    )
+  }
   return (
     <g>
-      <clipPath id={id}><ellipse cx={x + w / 2} cy={y + h / 2} rx={w / 2} ry={h / 2} /></clipPath>
-      <ellipse cx={x + w / 2} cy={y + h / 2} rx={w / 2} ry={h / 2} fill="#e8e4dc" />
+      <clipPath id={id}><rect x={x} y={y} width={w} height={h} rx={rx} /></clipPath>
+      <rect x={x} y={y} width={w} height={h} rx={rx} fill="#e8e4dc" />
       <image href={photo.url} x={x} y={y} width={w} height={h} preserveAspectRatio="xMidYMin slice" clip-path={`url(#${id})`} onError={rate} />
-      <ellipse cx={x + w / 2} cy={y + h / 2} rx={w / 2} ry={h / 2} fill="none" stroke="#fff" stroke-width="1.2" />
+      <rect x={x} y={y} width={w} height={h} rx={rx} fill="none" stroke="#fff" stroke-width="1.2" />
     </g>
   )
 }
@@ -220,6 +320,7 @@ export function Pyramide({ d, options }: { d: Donnees; options: OptionsFeuille }
   // Une place se dessine si la personne est connue, ou si elle manque sous un enfant connu
   const dessinee = (s: number) => !!pl[s]?.ind || (s > 1 && !!pl[s >> 1]?.ind && !!LIBELLES[pl[s]?.etat])
 
+  const theme = trouverThemePyramide(options.theme)
   const traits: JSX.Element[] = []
   const cases: JSX.Element[] = []
   const textes: JSX.Element[] = []
@@ -228,7 +329,7 @@ export function Pyramide({ d, options }: { d: Donnees; options: OptionsFeuille }
     const p = pl[s]
     const { g, cx, x, y, w, h, R } = pos(s)
     const r = resumes.get(s)
-    const c = COULEURS[p.ind?.sexe ?? '?']
+    const c = theme.case(s, p.ind?.sexe)
 
     // Le trait vers les parents : barre entre les deux cases (au milieu pour les cartouches, dessous pour les étiquettes)
     if (r && g < GENERATIONS - 1 && (dessinee(2 * s) || dessinee(2 * s + 1))) {
@@ -238,7 +339,7 @@ export function Pyramide({ d, options }: { d: Donnees; options: OptionsFeuille }
       const d = P.R.vertical
         ? `M${P.cx} ${P.y + P.h}V${yb}H${M.cx}V${M.y + M.h}M${cx} ${yb}V${y}`
         : `M${P.x + P.w} ${yb}H${M.x}M${cx} ${yb}V${y}`
-      traits.push(<path key={'t' + s} d={d} fill="none" stroke="#9aa19d" stroke-width="1" />)
+      traits.push(<path key={'t' + s} d={d} fill="none" stroke={theme.lien} stroke-width="1" />)
 
       // Le mariage des parents, juste au-dessus de la case, sur le trait ; la commune seulement si elle tient
       const m = mariages.get(s)
@@ -279,15 +380,17 @@ export function Pyramide({ d, options }: { d: Donnees; options: OptionsFeuille }
 
     // Cartouche : photo à gauche (en haut pour la génération V), texte à côté
     const ph = photoDe(p)
+    const formePhoto = options.formePhoto ?? 'carree'
+    const cadre = ph ? cadrePortrait(g, w, h, !!ph.signature, formePhoto, options.bordsArrondis ?? true) : undefined
     let lignes = lignesCartouche(g, r, implexe)
     if (g === 4) {
-      const hp = ph ? (ph.signature ? 20 : 30) : 0
-      if (ph) textes.push(<Portrait key={'p' + s} id={'ph' + s} photo={ph} x={ph.signature ? x + 4 : cx - 12} y={y + 4} w={ph.signature ? w - 8 : 24} h={hp} rate={rater(ph.url)} />)
+      const hp = cadre ? cadre.hp : 0
+      if (ph && cadre) textes.push(<Portrait key={'p' + s} id={'ph' + s} photo={ph} x={ph.signature ? x + 4 : cx - cadre.wp / 2} y={y + 4} w={cadre.wp} h={hp} forme={formePhoto} rx={cadre.rx} rate={rater(ph.url)} />)
       lignes = caser(lignes, h - hp - 8)
       textes.push(<g key={'x' + s}><Bloc lignes={lignes} x={cx} yc={y + hp + (h - hp) / 2 + (ph ? 2 : 0)} max={w - 6} /></g>)
     } else {
-      const pw = ph ? (ph.signature ? Math.min(78, w * 0.34) : (h - 10) * 0.78) : 0
-      if (ph) textes.push(<Portrait key={'p' + s} id={'ph' + s} photo={ph} x={x + 7} y={y + 5} w={pw} h={h - 10} rate={rater(ph.url)} />)
+      const pw = cadre ? cadre.wp : 0
+      if (ph && cadre) textes.push(<Portrait key={'p' + s} id={'ph' + s} photo={ph} x={x + 7} y={y + (h - cadre.hp) / 2} w={pw} h={cadre.hp} forme={formePhoto} rx={cadre.rx} rate={rater(ph.url)} />)
       lignes = caser(lignes, h - 8)
       const gauche = x + 7 + (ph ? pw + 7 : 0)
       const largeurTexte = x + w - 6 - gauche

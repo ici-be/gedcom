@@ -101,10 +101,11 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   **128 bouts de branche**, chaque case du bord de l'éventail prolongée d'un petit éventail des générations IX à XV,
   par quartier et dans l'ordre Sosa, aux mêmes teintes de régions qu'au recto (une seconde page à l'impression,
   recto verso retourné sur le bord court). Second modèle, l'**arbre en pyramide** (A3 paysage) : l'arbre
-  traditionnel, la personne de départ en bas et huit générations en rangées, cases bleues pour les hommes et
-  roses pour les femmes ; les générations I à V en cartouches (photo ou signature, prénoms, nom, années, commune,
+  traditionnel, la personne de départ en bas et huit générations en rangées, avec un choix de thèmes de couleurs
+  (bleu et rose, sauge et terre cuite, ardoise et ocre, forêt et prune, sépia et ambre, quatre quartiers, par
+  génération, gravure) ; les générations I à V en cartouches (photo ou signature, prénoms, nom, années, commune,
   métier), VI à VIII en étiquettes verticales ; les places sans ancêtre en pointillé (« à trouver », « père
-  inconnu »). En option : le mariage des parents au-dessus des cases des générations I à IV (« ∞ 1905 · Bruxelles », la commune si elle tient), les photos, et les frères et sœurs de chacun, à côté ou sous la case avec leur année
+  inconnu »). En option : le mariage des parents au-dessus des cases des générations I à IV (« ∞ 1905 · Bruxelles », la commune si elle tient), les photos (portraits en ovale, carré ou rectangle, avec ou sans bords arrondis ; les signatures gardent leur forme), et les frères et sœurs de chacun, à côté ou sous la case avec leur année
   de naissance quand la place le permet, sinon les prénoms seuls ou « + n », et leur nombre en génération VI.
   D'autres modèles s'ajoutent dans `src/ui/arbres/modeles.ts`.
 - **Parents inconnus ou introuvables** (`#/filiation`) : le GEDCOM n'a aucun champ pour dire qu'un
