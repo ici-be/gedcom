@@ -16,7 +16,11 @@ import { chargerPolices, largeur } from './mesure'
 import { ajuster } from './feuille'
 import { CodeQR } from './EventailOrigines'
 
-const GENERATIONS = 8
+export const GEN_MIN_PYRAMIDE = 4
+export const GEN_MAX_PYRAMIDE = 9
+export const GENERATIONS_DEFAUT = 8
+export const GENERATIONS_PYRAMIDE = [4, 5, 6, 7, 8, 9]
+
 /** Mariage des parents au-dessus des cases des générations 0 à 3 (taille du texte) */
 const TAILLES_MARIAGE = [9, 8.5, 8, 7.5]
 const X0 = 40
@@ -24,17 +28,70 @@ const LARG = 1320
 const LH = 1.18
 
 /** Par génération (0 : la personne de départ) : haut et hauteur des cases, place sous la case pour la fratrie, largeur des cases */
-interface Rangee { y: number; h: number; fratrie?: number; w: (slot: number) => number; vertical?: boolean }
-const RANGEES: Rangee[] = [
-  { y: 900, h: 60, w: () => 250 },
-  { y: 806, h: 60, w: () => 230 },
-  { y: 688, h: 64, fratrie: 38, w: (s) => Math.min(s * 0.8, 236) },
-  { y: 568, h: 66, fratrie: 38, w: (s) => s * 0.9 },
-  { y: 424, h: 88, fratrie: 40, w: (s) => s * 0.92 },
-  { y: 290, h: 122, w: (s) => s * 0.9, vertical: true },
-  { y: 160, h: 122, w: (s) => s * 0.9, vertical: true },
-  { y: 22, h: 130, w: (s) => s * 0.9, vertical: true },
-]
+export interface Rangee { y: number; h: number; fratrie?: number; w: (slot: number) => number; vertical?: boolean }
+
+const RANGEES_PAR_GEN: Record<number, Rangee[]> = {
+  4: [
+    { y: 880, h: 80, w: () => 280 },
+    { y: 696, h: 80, w: () => 260 },
+    { y: 446, h: 92, fratrie: 76, w: (s) => Math.min(s * 0.82, 270) },
+    { y: 120, h: 100, fratrie: 80, w: (s) => s * 0.9 },
+  ],
+  5: [
+    { y: 888, h: 72, w: () => 270 },
+    { y: 748, h: 72, w: () => 250 },
+    { y: 566, h: 82, fratrie: 60, w: (s) => Math.min(s * 0.82, 256) },
+    { y: 378, h: 86, fratrie: 60, w: (s) => s * 0.9 },
+    { y: 90, h: 120, fratrie: 64, w: (s) => s * 0.92 },
+  ],
+  6: [
+    { y: 892, h: 68, w: () => 260 },
+    { y: 774, h: 68, w: () => 240 },
+    { y: 622, h: 76, fratrie: 50, w: (s) => Math.min(s * 0.8, 246) },
+    { y: 466, h: 78, fratrie: 50, w: (s) => s * 0.9 },
+    { y: 282, h: 106, fratrie: 52, w: (s) => s * 0.92 },
+    { y: 40, h: 210, w: (s) => s * 0.9, vertical: true },
+  ],
+  7: [
+    { y: 896, h: 64, w: () => 250 },
+    { y: 790, h: 64, w: () => 230 },
+    { y: 656, h: 70, fratrie: 44, w: (s) => Math.min(s * 0.8, 236) },
+    { y: 518, h: 72, fratrie: 44, w: (s) => s * 0.9 },
+    { y: 356, h: 96, fratrie: 46, w: (s) => s * 0.92 },
+    { y: 192, h: 148, w: (s) => s * 0.9, vertical: true },
+    { y: 26, h: 150, w: (s) => s * 0.9, vertical: true },
+  ],
+  8: [
+    { y: 900, h: 60, w: () => 250 },
+    { y: 806, h: 60, w: () => 230 },
+    { y: 688, h: 64, fratrie: 38, w: (s) => Math.min(s * 0.8, 236) },
+    { y: 568, h: 66, fratrie: 38, w: (s) => s * 0.9 },
+    { y: 424, h: 88, fratrie: 40, w: (s) => s * 0.92 },
+    { y: 290, h: 122, w: (s) => s * 0.9, vertical: true },
+    { y: 160, h: 122, w: (s) => s * 0.9, vertical: true },
+    { y: 22, h: 130, w: (s) => s * 0.9, vertical: true },
+  ],
+  9: [
+    { y: 904, h: 56, w: () => 250 },
+    { y: 820, h: 56, w: () => 230 },
+    { y: 716, h: 58, fratrie: 32, w: (s) => Math.min(s * 0.8, 236) },
+    { y: 610, h: 58, fratrie: 32, w: (s) => s * 0.9 },
+    { y: 486, h: 76, fratrie: 34, w: (s) => s * 0.92 },
+    { y: 370, h: 104, w: (s) => s * 0.9, vertical: true },
+    { y: 254, h: 104, w: (s) => s * 0.9, vertical: true },
+    { y: 138, h: 104, w: (s) => s * 0.9, vertical: true },
+    { y: 18, h: 108, w: (s) => s * 0.88, vertical: true },
+  ],
+}
+
+export function bornerGenerationsPyramide(n?: number): number {
+  if (!n || Number.isNaN(n)) return GENERATIONS_DEFAUT
+  return Math.min(GEN_MAX_PYRAMIDE, Math.max(GEN_MIN_PYRAMIDE, Math.round(n)))
+}
+
+export function rangeesPyramide(generations?: number): Rangee[] {
+  return RANGEES_PAR_GEN[bornerGenerationsPyramide(generations)]
+}
 
 export interface CouleurCase { trait: string; fond: string }
 export interface ThemePyramide {
@@ -72,6 +129,7 @@ const TONS_GENERATIONS: CouleurCase[] = [
   { trait: '#874c62', fond: '#f7eef2' },
   { trait: '#9c5a3c', fond: '#f9f0eb' },
   { trait: '#9e7432', fond: '#f9f3e6' },
+  { trait: '#8c7a3b', fond: '#f7f4e6' },
 ]
 
 export const THEMES_PYRAMIDE: ThemePyramide[] = [
@@ -96,7 +154,7 @@ export const THEMES_PYRAMIDE: ThemePyramide[] = [
   },
   {
     id: 'generations',
-    titre: 'Par génération (dégradé de I à VIII)',
+    titre: 'Par génération (dégradé par rangée)',
     famille: 'autre',
     apercu: [TONS_GENERATIONS[0], TONS_GENERATIONS[2], TONS_GENERATIONS[5], TONS_GENERATIONS[7]],
     lien: '#9aa19d',
@@ -118,7 +176,7 @@ export function trouverThemePyramide(id = THEME_DEFAUT): ThemePyramide {
   return THEMES_PYRAMIDE.find((t) => t.id === id) ?? THEMES_PYRAMIDE.find((t) => t.id === THEME_DEFAUT)!
 }
 
-const LIBELLES: Record<string, (sosa: number) => string> = {
+export const LIBELLES: Record<string, (sosa: number) => string> = {
   inconnu: (s) => (s % 2 ? 'mère inconnue' : 'père inconnu'),
   introuvable: () => 'introuvable',
   'a-chercher': () => 'à trouver',
@@ -126,17 +184,17 @@ const LIBELLES: Record<string, (sosa: number) => string> = {
 
 const maj = (s: string) => s.toLocaleUpperCase('fr')
 
-type Morceau = [string, string?]
-interface Ligne { fs: number; parts: Morceau[]; cls?: string }
-interface Mariage { annee?: string; commune?: string; sourcee: boolean }
+export type Morceau = [string, string?]
+export interface Ligne { fs: number; parts: Morceau[]; cls?: string }
+export interface Mariage { annee?: string; commune?: string; sourcee: boolean }
 
-function Morceaux({ parts }: { parts: Morceau[] }) {
+export function Morceaux({ parts }: { parts: Morceau[] }) {
   return <>{parts.map(([t, c], i) => <tspan key={i} class={c}>{t}</tspan>)}</>
 }
 
 
 /** Réduit toutes les lignes si leur hauteur dépasse la place */
-function caser(lignes: Ligne[], hauteur: number): Ligne[] {
+export function caser(lignes: Ligne[], hauteur: number): Ligne[] {
   const H = lignes.reduce((s, l) => s + l.fs * LH, 0)
   if (H <= hauteur) return lignes
   const k = hauteur / H
@@ -144,8 +202,8 @@ function caser(lignes: Ligne[], hauteur: number): Ligne[] {
 }
 
 /** Le texte d'un cartouche, selon la génération */
-function lignesCartouche(g: number, r: Resume, implexe: boolean): Ligne[] {
-  const T = [[17, 13, 11, 9.5, 10], [15, 12, 10.5, 9, 9.5], [13.5, 11, 10, 8.8, 9], [11.5, 9.6, 9, 8.2, 8.2], [9.6, 8.6, 8.2, 7.4, 0]][g]
+export function lignesCartouche(g: number, r: Resume, implexe: boolean, h = 88): Ligne[] {
+  const T = [[17, 13, 11, 9.5, 10], [15, 12, 10.5, 9, 9.5], [13.5, 11, 10, 8.8, 9], [11.5, 9.6, 9, 8.2, 8.2], [9.6, 8.6, 8.2, 7.4, h >= 100 ? 7.4 : 0]][Math.min(4, g)]
   const pn = prenoms(r.prenom, g >= 4 ? 1 : 2)
   const nm: Morceau[] = [[maj(r.nom || '?'), 'nm'], ...(implexe ? [[' ◆', 'so'] as Morceau] : [])]
   const l: Ligne[] = []
@@ -158,10 +216,10 @@ function lignesCartouche(g: number, r: Resume, implexe: boolean): Ligne[] {
 }
 
 /** Le texte d'une étiquette verticale : de plus en plus court vers le haut */
-function lignesEtiquette(g: number, r: Resume, implexe: boolean, freres: string): Ligne[] {
+export function lignesEtiquette(g: number, r: Resume, implexe: boolean, freres: string): Ligne[] {
   const nom: Morceau[] = [[(prenoms(r.prenom, 1) ? prenoms(r.prenom, 1) + ' ' : ''), 'pn'], [maj(r.nom || '?'), 'nm'], ...(implexe ? [[' ◆', 'so'] as Morceau] : [])]
   const dates = r.naissance || r.deces ? morceauxAnnees(r) : []
-  if (g === 7) return [{ fs: 6.8, parts: [...nom, ...(dates.length ? [['  '] as Morceau, ...dates.map(([t, c]) => [t, (c ?? '') + ' mut'] as Morceau)] : [])] }]
+  if (g >= 7) return [{ fs: g >= 8 ? 4.2 : 6.8, parts: [...nom, ...(dates.length ? [['  '] as Morceau, ...dates.map(([t, c]) => [t, (c ?? '') + ' mut'] as Morceau)] : [])] }]
   if (g === 6) return [{ fs: 7.4, parts: nom }, ...(dates.length ? [{ fs: 6.6, parts: dates }] : [])]
   const l: Ligne[] = [{ fs: 8.4, parts: nom }]
   if (dates.length) l.push({ fs: 7.6, parts: dates })
@@ -171,7 +229,7 @@ function lignesEtiquette(g: number, r: Resume, implexe: boolean, freres: string)
 }
 
 /** « 5 frères et sœurs », « 1 sœur », « 3 frères » */
-function compteFreres(f: Individu[]): string {
+export function compteFreres(f: Individu[]): string {
   if (!f.length) return ''
   const h = f.filter((x) => x.sexe === 'M').length
   const fe = f.filter((x) => x.sexe === 'F').length
@@ -185,7 +243,7 @@ function compteFreres(f: Individu[]): string {
  * Les frères et sœurs en lignes de `max` de large : avec l'année de naissance si tout tient,
  * sinon les prénoms seuls, sinon ce qui tient suivi de « + n ».
  */
-function lignesFratrie(f: { prenom: string; annee?: string }[], max: number, nbLignes: number, fs: number): Morceau[][] {
+export function lignesFratrie(f: { prenom: string; annee?: string }[], max: number, nbLignes: number, fs: number): Morceau[][] {
   if (!f.length || nbLignes < 1) return []
   const couper = (items: Morceau[][]): Morceau[][] => {
     const lignes: Morceau[][] = []
@@ -215,7 +273,7 @@ function lignesFratrie(f: { prenom: string; annee?: string }[], max: number, nbL
 }
 
 /** Lignes centrées verticalement dans une boîte, à partir de `x` (ancre donnée) */
-function Bloc({ lignes, x, yc, max, ancre = 'middle' }: { lignes: Ligne[]; x: number; yc: number; max: number; ancre?: string }) {
+export function Bloc({ lignes, x, yc, max, ancre = 'middle' }: { lignes: Ligne[]; x: number; yc: number; max: number; ancre?: string }) {
   const H = lignes.reduce((s, l) => s + l.fs * LH, 0)
   let cumul = 0
   return (
@@ -231,15 +289,16 @@ function Bloc({ lignes, x, yc, max, ancre = 'middle' }: { lignes: Ligne[]; x: nu
 
 /** Dimensions et arrondi d'une photo dans un cartouche ; les signatures gardent leurs dimensions propres */
 export function cadrePortrait(g: number, w: number, h: number, signature: boolean, forme: FormePhoto = 'carree', arrondi = true) {
-  if (signature) return g === 4 ? { wp: w - 8, hp: 20, rx: 0 } : { wp: Math.min(78, w * 0.34), hp: h - 10, rx: 0 }
-  const hp = g === 4 ? (forme === 'carree' ? 28 : 30) : forme === 'carree' ? Math.min(h - 10, Math.round(w * 0.34)) : h - 10
-  const wp = g === 4 ? (forme === 'carree' ? 28 : 24) : forme === 'carree' ? hp : (h - 10) * 0.78
+  if (signature) return g === 4 ? { wp: w - 8, hp: h < 80 ? 18 : 20, rx: 0 } : { wp: Math.min(78, w * 0.34), hp: h - 10, rx: 0 }
+  const cote4 = h < 80 ? 24 : h >= 100 ? 32 : 28
+  const hp = g === 4 ? (forme === 'carree' ? cote4 : cote4 + 2) : forme === 'carree' ? Math.min(h - 10, Math.round(w * 0.34)) : h - 10
+  const wp = g === 4 ? (forme === 'carree' ? cote4 : cote4 - 4) : forme === 'carree' ? hp : (h - 10) * 0.78
   const rx = forme === 'ovale' || !arrondi ? 0 : Math.round(Math.min(wp, hp) * 0.18 * 10) / 10
   return { wp, hp, rx }
 }
 
 /** Visage en médaillon (ovale, carré ou rectangulaire, coins vifs ou arrondis), ou signature telle quelle ; rien si l'image ne vient pas */
-function Portrait({ id, photo, x, y, w, h, forme = 'carree', rx = 0, rate }: { id: string; photo: Photo; x: number; y: number; w: number; h: number; forme?: FormePhoto; rx?: number; rate: () => void }) {
+export function Portrait({ id, photo, x, y, w, h, forme = 'carree', rx = 0, rate }: { id: string; photo: Photo; x: number; y: number; w: number; h: number; forme?: FormePhoto; rx?: number; rate: () => void }) {
   if (photo.signature) return <image href={photo.url} x={x} y={y} width={w} height={h} preserveAspectRatio="xMidYMid meet" onError={rate} />
   if (forme === 'ovale') {
     return (
@@ -268,8 +327,11 @@ export function Pyramide({ d, options }: { d: Donnees; options: OptionsFeuille }
   const [, setPolices] = useState(false)
   useEffect(() => { chargerPolices().then(() => setPolices(true)) }, [])
 
+  const generations = bornerGenerationsPyramide(options.generations)
+  const rangees = rangeesPyramide(generations)
+
   const donnees = useMemo(() => {
-    const pl = places(d.arbre, d.racine, GENERATIONS)
+    const pl = places(d.arbre, d.racine, generations)
     const resumes = new Map<number, Resume>()
     const freres = new Map<number, Individu[]>()
     const naissance = (i: Individu) => d.suivis.get(i.id)?.naissance.evenement
@@ -281,7 +343,7 @@ export function Pyramide({ d, options }: { d: Donnees; options: OptionsFeuille }
     // Le mariage des parents de chaque place des premières générations, d'après la famille où elle est enfant
     const mariages = new Map<number, Mariage>()
     for (const p of pl) {
-      if (!options.mariages || !p?.ind || p.generation >= TAILLES_MARIAGE.length) continue
+      if (!options.mariages || !p?.ind || p.generation >= Math.min(TAILLES_MARIAGE.length, generations - 1)) continue
       const m = mariageDesParents(pl, p.sosa, d.suivis)
       if (!m?.evenement) continue
       const annee = anneeCourte(m.evenement)?.replace(/^\?$/, '') || undefined
@@ -290,7 +352,7 @@ export function Pyramide({ d, options }: { d: Donnees; options: OptionsFeuille }
     }
     const uniques = pl.filter((p) => p?.ind && !p.dejaVu && p.sosa > 1).length
     return { pl, resumes, freres, uniques, naissance, mariages }
-  }, [d, options.mariages])
+  }, [d, options.mariages, generations])
 
   useLayoutEffect(() => {
     if (!svg.current) return
@@ -312,7 +374,7 @@ export function Pyramide({ d, options }: { d: Donnees; options: OptionsFeuille }
     const g = Math.floor(Math.log2(s))
     const n = 2 ** g
     const slot = LARG / n
-    const R = RANGEES[g]
+    const R = rangees[g]
     const w = R.w(slot)
     const cx = X0 + slot * (s - n + 0.5)
     return { g, cx, x: cx - w / 2, y: R.y, w, h: R.h, slot, R }
@@ -324,7 +386,7 @@ export function Pyramide({ d, options }: { d: Donnees; options: OptionsFeuille }
   const traits: JSX.Element[] = []
   const cases: JSX.Element[] = []
   const textes: JSX.Element[] = []
-  for (let s = 1; s < 2 ** GENERATIONS; s++) {
+  for (let s = 1; s < 2 ** generations; s++) {
     if (!dessinee(s)) continue
     const p = pl[s]
     const { g, cx, x, y, w, h, R } = pos(s)
@@ -332,7 +394,7 @@ export function Pyramide({ d, options }: { d: Donnees; options: OptionsFeuille }
     const c = theme.case(s, p.ind?.sexe)
 
     // Le trait vers les parents : barre entre les deux cases (au milieu pour les cartouches, dessous pour les étiquettes)
-    if (r && g < GENERATIONS - 1 && (dessinee(2 * s) || dessinee(2 * s + 1))) {
+    if (r && g < generations - 1 && (dessinee(2 * s) || dessinee(2 * s + 1))) {
       const P = pos(2 * s)
       const M = pos(2 * s + 1)
       const yb = P.R.vertical ? P.y + P.h + 4 : P.y + P.h / 2
@@ -359,17 +421,17 @@ export function Pyramide({ d, options }: { d: Donnees; options: OptionsFeuille }
       cases.push(<rect key={s} x={x} y={y} width={w} height={h} rx={R.vertical ? 1.5 : 3} fill="#fff" stroke="#c9c9c2" stroke-dasharray="3 2.5" stroke-width="0.8" />)
       const t = LIBELLES[p.etat](s)
       textes.push(R.vertical
-        ? <g key={'x' + s} transform={`translate(${cx},${y + h / 2}) rotate(-90)`}><text x="0" y={(Math.min(w, 9) * 0.35).toFixed(1)} font-size={Math.min(7.5, w * 0.72)} text-anchor="middle" class="ns" data-max={h - 8}>{t}</text></g>
+        ? <g key={'x' + s} transform={`translate(${cx},${y + h / 2}) rotate(-90)`}><text x="0" y={(Math.min(w, 9) * 0.35).toFixed(1)} font-size={Math.min(7.5, w * 0.68)} text-anchor="middle" class="ns" data-max={h - 8}>{t}</text></g>
         : <text key={'x' + s} x={cx} y={y + h / 2 + 3} font-size={g >= 4 ? 7.5 : 9} text-anchor="middle" class="ns" data-max={w - 8}>{t}</text>)
       continue
     }
 
     const implexe = estImplexe(p)
-    cases.push(<rect key={s} x={x.toFixed(2)} y={y} width={w.toFixed(2)} height={h} rx={R.vertical ? 1.5 : 4} fill={c.fond} stroke={c.trait} stroke-width={R.vertical ? 0.7 : 1.2} />)
+    cases.push(<rect key={s} x={x.toFixed(2)} y={y} width={w.toFixed(2)} height={h} rx={R.vertical ? 1.5 : 4} fill={c.fond} stroke={c.trait} stroke-width={R.vertical ? (g >= 8 ? 0.45 : 0.7) : 1.2} />)
 
     if (R.vertical) {
       const f = g === 5 && options.fratrie ? compteFreres(freres.get(s) ?? []) : ''
-      const lignes = caser(lignesEtiquette(g, r, implexe, f), w - 3)
+      const lignes = caser(lignesEtiquette(g, r, implexe, f), Math.max(w * 0.82, w - 3))
       textes.push(
         <g key={'x' + s} transform={`translate(${cx.toFixed(2)},${y + h / 2}) rotate(-90)`}>
           <Bloc lignes={lignes} x={0} yc={0} max={h - 8} />
@@ -382,7 +444,7 @@ export function Pyramide({ d, options }: { d: Donnees; options: OptionsFeuille }
     const ph = photoDe(p)
     const formePhoto = options.formePhoto ?? 'carree'
     const cadre = ph ? cadrePortrait(g, w, h, !!ph.signature, formePhoto, options.bordsArrondis ?? true) : undefined
-    let lignes = lignesCartouche(g, r, implexe)
+    let lignes = lignesCartouche(g, r, implexe, h)
     if (g === 4) {
       const hp = cadre ? cadre.hp : 0
       if (ph && cadre) textes.push(<Portrait key={'p' + s} id={'ph' + s} photo={ph} x={ph.signature ? x + 4 : cx - cadre.wp / 2} y={y + 4} w={cadre.wp} h={hp} forme={formePhoto} rx={cadre.rx} rate={rater(ph.url)} />)
@@ -442,14 +504,14 @@ export function Pyramide({ d, options }: { d: Donnees; options: OptionsFeuille }
       <g>{textes}</g>
 
       {/* Numéros des générations, dans la marge de gauche */}
-      {RANGEES.slice(1).map((R, i) => (
+      {rangees.slice(1).map((R, i) => (
         <text key={i} x="22" y={R.y + R.h / 2 + 4} font-size="10" class="disp mut" text-anchor="middle">{romain(i + 2)}</text>
       ))}
 
       {/* Titre en bas à gauche, à côté de la personne de départ */}
       <text x={X0} y="906" font-size="9.5" class="cap mut">ASCENDANCE</text>
       <text x={X0} y="932" font-size="24" class="disp" data-max="480">{titre}</text>
-      <text x={X0} y="949" font-size="10.5" class="mut" data-max="480">{GENERATIONS} générations · {donnees.uniques} ancêtres identifiés</text>
+      <text x={X0} y="949" font-size="10.5" class="mut" data-max="480">{generations} générations · {donnees.uniques} ancêtres identifiés</text>
       {(legende || options.date) && (
         <text x={X0} y="966" font-size="8.5" class="mut" data-max="520">
           {options.date ? `Établi le ${options.date}` : ''}{options.date && legende ? ' · ' : ''}{legende}

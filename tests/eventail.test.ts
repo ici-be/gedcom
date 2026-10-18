@@ -131,8 +131,8 @@ describe('années sur les arbres', () => {
   })
 })
 
-describe('thèmes et photos de la pyramide', async () => {
-  const { THEMES_PYRAMIDE, trouverThemePyramide, cadrePortrait } = await import('../src/ui/arbres/Pyramide')
+describe('thèmes, photos et générations de la pyramide', async () => {
+  const { THEMES_PYRAMIDE, trouverThemePyramide, cadrePortrait, GENERATIONS_PYRAMIDE, bornerGenerationsPyramide, rangeesPyramide } = await import('../src/ui/arbres/Pyramide')
   test('thème par défaut et thèmes par sexe', () => {
     expect(trouverThemePyramide().id).toBe('quartiers')
     expect(trouverThemePyramide('inconnu').id).toBe('quartiers')
@@ -175,4 +175,96 @@ describe('thèmes et photos de la pyramide', async () => {
     expect(cadrePortrait(0, 250, 60, true, 'carree', true)).toEqual(cadrePortrait(0, 250, 60, true, 'ovale', false))
     expect(cadrePortrait(4, 76, 88, true, 'rectangulaire', true)).toEqual(cadrePortrait(4, 76, 88, true, 'ovale', false))
   })
+  test('nombre de générations réglable de 4 à 9 sans chevauchement des rangées', () => {
+    expect(bornerGenerationsPyramide()).toBe(8)
+    expect(bornerGenerationsPyramide(2)).toBe(4)
+    expect(bornerGenerationsPyramide(12)).toBe(9)
+    expect(GENERATIONS_PYRAMIDE).toEqual([4, 5, 6, 7, 8, 9])
+    for (const n of GENERATIONS_PYRAMIDE) {
+      const r = rangeesPyramide(n)
+      expect(r.length).toBe(n)
+      // Les générations I à V sont en cartouches horizontaux, VI à IX en étiquettes verticales
+      r.forEach((rg, g) => expect(!!rg.vertical).toBe(g >= 5))
+      // Chaque rangée est strictement au-dessus de la précédente (avec sa fratrie éventuelle) et tient dans la feuille
+      for (let g = 0; g < r.length; g++) {
+        expect(r[g].y).toBeGreaterThanOrEqual(18)
+        expect(r[g].y + r[g].h).toBeLessThanOrEqual(965)
+        if (g > 0) {
+          const basParent = r[g].y + r[g].h + (r[g].fratrie ?? 0)
+          expect(basParent).toBeLessThan(r[g - 1].y)
+        }
+      }
+    }
+  })
 })
+
+describe('arbre en sablier (ascendance et descendance)', async () => {
+  const { bornerAscendance, bornerDescendance, rangeesSablier, disposer, ordreUnions } = await import('../src/ui/arbres/Sablier')
+  const { MODELES } = await import('../src/ui/arbres/modeles')
+
+  test('présent dans le catalogue des modèles', () => {
+    const sablier = MODELES.find((m) => m.id === 'sablier')
+    expect(sablier).toBeDefined()
+    expect(sablier?.reglages.sablierGenerations).toBe(true)
+    expect(sablier?.reglages.photos).toBe(true)
+    expect(sablier?.reglages.theme).toBe(true)
+  })
+
+  test('bornage des générations', () => {
+    expect(bornerAscendance()).toBe(4)
+    expect(bornerAscendance(0)).toBe(4)
+    expect(bornerAscendance(10)).toBe(6)
+    expect(bornerDescendance()).toBe(2)
+    expect(bornerDescendance(0)).toBe(2)
+    expect(bornerDescendance(5)).toBe(3)
+  })
+
+  test('rangees sans chevauchement et contenues dans la feuille', () => {
+    for (let a = 1; a <= 6; a++) {
+      for (let d = 1; d <= 3; d++) {
+        const descV = Array(d).fill(false)
+        const r = rangeesSablier(a, descV, true)
+        expect(r.length).toBe(a + 1 + d)
+        for (let i = 0; i < r.length; i++) {
+          expect(r[i].y).toBeGreaterThanOrEqual(10)
+          expect(r[i].y + r[i].h).toBeLessThanOrEqual(920)
+          if (i > 0) {
+            const precedentBas = r[i - 1].y + r[i - 1].h + r[i - 1].fratrie
+            expect(precedentBas).toBeLessThan(r[i].y)
+          }
+        }
+      }
+    }
+  })
+
+  test('disposition et feuilles des branches descendantes', () => {
+    const descendants: any[] = [
+      {
+        ind: { id: 'c1' },
+        profondeur: 1,
+        enfants: [
+          { ind: { id: 'c11' }, profondeur: 2, enfants: [] },
+          { ind: { id: 'c12' }, profondeur: 2, enfants: [] },
+        ],
+      },
+      { ind: { id: 'c2' }, profondeur: 1, enfants: [] },
+    ]
+    const feuilles = disposer(descendants)
+    expect(feuilles).toBe(3)
+    expect(descendants[0].feuilles).toBe(2)
+    expect(descendants[0].enfants[0].debut).toBe(0)
+    expect(descendants[0].enfants[1].debut).toBe(1)
+    expect(descendants[1].debut).toBe(2)
+  })
+
+  test('ordre des unions avec premier et deuxième conjoint', () => {
+    const u1: any = { famille: { id: 'f1' }, conjoint: { id: 'p1' }, enfants: [] }
+    const u2: any = { famille: { id: 'f2' }, conjoint: { id: 'p2' }, enfants: [] }
+    const res = ordreUnions([u1, u2])
+    expect(res).toEqual([
+      { union: u2, cote: 'gauche' },
+      { union: u1, cote: 'droite' },
+    ])
+  })
+})
+

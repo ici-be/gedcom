@@ -11,7 +11,8 @@ import type { Donnees } from '../lib/donnees'
 import { nomFichierArbre } from '../lib/format'
 import { ecrire, lire } from '../lib/stockage'
 import { MODELES, type Format, type FormePhoto } from './arbres/modeles'
-import { FORMES_PHOTO, THEMES_PYRAMIDE, trouverThemePyramide } from './arbres/Pyramide'
+import { bornerGenerationsPyramide, FORMES_PHOTO, GENERATIONS_PYRAMIDE, GEN_MAX_PYRAMIDE, GEN_MIN_PYRAMIDE, THEMES_PYRAMIDE, trouverThemePyramide } from './arbres/Pyramide'
+import { ASC_MAX_SABLIER, ASC_MIN_SABLIER, bornerAscendance, bornerDescendance, DESC_MAX_SABLIER, DESC_MIN_SABLIER } from './arbres/Sablier'
 
 interface Reglages {
   date: boolean
@@ -20,6 +21,9 @@ interface Reglages {
   papier?: Format
   barres?: boolean
   theme?: string
+  generations?: number
+  ascendance?: number
+  descendance?: number
   fratrie?: boolean
   italiques?: boolean
   verso?: boolean
@@ -93,6 +97,9 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
   }, [nomFichier])
   const themeChoisi = trouverThemePyramide(reglages.theme)
   const theme = themeChoisi.id
+  const generations = modele.reglages.generations ? bornerGenerationsPyramide(reglages.generations) : modele.generations
+  const ascendance = bornerAscendance(reglages.ascendance)
+  const descendance = bornerDescendance(reglages.descendance)
   const fratrie = reglages.fratrie !== false
   const photosActives = reglages.photos !== false
   const formePhoto: FormePhoto = FORMES_PHOTO.some((f) => f.id === reglages.formePhoto) ? reglages.formePhoto! : 'carree'
@@ -102,6 +109,9 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
     qr: reglages.qr && !!d.adresse,
     carte: !reglages.barres,
     theme,
+    generations,
+    ascendance,
+    descendance,
     fratrie,
     italiques: reglages.italiques,
     photos: photosActives,
@@ -135,7 +145,7 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
           <div class="modele-choisi">
             <h2>{modele.titre}</h2>
             <p class="aide">{modele.description}</p>
-            <p class="aide">Prévu pour du {modele.papier.format} {orientation} · {modele.generations} générations</p>
+            <p class="aide">Prévu pour du {modele.papier.format} {orientation} · {modele.id === 'sablier' ? `${ascendance} gén. d'ancêtres, ${descendance} gén. de descendants` : `${generations} générations`}</p>
             {modele.verso && <p class="aide">Au verso, si on le souhaite : {modele.verso.titre.toLocaleLowerCase('fr')}, {modele.verso.description}.</p>}
           </div>
           <div class="options-impression groupes-options">
@@ -149,6 +159,48 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
                       {formats.map((f) => <option key={f} value={f}>{f} {orientation} ({(modele.papier.orientation === 'landscape' ? [...PAPIERS[f]].reverse() : PAPIERS[f]).join(' × ')} mm){f !== modele.papier.format ? ', réduit' : ''}</option>)}
                     </select>
                   </label>
+                )}
+                {modele.reglages.generations && (
+                  <div class="case pas-generations">
+                    <label for="impression-generations">Générations</label>
+                    <button type="button" class="bouton discret" title="Enlever une génération" aria-label="Enlever une génération"
+                      disabled={generations <= GEN_MIN_PYRAMIDE} onClick={() => setReglages({ generations: generations - 1 })}>−</button>
+                    <select id="impression-generations" value={generations} onChange={(e) => setReglages({ generations: Number(e.currentTarget.value) })}>
+                      {GENERATIONS_PYRAMIDE.map((n) => (
+                        <option key={n} value={n}>{n} générations ({2 ** n - 1} places, jusqu’au Sosa {2 ** n - 1})</option>
+                      ))}
+                    </select>
+                    <button type="button" class="bouton discret" title="Ajouter une génération" aria-label="Ajouter une génération"
+                      disabled={generations >= GEN_MAX_PYRAMIDE} onClick={() => setReglages({ generations: generations + 1 })}>+</button>
+                  </div>
+                )}
+                {modele.reglages.sablierGenerations && (
+                  <>
+                    <div class="case pas-generations">
+                      <label for="impression-ascendance">Ancêtres</label>
+                      <button type="button" class="bouton discret" title="Enlever une génération d'ascendance" aria-label="Enlever une génération d'ascendance"
+                        disabled={ascendance <= ASC_MIN_SABLIER} onClick={() => setReglages({ ascendance: ascendance - 1 })}>−</button>
+                      <select id="impression-ascendance" value={ascendance} onChange={(e) => setReglages({ ascendance: Number(e.currentTarget.value) })}>
+                        {Array.from({ length: ASC_MAX_SABLIER - ASC_MIN_SABLIER + 1 }, (_, i) => ASC_MIN_SABLIER + i).map((n) => (
+                          <option key={n} value={n}>{n} génération{n > 1 ? 's' : ''} ({2 ** (n + 1) - 2} ancêtres max)</option>
+                        ))}
+                      </select>
+                      <button type="button" class="bouton discret" title="Ajouter une génération d'ascendance" aria-label="Ajouter une génération d'ascendance"
+                        disabled={ascendance >= ASC_MAX_SABLIER} onClick={() => setReglages({ ascendance: ascendance + 1 })}>+</button>
+                    </div>
+                    <div class="case pas-generations">
+                      <label for="impression-descendance">Descendants</label>
+                      <button type="button" class="bouton discret" title="Enlever une génération de descendance" aria-label="Enlever une génération de descendance"
+                        disabled={descendance <= DESC_MIN_SABLIER} onClick={() => setReglages({ descendance: descendance - 1 })}>−</button>
+                      <select id="impression-descendance" value={descendance} onChange={(e) => setReglages({ descendance: Number(e.currentTarget.value) })}>
+                        {Array.from({ length: DESC_MAX_SABLIER - DESC_MIN_SABLIER + 1 }, (_, i) => DESC_MIN_SABLIER + i).map((n) => (
+                          <option key={n} value={n}>{n} génération{n > 1 ? 's' : ''} ({n === 1 ? 'enfants' : n === 2 ? 'petits-enfants' : 'arrière-petits-enfants'})</option>
+                        ))}
+                      </select>
+                      <button type="button" class="bouton discret" title="Ajouter une génération de descendance" aria-label="Ajouter une génération de descendance"
+                        disabled={descendance >= DESC_MAX_SABLIER} onClick={() => setReglages({ descendance: descendance + 1 })}>+</button>
+                    </div>
+                  </>
                 )}
                 {modele.reglages.bas && (
                   <label class="case">

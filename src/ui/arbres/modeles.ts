@@ -6,6 +6,7 @@ import type { Donnees } from '../../lib/donnees'
 import { BoutsDeBranche } from './BoutsDeBranche'
 import { EventailOrigines } from './EventailOrigines'
 import { Pyramide } from './Pyramide'
+import { Sablier } from './Sablier'
 
 export type FormePhoto = 'ovale' | 'carree' | 'rectangulaire'
 
@@ -30,6 +31,12 @@ export interface OptionsFeuille {
   italiques?: boolean
   /** Thème de couleurs (sur la pyramide) */
   theme?: string
+  /** Nombre de générations affichées (sur la pyramide) */
+  generations?: number
+  /** Nombre de générations d'ascendance (sur le sablier) */
+  ascendance?: number
+  /** Nombre de générations de descendance (sur le sablier) */
+  descendance?: number
 }
 
 export type Format = 'A4' | 'A3' | 'A2'
@@ -44,7 +51,15 @@ export interface Modele {
   papier: { format: Format; orientation: 'portrait' | 'landscape' }
   generations: number
   /** Réglages propres au modèle ; le libellé de la case « frères et sœurs » */
-  reglages: { bas?: boolean; theme?: boolean; photos?: boolean; fratrie: string; mariages: string }
+  reglages: {
+    bas?: boolean
+    theme?: boolean
+    generations?: boolean
+    sablierGenerations?: boolean
+    photos?: boolean
+    fratrie: string
+    mariages: string
+  }
   Feuille: FunctionComponent<{ d: Donnees; options: OptionsFeuille }>
   /** Une seconde feuille, à imprimer au dos de la première (même papier) */
   verso?: { titre: string; description: string; Feuille: FunctionComponent<{ d: Donnees; options: OptionsFeuille }> }
@@ -69,11 +84,21 @@ export const MODELES: Modele[] = [
   {
     id: 'pyramide',
     titre: 'Arbre en pyramide',
-    description: 'L’arbre traditionnel : la personne de départ en bas, huit générations en rangées, les cinq premières en cartouches avec photo, en plusieurs thèmes de couleurs.',
+    description: 'L’arbre traditionnel : la personne de départ en bas, quatre à neuf générations en rangées, les cinq premières en cartouches avec photo, en plusieurs thèmes de couleurs.',
     forme: 'arbre',
     papier: { format: 'A3', orientation: 'landscape' },
     generations: 8,
-    reglages: { theme: true, photos: true, fratrie: 'Frères et sœurs de chacun (sous ou à côté de la case)', mariages: 'Mariages des parents (année et commune au-dessus de la case)' },
+    reglages: { theme: true, generations: true, photos: true, fratrie: 'Frères et sœurs de chacun (sous ou à côté de la case)', mariages: 'Mariages des parents (année et commune au-dessus de la case)' },
     Feuille: Pyramide,
+  },
+  {
+    id: 'sablier',
+    titre: 'Ascendance et descendance',
+    description: 'L’arbre en sablier : la personne de départ au centre avec ses conjoints, ses ancêtres au-dessus et ses descendants en dessous, en plusieurs thèmes de couleurs.',
+    forme: 'arbre',
+    papier: { format: 'A3', orientation: 'landscape' },
+    generations: 6,
+    reglages: { theme: true, sablierGenerations: true, photos: true, fratrie: 'Frères et sœurs de chacun (sous ou à côté de la case)', mariages: 'Mariages et conjoints (année et commune)' },
+    Feuille: Sablier,
   },
 ]

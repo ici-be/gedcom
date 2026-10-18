@@ -101,12 +101,14 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   **128 bouts de branche**, chaque case du bord de l'éventail prolongée d'un petit éventail des générations IX à XV,
   par quartier et dans l'ordre Sosa, aux mêmes teintes de régions qu'au recto (une seconde page à l'impression,
   recto verso retourné sur le bord court). Second modèle, l'**arbre en pyramide** (A3 paysage) : l'arbre
-  traditionnel, la personne de départ en bas et huit générations en rangées, avec un choix de thèmes de couleurs
-  (bleu et rose, sauge et terre cuite, ardoise et ocre, forêt et prune, sépia et ambre, quatre quartiers, par
-  génération, gravure) ; les générations I à V en cartouches (photo ou signature, prénoms, nom, années, commune,
-  métier), VI à VIII en étiquettes verticales ; les places sans ancêtre en pointillé (« à trouver », « père
-  inconnu »). En option : le mariage des parents au-dessus des cases des générations I à IV (« ∞ 1905 · Bruxelles », la commune si elle tient), les photos (portraits en ovale, carré ou rectangle, avec ou sans bords arrondis ; les signatures gardent leur forme), et les frères et sœurs de chacun, à côté ou sous la case avec leur année
+  traditionnel, la personne de départ en bas et de quatre à neuf générations en rangées (huit par défaut), avec un choix de thèmes de couleurs
+  (quatre quartiers par défaut, par génération, gravure, bleu et rose, sauge et terre cuite, ardoise et ocre, forêt et prune, sépia et ambre) ; les générations I à V en cartouches (photo ou signature, prénoms, nom, années, commune,
+  métier), VI à IX en étiquettes verticales ; les places sans ancêtre en pointillé (« à trouver », « père
+  inconnu »). En option : le mariage des parents au-dessus des cases des générations I à IV (« ∞ 1905 · Bruxelles », la commune si elle tient), les photos (portraits en carré à bords arrondis par défaut, ou en ovale / rectangle, avec ou sans bords arrondis ; les signatures gardent leur forme), et les frères et sœurs de chacun, à côté ou sous la case avec leur année
   de naissance quand la place le permet, sinon les prénoms seuls ou « + n », et leur nombre en génération VI.
+  Troisième modèle, l'**arbre en sablier** (ascendance et descendance, A3 paysage) : la personne de départ au centre
+  avec son ou ses conjoints, de 1 à 6 générations d'ancêtres au-dessus et de 1 à 3 générations de descendants en dessous,
+  avec les mêmes thèmes de couleurs, photos, frères et sœurs et mariages que la pyramide.
   D'autres modèles s'ajoutent dans `src/ui/arbres/modeles.ts`.
 - **Parents inconnus ou introuvables** (`#/filiation`) : le GEDCOM n'a aucun champ pour dire qu'un
   parent n'est pas à chercher. On l'écrit dans la **note de la personne** (sur Geneanet : rubrique
