@@ -30,6 +30,8 @@ export interface OptionsFeuille {
   lieuxDesc?: boolean
   /** Métier dans les cases des descendants (vrai par défaut) */
   metiersDesc?: boolean
+  /** Métier de la personne de départ et de son conjoint (vrai par défaut) */
+  metiersCentre?: boolean
   /** Photos dans les cases des descendants (sur le sablier et l'arbre du couple ; sinon comme `photos`) */
   photosDesc?: boolean
   /** Conjoint et mariage dans les cartouches des descendants (sinon comme `mariages`) */

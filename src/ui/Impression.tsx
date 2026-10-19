@@ -39,6 +39,7 @@ interface Reglages {
   fratrieCases?: boolean
   lieuxDesc?: boolean
   metiersDesc?: boolean
+  metiersCentre?: boolean
 }
 
 const PAPIERS: Record<Format, [number, number]> = { A4: [210, 297], A3: [297, 420], A2: [420, 594] }
@@ -130,6 +131,7 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
     fratrie,
     lieuxDesc: reglages.lieuxDesc !== false,
     metiersDesc: reglages.metiersDesc !== false,
+    metiersCentre: reglages.metiersCentre !== false,
     fratrieCases: !!modele.reglages.conjoint && fratrieBase && !!reglages.fratrieCases,
     fratrieBase: modele.reglages.descendants ? fratrieBase : fratrie,
     italiques: reglages.italiques,
@@ -298,6 +300,12 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
                   <label class="case">
                     <input type="checkbox" id="impression-metiers-desc" checked={reglages.metiersDesc !== false} onChange={(e) => setReglages({ metiersDesc: e.currentTarget.checked })} />
                     Métier des descendants
+                  </label>
+                )}
+                {modele.reglages.descendants && (
+                  <label class="case">
+                    <input type="checkbox" id="impression-metiers-centre" checked={reglages.metiersCentre !== false} onChange={(e) => setReglages({ metiersCentre: e.currentTarget.checked })} />
+                    {modele.reglages.conjoint ? 'Métier du couple central' : 'Métier de la personne de départ et de ses conjoints'}
                   </label>
                 )}
                 <label class="case">

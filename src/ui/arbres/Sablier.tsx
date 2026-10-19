@@ -354,6 +354,8 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
   /** Les couleurs d'un ancêtre : par génération, il garde la sienne ; sinon, d'après sa place sur la feuille */
   const couleurAsc = (v: number, s: number, sexe?: 'M' | 'F' | '?') => theme.case(theme.id === 'generations' ? s : v, sexe)
   const photoDe = (i?: Individu, descendant = false) => ((descendant ? options.photosDesc ?? options.photos : options.photos) && i?.photo && !ratees.has(i.photo.url) ? i.photo : undefined)
+  /** La personne de départ et son conjoint, sans leur métier si on le souhaite */
+  const resumeCentre = (i: Individu) => (options.metiersCentre === false ? { ...resume(i), metier: undefined } : resume(i))
   const rater = (url: string) => () => setRatees((r) => new Set(r).add(url))
   const listeFratrie = (f: Individu[], base = false) => ((base ? options.fratrieBase ?? options.fratrie : options.fratrie) ? f : []).map((x) => ({ prenom: prenoms(x.prenom, 1) || '?', annee: anneeCourte(naissance(x))?.replace(/^\?$/, '') || undefined }))
   const formePhoto = options.formePhoto ?? 'carree'
@@ -552,7 +554,7 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
         if (i === 1 && racine) textes.push(<text key={'vide-t' + i} x={x + w / 2} y={y + h / 2 + 3} font-size="9" text-anchor="middle" class="ns">aucun conjoint connu</text>)
         return
       }
-      cartouche('centre' + cote.cle, x, y, w, h, 0, resume(ind), estImplexe(cote, cote.pl[1]), couleurAsc(2 + i, 1, ind.sexe), photoDe(ind))
+      cartouche('centre' + cote.cle, x, y, w, h, 0, resumeCentre(ind), estImplexe(cote, cote.pl[1]), couleurAsc(2 + i, 1, ind.sexe), photoDe(ind))
       // Frères et sœurs de chacun, vers l'extérieur de la feuille
       const f = listeFratrie(cote.freres.get(1) ?? [], true)
       if (!f.length) return
@@ -572,12 +574,12 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
     const xCentre = CENTRE.cx - CENTRE.w / 2
     let gaucheRangee = xCentre
     const p1 = cotes[0].pl[1]
-    cartouche('centre', xCentre, rCentre.y, CENTRE.w, rCentre.h, 0, resume(racine), estImplexe(cotes[0], p1), theme.case(1, racine.sexe), photoDe(racine))
+    cartouche('centre', xCentre, rCentre.y, CENTRE.w, rCentre.h, 0, resumeCentre(racine), estImplexe(cotes[0], p1), theme.case(1, racine.sexe), photoDe(racine))
     for (const { union, cote } of ordre) {
       if (cote === 'milieu' || !union.conjoint) { origines.set(union, { x: CENTRE.cx, y: rCentre.y + rCentre.h }); continue }
       const xc = cote === 'droite' ? xCentre + CENTRE.w + CENTRE.ecart : xCentre - CENTRE.ecart - CENTRE.wConjoint
       const c = theme.famille === 'sexe' ? theme.case(1, union.conjoint.sexe) : NEUTRE
-      cartouche('conj' + union.famille.id, xc, rCentre.y, CENTRE.wConjoint, rCentre.h, 1, resume(union.conjoint), false, c, photoDe(union.conjoint))
+      cartouche('conj' + union.famille.id, xc, rCentre.y, CENTRE.wConjoint, rCentre.h, 1, resumeCentre(union.conjoint), false, c, photoDe(union.conjoint))
       const x1 = cote === 'droite' ? xCentre + CENTRE.w : xc + CENTRE.wConjoint
       const x2 = cote === 'droite' ? xc : xCentre
       const xm = (x1 + x2) / 2
