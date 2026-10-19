@@ -322,7 +322,7 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
   const estImplexe = (c: Cote, p: Place) => !!p.dejaVu || c.pl.some((q) => q?.dejaVu === p.sosa) || (!!p.ind && p.sosa > 1 && communs.has(p.ind.id))
   /** Les couleurs d'un ancêtre : par génération, il garde la sienne ; sinon, d'après sa place sur la feuille */
   const couleurAsc = (v: number, s: number, sexe?: 'M' | 'F' | '?') => theme.case(theme.id === 'generations' ? s : v, sexe)
-  const photoDe = (i?: Individu) => (options.photos && i?.photo && !ratees.has(i.photo.url) ? i.photo : undefined)
+  const photoDe = (i?: Individu, descendant = false) => ((descendant ? options.photosDesc ?? options.photos : options.photos) && i?.photo && !ratees.has(i.photo.url) ? i.photo : undefined)
   const rater = (url: string) => () => setRatees((r) => new Set(r).add(url))
   const listeFratrie = (f: Individu[]) => (options.fratrie ? f : []).map((x) => ({ prenom: prenoms(x.prenom, 1) || '?', annee: anneeCourte(naissance(x))?.replace(/^\?$/, '') || undefined }))
   const formePhoto = options.formePhoto ?? 'carree'
@@ -554,13 +554,13 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
       etiquette('d' + n.ind.id, cx, y, w, h, h >= 100 ? 5 : 6, r, false, couleurDesc(n))
     } else {
       const enPlus: Ligne[] = []
-      if (options.mariages && n.conjoint) {
+      if ((options.mariagesDesc ?? options.mariages) && n.conjoint) {
         const { marie, m } = unionDe(n.ind.id, n.famille)
         const nom = [prenoms(n.conjoint.prenom, 1), n.conjoint.nom.toLocaleUpperCase('fr')].filter(Boolean).join(' ')
         const debut: Morceau[] = marie ? [['∞ ', 'mut'], ...(m?.annee ? [[m.annee + ' ', m.sourcee ? undefined : 'nd'] as Morceau] : [])] : [['avec ', 'mut']]
         enPlus.push({ fs: [0, 9, 8.6, 8.2, 7.4][tailleDesc(w)], parts: [...debut, [nom]], cls: 'mt' })
       }
-      cartouche('d' + n.ind.id, x, y, w, h, tailleDesc(w), r, false, couleurDesc(n), photoDe(n.ind), enPlus)
+      cartouche('d' + n.ind.id, x, y, w, h, tailleDesc(w), r, false, couleurDesc(n), photoDe(n.ind, true), enPlus)
     }
     versEnfants('e' + n.ind.id, { x: cx, y: y + h }, n.enfants)
   }

@@ -32,6 +32,8 @@ interface Reglages {
   formePhoto?: FormePhoto
   bordsArrondis?: boolean
   mariages?: boolean
+  photosDesc?: boolean
+  mariagesDesc?: boolean
 }
 
 const PAPIERS: Record<Format, [number, number]> = { A4: [210, 297], A3: [297, 420], A2: [420, 594] }
@@ -107,6 +109,8 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
   const fratrie = reglages.fratrie !== false
   const photosActives = reglages.photos !== false
   const formePhoto: FormePhoto = FORMES_PHOTO.some((f) => f.id === reglages.formePhoto) ? reglages.formePhoto! : 'carree'
+  const photosDesc = reglages.photosDesc ?? photosActives
+  const mariagesDesc = reglages.mariagesDesc ?? reglages.mariages !== false
   const bordsArrondis = reglages.bordsArrondis !== false
   const options = {
     date: reglages.date ? dateLongue(jour) : undefined,
@@ -120,6 +124,8 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
     fratrie,
     italiques: reglages.italiques,
     photos: photosActives,
+    photosDesc: modele.reglages.descendants ? photosDesc : photosActives,
+    mariagesDesc: modele.reglages.descendants ? mariagesDesc : reglages.mariages !== false,
     formePhoto,
     bordsArrondis,
     mariages: reglages.mariages !== false,
@@ -257,8 +263,14 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
               <div class="groupe-options-corps">
                 <label class="case">
                   <input type="checkbox" id="impression-mariages" checked={reglages.mariages !== false} onChange={(e) => setReglages({ mariages: e.currentTarget.checked })} />
-                  {modele.reglages.mariages}
+                  {modele.reglages.descendants ? 'Mariages et conjoints (ancêtres et personne de départ)' : modele.reglages.mariages}
                 </label>
+                {modele.reglages.descendants && (
+                  <label class="case">
+                    <input type="checkbox" id="impression-mariages-desc" checked={mariagesDesc} onChange={(e) => setReglages({ mariagesDesc: e.currentTarget.checked })} />
+                    Conjoints des descendants (« ∞ année conjoint »)
+                  </label>
+                )}
                 <label class="case">
                   <input type="checkbox" id="impression-fratrie" checked={fratrie} onChange={(e) => setReglages({ fratrie: e.currentTarget.checked })} />
                   {modele.reglages.fratrie}
@@ -277,9 +289,15 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
                   <div class="option-groupee">
                     <label class="case">
                       <input type="checkbox" id="impression-photos" checked={photosActives} onChange={(e) => setReglages({ photos: e.currentTarget.checked })} />
-                      Afficher les photos et signatures
+                      {modele.reglages.descendants ? 'Photos et signatures (ancêtres et personne de départ)' : 'Afficher les photos et signatures'}
                     </label>
-                    {photosActives && (
+                    {modele.reglages.descendants && (
+                      <label class="case">
+                        <input type="checkbox" id="impression-photos-desc" checked={photosDesc} onChange={(e) => setReglages({ photosDesc: e.currentTarget.checked })} />
+                        Photos et signatures des descendants
+                      </label>
+                    )}
+                    {(photosActives || (modele.reglages.descendants && photosDesc)) && (
                       <>
                         <label class="case">
                           Forme des portraits
