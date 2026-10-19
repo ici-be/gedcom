@@ -26,6 +26,8 @@ export interface OptionsFeuille {
   photosDesc?: boolean
   /** Conjoint et mariage dans les cartouches des descendants (sinon comme `mariages`) */
   mariagesDesc?: boolean
+  /** Cases des descendants de même largeur : une place plus large pour ceux sans enfant, et les enfants d'un même parent empilés à la dernière génération (arbre du couple) */
+  equitable?: boolean
   /** Forme des portraits dans les cases (hors signatures) */
   formePhoto?: FormePhoto
   /** Bords arrondis pour les portraits carrés ou rectangulaires */
@@ -68,6 +70,8 @@ export interface Modele {
     photos?: boolean
     /** Réglages de contenu distincts pour les descendants */
     descendants?: boolean
+    /** Case « descendants équitables » */
+    equitable?: boolean
     /** Choix du conjoint (arbre du couple) */
     conjoint?: boolean
     fratrie: string
@@ -126,7 +130,7 @@ export const MODELES: Modele[] = [
     forme: 'arbre',
     papier: { format: 'A3', orientation: 'landscape' },
     generations: 6,
-    reglages: { theme: true, sablierGenerations: true, descendants: true, photos: true, conjoint: true, fratrie: 'Frères et sœurs de chacun (sous ou à côté de la case)', mariages: 'Mariages et conjoints (année et commune)' },
+    reglages: { theme: true, sablierGenerations: true, descendants: true, photos: true, conjoint: true, equitable: true, fratrie: 'Frères et sœurs de chacun (sous ou à côté de la case)', mariages: 'Mariages et conjoints (année et commune)' },
     Feuille: Couple,
   },
 ]

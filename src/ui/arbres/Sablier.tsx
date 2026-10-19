@@ -35,6 +35,9 @@ const LH = 1.18
 const Y0 = 14
 const Y1 = 896
 const ECART = 26
+/** Hauteur d'un cartouche empilé et espace entre deux cartouches empilés */
+const H_PILE = 50
+const GAP_PILE = 4
 const TAILLES_MARIAGE = [9, 8.5, 8, 7.5]
 /** Largeur en dessous de laquelle un descendant passe en étiquette verticale */
 const MIN_CARTOUCHE = 84
@@ -58,6 +61,8 @@ export interface Descendant {
   /** Famille du premier mariage (pour son année) */
   famille?: string
   enfants: Descendant[]
+  /** Dernière génération « empilée » : la place de ce descendant parmi ses frères et sœurs, qui partagent une seule colonne */
+  pile?: { rang: number; taille: number }
   /** Nombre de places au bas de sa branche, et la première d'entre elles */
   feuilles: number
   debut: number
@@ -135,16 +140,40 @@ export function ordreUnions(unions: Union[]): { union: Union; cote: 'gauche' | '
 }
 
 /** Places au bas de chaque branche, première place de chacun, branche ; renvoie le nombre total de places */
-export function disposer(enfants: Descendant[]): number {
-  const compter = (n: Descendant): number => (n.feuilles = n.enfants.length ? n.enfants.reduce((s, e) => s + compter(e), 0) : 1)
+export function disposer(enfants: Descendant[], equitable = false, profondeurMax = 0): number {
+  const compter = (n: Descendant): number => (n.feuilles = n.enfants.length ? (n.enfants[0].pile ? (n.enfants.forEach(compter), 1) : n.enfants.reduce((s, e) => s + compter(e), 0)) : 1)
   const placer = (n: Descendant, debut: number, branche: number) => {
     n.debut = debut
     n.branche = branche
     let x = debut
-    for (const e of n.enfants) { placer(e, x, branche); x += e.feuilles }
+    for (const e of n.enfants) { placer(e, x, branche); if (!e.pile) x += e.feuilles }
+  }
+  if (equitable) {
+    // Les enfants d'un même parent, à la dernière génération, s'empilent dans une seule colonne
+    const empiler = (n: Descendant) => {
+      if (n.profondeur === profondeurMax - 1 && profondeurMax >= 2) n.enfants.forEach((e, rang) => { e.pile = { rang, taille: n.enfants.length } })
+      n.enfants.forEach(empiler)
+    }
+    enfants.forEach(empiler)
+  }
+  enfants.forEach(compter)
+  if (equitable) {
+    // Ceux qui n'ont pas d'enfant ne se contentent pas d'une place : la largeur moyenne des familles de leur génération (au plus 3)
+    const niveaux = parProfondeur(enfants)
+    for (let p = profondeurMax - 1; p >= 1; p--) {
+      const nv = niveaux[p - 1] ?? []
+      for (const n of nv) if (n.enfants.length) n.feuilles = n.enfants[0].pile ? 1 : n.enfants.reduce((t, e) => t + e.feuilles, 0)
+      const avec = nv.filter((n) => n.enfants.length)
+      if (!avec.length) continue
+      const moyenne = Math.min(3, avec.reduce((t, n) => t + n.feuilles, 0) / avec.length)
+      for (const n of nv) if (!n.enfants.length) n.feuilles = Math.max(1, Math.round(moyenne * 10) / 10)
+    }
+    // Le haut de la branche reprend la somme de ses enfants
+    const somme = (n: Descendant): number => (n.enfants.length && !n.enfants[0].pile ? (n.feuilles = n.enfants.reduce((t, e) => t + somme(e), 0)) : n.feuilles)
+    enfants.forEach(somme)
   }
   let x = 0
-  enfants.forEach((e, i) => { compter(e); placer(e, x, i); x += e.feuilles })
+  enfants.forEach((e, i) => { placer(e, x, i); x += e.feuilles })
   return x
 }
 
@@ -165,7 +194,7 @@ export interface RangeeSablier { sens: 'asc' | 'centre' | 'desc'; g: number; y: 
  * Les cartouches des ancêtres I à V, les étiquettes verticales au-delà ; les descendants en étiquettes quand ils sont trop
  * nombreux. Le tout rapetissé (ou un peu agrandi) pour tenir entre le haut de la feuille et le pied de page.
  */
-export function rangeesSablier(asc: number, descVerticales: boolean[], fratrie: boolean, couple = false): RangeeSablier[] {
+export function rangeesSablier(asc: number, descVerticales: boolean[], fratrie: boolean, couple = false, pile = 0): RangeeSablier[] {
   const brut: Omit<RangeeSablier, 'y'>[] = []
   for (let g = asc; g >= 1; g--) {
     // Pour le couple, chaque moitié de la feuille porte une ascendance : les cases ont la taille de la génération suivante
@@ -174,7 +203,7 @@ export function rangeesSablier(asc: number, descVerticales: boolean[], fratrie: 
     brut.push({ sens: 'asc', g, vertical, h: vertical ? 120 : [0, 64, 64, 68, 92][ge], fratrie: fratrie && !vertical && ge >= 2 ? 34 : 0 })
   }
   brut.push({ sens: 'centre', g: 0, vertical: false, h: 74, fratrie: 0 })
-  descVerticales.forEach((v, i) => brut.push({ sens: 'desc', g: i + 1, vertical: v, h: v ? 120 : 64, fratrie: 0 }))
+  descVerticales.forEach((v, i) => brut.push({ sens: 'desc', g: i + 1, vertical: v, h: v ? 120 : i === descVerticales.length - 1 && pile > 1 ? Math.max(64, pile * H_PILE + (pile - 1) * GAP_PILE) : 64, fratrie: 0 }))
   const total = brut.reduce((s, r) => s + r.h + r.fratrie, 0) + ECART * (brut.length - 1)
   const k = Math.min(1.3, (Y1 - Y0) / total)
   let y = Y0 + (Y1 - Y0 - total * k) / 2
@@ -277,7 +306,7 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
     })
 
     const enfants = ordre.flatMap((o) => o.union.enfants)
-    const feuilles = disposer(enfants)
+    const feuilles = disposer(enfants, !!options.equitable, desc)
     const niveaux = parProfondeur(enfants)
     for (const n of niveaux.flat()) resume(n.ind)
     /** L'union d'une personne dans une famille : mariée (avec l'année et la commune), ou non */
@@ -290,7 +319,7 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
     const uniques = new Set(ids.flatMap((s) => [...s])).size
     const communs = new Set(ids.length > 1 ? [...ids[0]].filter((id) => ids[1].has(id)) : [])
     return { racine, resume, cotes, naissance, ordre, feuilles, niveaux, unionDe, uniques, communs }
-  }, [d, options.mariages, options.conjoint, asc, desc, couple])
+  }, [d, options.mariages, options.equitable, options.conjoint, asc, desc, couple])
 
   useLayoutEffect(() => {
     if (!svg.current) return
@@ -306,8 +335,9 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
 
   // Les descendants trop serrés passent en étiquettes verticales (toute la rangée prend leur hauteur)
   const unite = feuilles ? LARG / feuilles : LARG
-  const descVerticales = (niveaux.length ? niveaux : [[]]).map((n) => n.some((x) => x.feuilles * unite < MIN_CARTOUCHE))
-  const rangees = rangeesSablier(asc, descVerticales, !!options.fratrie, couple)
+  const descVerticales = (niveaux.length ? niveaux : [[]]).map((n) => n.some((x) => !x.pile && x.feuilles * unite < MIN_CARTOUCHE))
+  const pileMax = Math.max(0, ...niveaux.flat().map((x) => x.pile?.taille ?? 0))
+  const rangees = rangeesSablier(asc, descVerticales, !!options.fratrie, couple, pileMax)
   const rAsc = (g: number) => rangees.find((r) => (g === 0 ? r.sens === 'centre' : r.sens === 'asc' && r.g === g))!
   const rDesc = (p: number) => rangees.find((r) => r.sens === 'desc' && r.g === p)!
   const rCentre = rAsc(0)
@@ -527,8 +557,12 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
     const R = rDesc(n.profondeur)
     const span = n.feuilles * unite
     const cx = X0 + unite * (n.debut + n.feuilles / 2)
-    const vertical = R.vertical && span < MIN_CARTOUCHE
+    const vertical = R.vertical && span < MIN_CARTOUCHE && !n.pile
     const w = vertical ? Math.min(span * 0.9, 46) : Math.min(LARGEUR_MAX_DESC[n.profondeur], span - 8)
+    if (n.pile && pileMax > 1) {
+      const h = (R.h - GAP_PILE * (pileMax - 1)) / pileMax
+      return { cx, x: cx - w / 2, y: arrondi(R.y + n.pile.rang * (h + GAP_PILE)), w, h: arrondi(h), R, vertical: false }
+    }
     const h = vertical ? R.h : Math.min(R.h, 92)
     return { cx, x: cx - w / 2, y: R.y, w, h, R, vertical }
   }

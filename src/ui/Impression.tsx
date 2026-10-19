@@ -34,6 +34,7 @@ interface Reglages {
   mariages?: boolean
   photosDesc?: boolean
   mariagesDesc?: boolean
+  equitable?: boolean
 }
 
 const PAPIERS: Record<Format, [number, number]> = { A4: [210, 297], A3: [297, 420], A2: [420, 594] }
@@ -124,6 +125,7 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
     fratrie,
     italiques: reglages.italiques,
     photos: photosActives,
+    equitable: !!modele.reglages.equitable && !!reglages.equitable,
     photosDesc: modele.reglages.descendants ? photosDesc : photosActives,
     mariagesDesc: modele.reglages.descendants ? mariagesDesc : reglages.mariages !== false,
     formePhoto,
@@ -247,6 +249,12 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
                         <i key={i} class="pastille-theme" style={{ background: c.fond, borderColor: c.trait }} />
                       ))}
                     </span>
+                  </label>
+                )}
+                {modele.reglages.equitable && (
+                  <label class="case" title="Les descendants sans enfant gardent une case aussi large que les autres ; à la dernière génération, les enfants d'un même parent sont empilés">
+                    <input type="checkbox" id="impression-equitable" checked={!!reglages.equitable} onChange={(e) => setReglages({ equitable: e.currentTarget.checked })} />
+                    Descendants équitables (cases égales, derniers enfants empilés)
                   </label>
                 )}
                 {modele.verso && (
