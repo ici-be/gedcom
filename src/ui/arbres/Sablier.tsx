@@ -397,6 +397,23 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
     )
   }
 
+  /** Une étiquette verticale à deux lignes (prénom, nom), l'année de naissance à l'horizontale dans le bas de la case */
+  const etiquetteDeux = (cle: string, cx: number, y: number, w: number, h: number, r: Resume, c: CouleurCase) => {
+    cases.push(<rect key={'c' + cle} x={(cx - w / 2).toFixed(2)} y={y} width={w.toFixed(2)} height={h} rx="1.5" fill={c.fond} stroke={c.trait} stroke-width="0.7" />)
+    const fs = Math.min(10.5, (w - 4) / (2 * LH))
+    const bas = r.naissance ? 12 : 0
+    const lignes: Ligne[] = [
+      ...(prenoms(r.prenom, 1) ? [{ fs, parts: [[prenoms(r.prenom, 1), 'pn']] as Morceau[] }] : []),
+      { fs, parts: [[maj(r.nom || '?'), 'nm']] as Morceau[] },
+    ]
+    textes.push(
+      <g key={'x' + cle} transform={`translate(${cx.toFixed(2)},${(y + (h - bas) / 2).toFixed(2)}) rotate(-90)`}>
+        <Bloc lignes={lignes} x={0} yc={0} max={h - bas - 8} />
+      </g>,
+    )
+    if (r.naissance) textes.push(<text key={'a' + cle} x={cx.toFixed(2)} y={(y + h - 4).toFixed(2)} font-size="7.6" data-fs="7.6" data-max={Math.round(w - 2)} text-anchor="middle"><Morceaux parts={[[r.naissance, r.naissanceSourcee ? undefined : 'nd']]} /></text>)
+  }
+
   /** Une case en pointillé (place sans personne) */
   const caseVide = (cle: string, x: number, y: number, w: number, h: number, rx: number) =>
     cases.push(<rect key={cle} x={x} y={y} width={w} height={h} rx={rx} fill="#fff" stroke="#c9c9c2" stroke-dasharray="3 2.5" stroke-width="0.8" />)
@@ -630,7 +647,8 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
     const taille = n.profondeur === 1 ? tailleEnfants : tailleDesc(w)
     const r = { ...resume(n.ind), ...(options.lieuxDesc === false && { commune: undefined }), ...(options.metiersDesc === false && { metier: undefined }) }
     if (vertical) {
-      etiquette('d' + n.ind.id, cx, y, w, h, h >= 100 ? 5 : 6, r, false, couleurDesc(n))
+      if (couple && n.profondeur === 2) etiquetteDeux('d' + n.ind.id, cx, y, w, h, r, couleurDesc(n))
+      else etiquette('d' + n.ind.id, cx, y, w, h, h >= 100 ? 5 : 6, r, false, couleurDesc(n))
     } else {
       const enPlus: Ligne[] = []
       if ((options.mariagesDesc ?? options.mariages) && n.conjoint) {
