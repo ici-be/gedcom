@@ -366,7 +366,7 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
   const trait = (cle: string, chemin: string) => traits.push(<path key={cle} d={chemin} fill="none" stroke={theme.lien} stroke-width="1" />)
 
   /** Un cartouche : photo à gauche (en haut pour les plus étroits, taille 4), texte à côté ; renvoie rien */
-  const cartouche = (cle: string, x: number, y: number, w: number, h: number, taille: number, r: Resume, implexe: boolean, c: CouleurCase, ph?: Photo, enPlus: Ligne[] = [], forcerMetier = false) => {
+  const cartouche = (cle: string, x: number, y: number, w: number, h: number, taille: number, r: Resume, implexe: boolean, c: CouleurCase, ph?: Photo, enPlus: Ligne[] = [], forcerMetier = false, groupe?: string) => {
     cases.push(<rect key={'c' + cle} x={x.toFixed(2)} y={y} width={w.toFixed(2)} height={h} rx="4" fill={c.fond} stroke={c.trait} stroke-width="1.2" />)
     const cadre = ph ? cadrePortrait(taille, w, h, !!ph.signature, formePhoto, options.bordsArrondis ?? true) : undefined
     const cx = x + w / 2
@@ -375,13 +375,13 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
       const hp = cadre ? cadre.hp : 0
       if (ph && cadre) textes.push(<Portrait key={'p' + cle} id={'ph' + cle} photo={ph} x={ph.signature ? x + 4 : cx - cadre.wp / 2} y={y + 4} w={cadre.wp} h={hp} forme={formePhoto} rx={cadre.rx} rate={rater(ph.url)} />)
       lignes = caser(lignes, h - hp - 8)
-      textes.push(<g key={'x' + cle}><Bloc lignes={lignes} x={cx} yc={y + hp + (h - hp) / 2 + (ph ? 2 : 0)} max={w - 6} /></g>)
+      textes.push(<g key={'x' + cle}><Bloc lignes={lignes} x={cx} yc={y + hp + (h - hp) / 2 + (ph ? 2 : 0)} max={w - 6} groupe={groupe} /></g>)
     } else {
       const pw = cadre ? cadre.wp : 0
       if (ph && cadre) textes.push(<Portrait key={'p' + cle} id={'ph' + cle} photo={ph} x={x + 7} y={y + (h - cadre.hp) / 2} w={pw} h={cadre.hp} forme={formePhoto} rx={cadre.rx} rate={rater(ph.url)} />)
       lignes = caser(lignes, h - 8)
       const gauche = x + 7 + (ph ? pw + 7 : 0)
-      textes.push(<g key={'x' + cle}><Bloc lignes={lignes} x={ph ? gauche : cx} yc={y + h / 2} max={x + w - 6 - gauche} ancre={ph ? 'start' : 'middle'} /></g>)
+      textes.push(<g key={'x' + cle}><Bloc lignes={lignes} x={ph ? gauche : cx} yc={y + h / 2} max={x + w - 6 - gauche} ancre={ph ? 'start' : 'middle'} groupe={groupe} /></g>)
     }
   }
 
@@ -621,10 +621,13 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
     trait(cle, `M${de.x.toFixed(1)} ${de.y}V${yb}M${Math.min(...xs).toFixed(1)} ${yb}H${Math.max(...xs).toFixed(1)}${ps.map((p) => `M${p.cx.toFixed(1)} ${yb}V${p.y}`).join('')}`)
   }
   for (const { union } of ordre) versEnfants('d' + union.famille.id, origines.get(union)!, union.enfants)
+  // Les enfants de la personne de départ (ou du couple) gardent la même taille de texte, celle du plus étroit
+  const tailleEnfants = Math.max(1, ...niveaux.flat().filter((n) => n.profondeur === 1 && !posDesc(n).vertical).map((n) => tailleDesc(posDesc(n).w)))
   let nbDescendants = 0
   for (const n of niveaux.flat()) {
     nbDescendants++
     const { cx, x, y, w, h, vertical } = posDesc(n)
+    const taille = n.profondeur === 1 ? tailleEnfants : tailleDesc(w)
     const r = { ...resume(n.ind), ...(options.lieuxDesc === false && { commune: undefined }), ...(options.metiersDesc === false && { metier: undefined }) }
     if (vertical) {
       etiquette('d' + n.ind.id, cx, y, w, h, h >= 100 ? 5 : 6, r, false, couleurDesc(n))
@@ -634,9 +637,9 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
         const { marie, m } = unionDe(n.ind.id, n.famille)
         const nom = [prenoms(n.conjoint.prenom, 1), n.conjoint.nom.toLocaleUpperCase('fr')].filter(Boolean).join(' ')
         const debut: Morceau[] = marie ? [['∞ ', 'mut'], ...(m?.annee ? [[m.annee + ' ', m.sourcee ? undefined : 'nd'] as Morceau] : [])] : [['avec ', 'mut']]
-        enPlus.push({ fs: [0, 9, 8.6, 8.2, 7.4][tailleDesc(w)], parts: [...debut, [nom]], cls: 'mt' })
+        enPlus.push({ fs: [0, 9, 8.6, 8.2, 7.4][taille], parts: [...debut, [nom]], cls: 'mt' })
       }
-      cartouche('d' + n.ind.id, x, y, w, h, tailleDesc(w), r, false, couleurDesc(n), photoDe(n.ind, true), enPlus)
+      cartouche('d' + n.ind.id, x, y, w, h, taille, r, false, couleurDesc(n), photoDe(n.ind, true), enPlus, false, n.profondeur === 1 ? 'enfants' : undefined)
     }
     versEnfants('e' + n.ind.id, { x: cx, y: y + h }, n.enfants)
   }

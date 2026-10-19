@@ -273,7 +273,7 @@ export function lignesFratrie(f: { prenom: string; annee?: string }[], max: numb
 }
 
 /** Lignes centrées verticalement dans une boîte, à partir de `x` (ancre donnée) */
-export function Bloc({ lignes, x, yc, max, ancre = 'middle' }: { lignes: Ligne[]; x: number; yc: number; max: number; ancre?: string }) {
+export function Bloc({ lignes, x, yc, max, ancre = 'middle', groupe }: { lignes: Ligne[]; x: number; yc: number; max: number; ancre?: string; groupe?: string }) {
   const H = lignes.reduce((s, l) => s + l.fs * LH, 0)
   let cumul = 0
   return (
@@ -281,7 +281,7 @@ export function Bloc({ lignes, x, yc, max, ancre = 'middle' }: { lignes: Ligne[]
       {lignes.map((l, j) => {
         const y = yc - H / 2 + cumul + l.fs * LH * 0.78
         cumul += l.fs * LH
-        return <text key={j} x={x.toFixed(1)} y={y.toFixed(1)} font-size={l.fs} data-fs={l.fs} data-max={Math.round(max)} text-anchor={ancre} class={l.cls}><Morceaux parts={l.parts} /></text>
+        return <text key={j} x={x.toFixed(1)} y={y.toFixed(1)} font-size={l.fs} data-fs={l.fs} data-max={Math.round(max)} data-groupe={groupe !== undefined && j < 2 ? groupe + j : undefined} text-anchor={ancre} class={l.cls}><Morceaux parts={l.parts} /></text>
       })}
     </>
   )

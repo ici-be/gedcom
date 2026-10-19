@@ -16,6 +16,8 @@ export function couleursRegions(ordre: string[]): Map<string, string> {
  * ceux marqués data-texte (métiers) sont plutôt abrégés par « … » quand il faudrait trop les rapetisser.
  */
 export function ajuster(svg: SVGSVGElement) {
+  // Les textes d'un même groupe (data-groupe) gardent la même taille : celle du plus à l'étroit
+  const groupes = new Map<string, { t: SVGTextElement; fs: number; k: number }[]>()
   for (const t of svg.querySelectorAll<SVGTextElement>('text[data-max]')) {
     t.dataset.fs ??= t.getAttribute('font-size') ?? ''
     const fs = Number(t.dataset.fs)
@@ -24,6 +26,12 @@ export function ajuster(svg: SVGSVGElement) {
     if (noeud instanceof Text) noeud.data = t.dataset.texte!
     const max = Number(t.dataset.max)
     const long = t.getComputedTextLength()
+    const groupe = t.dataset.groupe
+    if (groupe !== undefined) {
+      if (!groupes.has(groupe)) groupes.set(groupe, [])
+      groupes.get(groupe)!.push({ t, fs, k: Math.min(1, max / long) })
+      continue
+    }
     if (long <= max) continue
     const k = max / long
     if (noeud instanceof Text && k < 0.8) {
@@ -36,5 +44,9 @@ export function ajuster(svg: SVGSVGElement) {
       continue
     }
     t.setAttribute('font-size', (fs * k * 0.98).toFixed(2))
+  }
+  for (const membres of groupes.values()) {
+    const k = Math.min(...membres.map((m) => m.k))
+    if (k < 1) for (const m of membres) m.t.setAttribute('font-size', (m.fs * k * 0.98).toFixed(2))
   }
 }
