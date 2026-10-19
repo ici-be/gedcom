@@ -109,6 +109,10 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   Troisième modèle, l'**arbre en sablier** (ascendance et descendance, A3 paysage) : la personne de départ au centre
   avec son ou ses conjoints, de 1 à 6 générations d'ancêtres au-dessus et de 1 à 3 générations de descendants en dessous,
   avec les mêmes thèmes de couleurs, photos, frères et sœurs et mariages que la pyramide.
+  Quatrième modèle, l'**arbre du couple** (A3 paysage) : la personne de départ et son conjoint côte à côte au centre
+  (l'homme à gauche, la femme à droite ; au choix parmi les conjoints s'il y en a plusieurs), les ancêtres de chacun
+  sur sa moitié de la feuille (1 à 6 générations), leurs descendants communs en dessous (1 à 3 générations), avec les
+  mêmes options que le sablier ; un ancêtre commun aux deux est marqué ◆.
   D'autres modèles s'ajoutent dans `src/ui/arbres/modeles.ts`.
 - **Parents inconnus ou introuvables** (`#/filiation`) : le GEDCOM n'a aucun champ pour dire qu'un
   parent n'est pas à chercher. On l'écrit dans la **note de la personne** (sur Geneanet : rubrique

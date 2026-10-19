@@ -268,3 +268,36 @@ describe('arbre en sablier (ascendance et descendance)', async () => {
   })
 })
 
+
+describe('arbre du couple', async () => {
+  const { rangeesSablier, conjointsDe } = await import('../src/ui/arbres/Sablier')
+  const { MODELES } = await import('../src/ui/arbres/modeles')
+
+  test('présent dans le catalogue, avec le choix du conjoint', () => {
+    const couple = MODELES.find((m) => m.id === 'couple')
+    expect(couple?.reglages.sablierGenerations).toBe(true)
+    expect(couple?.reglages.conjoint).toBe(true)
+  })
+
+  test('rangees du couple : une génération de plus par moitié, sans chevauchement', () => {
+    for (let a = 1; a <= 6; a++) {
+      for (let d = 1; d <= 3; d++) {
+        const r = rangeesSablier(a, Array(d).fill(false), true, true)
+        expect(r.length).toBe(a + 1 + d)
+        // les parents de chacun ont leurs frères et sœurs sous la case, les grands-parents passent en étiquettes à la génération IV
+        expect(r.find((x) => x.sens === 'asc' && x.g === 1)?.fratrie).toBeGreaterThan(0)
+        if (a >= 4) expect(r.find((x) => x.sens === 'asc' && x.g === 4)?.vertical).toBe(true)
+        for (let i = 1; i < r.length; i++) expect(r[i - 1].y + r[i - 1].h + r[i - 1].fratrie).toBeLessThan(r[i].y)
+        expect(r[r.length - 1].y + r[r.length - 1].h).toBeLessThanOrEqual(920)
+      }
+    }
+  })
+
+  test('conjoints de la personne de départ', () => {
+    const arbre = lireArbre(GED)
+    const pere = arbre.individus.get('@I2@')!
+    const c = conjointsDe(arbre, pere)
+    expect(c.length).toBe(1)
+    expect(c[0].conjoint.nom).toBe('Lambert')
+  })
+})

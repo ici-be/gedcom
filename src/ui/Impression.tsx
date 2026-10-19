@@ -12,7 +12,7 @@ import { nomFichierArbre } from '../lib/format'
 import { ecrire, lire } from '../lib/stockage'
 import { MODELES, type Format, type FormePhoto } from './arbres/modeles'
 import { bornerGenerationsPyramide, FORMES_PHOTO, GENERATIONS_PYRAMIDE, GEN_MAX_PYRAMIDE, GEN_MIN_PYRAMIDE, THEMES_PYRAMIDE, trouverThemePyramide } from './arbres/Pyramide'
-import { ASC_MAX_SABLIER, ASC_MIN_SABLIER, bornerAscendance, bornerDescendance, DESC_MAX_SABLIER, DESC_MIN_SABLIER } from './arbres/Sablier'
+import { ASC_MAX_SABLIER, ASC_MIN_SABLIER, bornerAscendance, bornerDescendance, conjointsDe, DESC_MAX_SABLIER, DESC_MIN_SABLIER } from './arbres/Sablier'
 
 interface Reglages {
   date: boolean
@@ -24,6 +24,7 @@ interface Reglages {
   generations?: number
   ascendance?: number
   descendance?: number
+  conjoint?: string
   fratrie?: boolean
   italiques?: boolean
   verso?: boolean
@@ -100,6 +101,9 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
   const generations = modele.reglages.generations ? bornerGenerationsPyramide(reglages.generations) : modele.generations
   const ascendance = bornerAscendance(reglages.ascendance)
   const descendance = bornerDescendance(reglages.descendance)
+  // Arbre du couple : le conjoint choisi s'il est encore parmi ceux de la personne de départ, sinon le premier
+  const conjoints = modele.reglages.conjoint && racine ? conjointsDe(d.arbre, racine) : []
+  const conjoint = conjoints.find((c) => c.famille === reglages.conjoint)?.famille ?? conjoints[0]?.famille
   const fratrie = reglages.fratrie !== false
   const photosActives = reglages.photos !== false
   const formePhoto: FormePhoto = FORMES_PHOTO.some((f) => f.id === reglages.formePhoto) ? reglages.formePhoto! : 'carree'
@@ -112,6 +116,7 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
     generations,
     ascendance,
     descendance,
+    conjoint,
     fratrie,
     italiques: reglages.italiques,
     photos: photosActives,
@@ -146,7 +151,7 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
           <div class="modele-choisi">
             <h2>{modele.titre}</h2>
             <p class="aide">{modele.description}</p>
-            <p class="aide">Prévu pour du {modele.papier.format} {orientation} · {modele.id === 'sablier' ? `${ascendance} gén. d'ancêtres, ${descendance} gén. de descendants` : `${generations} générations`}</p>
+            <p class="aide">Prévu pour du {modele.papier.format} {orientation} · {modele.reglages.sablierGenerations ? `${ascendance} gén. d'ancêtres, ${descendance} gén. de descendants` : `${generations} générations`}</p>
             {modele.verso && <p class="aide">Au verso, si on le souhaite : {modele.verso.titre.toLocaleLowerCase('fr')}, {modele.verso.description}.</p>}
           </div>
           <div class="options-impression groupes-options">
@@ -174,6 +179,14 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
                     <button type="button" class="bouton discret" title="Ajouter une génération" aria-label="Ajouter une génération"
                       disabled={generations >= GEN_MAX_PYRAMIDE} onClick={() => setReglages({ generations: generations + 1 })}>+</button>
                   </div>
+                )}
+                {conjoints.length > 1 && (
+                  <label class="case">
+                    Conjoint
+                    <select id="impression-conjoint" value={conjoint} onChange={(e) => setReglages({ conjoint: e.currentTarget.value })}>
+                      {conjoints.map((c) => <option key={c.famille} value={c.famille}>{[c.conjoint.prenom, c.conjoint.nom.toLocaleUpperCase('fr')].filter(Boolean).join(' ') || 'conjoint sans nom'}</option>)}
+                    </select>
+                  </label>
                 )}
                 {modele.reglages.sablierGenerations && (
                   <>

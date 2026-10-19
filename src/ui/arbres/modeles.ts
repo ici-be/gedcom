@@ -6,7 +6,7 @@ import type { Donnees } from '../../lib/donnees'
 import { BoutsDeBranche } from './BoutsDeBranche'
 import { EventailOrigines } from './EventailOrigines'
 import { Pyramide } from './Pyramide'
-import { Sablier } from './Sablier'
+import { Couple, Sablier } from './Sablier'
 import { TableAncetres } from './TableAncetres'
 
 export type FormePhoto = 'ovale' | 'carree' | 'rectangulaire'
@@ -40,6 +40,8 @@ export interface OptionsFeuille {
   ascendance?: number
   /** Nombre de générations de descendance (sur le sablier) */
   descendance?: number
+  /** Famille de la personne de départ avec le conjoint de l'arbre du couple (la première union par défaut) */
+  conjoint?: string
 }
 
 export type Format = 'A4' | 'A3' | 'A2'
@@ -60,6 +62,8 @@ export interface Modele {
     generations?: boolean
     sablierGenerations?: boolean
     photos?: boolean
+    /** Choix du conjoint (arbre du couple) */
+    conjoint?: boolean
     fratrie: string
     mariages: string
   }
@@ -108,5 +112,15 @@ export const MODELES: Modele[] = [
     generations: 6,
     reglages: { theme: true, sablierGenerations: true, photos: true, fratrie: 'Frères et sœurs de chacun (sous ou à côté de la case)', mariages: 'Mariages et conjoints (année et commune)' },
     Feuille: Sablier,
+  },
+  {
+    id: 'couple',
+    titre: 'Arbre du couple',
+    description: 'La personne de départ et son conjoint côte à côte au centre, les ancêtres de chacun au-dessus (ceux de l’homme à gauche, ceux de la femme à droite) et leurs descendants communs en dessous, en plusieurs thèmes de couleurs.',
+    forme: 'arbre',
+    papier: { format: 'A3', orientation: 'landscape' },
+    generations: 6,
+    reglages: { theme: true, sablierGenerations: true, photos: true, conjoint: true, fratrie: 'Frères et sœurs de chacun (sous ou à côté de la case)', mariages: 'Mariages et conjoints (année et commune)' },
+    Feuille: Couple,
   },
 ]
