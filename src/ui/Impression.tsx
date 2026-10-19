@@ -42,6 +42,7 @@ interface Reglages {
   metiersCentre?: boolean
   metiersEtiquettes?: boolean
   metiersCartouches?: boolean
+  tousPrenoms?: boolean
 }
 
 const PAPIERS: Record<Format, [number, number]> = { A4: [210, 297], A3: [297, 420], A2: [420, 594] }
@@ -139,6 +140,7 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
     metiersCentre: reglages.metiersCentre !== false,
     metiersEtiquettes: !!reglages.metiersEtiquettes,
     metiersCartouches: !!reglages.metiersCartouches,
+    tousPrenoms: !!reglages.tousPrenoms,
     fratrieCases: !!modele.reglages.conjoint && fratrieBase && !!reglages.fratrieCases,
     fratrieBase: modele.reglages.descendants ? fratrieBase : fratrie,
     italiques: reglages.italiques,
@@ -273,6 +275,12 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
                   <label class="case" title="Les descendants sans enfant gardent une case aussi large que les autres ; à la dernière génération, les enfants d'un même parent sont empilés">
                     <input type="checkbox" id="impression-equitable" checked={!!reglages.equitable} onChange={(e) => setReglages({ equitable: e.currentTarget.checked })} />
                     Descendants équitables (cases égales, derniers enfants empilés)
+                  </label>
+                )}
+                {modele.reglages.descendants && (
+                  <label class="case">
+                    <input type="checkbox" id="impression-tous-prenoms" checked={!!reglages.tousPrenoms} onChange={(e) => setReglages({ tousPrenoms: e.currentTarget.checked })} />
+                    Tous les prénoms dans le titre
                   </label>
                 )}
                 {modele.verso && (

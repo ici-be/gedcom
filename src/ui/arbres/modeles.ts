@@ -36,6 +36,8 @@ export interface OptionsFeuille {
   metiersEtiquettes?: boolean
   /** Métier dans les petits cartouches de la génération 4 (génération 3 de l'arbre du couple) */
   metiersCartouches?: boolean
+  /** Tous les prénoms dans le titre de la feuille (le premier seulement par défaut ; les cases ne changent pas) */
+  tousPrenoms?: boolean
   /** Photos dans les cases des descendants (sur le sablier et l'arbre du couple ; sinon comme `photos`) */
   photosDesc?: boolean
   /** Conjoint et mariage dans les cartouches des descendants (sinon comme `mariages`) */

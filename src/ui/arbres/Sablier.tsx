@@ -652,7 +652,7 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
   const NOMS_DESC = ['ENFANTS', 'PETITS-ENFANTS', 'ARRIÈRE-PETITS-ENFANTS']
   const nomDe = (i?: Individu) => {
     const r = i ? resume(i) : undefined
-    return r ? [prenoms(r.prenom, 2), r.nom].filter(Boolean).join(' ') : ''
+    return r ? [prenoms(r.prenom, options.tousPrenoms ? 99 : 1), r.nom].filter(Boolean).join(' ') : ''
   }
   const noms = cotes.map((c) => nomDe(c.pl[1]?.ind)).filter(Boolean)
   const titre = noms.length ? noms.join(' et ') : couple ? 'Arbre du couple' : 'Ascendance et descendance'
