@@ -11,6 +11,7 @@ import type { Donnees } from '../../lib/donnees'
 import type { Arbre, Evenement, Famille, Individu, Photo } from '../../lib/gedcom/arbre'
 import { decouperLieu, romain } from '../../lib/communes'
 import { abregerCommune, anneeCourte, fratrie, mariageDesParents, places, prenoms, resumer, type Place, type Resume } from '../../lib/eventail'
+import { marie } from '../../lib/suivi'
 import type { OptionsFeuille } from './modeles'
 import { chargerPolices, largeur } from './mesure'
 import { ajuster } from './feuille'
@@ -279,15 +280,16 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
     const feuilles = disposer(enfants)
     const niveaux = parProfondeur(enfants)
     for (const n of niveaux.flat()) resume(n.ind)
-    const mariageDe = (id: string, famille?: string) => {
-      const m = famille ? d.suivis.get(id)?.mariages.find((x) => x.famille === famille) : undefined
-      return m && m.etat !== 'sans-objet' ? versMariage(m.evenement, m.etat) : undefined
+    /** L'union d'une personne dans une famille : mariée (avec l'année et la commune), ou non */
+    const unionDe = (id: string, famille?: string): { marie: boolean; m?: Mariage } => {
+      const f = famille ? d.suivis.get(id)?.mariages.find((x) => x.famille === famille) : undefined
+      return marie(f) ? { marie: true, m: versMariage(f!.evenement, f!.etat) } : { marie: false }
     }
     // Les ancêtres, comptés une fois même s'ils reviennent (implexe, ou ancêtre commun aux deux membres du couple)
     const ids = cotes.map((c) => new Set(c.pl.filter((p) => p?.ind && p.sosa > 1).map((p) => p.ind!.id)))
     const uniques = new Set(ids.flatMap((s) => [...s])).size
     const communs = new Set(ids.length > 1 ? [...ids[0]].filter((id) => ids[1].has(id)) : [])
-    return { racine, resume, cotes, naissance, ordre, feuilles, niveaux, mariageDe, uniques, communs }
+    return { racine, resume, cotes, naissance, ordre, feuilles, niveaux, unionDe, uniques, communs }
   }, [d, options.mariages, options.conjoint, asc, desc, couple])
 
   useLayoutEffect(() => {
@@ -298,7 +300,7 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
     return () => { vivant = false }
   })
 
-  const { racine, resume, cotes, naissance, ordre, feuilles, niveaux, mariageDe, communs } = donnees
+  const { racine, resume, cotes, naissance, ordre, feuilles, niveaux, unionDe, communs } = donnees
   const theme = trouverThemePyramide(options.theme)
   const decal = couple ? 1 : 0
 
@@ -373,9 +375,14 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
     if (parts.length > 1) textes.push(<text key={'m' + cle} x={cx.toFixed(1)} y={(y - 4).toFixed(1)} font-size={fs} data-fs={fs} data-max={Math.round(max)} text-anchor="middle" class="mar"><Morceaux parts={parts} /></text>)
   }
 
-  /** Le mariage au-dessus du trait entre deux époux de la rangée du milieu : l'année, puis la commune */
-  const mariageEntre = (cle: string, m: Mariage, xm: number, yMilieu: number) => {
+  /** Au-dessus du trait entre deux conjoints de la rangée du milieu : « ∞ » et l'année, puis la commune, s'ils sont mariés ; sinon « avec » */
+  const mariageEntre = (cle: string, u: { marie: boolean; m?: Mariage }, xm: number, yMilieu: number) => {
     const max = CENTRE.ecart - 6
+    const m: Partial<Mariage> = u.m ?? {}
+    if (!u.marie) {
+      textes.push(<text key={'mu' + cle} x={xm} y={(yMilieu - 5).toFixed(1)} font-size="9" data-fs="9" data-max={max} text-anchor="middle" class="mar mut">avec</text>)
+      return
+    }
     textes.push(<text key={'mu' + cle} x={xm} y={(yMilieu - (m.commune ? 15 : 5)).toFixed(1)} font-size="9" data-fs="9" data-max={max} text-anchor="middle" class="mar">
       <tspan class="mut">∞ </tspan>{m.annee && <tspan class={m.sourcee ? undefined : 'nd'}>{m.annee}</tspan>}
     </text>)
@@ -490,8 +497,7 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
       const B = pos(3)
       trait('u' + union.famille.id, `M${A.x + A.w} ${yMilieu}H${B.x}`)
       origines.set(union, { x: CENTRE.cx, y: yMilieu })
-      const m = options.mariages ? mariageDe(racine.id, union.famille.id) : undefined
-      if (m) mariageEntre(union.famille.id, m, CENTRE.cx, yMilieu)
+      if (options.mariages) mariageEntre(union.famille.id, unionDe(racine.id, union.famille.id), CENTRE.cx, yMilieu)
     }
   } else if (racine) {
     const xCentre = CENTRE.cx - CENTRE.w / 2
@@ -509,8 +515,7 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
       trait('u' + union.famille.id, `M${x1} ${yMilieu}H${x2}`)
       origines.set(union, { x: xm, y: yMilieu })
       if (cote === 'gauche') gaucheRangee = xc
-      const m = options.mariages ? mariageDe(racine.id, union.famille.id) : undefined
-      if (m) mariageEntre(union.famille.id, m, xm, yMilieu)
+      if (options.mariages) mariageEntre(union.famille.id, unionDe(racine.id, union.famille.id), xm, yMilieu)
     }
     // Frères et sœurs de la personne de départ : à gauche de la rangée
     const f = listeFratrie(cotes[0].freres.get(1) ?? [])
@@ -541,7 +546,6 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
   }
   for (const { union } of ordre) versEnfants('d' + union.famille.id, origines.get(union)!, union.enfants)
   let nbDescendants = 0
-  let conjointsMontres = false
   for (const n of niveaux.flat()) {
     nbDescendants++
     const { cx, x, y, w, h, vertical } = posDesc(n)
@@ -551,10 +555,10 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
     } else {
       const enPlus: Ligne[] = []
       if (options.mariages && n.conjoint) {
-        const m = mariageDe(n.ind.id, n.famille)
+        const { marie, m } = unionDe(n.ind.id, n.famille)
         const nom = [prenoms(n.conjoint.prenom, 1), n.conjoint.nom.toLocaleUpperCase('fr')].filter(Boolean).join(' ')
-        enPlus.push({ fs: [0, 9, 8.6, 8.2, 7.4][tailleDesc(w)], parts: [['∞ ', 'mut'], ...(m?.annee ? [[m.annee + ' ', m.sourcee ? undefined : 'nd'] as Morceau] : []), [nom]], cls: 'mt' })
-        conjointsMontres = true
+        const debut: Morceau[] = marie ? [['∞ ', 'mut'], ...(m?.annee ? [[m.annee + ' ', m.sourcee ? undefined : 'nd'] as Morceau] : [])] : [['avec ', 'mut']]
+        enPlus.push({ fs: [0, 9, 8.6, 8.2, 7.4][tailleDesc(w)], parts: [...debut, [nom]], cls: 'mt' })
       }
       cartouche('d' + n.ind.id, x, y, w, h, tailleDesc(w), r, false, couleurDesc(n), photoDe(n.ind), enPlus)
     }
@@ -578,9 +582,7 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
   const titre = noms.length ? noms.join(' et ') : couple ? 'Arbre du couple' : 'Ascendance et descendance'
   const surTitre = couple ? 'ARBRE DU COUPLE' : 'ASCENDANCE ET DESCENDANCE'
   const adresse = options.qr ? d.adresse : ''
-  const nbMariages = cotes.reduce((n, c) => n + c.mariages.size, 0)
   const legende = [
-    (nbMariages > 0 || conjointsMontres) && '∞ mariage' + (conjointsMontres ? ' (et conjoint des descendants)' : ''),
     options.fratrie && 'en italique : frères et sœurs',
     options.italiques && 'date en italique : sans source',
     implexes && (communs.size ? '◆ implexe ou ancêtre commun aux deux' : '◆ implexe'),

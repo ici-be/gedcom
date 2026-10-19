@@ -10,7 +10,7 @@ import { decouperLieu, nomSiecle, numeroSiecle } from '../lib/communes'
 import { decouperMetiers } from '../lib/metiers'
 import { nombre } from '../lib/format'
 import { nomComplet } from '../lib/parente'
-import type { Fait } from '../lib/suivi'
+import { marie, type Fait } from '../lib/suivi'
 import { CasePhotos, normaliser, Pastille, Photo, Sources, usePhotos } from './commun'
 import { lienMetier } from './Metiers'
 
@@ -99,7 +99,7 @@ function Union({ d, m, photo }: { d: Donnees; m: Maillon; photo: boolean }) {
     <div class="lg-union">
       <div class="lg-union-ligne">
         {m.union && e && <Pastille etat={m.union.etat} introuvable={m.union.introuvable} />}
-        <span class="lg-signe" title="Union" aria-label="Union">∞</span>
+        {marie(m.union) && <span class="lg-signe" title="Mariage" aria-label="Mariage">∞</span>}
         <span>
           {e?.date?.texte ? <>{e.date.texte}{e.lieu ? ', ' : ''}</> : null}<Lieu lieu={e?.lieu} />
           {e && (e.date || e.lieu) ? ' · ' : ''}

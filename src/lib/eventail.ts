@@ -3,7 +3,7 @@
 import type { Arbre, Evenement, Individu } from './gedcom/arbre'
 import type { DateGed } from './gedcom/dates'
 import { etatParents } from './parente'
-import type { Fait, Suivi } from './suivi'
+import { marie, type Fait, type Suivi } from './suivi'
 import { decouper } from './geo'
 
 /** connu · parent inconnu ou introuvable (note Filiation) · à chercher · vide (au-dessus d'une place sans personne) */
@@ -232,8 +232,8 @@ export function mariageDesParents(pl: Place[], sosa: number, suivis: Map<string,
   if (!enfant || !parent) return undefined
   const fam = enfant.famc.find((f) => parent.fams.includes(f))
   const m = fam ? suivis.get(parent.id)?.mariages.find((x) => x.famille === fam) : undefined
-  if (!m?.evenement || m.etat === 'sans-objet') return undefined
-  return anneeCourte(m.evenement)?.replace(/^\?$/, '') || m.evenement.lieu ? m : undefined
+  if (!m || !marie(m)) return undefined
+  return anneeCourte(m.evenement!)?.replace(/^\?$/, '') || m.evenement!.lieu ? m : undefined
 }
 
 /**

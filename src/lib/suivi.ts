@@ -65,6 +65,12 @@ export function unionLibre(e: Evenement): boolean {
   return UNION_LIBRE.test(e.type ?? '')
 }
 
+/** Un vrai mariage : un acte noté (mariage, bans, contrat…), ni union libre ni simples fiançailles */
+export function marie(f?: Fait): boolean {
+  const e = f?.evenement
+  return !!e && e.tag !== 'ENGA' && !unionLibre(e)
+}
+
 function faitMariage(fam: Famille, ind: Individu): Fait {
   const f = fait(fam.evenements, ['MARR', 'MARB', 'MARC', 'MARL', 'ENGA'])
   const conjoint = fam.mari === ind.id ? fam.femme : fam.mari

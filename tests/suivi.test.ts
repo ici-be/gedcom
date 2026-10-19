@@ -124,3 +124,14 @@ describe('relevés', () => {
     expect(relevePrecedent(releves, '2026-10-01', 'a.gwb')).toBeUndefined()
   })
 })
+
+test('mariage : un acte noté, ni union libre ni fiançailles', async () => {
+  const { marie } = await import('../src/lib/suivi')
+  const ev = (tag: string, type?: string): any => ({ tag, type, sources: [] })
+  expect(marie({ etat: 'sans-source', evenement: ev('MARR') })).toBe(true)
+  expect(marie({ etat: 'manquant', evenement: ev('MARR') })).toBe(true)
+  expect(marie({ etat: 'sans-objet', evenement: ev('MARR', 'unmarried') })).toBe(false)
+  expect(marie({ etat: 'sans-source', evenement: ev('ENGA') })).toBe(false)
+  expect(marie({ etat: 'manquant' })).toBe(false)
+  expect(marie(undefined)).toBe(false)
+})

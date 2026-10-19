@@ -495,7 +495,6 @@ export function Pyramide({ d, options }: { d: Donnees; options: OptionsFeuille }
   const titre = p1 ? [prenoms(p1.prenom, 2), p1.nom].filter(Boolean).join(' ') : 'Ascendance'
   const adresse = options.qr ? d.adresse : ''
   const legende = [
-    mariages.size > 0 && '∞ mariage des parents',
     options.fratrie && 'en italique sous les cases : frères et sœurs',
     options.italiques && 'date en italique : sans source',
     implexes && '◆ implexe',
