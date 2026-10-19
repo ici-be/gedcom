@@ -675,7 +675,7 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
 
   // ——— Marges et pied de page ———
   const NOMS_DESC = ['ENFANT', 'PETIT-ENFANT', 'ARRIÈRE-PETIT-ENFANT']
-  const nomDesc = (g: number) => { const n = niveaux[g - 1]?.length ?? 0; return `${n} ${NOMS_DESC[g - 1]}${n > 1 ? 'S' : ''}` }
+  const nomDesc = (g: number) => { const n = niveaux[g - 1]?.length ?? 0; return `${n} ${n > 1 ? NOMS_DESC[g - 1].replace('PETIT', 'PETITS') + 'S' : NOMS_DESC[g - 1]}` }
   const nomDe = (i?: Individu) => {
     const r = i ? resume(i) : undefined
     return r ? [prenoms(r.prenom, options.tousPrenoms ? 99 : 1), r.nom].filter(Boolean).join(' ') : ''
