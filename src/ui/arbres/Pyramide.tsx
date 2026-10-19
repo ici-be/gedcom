@@ -239,6 +239,19 @@ export function compteFreres(f: Individu[]): string {
   return `${n} frères et sœurs`
 }
 
+/** Les frères et les sœurs comptés séparément : « 4 frères », « 4 frères et une sœur », « un frère et 2 sœurs » */
+export function compteFreresEtSoeurs(f: Individu[]): string {
+  const frere = f.filter((x) => x.sexe === 'M').length
+  const soeur = f.filter((x) => x.sexe === 'F').length
+  const autre = f.length - frere - soeur
+  const parts = [
+    frere && (frere === 1 ? 'un frère' : `${frere} frères`),
+    soeur && (soeur === 1 ? 'une sœur' : `${soeur} sœurs`),
+    autre && `${autre} de sexe inconnu`,
+  ].filter(Boolean) as string[]
+  return parts.length > 1 ? `${parts.slice(0, -1).join(', ')} et ${parts[parts.length - 1]}` : parts[0] ?? ''
+}
+
 /**
  * Les frères et sœurs en lignes de `max` de large : avec l'année de naissance si tout tient,
  * sinon les prénoms seuls, sinon ce qui tient suivi de « + n ».

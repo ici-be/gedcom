@@ -17,7 +17,7 @@ import { chargerPolices, largeur } from './mesure'
 import { ajuster } from './feuille'
 import { CodeQR } from './EventailOrigines'
 import {
-  Bloc, cadrePortrait, caser, compteFreres, LIBELLES, lignesCartouche, lignesEtiquette, lignesFratrie, Morceaux, Portrait,
+  Bloc, cadrePortrait, caser, compteFreres, compteFreresEtSoeurs, LIBELLES, lignesCartouche, lignesEtiquette, lignesFratrie, Morceaux, Portrait,
   trouverThemePyramide, type CouleurCase, type Ligne, type Mariage, type Morceau,
 } from './Pyramide'
 
@@ -543,7 +543,7 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
       const implexe = estImplexe(cote, p)
       const c = couleurAsc(v, s, p.ind!.sexe)
       if (R.vertical) {
-        etiquette(cle + s, cx, y, w, h, G, r, implexe, c, G === 5 && options.fratrie ? compteFreres(freres.get(s) ?? []) : '', couple && G === 5)
+        etiquette(cle + s, cx, y, w, h, G, r, implexe, c, G === 5 && options.fratrie ? (couple ? compteFreresEtSoeurs : compteFreres)(freres.get(s) ?? []) : '', couple && G === 5)
         continue
       }
       cartouche(cle + s, x, y, w, h, G, r, implexe, c, photoDe(p.ind), [], G === 4 && !!options.metiersCartouches)
