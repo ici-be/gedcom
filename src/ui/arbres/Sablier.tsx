@@ -386,15 +386,19 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
   }
 
   /** Une étiquette verticale */
-  const etiquette = (cle: string, cx: number, y: number, w: number, h: number, g: number, r: Resume, implexe: boolean, c: CouleurCase, freresTexte = '') => {
+  const etiquette = (cle: string, cx: number, y: number, w: number, h: number, g: number, r: Resume, implexe: boolean, c: CouleurCase, freresTexte = '', datesBas = false) => {
     cases.push(<rect key={'c' + cle} x={(cx - w / 2).toFixed(2)} y={y} width={w.toFixed(2)} height={h} rx="1.5" fill={c.fond} stroke={c.trait} stroke-width={g >= 8 ? 0.45 : 0.7} />)
     const metier: Ligne[] = g === 5 && options.metiersEtiquettes && r.metier ? [{ fs: 6.6, parts: [[r.metier]], cls: 'mt' }] : []
-    const lignes = caser([...lignesEtiquette(g, r, implexe, freresTexte), ...metier], Math.max(w * 0.82, w - 3))
+    // Les dates à l'horizontale dans le bas de la case : le texte tourné n'en porte plus
+    const dates = datesBas ? morceauxAnnees(r) : []
+    const bas = dates.length ? 11 : 0
+    const lignes = caser([...lignesEtiquette(g, datesBas ? { ...r, naissance: undefined, deces: undefined } : r, implexe, freresTexte), ...metier], Math.max(w * 0.82, w - 3))
     textes.push(
-      <g key={'x' + cle} transform={`translate(${cx.toFixed(2)},${y + h / 2}) rotate(-90)`}>
-        <Bloc lignes={lignes} x={0} yc={0} max={h - 8} />
+      <g key={'x' + cle} transform={`translate(${cx.toFixed(2)},${y + (h - bas) / 2}) rotate(-90)`}>
+        <Bloc lignes={lignes} x={0} yc={0} max={h - bas - 8} />
       </g>,
     )
+    if (dates.length) textes.push(<text key={'a' + cle} x={cx.toFixed(2)} y={(y + h - 3.5).toFixed(2)} font-size="6.2" data-fs="6.2" data-max={Math.round(w - 1)} text-anchor="middle"><Morceaux parts={dates} /></text>)
   }
 
   /** Une étiquette verticale à deux lignes (prénom, nom), l'année de naissance à l'horizontale dans le bas de la case */
@@ -539,7 +543,7 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
       const implexe = estImplexe(cote, p)
       const c = couleurAsc(v, s, p.ind!.sexe)
       if (R.vertical) {
-        etiquette(cle + s, cx, y, w, h, G, r, implexe, c, G === 5 && options.fratrie ? compteFreres(freres.get(s) ?? []) : '')
+        etiquette(cle + s, cx, y, w, h, G, r, implexe, c, G === 5 && options.fratrie ? compteFreres(freres.get(s) ?? []) : '', couple && G === 5)
         continue
       }
       cartouche(cle + s, x, y, w, h, G, r, implexe, c, photoDe(p.ind), [], G === 4 && !!options.metiersCartouches)
