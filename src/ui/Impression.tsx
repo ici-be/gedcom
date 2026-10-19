@@ -35,6 +35,7 @@ interface Reglages {
   photosDesc?: boolean
   mariagesDesc?: boolean
   equitable?: boolean
+  fratrieBase?: boolean
 }
 
 const PAPIERS: Record<Format, [number, number]> = { A4: [210, 297], A3: [297, 420], A2: [420, 594] }
@@ -110,6 +111,7 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
   const fratrie = reglages.fratrie !== false
   const photosActives = reglages.photos !== false
   const formePhoto: FormePhoto = FORMES_PHOTO.some((f) => f.id === reglages.formePhoto) ? reglages.formePhoto! : 'carree'
+  const fratrieBase = reglages.fratrieBase ?? fratrie
   const photosDesc = reglages.photosDesc ?? photosActives
   const mariagesDesc = reglages.mariagesDesc ?? reglages.mariages !== false
   const bordsArrondis = reglages.bordsArrondis !== false
@@ -123,6 +125,7 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
     descendance,
     conjoint,
     fratrie,
+    fratrieBase: modele.reglages.descendants ? fratrieBase : fratrie,
     italiques: reglages.italiques,
     photos: photosActives,
     equitable: !!modele.reglages.equitable && !!reglages.equitable,
@@ -281,8 +284,14 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
                 )}
                 <label class="case">
                   <input type="checkbox" id="impression-fratrie" checked={fratrie} onChange={(e) => setReglages({ fratrie: e.currentTarget.checked })} />
-                  {modele.reglages.fratrie}
+                  {modele.reglages.descendants ? 'Frères et sœurs des ancêtres (sous ou à côté de la case)' : modele.reglages.fratrie}
                 </label>
+                {modele.reglages.descendants && (
+                  <label class="case">
+                    <input type="checkbox" id="impression-fratrie-base" checked={fratrieBase} onChange={(e) => setReglages({ fratrieBase: e.currentTarget.checked })} />
+                    {modele.reglages.conjoint ? 'Frères et sœurs des deux membres du couple' : 'Frères et sœurs de la personne de départ'}
+                  </label>
+                )}
                 <label class="case">
                   <input type="checkbox" id="impression-italiques" checked={!!reglages.italiques} onChange={(e) => setReglages({ italiques: e.currentTarget.checked })} />
                   Dates sans source en italique

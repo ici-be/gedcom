@@ -354,7 +354,7 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
   const couleurAsc = (v: number, s: number, sexe?: 'M' | 'F' | '?') => theme.case(theme.id === 'generations' ? s : v, sexe)
   const photoDe = (i?: Individu, descendant = false) => ((descendant ? options.photosDesc ?? options.photos : options.photos) && i?.photo && !ratees.has(i.photo.url) ? i.photo : undefined)
   const rater = (url: string) => () => setRatees((r) => new Set(r).add(url))
-  const listeFratrie = (f: Individu[]) => (options.fratrie ? f : []).map((x) => ({ prenom: prenoms(x.prenom, 1) || '?', annee: anneeCourte(naissance(x))?.replace(/^\?$/, '') || undefined }))
+  const listeFratrie = (f: Individu[], base = false) => ((base ? options.fratrieBase ?? options.fratrie : options.fratrie) ? f : []).map((x) => ({ prenom: prenoms(x.prenom, 1) || '?', annee: anneeCourte(naissance(x))?.replace(/^\?$/, '') || undefined }))
   const formePhoto = options.formePhoto ?? 'carree'
 
   const traits: JSX.Element[] = []
@@ -516,7 +516,7 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
       }
       cartouche('centre' + cote.cle, x, y, w, h, 0, resume(ind), estImplexe(cote, cote.pl[1]), couleurAsc(2 + i, 1, ind.sexe), photoDe(ind))
       // Frères et sœurs de chacun, vers l'extérieur de la feuille
-      const f = listeFratrie(cote.freres.get(1) ?? [])
+      const f = listeFratrie(cote.freres.get(1) ?? [], true)
       if (!f.length) return
       const xt = i === 0 ? x - 14 : x + w + 14
       fratrieACote('f' + cote.cle + '1', f, xt, i === 0 ? xt - X0 - 20 : X0 + LARG - xt - 20, i === 0, yMilieu, rCentre.h)
@@ -548,7 +548,7 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
       if (options.mariages) mariageEntre(union.famille.id, unionDe(racine.id, union.famille.id), xm, yMilieu)
     }
     // Frères et sœurs de la personne de départ : à gauche de la rangée
-    const f = listeFratrie(cotes[0].freres.get(1) ?? [])
+    const f = listeFratrie(cotes[0].freres.get(1) ?? [], true)
     if (f.length) fratrieACote('f1', f, gaucheRangee - 14, gaucheRangee - 14 - X0 - 20, true, yMilieu, rCentre.h)
   }
 
@@ -617,7 +617,7 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
   const surTitre = couple ? 'ARBRE DU COUPLE' : 'ASCENDANCE ET DESCENDANCE'
   const adresse = options.qr ? d.adresse : ''
   const legende = [
-    options.fratrie && 'en italique : frères et sœurs',
+    (options.fratrie || (options.fratrieBase ?? options.fratrie)) && 'en italique : frères et sœurs',
     options.italiques && 'date en italique : sans source',
     implexes && (communs.size ? '◆ implexe ou ancêtre commun aux deux' : '◆ implexe'),
   ].filter(Boolean).join(' · ')
