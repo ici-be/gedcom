@@ -8,7 +8,7 @@ import '@fontsource/fira-sans-condensed/latin-500.css'
 import '@fontsource/fira-sans-condensed/latin-600.css'
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks'
 import type { Donnees } from '../lib/donnees'
-import { nomFichierArbre } from '../lib/format'
+import { nomFichierArbre, nomFichierCouple } from '../lib/format'
 import { ecrire, lire } from '../lib/stockage'
 import { MODELES, type Format, type FormePhoto } from './arbres/modeles'
 import { bornerGenerationsPyramide, FORMES_PHOTO, GENERATIONS_PYRAMIDE, GEN_MAX_PYRAMIDE, GEN_MIN_PYRAMIDE, THEMES_PYRAMIDE, trouverThemePyramide } from './arbres/Pyramide'
@@ -93,17 +93,6 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
   const [court, long] = PAPIERS[format]
   const [largeur, hauteur] = modele.papier.orientation === 'landscape' ? [long, court] : [court, long]
 
-  // Le navigateur nomme le PDF d'après le titre de la page : on le change le temps de l'impression
-  const racine = d.arbre.individus.get(d.racine)
-  const nomFichier = nomFichierArbre(racine?.prenom ?? '', racine?.nom ?? '', jour)
-  useEffect(() => {
-    let titre = document.title
-    const avant = () => { titre = document.title; document.title = nomFichier }
-    const apres = () => { document.title = titre }
-    addEventListener('beforeprint', avant)
-    addEventListener('afterprint', apres)
-    return () => { removeEventListener('beforeprint', avant); removeEventListener('afterprint', apres) }
-  }, [nomFichier])
   const themeChoisi = trouverThemePyramide(reglages.theme)
   const theme = themeChoisi.id
   const generations = modele.reglages.generations ? bornerGenerationsPyramide(reglages.generations) : modele.generations
@@ -112,6 +101,20 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
   // Arbre du couple : le conjoint choisi s'il est encore parmi ceux de la personne de départ, sinon le premier
   const conjoints = modele.reglages.conjoint && racine ? conjointsDe(d.arbre, racine) : []
   const conjoint = conjoints.find((c) => c.famille === reglages.conjoint)?.famille ?? conjoints[0]?.famille
+  // Arbre du couple : les noms des deux, dans l'ordre de la feuille (l'homme à gauche)
+  const membre = conjoints.find((c) => c.famille === conjoint)?.conjoint
+  const [premier, second] = racine?.sexe === 'F' && membre?.sexe === 'M' ? [membre, racine] : [racine, membre]
+  const nomFichier = modele.reglages.conjoint && membre ? nomFichierCouple(premier?.nom ?? '', second?.nom ?? '', jour) : nomFichierArbre(racine?.prenom ?? '', racine?.nom ?? '', jour)
+  // Le navigateur nomme le PDF d'après le titre de la page : on le change le temps de l'impression
+  const racine = d.arbre.individus.get(d.racine)
+  useEffect(() => {
+    let titre = document.title
+    const avant = () => { titre = document.title; document.title = nomFichier }
+    const apres = () => { document.title = titre }
+    addEventListener('beforeprint', avant)
+    addEventListener('afterprint', apres)
+    return () => { removeEventListener('beforeprint', avant); removeEventListener('afterprint', apres) }
+  }, [nomFichier])
   const fratrie = reglages.fratrie !== false
   const photosActives = reglages.photos !== false
   const formePhoto: FormePhoto = FORMES_PHOTO.some((f) => f.id === reglages.formePhoto) ? reglages.formePhoto! : 'carree'
