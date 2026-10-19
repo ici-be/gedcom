@@ -826,3 +826,11 @@ a.asc-piste-g:hover { color: var(--accent); }
 }
 .lectures ul { margin: 0; padding-left: 1.2em; }
 .lectures li { margin: 2px 0; }
+
+/* le sous-ensemble « latin » des polices n'a pas Ÿ, Ł, Ő… : on les prend dans « latin-ext » (sinon une police de repli, plus grande) */
+@font-face { font-family: "Fira Sans Condensed"; font-style: normal; font-weight: 400; font-display: swap; unicode-range: U+0100-0130,U+0132-0151,U+0154-017F; src: url(../node_modules/@fontsource/fira-sans-condensed/files/fira-sans-condensed-latin-ext-400-normal.woff2) format("woff2"); }
+@font-face { font-family: "Fira Sans Condensed"; font-style: normal; font-weight: 500; font-display: swap; unicode-range: U+0100-0130,U+0132-0151,U+0154-017F; src: url(../node_modules/@fontsource/fira-sans-condensed/files/fira-sans-condensed-latin-ext-500-normal.woff2) format("woff2"); }
+@font-face { font-family: "Fira Sans Condensed"; font-style: normal; font-weight: 600; font-display: swap; unicode-range: U+0100-0130,U+0132-0151,U+0154-017F; src: url(../node_modules/@fontsource/fira-sans-condensed/files/fira-sans-condensed-latin-ext-600-normal.woff2) format("woff2"); }
+@font-face { font-family: "Fira Sans Condensed"; font-style: italic; font-weight: 400; font-display: swap; unicode-range: U+0100-0130,U+0132-0151,U+0154-017F; src: url(../node_modules/@fontsource/fira-sans-condensed/files/fira-sans-condensed-latin-ext-400-italic.woff2) format("woff2"); }
+@font-face { font-family: "Fraunces"; font-style: normal; font-weight: 400; font-display: swap; unicode-range: U+0100-0130,U+0132-0151,U+0154-017F; src: url(../node_modules/@fontsource/fraunces/files/fraunces-latin-ext-400-normal.woff2) format("woff2"); }
+@font-face { font-family: "Fraunces"; font-style: normal; font-weight: 500; font-display: swap; unicode-range: U+0100-0130,U+0132-0151,U+0154-017F; src: url(../node_modules/@fontsource/fraunces/files/fraunces-latin-ext-500-normal.woff2) format("woff2"); }
