@@ -24,6 +24,8 @@ export interface OptionsFeuille {
   photos?: boolean
   /** Frères et sœurs de la personne de départ (et de son conjoint pour l'arbre du couple), sinon comme `fratrie` */
   fratrieBase?: boolean
+  /** Frères et sœurs du couple en petites cases (empilées) reliées à leurs parents plutôt qu'en texte (arbre du couple) */
+  fratrieCases?: boolean
   /** Photos dans les cases des descendants (sur le sablier et l'arbre du couple ; sinon comme `photos`) */
   photosDesc?: boolean
   /** Conjoint et mariage dans les cartouches des descendants (sinon comme `mariages`) */

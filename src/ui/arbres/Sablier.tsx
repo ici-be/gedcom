@@ -10,7 +10,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/ho
 import type { Donnees } from '../../lib/donnees'
 import type { Arbre, Evenement, Famille, Individu, Photo } from '../../lib/gedcom/arbre'
 import { decouperLieu, romain } from '../../lib/communes'
-import { abregerCommune, anneeCourte, fratrie, mariageDesParents, places, prenoms, resumer, type Place, type Resume } from '../../lib/eventail'
+import { abregerCommune, anneeCourte, fratrie, mariageDesParents, morceauxAnnees, places, prenoms, resumer, type Place, type Resume } from '../../lib/eventail'
 import { marie } from '../../lib/suivi'
 import type { OptionsFeuille } from './modeles'
 import { chargerPolices, largeur } from './mesure'
@@ -49,6 +49,7 @@ const borner = (n: number | undefined, min: number, max: number, defaut: number)
 export const bornerAscendance = (n?: number) => borner(n, ASC_MIN_SABLIER, ASC_MAX_SABLIER, ASC_DEFAUT_SABLIER)
 export const bornerDescendance = (n?: number) => borner(n, DESC_MIN_SABLIER, DESC_MAX_SABLIER, DESC_DEFAUT_SABLIER)
 
+const maj = (s: string) => s.toLocaleUpperCase('fr')
 const arrondi = (n: number) => Math.round(n * 10) / 10
 
 // ——— Descendance ———
@@ -427,6 +428,43 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
     textes.push(<g key={cle}>{l.map((m, j) => <text key={j} x={xt.toFixed(1)} y={(y0 + j * fs * LH).toFixed(1)} font-size={fs} data-fs={fs} data-max={Math.round(larg)} text-anchor={versGauche ? 'end' : 'start'} class="fr"><Morceaux parts={m} /></text>)}</g>)
   }
 
+  /**
+   * Les frères et sœurs d'un membre du couple en petites cases, dans la rangée du milieu vers l'extérieur de la feuille, empilées
+   * par colonnes et reliées à ses parents ; renvoie faux s'il y en a trop pour tenir (ils s'écrivent alors en texte).
+   */
+  const fratrieEnCases = (cle: string, freres: Individu[], i: number, x: number, w: number, y: number, h: number, parents: { P: { cx: number }; M: { cx: number } }, ym: number) => {
+    const LC = 104
+    const ESP = 6
+    const place = i === 0 ? x - 14 - X0 : X0 + LARG - (x + w + 14)
+    const colonnes = Math.floor((place + ESP) / (LC + ESP))
+    const pile = Math.min(3, Math.ceil(freres.length / Math.max(1, colonnes)))
+    if (colonnes < 1 || freres.length > colonnes * 3) return false
+    const hc = Math.min(40, (h - GAP_PILE * (pile - 1)) / pile)
+    const nbCol = Math.ceil(freres.length / pile)
+    const haut = pile * hc + (pile - 1) * GAP_PILE
+    const y0 = y + (h - haut) / 2
+    const xs: number[] = []
+    for (let j = 0; j < nbCol; j++) {
+      const cx = i === 0 ? x - 14 - LC / 2 - j * (LC + ESP) : x + w + 14 + LC / 2 + j * (LC + ESP)
+      xs.push(cx)
+      freres.slice(j * pile, (j + 1) * pile).forEach((fr, k) => {
+        const r = resume(fr)
+        const c = couleurAsc(2 + i, 1, fr.sexe)
+        const yc = y0 + k * (hc + GAP_PILE)
+        const lignes = caser([
+          { fs: 8.6, parts: [...(prenoms(r.prenom, 1) ? [[prenoms(r.prenom, 1) + ' ', 'pn'] as Morceau] : []), [maj(r.nom || '?'), 'nm'] as Morceau] },
+          ...(r.naissance || r.deces ? [{ fs: 7.4, parts: morceauxAnnees(r) }] : []),
+        ], hc - 5)
+        cases.push(<rect key={cle + 'fc' + j + k} x={(cx - LC / 2).toFixed(1)} y={yc.toFixed(1)} width={LC} height={hc.toFixed(1)} rx="3" fill={c.fond} stroke={c.trait} stroke-width="0.9" />)
+        textes.push(<g key={cle + 'ft' + j + k}><Bloc lignes={lignes} x={cx} yc={yc + hc / 2} max={LC - 6} /></g>)
+      })
+    }
+    const xm = (parents.P.cx + parents.M.cx) / 2
+    const tous = [xm, ...xs]
+    trait(cle + 'fl', `M${Math.min(...tous).toFixed(1)} ${ym}H${Math.max(...tous).toFixed(1)}${xs.map((cx) => `M${cx.toFixed(1)} ${ym}V${y0.toFixed(1)}`).join('')}`)
+    return true
+  }
+
   // ——— Ascendance (comme la pyramide, la personne de départ au milieu de la feuille ; pour le couple, une moitié chacun) ———
   const wCentre = couple ? CENTRE.wCouple : CENTRE.w
   /** La place `v` sur la feuille : G, la rangée comme sur la pyramide ; g, la génération comptée depuis la rangée du milieu */
@@ -518,6 +556,7 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
       // Frères et sœurs de chacun, vers l'extérieur de la feuille
       const f = listeFratrie(cote.freres.get(1) ?? [], true)
       if (!f.length) return
+      if (options.fratrieCases && fratrieEnCases(cote.cle, f.length ? cote.freres.get(1)! : [], i, x, w, y, h, { P: pos(2 * (1 + 2 ** i)), M: pos(2 * (1 + 2 ** i) + 1) }, barreAuDessus(rCentre))) return
       const xt = i === 0 ? x - 14 : x + w + 14
       fratrieACote('f' + cote.cle + '1', f, xt, i === 0 ? xt - X0 - 20 : X0 + LARG - xt - 20, i === 0, yMilieu, rCentre.h)
     })

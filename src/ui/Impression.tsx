@@ -36,6 +36,7 @@ interface Reglages {
   mariagesDesc?: boolean
   equitable?: boolean
   fratrieBase?: boolean
+  fratrieCases?: boolean
 }
 
 const PAPIERS: Record<Format, [number, number]> = { A4: [210, 297], A3: [297, 420], A2: [420, 594] }
@@ -125,6 +126,7 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
     descendance,
     conjoint,
     fratrie,
+    fratrieCases: !!modele.reglages.conjoint && fratrieBase && !!reglages.fratrieCases,
     fratrieBase: modele.reglages.descendants ? fratrieBase : fratrie,
     italiques: reglages.italiques,
     photos: photosActives,
@@ -290,6 +292,12 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
                   <label class="case">
                     <input type="checkbox" id="impression-fratrie-base" checked={fratrieBase} onChange={(e) => setReglages({ fratrieBase: e.currentTarget.checked })} />
                     {modele.reglages.conjoint ? 'Frères et sœurs des deux membres du couple' : 'Frères et sœurs de la personne de départ'}
+                  </label>
+                )}
+                {modele.reglages.conjoint && fratrieBase && (
+                  <label class="case" title="Petites cases empilées à côté de chaque membre du couple, reliées à leurs parents ; en texte s'il y en a trop">
+                    <input type="checkbox" id="impression-fratrie-cases" checked={!!reglages.fratrieCases} onChange={(e) => setReglages({ fratrieCases: e.currentTarget.checked })} />
+                    Les afficher en petites cases reliées à leurs parents
                   </label>
                 )}
                 <label class="case">
