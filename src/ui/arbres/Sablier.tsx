@@ -622,7 +622,7 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
   for (const n of niveaux.flat()) {
     nbDescendants++
     const { cx, x, y, w, h, vertical } = posDesc(n)
-    const r = options.lieuxDesc === false ? { ...resume(n.ind), commune: undefined } : resume(n.ind)
+    const r = { ...resume(n.ind), ...(options.lieuxDesc === false && { commune: undefined }), ...(options.metiersDesc === false && { metier: undefined }) }
     if (vertical) {
       etiquette('d' + n.ind.id, cx, y, w, h, h >= 100 ? 5 : 6, r, false, couleurDesc(n))
     } else {

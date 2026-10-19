@@ -28,6 +28,8 @@ export interface OptionsFeuille {
   fratrieCases?: boolean
   /** Commune de naissance dans les cases des descendants (vrai par défaut) */
   lieuxDesc?: boolean
+  /** Métier dans les cases des descendants (vrai par défaut) */
+  metiersDesc?: boolean
   /** Photos dans les cases des descendants (sur le sablier et l'arbre du couple ; sinon comme `photos`) */
   photosDesc?: boolean
   /** Conjoint et mariage dans les cartouches des descendants (sinon comme `mariages`) */
