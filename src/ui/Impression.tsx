@@ -37,6 +37,7 @@ interface Reglages {
   equitable?: boolean
   fratrieBase?: boolean
   fratrieCases?: boolean
+  lieuxDesc?: boolean
 }
 
 const PAPIERS: Record<Format, [number, number]> = { A4: [210, 297], A3: [297, 420], A2: [420, 594] }
@@ -126,6 +127,7 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
     descendance,
     conjoint,
     fratrie,
+    lieuxDesc: reglages.lieuxDesc !== false,
     fratrieCases: !!modele.reglages.conjoint && fratrieBase && !!reglages.fratrieCases,
     fratrieBase: modele.reglages.descendants ? fratrieBase : fratrie,
     italiques: reglages.italiques,
@@ -282,6 +284,12 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
                   <label class="case">
                     <input type="checkbox" id="impression-mariages-desc" checked={mariagesDesc} onChange={(e) => setReglages({ mariagesDesc: e.currentTarget.checked })} />
                     Conjoints des descendants (« ∞ année conjoint »)
+                  </label>
+                )}
+                {modele.reglages.descendants && (
+                  <label class="case">
+                    <input type="checkbox" id="impression-lieux-desc" checked={reglages.lieuxDesc !== false} onChange={(e) => setReglages({ lieuxDesc: e.currentTarget.checked })} />
+                    Commune de naissance des descendants
                   </label>
                 )}
                 <label class="case">
