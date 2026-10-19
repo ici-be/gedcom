@@ -432,15 +432,20 @@ export function Pyramide({ d, options }: { d: Donnees; options: OptionsFeuille }
     if (R.vertical) {
       const f = g === 5 && options.fratrie ? compteFreres(freres.get(s) ?? []) : ''
       const lignes = caser(lignesEtiquette(g, r, implexe, f), Math.max(w * 0.82, w - 3))
+      // le numéro en haut de l'étiquette, à l'horizontale ; le nom descend d'autant
+      const fn = Math.min(6.5, w * 0.42)
+      const decale = options.numeros ? fn + 2 : 0
+      if (options.numeros) textes.push(<text key={'n' + s} x={cx.toFixed(2)} y={(y + fn + 1.5).toFixed(1)} font-size={fn.toFixed(2)} data-max={Math.round(w)} text-anchor="middle" class="mut an">{s}</text>)
       textes.push(
-        <g key={'x' + s} transform={`translate(${cx.toFixed(2)},${y + h / 2}) rotate(-90)`}>
-          <Bloc lignes={lignes} x={0} yc={0} max={h - 8} />
+        <g key={'x' + s} transform={`translate(${cx.toFixed(2)},${y + (h + decale) / 2}) rotate(-90)`}>
+          <Bloc lignes={lignes} x={0} yc={0} max={h - 8 - decale} />
         </g>,
       )
       continue
     }
 
-    // Cartouche : photo à gauche (en haut pour la génération V), texte à côté
+    // Cartouche : photo à gauche (en haut pour la génération V), texte à côté ; le numéro dans le coin en haut à droite
+    if (options.numeros) textes.push(<text key={'n' + s} x={(x + w - 4).toFixed(1)} y={y + 9} font-size={g >= 3 ? 6.5 : 7.5} text-anchor="end" class="mut an">{s}</text>)
     const ph = photoDe(p)
     const formePhoto = options.formePhoto ?? 'carree'
     const cadre = ph ? cadrePortrait(g, w, h, !!ph.signature, formePhoto, options.bordsArrondis ?? true) : undefined
@@ -494,6 +499,7 @@ export function Pyramide({ d, options }: { d: Donnees; options: OptionsFeuille }
     options.fratrie && 'en italique sous les cases : frères et sœurs',
     options.italiques && 'date en italique : sans source',
     implexes && '◆ implexe',
+    options.numeros && 'chiffre dans la case : numéro Sosa, fiche au verso',
   ].filter(Boolean).join(' · ')
 
   return (

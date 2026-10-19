@@ -118,6 +118,7 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
     formePhoto,
     bordsArrondis,
     mariages: reglages.mariages !== false,
+    numeros: !!verso,
   }
   const themesSexe = THEMES_PYRAMIDE.filter((t) => t.famille === 'sexe')
   const themesAutres = THEMES_PYRAMIDE.filter((t) => t.famille === 'autre')

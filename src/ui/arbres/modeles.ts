@@ -7,6 +7,7 @@ import { BoutsDeBranche } from './BoutsDeBranche'
 import { EventailOrigines } from './EventailOrigines'
 import { Pyramide } from './Pyramide'
 import { Sablier } from './Sablier'
+import { TableAncetres } from './TableAncetres'
 
 export type FormePhoto = 'ovale' | 'carree' | 'rectangulaire'
 
@@ -33,6 +34,8 @@ export interface OptionsFeuille {
   theme?: string
   /** Nombre de générations affichées (sur la pyramide) */
   generations?: number
+  /** Numéro Sosa dans chaque case, pour retrouver la fiche dans la table du verso (sur la pyramide) */
+  numeros?: boolean
   /** Nombre de générations d'ascendance (sur le sablier) */
   ascendance?: number
   /** Nombre de générations de descendance (sur le sablier) */
@@ -90,6 +93,11 @@ export const MODELES: Modele[] = [
     generations: 8,
     reglages: { theme: true, generations: true, photos: true, fratrie: 'Frères et sœurs de chacun (sous ou à côté de la case)', mariages: 'Mariages des parents (année et commune au-dessus de la case)' },
     Feuille: Pyramide,
+    verso: {
+      titre: 'La table des ancêtres',
+      description: 'chaque case du recto par son numéro Sosa, avec dates, communes de naissance et de décès et métier',
+      Feuille: TableAncetres,
+    },
   },
   {
     id: 'sablier',
