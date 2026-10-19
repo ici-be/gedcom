@@ -98,6 +98,7 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
   const generations = modele.reglages.generations ? bornerGenerationsPyramide(reglages.generations) : modele.generations
   const ascendance = bornerAscendance(reglages.ascendance)
   const descendance = bornerDescendance(reglages.descendance)
+  const racine = d.arbre.individus.get(d.racine)
   // Arbre du couple : le conjoint choisi s'il est encore parmi ceux de la personne de départ, sinon le premier
   const conjoints = modele.reglages.conjoint && racine ? conjointsDe(d.arbre, racine) : []
   const conjoint = conjoints.find((c) => c.famille === reglages.conjoint)?.famille ?? conjoints[0]?.famille
@@ -106,7 +107,6 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
   const [premier, second] = racine?.sexe === 'F' && membre?.sexe === 'M' ? [membre, racine] : [racine, membre]
   const nomFichier = modele.reglages.conjoint && membre ? nomFichierCouple(premier?.nom ?? '', second?.nom ?? '', jour) : nomFichierArbre(racine?.prenom ?? '', racine?.nom ?? '', jour)
   // Le navigateur nomme le PDF d'après le titre de la page : on le change le temps de l'impression
-  const racine = d.arbre.individus.get(d.racine)
   useEffect(() => {
     let titre = document.title
     const avant = () => { titre = document.title; document.title = nomFichier }
