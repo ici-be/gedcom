@@ -32,6 +32,8 @@ export interface OptionsFeuille {
   metiersDesc?: boolean
   /** Métier de la personne de départ et de son conjoint (vrai par défaut) */
   metiersCentre?: boolean
+  /** Métier sur les étiquettes verticales de la génération 5 (génération 4 de l'arbre du couple) */
+  metiersEtiquettes?: boolean
   /** Photos dans les cases des descendants (sur le sablier et l'arbre du couple ; sinon comme `photos`) */
   photosDesc?: boolean
   /** Conjoint et mariage dans les cartouches des descendants (sinon comme `mariages`) */

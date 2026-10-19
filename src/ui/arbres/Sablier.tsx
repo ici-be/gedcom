@@ -388,7 +388,8 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
   /** Une étiquette verticale */
   const etiquette = (cle: string, cx: number, y: number, w: number, h: number, g: number, r: Resume, implexe: boolean, c: CouleurCase, freresTexte = '') => {
     cases.push(<rect key={'c' + cle} x={(cx - w / 2).toFixed(2)} y={y} width={w.toFixed(2)} height={h} rx="1.5" fill={c.fond} stroke={c.trait} stroke-width={g >= 8 ? 0.45 : 0.7} />)
-    const lignes = caser(lignesEtiquette(g, r, implexe, freresTexte), Math.max(w * 0.82, w - 3))
+    const metier: Ligne[] = g === 5 && options.metiersEtiquettes && r.metier ? [{ fs: 6.6, parts: [[r.metier]], cls: 'mt' }] : []
+    const lignes = caser([...lignesEtiquette(g, r, implexe, freresTexte), ...metier], Math.max(w * 0.82, w - 3))
     textes.push(
       <g key={'x' + cle} transform={`translate(${cx.toFixed(2)},${y + h / 2}) rotate(-90)`}>
         <Bloc lignes={lignes} x={0} yc={0} max={h - 8} />
