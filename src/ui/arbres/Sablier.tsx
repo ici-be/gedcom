@@ -674,7 +674,8 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
   }
 
   // ——— Marges et pied de page ———
-  const NOMS_DESC = ['ENFANTS', 'PETITS-ENFANTS', 'ARRIÈRE-PETITS-ENFANTS']
+  const NOMS_DESC = ['ENFANT', 'PETIT-ENFANT', 'ARRIÈRE-PETIT-ENFANT']
+  const nomDesc = (g: number) => { const n = niveaux[g - 1]?.length ?? 0; return `${n} ${NOMS_DESC[g - 1]}${n > 1 ? 'S' : ''}` }
   const nomDe = (i?: Individu) => {
     const r = i ? resume(i) : undefined
     return r ? [prenoms(r.prenom, options.tousPrenoms ? 99 : 1), r.nom].filter(Boolean).join(' ') : ''
@@ -699,7 +700,7 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
 
       {/* Générations dans la marge de gauche : chiffres romains pour la personne et ses ancêtres, noms pour les descendants */}
       {rangees.map((R, i) => R.sens === 'desc'
-        ? <g key={i} transform={`translate(22,${R.y + R.h / 2}) rotate(-90)`}><text x="0" y="3" font-size="7" class="cap mut" text-anchor="middle" data-max={R.h - 4}>{NOMS_DESC[R.g - 1]}</text></g>
+        ? <g key={i} transform={`translate(22,${R.y + R.h / 2}) rotate(-90)`}><text x="0" y="3" font-size="7" class="cap mut" text-anchor="middle" data-max={R.h - 4}>{nomDesc(R.g)}</text></g>
         : <text key={i} x="22" y={R.y + R.h / 2 + 4} font-size="10" class="disp mut" text-anchor="middle">{romain(R.g + 1)}</text>)}
 
       <text x={X0} y="920" font-size="9.5" class="cap mut">{surTitre}</text>
