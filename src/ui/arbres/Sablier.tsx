@@ -366,11 +366,11 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
   const trait = (cle: string, chemin: string) => traits.push(<path key={cle} d={chemin} fill="none" stroke={theme.lien} stroke-width="1" />)
 
   /** Un cartouche : photo à gauche (en haut pour les plus étroits, taille 4), texte à côté ; renvoie rien */
-  const cartouche = (cle: string, x: number, y: number, w: number, h: number, taille: number, r: Resume, implexe: boolean, c: CouleurCase, ph?: Photo, enPlus: Ligne[] = []) => {
+  const cartouche = (cle: string, x: number, y: number, w: number, h: number, taille: number, r: Resume, implexe: boolean, c: CouleurCase, ph?: Photo, enPlus: Ligne[] = [], forcerMetier = false) => {
     cases.push(<rect key={'c' + cle} x={x.toFixed(2)} y={y} width={w.toFixed(2)} height={h} rx="4" fill={c.fond} stroke={c.trait} stroke-width="1.2" />)
     const cadre = ph ? cadrePortrait(taille, w, h, !!ph.signature, formePhoto, options.bordsArrondis ?? true) : undefined
     const cx = x + w / 2
-    let lignes = [...lignesCartouche(taille, r, implexe, h), ...enPlus]
+    let lignes = [...lignesCartouche(taille, r, implexe, forcerMetier ? Math.max(h, 100) : h), ...enPlus]
     if (taille >= 4) {
       const hp = cadre ? cadre.hp : 0
       if (ph && cadre) textes.push(<Portrait key={'p' + cle} id={'ph' + cle} photo={ph} x={ph.signature ? x + 4 : cx - cadre.wp / 2} y={y + 4} w={cadre.wp} h={hp} forme={formePhoto} rx={cadre.rx} rate={rater(ph.url)} />)
@@ -525,7 +525,7 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
         etiquette(cle + s, cx, y, w, h, G, r, implexe, c, G === 5 && options.fratrie ? compteFreres(freres.get(s) ?? []) : '')
         continue
       }
-      cartouche(cle + s, x, y, w, h, G, r, implexe, c, photoDe(p.ind))
+      cartouche(cle + s, x, y, w, h, G, r, implexe, c, photoDe(p.ind), [], G === 4 && !!options.metiersCartouches)
 
       // Frères et sœurs : sous le cartouche, ou à côté (vers l'extérieur) pour le père et la mère
       const f = listeFratrie(freres.get(s) ?? [])

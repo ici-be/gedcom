@@ -41,6 +41,7 @@ interface Reglages {
   metiersDesc?: boolean
   metiersCentre?: boolean
   metiersEtiquettes?: boolean
+  metiersCartouches?: boolean
 }
 
 const PAPIERS: Record<Format, [number, number]> = { A4: [210, 297], A3: [297, 420], A2: [420, 594] }
@@ -137,6 +138,7 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
     metiersDesc: reglages.metiersDesc !== false,
     metiersCentre: reglages.metiersCentre !== false,
     metiersEtiquettes: !!reglages.metiersEtiquettes,
+    metiersCartouches: !!reglages.metiersCartouches,
     fratrieCases: !!modele.reglages.conjoint && fratrieBase && !!reglages.fratrieCases,
     fratrieBase: modele.reglages.descendants ? fratrieBase : fratrie,
     italiques: reglages.italiques,
@@ -317,6 +319,12 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
                   <label class="case" title="Sur les étiquettes verticales, le métier s'écrit en petit sous le reste du texte">
                     <input type="checkbox" id="impression-metiers-etiquettes" checked={!!reglages.metiersEtiquettes} onChange={(e) => setReglages({ metiersEtiquettes: e.currentTarget.checked })} />
                     Métier des ancêtres de la génération {modele.reglages.conjoint ? 4 : 5} (étiquettes verticales)
+                  </label>
+                )}
+                {modele.reglages.descendants && ascendance >= (modele.reglages.conjoint ? 3 : 4) && (
+                  <label class="case" title="Dans les petits cartouches, le métier s'écrit en petit sous le reste du texte">
+                    <input type="checkbox" id="impression-metiers-cartouches" checked={!!reglages.metiersCartouches} onChange={(e) => setReglages({ metiersCartouches: e.currentTarget.checked })} />
+                    Métier des ancêtres de la génération {modele.reglages.conjoint ? 3 : 4}
                   </label>
                 )}
                 <label class="case">
