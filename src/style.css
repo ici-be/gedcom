@@ -726,28 +726,29 @@ a.asc-piste-g:hover { color: var(--accent); }
 .rc-ligne { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
 .rc-ligne .choix-personne { flex: 1 1 320px; }
 .rc-etiquette { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
-.rc-texte { padding: clamp(18px, 4vw, 40px); }
-.rc-texte > section { max-width: 68ch; margin: 0 auto; width: 100%; }
+.rc-texte { padding: clamp(16px, 3vw, 32px); }
+.rc-texte > section { width: 100%; }
 .rc-texte .rc-titre { font-size: clamp(1.6rem, 3.5vw, 2.1rem); margin-bottom: 4px; }
-.rc-texte h3 { font-family: var(--display); font-size: 1.25rem; margin: 26px 0 4px; }
-.rc-texte p { font-family: var(--display); font-weight: 400; font-size: 1rem; line-height: 1.7; margin: 10px 0; text-align: justify; hyphens: auto; }
+.rc-texte h3 { font-family: var(--display); font-size: 1.15rem; margin: 26px 0 4px; }
+.rc-texte p { font-family: var(--display); font-weight: 400; font-size: 0.94rem; line-height: 1.65; margin: 10px 0; text-align: justify; hyphens: auto; }
 .rc-texte a { color: inherit; text-decoration: underline; text-decoration-color: var(--souligne); text-decoration-thickness: 1px; text-underline-offset: 3px; }
 .rc-texte a:hover { color: var(--accent); }
 .rc-texte .rc-gras { font-weight: 700; }
-.rc-texte .rc-sosa { font-weight: 700; text-decoration: none; font-variant-numeric: lining-nums; }
+.rc-texte .rc-sosa { font-size: 0.78em; font-weight: 500; color: var(--muted); text-decoration: none; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
 .rc-texte a.rc-sosa:hover { color: var(--accent); }
-.rc-texte .rc-appel { font-size: 0.68em; line-height: 0; margin-left: 1px; }
-.rc-texte .rc-appel a { text-decoration: none; color: var(--accent); padding: 0 1px; }
+.rc-texte .rc-appel { font-size: 0.62em; line-height: 0; margin-left: 1px; vertical-align: 0.6em; }
+.rc-texte .rc-appel a { text-decoration: none; color: var(--muted); font-weight: 500; font-variant-numeric: tabular-nums; padding: 0 1px; }
+.rc-texte .rc-appel a:hover { color: var(--accent); }
 .rc-texte .rc-num { font-variant-numeric: lining-nums; color: var(--muted); }
 .rc-texte .rc-lit { font-style: italic; margin: 8px 0 2px; }
 .rc-ancre { scroll-margin-top: 90px; }
 .rc-liste { margin: 4px 0 4px clamp(10px, 3vw, 28px); }
 .rc-item { display: grid; grid-template-columns: 2.2em 1fr; align-items: baseline; }
-.rc-marque { font-family: var(--display); font-size: 1rem; font-variant-numeric: tabular-nums; }
+.rc-marque { font-family: var(--display); font-size: 0.94rem; font-variant-numeric: tabular-nums; }
 .rc-corps > p:first-child { margin-top: 6px; }
 .rc-notes { margin: 18px 0 30px; padding-top: 8px; position: relative; }
 .rc-notes::before { content: ''; position: absolute; top: 0; left: 0; width: 9em; border-top: 1px solid var(--line, #ccc); }
-.rc-texte .rc-notes p { display: grid; grid-template-columns: 2.6em 1fr; font-size: 0.82rem; line-height: 1.45; margin: 3px 0; text-align: left; hyphens: manual; }
+.rc-texte .rc-notes p { display: grid; grid-template-columns: 2.6em 1fr; font-size: 0.78rem; line-height: 1.45; margin: 3px 0; text-align: left; hyphens: manual; }
 .rc-notes .rc-num-note { text-decoration: none; color: var(--muted); font-variant-numeric: tabular-nums lining-nums; }
 .rc-notes p, .rc-texte sup a { scroll-margin-top: 90px; }
 .rc-vise { animation: rc-vise 1.6s ease-out; }
@@ -771,6 +772,7 @@ a.asc-piste-g:hover { color: var(--accent); }
 .rc-figures .signature img { max-width: min(180px, 38vw); max-height: 70px; }
 .rc-corps .rc-figures .portrait img { width: 64px; height: 80px; }
 .rc-corps .rc-figures .signature img { max-width: min(140px, 30vw); max-height: 54px; }
+.rc-figures .photo.portrait img { border-radius: 4px; }
 @media (max-width: 560px) {
   .rc-figures { gap: 8px; margin-left: 12px; }
   .rc-figures .portrait img, .rc-corps .rc-figures .portrait img { width: 52px; height: 64px; }
@@ -782,8 +784,8 @@ a.asc-piste-g:hover { color: var(--accent); }
 @media print {
   .recit > .titre-ecran, .rc-reglages { display: none !important; }
   .rc-texte { border: 0; padding: 0; }
-  .rc-texte p, .rc-marque { font-size: 11pt; }
-  .rc-texte .rc-notes p { font-size: 8pt; }
+  .rc-texte p, .rc-marque { font-size: 9.5pt; line-height: 1.5; }
+  .rc-texte .rc-notes p { font-size: 7.5pt; }
   .rc-texte a { text-decoration: none; }
   .rc-texte h3 { break-after: avoid; }
   .rc-figures { break-inside: avoid; }
