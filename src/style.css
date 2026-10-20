@@ -37,7 +37,7 @@
   --shadow: 0 1px 2px rgb(16 24 40 / 6%), 0 4px 12px rgb(16 24 40 / 5%);
   --display: "Inter Variable", system-ui, sans-serif;
   --body: "Inter Variable", system-ui, sans-serif;
-  /* récit et cartes de migrations : la serif des feuilles imprimées */
+  /* cartes de migrations : la serif des feuilles imprimées */
   --serif: "Fraunces", Georgia, serif;
   --radius: 12px;
   color-scheme: light;
@@ -87,8 +87,8 @@ h1, h2, h3 { font-family: var(--display); font-weight: 650; letter-spacing: -0.0
 .icone-menu { flex: none; width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 @media (min-width: 900px) {
   .coque.avec-menu { flex-direction: row; }
-  .avec-menu .bandeau { flex: none; width: 232px; height: 100vh; flex-direction: column; align-items: stretch; flex-wrap: nowrap; gap: 18px;
-    padding: 20px 14px; border-bottom: 0; border-right: 1px solid var(--line); overflow-y: auto; }
+  .avec-menu .bandeau { flex: none; width: 232px; height: 100vh; flex-direction: column; align-items: stretch; flex-wrap: nowrap; gap: 18px; z-index: 30;
+    padding: 20px 14px; border-bottom: 0; border-right: 1px solid var(--line); }
   .avec-menu .marque { padding: 0 8px; }
   .avec-menu .onglets { flex-direction: column; overflow: visible; }
   .avec-menu .choix-racine { margin-left: 0; }
@@ -729,9 +729,9 @@ a.asc-piste-g:hover { color: var(--accent); }
 .rc-texte { padding: clamp(18px, 4vw, 40px); }
 .rc-texte > section { max-width: 68ch; margin: 0 auto; width: 100%; }
 .rc-texte .rc-titre { font-size: clamp(1.6rem, 3.5vw, 2.1rem); margin-bottom: 4px; }
-.rc-texte h3 { font-family: var(--serif); font-size: 1.25rem; margin: 26px 0 4px; }
-.rc-texte p { font-family: var(--serif); font-weight: 400; font-size: 1.06rem; line-height: 1.65; margin: 10px 0; text-align: justify; hyphens: auto; }
-.rc-texte a { color: inherit; text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--accent) 35%, transparent); text-underline-offset: 3px; }
+.rc-texte h3 { font-family: var(--display); font-size: 1.25rem; margin: 26px 0 4px; }
+.rc-texte p { font-family: var(--display); font-weight: 400; font-size: 1rem; line-height: 1.7; margin: 10px 0; text-align: justify; hyphens: auto; }
+.rc-texte a { color: inherit; text-decoration: underline; text-decoration-color: var(--souligne); text-decoration-thickness: 1px; text-underline-offset: 3px; }
 .rc-texte a:hover { color: var(--accent); }
 .rc-texte .rc-gras { font-weight: 700; }
 .rc-texte .rc-sosa { font-weight: 700; text-decoration: none; font-variant-numeric: lining-nums; }
@@ -743,7 +743,7 @@ a.asc-piste-g:hover { color: var(--accent); }
 .rc-ancre { scroll-margin-top: 90px; }
 .rc-liste { margin: 4px 0 4px clamp(10px, 3vw, 28px); }
 .rc-item { display: grid; grid-template-columns: 2.2em 1fr; align-items: baseline; }
-.rc-marque { font-family: var(--serif); font-size: 1.06rem; font-variant-numeric: lining-nums; }
+.rc-marque { font-family: var(--display); font-size: 1rem; font-variant-numeric: tabular-nums; }
 .rc-corps > p:first-child { margin-top: 6px; }
 .rc-notes { margin: 18px 0 30px; padding-top: 8px; position: relative; }
 .rc-notes::before { content: ''; position: absolute; top: 0; left: 0; width: 9em; border-top: 1px solid var(--line, #ccc); }

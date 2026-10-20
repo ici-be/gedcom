@@ -1,6 +1,7 @@
 import { render } from 'preact'
 import { registerSW } from 'virtual:pwa-register'
 import '@fontsource-variable/inter'
+import '@fontsource-variable/inter/wght-italic.css'
 import '@fontsource/fraunces/600.css'
 import '@fontsource/fraunces/700.css'
 import './style.css'

@@ -1,8 +1,6 @@
 // Récit : une notice généalogique sur une personne choisie, ses descendants et ses ancêtres, sur autant de
 // générations qu'on veut dans chaque sens, avec notes de bas de partie. Chaque nom cité mène au récit de cette personne.
 
-import '@fontsource/fraunces/latin-400.css'
-import '@fontsource/fraunces/latin-400-italic.css'
 import { useMemo, useState } from 'preact/hooks'
 import type { Donnees } from '../lib/donnees'
 import { MAX_ASCENDANTS, MAX_DESCENDANTS, recit, texteBrut, type Bloc, type Morceau, type Phrase } from '../lib/recit'
