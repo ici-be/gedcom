@@ -466,6 +466,23 @@ th:not([aria-sort]) .tri .fleche { opacity: 0.35; }
 .options-impression .pas-generations .bouton.discret { padding: 3px 10px; line-height: 1.2; }
 .options-impression input[type="date"], .options-impression select { font: inherit; padding: 4px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--fg); }
 @media (max-width: 640px) { .groupe-options { grid-template-columns: 1fr; gap: 4px; } }
+/* arbres avec descendants : qui affiche quoi, en tableau */
+.groupe-options-corps:has(> .matrice-options-cadre) { flex-direction: column; align-items: flex-start; gap: 10px; }
+.matrice-options-cadre { max-width: 100%; overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+.matrice-options { border-collapse: collapse; font-size: 0.9rem; }
+.matrice-options th, .matrice-options td { padding: 5px 14px; text-align: center; white-space: nowrap; }
+.matrice-options thead th { font-size: 0.78rem; font-weight: 600; color: var(--muted); background: var(--panel-2); }
+.matrice-options thead td { background: var(--panel-2); }
+.matrice-options tbody th { text-align: left; font-weight: 500; }
+.matrice-options tbody tr + tr > * { border-top: 1px solid var(--line); }
+.matrice-options td + td, .matrice-options th + td, .matrice-options th + th, .matrice-options td + th { border-left: 1px solid var(--line); }
+.matrice-options input[type="checkbox"] { width: 16px; height: 16px; margin: 0; vertical-align: middle; accent-color: var(--accent); }
+.matrice-options select { padding: 2px 6px; font-size: 0.85rem; }
+.matrice-options .sans { color: var(--muted); font-size: 0.82rem; }
+.matrice-sous { display: inline-flex; gap: 12px; }
+.matrice-sous label { display: inline-flex; align-items: center; gap: 5px; font-size: 0.82rem; color: var(--muted); }
+.groupe-options:has(.matrice-options-cadre) > .groupe-options-titre { align-self: start; padding-top: 8px; }
+.matrice-suite { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; }
 .ligne .aide { flex: 1 1 280px; align-self: center; }
 .apercu-outils { align-items: center; justify-content: space-between; }
 .apercu { overflow: auto; border-radius: 6px; box-shadow: var(--shadow); background: #fff; }

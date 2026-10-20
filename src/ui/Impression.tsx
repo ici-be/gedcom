@@ -171,6 +171,11 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
   const signaturesDesc = reglages.signaturesDesc ?? signaturesActives
   const mariagesDesc = reglages.mariagesDesc ?? reglages.mariages !== false
   const bordsArrondis = reglages.bordsArrondis !== false
+  // Colonne du milieu dans le tableau des options : le couple ou la personne de départ
+  const centre = modele.reglages.conjoint ? 'Couple' : 'Sosa 1'
+  const centreMin = modele.reglages.conjoint ? 'couple' : 'personne de départ'
+  // Métier des ancêtres : première génération en petits cartouches, la suivante en étiquettes verticales
+  const genCartouches = modele.reglages.conjoint ? 3 : 4
   const options = {
     date: reglages.date ? dateLongue(jour) : undefined,
     qr: reglages.qr && !!d.adresse,
@@ -234,7 +239,7 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
           </div>
           <div class="options-impression groupes-options">
             <div class="groupe-options">
-              <span class="groupe-options-titre">Feuille et style</span>
+              <span class="groupe-options-titre">Feuille</span>
               <div class="groupe-options-corps">
                 {formats.length > 1 && (
                   <label class="case">
@@ -324,7 +329,7 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
                 {modele.reglages.equitable && (
                   <label class="case" title="Les descendants sans enfant gardent une case aussi large que les autres ; à la dernière génération, les enfants d'un même parent sont empilés">
                     <input type="checkbox" id="impression-equitable" checked={!!reglages.equitable} onChange={(e) => setReglages({ equitable: e.currentTarget.checked })} />
-                    Descendants équitables (cases égales, derniers enfants empilés)
+                    Cases égales pour les descendants
                   </label>
                 )}
                 {modele.reglages.descendants && (
@@ -342,117 +347,123 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
               </div>
             </div>
 
-            <div class="groupe-options">
-              <span class="groupe-options-titre">Contenu</span>
-              <div class="groupe-options-corps">
-                <label class="case">
-                  <input type="checkbox" id="impression-mariages" checked={reglages.mariages !== false} onChange={(e) => setReglages({ mariages: e.currentTarget.checked })} />
-                  {modele.reglages.descendants ? 'Mariages et conjoints (ancêtres et personne de départ)' : modele.reglages.mariages}
-                </label>
-                {modele.reglages.descendants && (
-                  <label class="case">
-                    <input type="checkbox" id="impression-mariages-desc" checked={mariagesDesc} onChange={(e) => setReglages({ mariagesDesc: e.currentTarget.checked })} />
-                    Conjoints des descendants (« ∞ année conjoint »)
-                  </label>
-                )}
-                {modele.reglages.descendants && (
-                  <label class="case">
-                    <input type="checkbox" id="impression-lieux-desc" checked={reglages.lieuxDesc !== false} onChange={(e) => setReglages({ lieuxDesc: e.currentTarget.checked })} />
-                    Commune de naissance des descendants
-                  </label>
-                )}
-                {modele.reglages.descendants && (
-                  <label class="case">
-                    <input type="checkbox" id="impression-metiers-desc" checked={reglages.metiersDesc !== false} onChange={(e) => setReglages({ metiersDesc: e.currentTarget.checked })} />
-                    Métier des descendants
-                  </label>
-                )}
-                {modele.reglages.descendants && (
-                  <label class="case">
-                    <input type="checkbox" id="impression-metiers-centre" checked={reglages.metiersCentre !== false} onChange={(e) => setReglages({ metiersCentre: e.currentTarget.checked })} />
-                    {modele.reglages.conjoint ? 'Métier du couple central' : 'Métier de la personne de départ et de ses conjoints'}
-                  </label>
-                )}
-                {modele.reglages.descendants && ascendance >= (modele.reglages.conjoint ? 4 : 5) && (
-                  <label class="case" title="Sur les étiquettes verticales, le métier s'écrit en petit sous le reste du texte">
-                    <input type="checkbox" id="impression-metiers-etiquettes" checked={!!reglages.metiersEtiquettes} onChange={(e) => setReglages({ metiersEtiquettes: e.currentTarget.checked })} />
-                    Métier des ancêtres de la génération {modele.reglages.conjoint ? 4 : 5} (étiquettes verticales)
-                  </label>
-                )}
-                {modele.reglages.descendants && ascendance >= (modele.reglages.conjoint ? 3 : 4) && (
-                  <label class="case" title="Dans les petits cartouches, le métier s'écrit en petit sous le reste du texte">
-                    <input type="checkbox" id="impression-metiers-cartouches" checked={!!reglages.metiersCartouches} onChange={(e) => setReglages({ metiersCartouches: e.currentTarget.checked })} />
-                    Métier des ancêtres de la génération {modele.reglages.conjoint ? 3 : 4}
-                  </label>
-                )}
-                <label class="case">
-                  <input type="checkbox" id="impression-fratrie" checked={fratrie} onChange={(e) => setReglages({ fratrie: e.currentTarget.checked })} />
-                  {modele.reglages.descendants ? 'Frères et sœurs des ancêtres (sous ou à côté de la case)' : modele.reglages.fratrie}
-                </label>
-                {modele.reglages.descendants && (
-                  <label class="case">
-                    <input type="checkbox" id="impression-fratrie-base" checked={fratrieBase} onChange={(e) => setReglages({ fratrieBase: e.currentTarget.checked })} />
-                    {modele.reglages.conjoint ? 'Frères et sœurs des deux membres du couple' : 'Frères et sœurs de la personne de départ'}
-                  </label>
-                )}
-                {modele.reglages.conjoint && fratrieBase && (
-                  <label class="case" title="Petites cases empilées à côté de chaque membre du couple, reliées à leurs parents ; en texte s'il y en a trop">
-                    <input type="checkbox" id="impression-fratrie-cases" checked={!!reglages.fratrieCases} onChange={(e) => setReglages({ fratrieCases: e.currentTarget.checked })} />
-                    Les afficher en petites cases reliées à leurs parents
-                  </label>
-                )}
-                <label class="case">
-                  <input type="checkbox" id="impression-italiques" checked={!!reglages.italiques} onChange={(e) => setReglages({ italiques: e.currentTarget.checked })} />
-                  Dates sans source en italique
-                </label>
-              </div>
-            </div>
-
-            {modele.reglages.photos && (
+            {modele.reglages.descendants ? (
               <div class="groupe-options">
-                <span class="groupe-options-titre">Photos et signatures</span>
+                <span class="groupe-options-titre">Contenu</span>
                 <div class="groupe-options-corps">
-                  <div class="option-groupee">
+                  <div class="matrice-options-cadre">
+                    <table class="matrice-options">
+                      <thead>
+                        <tr><td /><th scope="col">Ancêtres</th><th scope="col">{centre}</th><th scope="col">Descendants</th></tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <th scope="row">Mariages</th>
+                          <td colSpan={2}><input type="checkbox" id="impression-mariages" aria-label={`Mariages et conjoints : ancêtres et ${centreMin}`} title="Année et commune du mariage" checked={reglages.mariages !== false} onChange={(e) => setReglages({ mariages: e.currentTarget.checked })} /></td>
+                          <td><input type="checkbox" id="impression-mariages-desc" aria-label="Conjoints des descendants" title="« ∞ année conjoint »" checked={mariagesDesc} onChange={(e) => setReglages({ mariagesDesc: e.currentTarget.checked })} /></td>
+                        </tr>
+                        <tr>
+                          <th scope="row">Frères et sœurs</th>
+                          <td><input type="checkbox" id="impression-fratrie" aria-label="Frères et sœurs des ancêtres" title="Sous ou à côté de la case" checked={fratrie} onChange={(e) => setReglages({ fratrie: e.currentTarget.checked })} /></td>
+                          <td>
+                            {modele.reglages.conjoint ? (
+                              <select id="impression-fratrie-base" aria-label="Frères et sœurs du couple" title="En petites cases : empilées à côté de chaque membre du couple, reliées à leurs parents ; en texte s'il y en a trop"
+                                value={!fratrieBase ? 'non' : reglages.fratrieCases ? 'cases' : 'texte'}
+                                onChange={(e) => { const v = e.currentTarget.value; setReglages({ fratrieBase: v !== 'non', ...(v !== 'non' && { fratrieCases: v === 'cases' }) }) }}>
+                                <option value="non">non</option>
+                                <option value="texte">en texte</option>
+                                <option value="cases">en cases</option>
+                              </select>
+                            ) : (
+                              <input type="checkbox" id="impression-fratrie-base" aria-label="Frères et sœurs de la personne de départ" checked={fratrieBase} onChange={(e) => setReglages({ fratrieBase: e.currentTarget.checked })} />
+                            )}
+                          </td>
+                          <td class="sans">—</td>
+                        </tr>
+                        <tr>
+                          <th scope="row">Métier</th>
+                          <td>
+                            {ascendance >= genCartouches ? (
+                              <span class="matrice-sous">
+                                <label title="Dans les petits cartouches, le métier s'écrit en petit sous le reste du texte">
+                                  <input type="checkbox" id="impression-metiers-cartouches" checked={!!reglages.metiersCartouches} onChange={(e) => setReglages({ metiersCartouches: e.currentTarget.checked })} />
+                                  gén. {genCartouches}
+                                </label>
+                                {ascendance >= genCartouches + 1 && (
+                                  <label title="Sur les étiquettes verticales, le métier s'écrit en petit sous le reste du texte">
+                                    <input type="checkbox" id="impression-metiers-etiquettes" checked={!!reglages.metiersEtiquettes} onChange={(e) => setReglages({ metiersEtiquettes: e.currentTarget.checked })} />
+                                    gén. {genCartouches + 1}
+                                  </label>
+                                )}
+                              </span>
+                            ) : <span class="sans">—</span>}
+                          </td>
+                          <td><input type="checkbox" id="impression-metiers-centre" aria-label={modele.reglages.conjoint ? 'Métier du couple central' : 'Métier de la personne de départ et de ses conjoints'} checked={reglages.metiersCentre !== false} onChange={(e) => setReglages({ metiersCentre: e.currentTarget.checked })} /></td>
+                          <td><input type="checkbox" id="impression-metiers-desc" aria-label="Métier des descendants" checked={reglages.metiersDesc !== false} onChange={(e) => setReglages({ metiersDesc: e.currentTarget.checked })} /></td>
+                        </tr>
+                        <tr>
+                          <th scope="row">Commune de naissance</th>
+                          <td colSpan={2} class="sans">toujours</td>
+                          <td><input type="checkbox" id="impression-lieux-desc" aria-label="Commune de naissance des descendants" checked={reglages.lieuxDesc !== false} onChange={(e) => setReglages({ lieuxDesc: e.currentTarget.checked })} /></td>
+                        </tr>
+                        <tr>
+                          <th scope="row">Photos</th>
+                          <td colSpan={2}><input type="checkbox" id="impression-photos" aria-label={`Photos : ancêtres et ${centreMin}`} checked={photosActives} onChange={(e) => setReglages({ photos: e.currentTarget.checked })} /></td>
+                          <td><input type="checkbox" id="impression-photos-desc" aria-label="Photos des descendants" checked={photosDesc} onChange={(e) => setReglages({ photosDesc: e.currentTarget.checked })} /></td>
+                        </tr>
+                        <tr>
+                          <th scope="row">Signatures</th>
+                          <td colSpan={2}><input type="checkbox" id="impression-signatures" aria-label={`Signatures : ancêtres et ${centreMin}`} checked={signaturesActives} onChange={(e) => setReglages({ signatures: e.currentTarget.checked })} /></td>
+                          <td><input type="checkbox" id="impression-signatures-desc" aria-label="Signatures des descendants" checked={signaturesDesc} onChange={(e) => setReglages({ signaturesDesc: e.currentTarget.checked })} /></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div class="matrice-suite">
+                    {(photosActives || photosDesc) && <ChoixPortraits formePhoto={formePhoto} bordsArrondis={bordsArrondis} setReglages={setReglages} />}
                     <label class="case">
-                      <input type="checkbox" id="impression-photos" checked={photosActives} onChange={(e) => setReglages({ photos: e.currentTarget.checked })} />
-                      {modele.reglages.descendants ? (modele.reglages.conjoint ? 'Photos (ancêtres et couple)' : 'Photos (ancêtres et personne de départ)') : 'Photos'}
+                      <input type="checkbox" id="impression-italiques" checked={!!reglages.italiques} onChange={(e) => setReglages({ italiques: e.currentTarget.checked })} />
+                      Dates sans source en italique
                     </label>
-                    <label class="case">
-                      <input type="checkbox" id="impression-signatures" checked={signaturesActives} onChange={(e) => setReglages({ signatures: e.currentTarget.checked })} />
-                      {modele.reglages.descendants ? (modele.reglages.conjoint ? 'Signatures (ancêtres et couple)' : 'Signatures (ancêtres et personne de départ)') : 'Signatures'}
-                    </label>
-                    {modele.reglages.descendants && (
-                      <>
-                        <label class="case">
-                          <input type="checkbox" id="impression-photos-desc" checked={photosDesc} onChange={(e) => setReglages({ photosDesc: e.currentTarget.checked })} />
-                          Photos des descendants
-                        </label>
-                        <label class="case">
-                          <input type="checkbox" id="impression-signatures-desc" checked={signaturesDesc} onChange={(e) => setReglages({ signaturesDesc: e.currentTarget.checked })} />
-                          Signatures des descendants
-                        </label>
-                      </>
-                    )}
-                    {(photosActives || (modele.reglages.descendants && photosDesc)) && (
-                      <>
-                        <label class="case">
-                          Forme des portraits
-                          <select id="impression-forme-photo" value={formePhoto} onChange={(e) => setReglages({ formePhoto: e.currentTarget.value as FormePhoto })}>
-                            {FORMES_PHOTO.map((f) => <option key={f.id} value={f.id}>{f.titre}</option>)}
-                          </select>
-                        </label>
-                        <label class={'case' + (formePhoto === 'ovale' ? ' inactif' : '')} title={formePhoto === 'ovale' ? 'S’applique aux portraits carrés ou rectangulaires' : undefined}>
-                          <input type="checkbox" id="impression-photo-arrondie" checked={bordsArrondis} disabled={formePhoto === 'ovale'} onChange={(e) => setReglages({ bordsArrondis: e.currentTarget.checked })} />
-                          Avec bords arrondis
-                        </label>
-                      </>
-                    )}
-                    {(signaturesActives || (modele.reglages.descendants && signaturesDesc)) && (
-                      <span class="aide">(les signatures gardent leur forme)</span>
-                    )}
                   </div>
                 </div>
               </div>
+            ) : (
+              <>
+                <div class="groupe-options">
+                  <span class="groupe-options-titre">Contenu</span>
+                  <div class="groupe-options-corps">
+                    <label class="case">
+                      <input type="checkbox" id="impression-mariages" checked={reglages.mariages !== false} onChange={(e) => setReglages({ mariages: e.currentTarget.checked })} />
+                      {modele.reglages.mariages}
+                    </label>
+                    <label class="case">
+                      <input type="checkbox" id="impression-fratrie" checked={fratrie} onChange={(e) => setReglages({ fratrie: e.currentTarget.checked })} />
+                      {modele.reglages.fratrie}
+                    </label>
+                    <label class="case">
+                      <input type="checkbox" id="impression-italiques" checked={!!reglages.italiques} onChange={(e) => setReglages({ italiques: e.currentTarget.checked })} />
+                      Dates sans source en italique
+                    </label>
+                  </div>
+                </div>
+                {modele.reglages.photos && (
+                  <div class="groupe-options">
+                    <span class="groupe-options-titre">Photos</span>
+                    <div class="groupe-options-corps">
+                      <label class="case">
+                        <input type="checkbox" id="impression-photos" checked={photosActives} onChange={(e) => setReglages({ photos: e.currentTarget.checked })} />
+                        Photos
+                      </label>
+                      <label class="case">
+                        <input type="checkbox" id="impression-signatures" checked={signaturesActives} onChange={(e) => setReglages({ signatures: e.currentTarget.checked })} />
+                        Signatures
+                      </label>
+                      {photosActives && <ChoixPortraits formePhoto={formePhoto} bordsArrondis={bordsArrondis} setReglages={setReglages} />}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
 
             <div class="groupe-options">
@@ -480,20 +491,20 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
                 <div class="option-groupee">
                   <label class="case">
                     <input type="checkbox" id="impression-date" checked={reglages.date} onChange={(e) => setReglages({ date: e.currentTarget.checked })} />
-                    Date en pied de page
+                    Date
                   </label>
                   {reglages.date && (
                     <input type="date" id="impression-jour" value={jour} aria-label="Date imprimée"
                       onInput={(e) => setReglages({ jour: e.currentTarget.value || undefined })} />
                   )}
                 </div>
-                <label class="case">
+                <label class="case" title="Vers l'arbre en ligne">
                   <input type="checkbox" id="impression-qr" checked={reglages.qr && !!d.adresse} disabled={!d.adresse} onChange={(e) => setReglages({ qr: e.currentTarget.checked })} />
-                  Code QR vers l'arbre en ligne
+                  Code QR
                 </label>
-                <label class="case">
+                <label class="case" title="De l'arbre en ligne">
                   <input type="checkbox" id="impression-url" checked={(reglages.url ?? reglages.qr ?? true) && !!d.adresse} disabled={!d.adresse} onChange={(e) => setReglages({ url: e.currentTarget.checked })} />
-                  Adresse (URL) de l'arbre en ligne
+                  Adresse (URL)
                 </label>
                 {!d.adresse && <span class="aide">Indiquez d'abord l'adresse de l'arbre en ligne dans les <a href="#/">réglages de l'accueil</a>.</span>}
               </div>
@@ -516,5 +527,23 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
         {verso && <verso.Feuille d={d} options={options} />}
       </div>
     </section>
+  )
+}
+
+/** Forme des portraits et bords arrondis (les signatures gardent leur forme) */
+function ChoixPortraits({ formePhoto, bordsArrondis, setReglages }: { formePhoto: FormePhoto; bordsArrondis: boolean; setReglages: (r: Partial<Reglages>) => void }) {
+  return (
+    <span class="option-groupee">
+      <label class="case">
+        Portraits
+        <select id="impression-forme-photo" value={formePhoto} onChange={(e) => setReglages({ formePhoto: e.currentTarget.value as FormePhoto })}>
+          {FORMES_PHOTO.map((f) => <option key={f.id} value={f.id}>{f.titre}</option>)}
+        </select>
+      </label>
+      <label class={'case' + (formePhoto === 'ovale' ? ' inactif' : '')} title={formePhoto === 'ovale' ? 'S’applique aux portraits carrés ou rectangulaires' : undefined}>
+        <input type="checkbox" id="impression-photo-arrondie" checked={bordsArrondis} disabled={formePhoto === 'ovale'} onChange={(e) => setReglages({ bordsArrondis: e.currentTarget.checked })} />
+        bords arrondis
+      </label>
+    </span>
   )
 }
