@@ -18,7 +18,7 @@ export const MENTIONS: Mention[] = [
   {
     mot: 'Filiation: père inconnu', filiation: { pere: 'inconnu' },
     sens: "L'acte de naissance ou de baptême ne nomme pas le père.",
-    exemple: 'Enfant naturel, non reconnu : seule la mère est à chercher.',
+    exemple: 'Enfant naturel, non reconnu : seule la mère est à chercher.',
   },
   {
     mot: 'Filiation: mère inconnue', filiation: { mere: 'inconnu' },
@@ -33,7 +33,7 @@ export const MENTIONS: Mention[] = [
   {
     mot: 'Filiation: père introuvable', filiation: { pere: 'introuvable' },
     sens: 'Le père est nommé ou devrait l’être, mais les sources manquent.',
-    exemple: 'Registres détruits, lacune, acte illisible : recherche close du côté paternel.',
+    exemple: 'Registres détruits, lacune, acte illisible : recherche close du côté paternel.',
   },
   {
     mot: 'Filiation: mère introuvable', filiation: { mere: 'introuvable' },

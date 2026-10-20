@@ -49,13 +49,13 @@ export function Bienvenue({ ouvrir, erreur }: { ouvrir: (f: File) => void; erreu
         <div>
           <h2>1. Exporter</h2>
           <p>
-            Sur Geneanet : <a href="https://gw.geneanet.org/my-tree/operations/export" target="_blank" rel="noopener noreferrer">Mon arbre → Exporter</a>,
+            Sur Geneanet : <a href="https://gw.geneanet.org/my-tree/operations/export" target="_blank" rel="noopener noreferrer">Mon arbre → Exporter</a>,
             puis « Mon arbre en ligne » au format GEDCOM. Les exports d'Heredis, Ancestris, Gramps, GeneWeb ou RootsMagic fonctionnent aussi.
           </p>
         </div>
         <div>
           <h2>2. Déposer</h2>
-          <p>Inutile de décompresser : le .zip de Geneanet peut être déposé tel quel, les images qu'il contient sont ignorées.</p>
+          <p>Inutile de décompresser : le .zip de Geneanet peut être déposé tel quel, les images qu'il contient sont ignorées.</p>
         </div>
         <div>
           <h2>3. Rien ne quitte votre ordinateur</h2>
@@ -99,7 +99,7 @@ function Progres({ d, bilan, precedent }: { d: Donnees; bilan: Bilan; precedent?
           {lignes.map(([t, f]) => <li key={t}><strong>{diff(f)}</strong> {t}</li>)}
         </ul>
       )}
-      {!memeRacine && <p class="aide">La personne de départ a changé depuis : seuls les chiffres de tout l’arbre sont comparés.</p>}
+      {!memeRacine && <p class="aide">La personne de départ a changé depuis : seuls les chiffres de tout l’arbre sont comparés.</p>}
     </section>
   )
 }
@@ -179,8 +179,8 @@ export function TableauDeBord({ d, bilan, precedent, fichier, ouvrir, setAdresse
       </div>
 
       <p class="astuce">Un « fait », c'est une naissance (ou un baptême), un mariage ou un décès (ou une inhumation). Il est sourcé quand au moins une source y est attachée.</p>
-      <p class="astuce">Un parent qu'il ne sert à rien de chercher (enfant naturel, enfant trouvé, registres perdus) se signale dans la note de la personne : <a href="#/filiation">« Filiation: père inconnu »…</a></p>
-      <p class="astuce">Un acte qui ne se trouvera pas (registres brûlés, lacune) se signale dans la note de l'événement, pour ne plus le compter parmi les sources à chercher : <a href="#/introuvables">« Source: introuvable (les archives ont brûlé en 1914) »</a></p>
+      <p class="astuce">Un parent qu'il ne sert à rien de chercher (enfant naturel, enfant trouvé, registres perdus) se signale dans la note de la personne : <a href="#/filiation">« Filiation: père inconnu »…</a></p>
+      <p class="astuce">Un acte qui ne se trouvera pas (registres brûlés, lacune) se signale dans la note de l'événement, pour ne plus le compter parmi les sources à chercher : <a href="#/introuvables">« Source: introuvable (les archives ont brûlé en 1914) »</a></p>
 
       <section class="panneau reglages">
         <h2>Réglages</h2>
@@ -195,7 +195,7 @@ export function TableauDeBord({ d, bilan, precedent, fichier, ouvrir, setAdresse
           {devinee && d.adresse === devinee && (
             <p class="aide">Adresse trouvée dans le fichier. Pour ouvrir les fiches en mode modification, indiquez la vôtre (par exemple {devinee}_w).</p>
           )}
-          {d.adresse && racine && <p class="aide">Essai : <Personne d={d} id={racine.id} /></p>}
+          {d.adresse && racine && <p class="aide">Essai : <Personne d={d} id={racine.id} /></p>}
         </div>
         <div class="reglage">
           <h3>Fichier</h3>

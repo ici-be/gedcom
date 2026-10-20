@@ -126,8 +126,8 @@ export function Individus({ d, perimetre, setPerimetre }: { d: Donnees; perimetr
   const actifs = [
     f.recherche.trim() && `nom « ${f.recherche.trim()} »`,
     f.lieu.trim() && `lieu « ${f.lieu.trim()} »`,
-    f.fait !== 'tous' && `fait : ${f.fait === 'deces' ? 'décès' : f.fait}`,
-    f.etat !== 'tout' && `état : ${{ 'a-faire': 'à compléter', 'sans-source': 'sans source', manquant: 'manquant', introuvable: 'source introuvable', complet: 'tout sourcé' }[f.etat]}`,
+    f.fait !== 'tous' && `fait : ${f.fait === 'deces' ? 'décès' : f.fait}`,
+    f.etat !== 'tout' && `état : ${{ 'a-faire': 'à compléter', 'sans-source': 'sans source', manquant: 'manquant', introuvable: 'source introuvable', complet: 'tout sourcé' }[f.etat]}`,
     avecAncetres && (f.genMin || f.genMax) && `générations ${f.genMin || '…'} à ${f.genMax || '…'}`,
     avecAncetres && f.branche && `branche ${f.branche}`,
     f.parents !== 'tous' && (f.parents === 'a-chercher' ? 'parents à chercher' : 'parents inconnus ou introuvables'),
@@ -199,7 +199,7 @@ export function Individus({ d, perimetre, setPerimetre }: { d: Donnees; perimetr
     <section class="ecran">
       <header class="titre-ecran">
         <h1>Personnes</h1>
-        <p class="sous-titre">Naissance, mariage et décès : ce qui est sourcé, ce qui ne l'est pas, ce qui manque.</p>
+        <p class="sous-titre">Naissance, mariage et décès : ce qui est sourcé, ce qui ne l'est pas, ce qui manque.</p>
       </header>
       {!d.adresse && <p class="astuce bandeau-info">Pour que les noms deviennent des liens vers les fiches en ligne, indiquez l'adresse de votre arbre dans les <a href="#/">réglages de l'accueil</a>.</p>}
 
@@ -242,13 +242,13 @@ export function Individus({ d, perimetre, setPerimetre }: { d: Donnees; perimetr
                 <input type="number" min="1" inputMode="numeric" value={f.genMax} onInput={(e) => changer({ genMax: e.currentTarget.value })} placeholder="à" aria-label="Génération maximale" />
               </span>
             </label>
-            <label class="court" title="Ancêtres d'un Sosa : 2 = côté paternel, 3 = côté maternel">
+            <label class="court" title="Ancêtres d'un Sosa : 2 = côté paternel, 3 = côté maternel">
               <span>Branche (Sosa)</span>
               <input type="number" min="1" inputMode="numeric" value={f.branche} onInput={(e) => changer({ branche: e.currentTarget.value })} placeholder="ex. 2" />
             </label>
           </>
         )}
-        <label title="Parents absents de l'arbre : à chercher, ou notés inconnus ou introuvables (« Filiation: père inconnu » dans la note)">
+        <label title="Parents absents de l'arbre : à chercher, ou notés inconnus ou introuvables (« Filiation: père inconnu » dans la note)">
           <span>Parents <a href="#/filiation" class="aide-lien" title="Noter un parent inconnu ou introuvable">?</a></span>
           <select value={f.parents} onChange={(e) => changer({ parents: e.currentTarget.value as QuelsParents })}>
             <option value="tous">Peu importe</option>
@@ -368,7 +368,7 @@ function Details({ d, ind }: { d: Donnees; ind: Individu }) {
           ))
         })}
       </ul>
-      {ind.sources.length > 0 && <p class="sources-generales">Sources générales : <Sources sources={ind.sources} /></p>}
+      {ind.sources.length > 0 && <p class="sources-generales">Sources générales : <Sources sources={ind.sources} /></p>}
     </div>
   )
 }

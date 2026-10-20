@@ -11,7 +11,7 @@ import { libelle, nombre } from '../lib/format'
 import { Copier, DateLieu, Personne } from './commun'
 
 const EXEMPLES: { mot: string; sens: string }[] = [
-  { mot: 'Source: introuvable (les archives de 1789 à 1820 ont brûlé en 1914)', sens: 'Registres détruits : incendie, guerre, inondation.' },
+  { mot: 'Source: introuvable (les archives de 1789 à 1820 ont brûlé en 1914)', sens: 'Registres détruits : incendie, guerre, inondation.' },
   { mot: 'Source: introuvable (lacune dans les registres de 1740 à 1752)', sens: 'Années manquantes dans la collection conservée.' },
   { mot: 'Source: introuvable (acte absent des registres de la paroisse et des communes voisines)', sens: 'Recherche faite sans résultat.' },
   { mot: 'Source: introuvable (lieu de naissance inconnu)', sens: 'Rien ne dit où chercher.' },
@@ -54,12 +54,12 @@ export function Introuvables({ d }: { d: Donnees }) {
         <h2>Où l'écrire</h2>
         <p>
           Le format GEDCOM n'a pas de champ pour cela, et Geneanet non plus. On l'écrit donc dans la <strong>note de l'événement</strong>{' '}
-          (sur Geneanet : modifier la personne, puis la naissance, le baptême, le mariage ou le décès concerné, rubrique « Note »),
+          (sur Geneanet : modifier la personne, puis la naissance, le baptême, le mariage ou le décès concerné, rubrique « Note »),
           sous la forme d'une ligne qui commence par <code>{MENTION_INTROUVABLE}</code>, suivie si l'on veut de la raison entre parenthèses.
-          La note fait partie de l'arbre : elle revient dans chaque export, sur tous vos appareils, et les visiteurs de votre arbre la voient aussi.
+          La note fait partie de l'arbre : elle revient dans chaque export, sur tous vos appareils, et les visiteurs de votre arbre la voient aussi.
         </p>
         <p class="aide">
-          Un mariage se note sur l'événement du mariage (il est commun aux deux époux). Majuscules et pluriel sont libres :
+          Un mariage se note sur l'événement du mariage (il est commun aux deux époux). Majuscules et pluriel sont libres :
           « source : introuvable », « Sources: introuvables » ou « Acte: introuvable » sont reconnus aussi.
           Si une source est malgré tout attachée à l'événement, c'est la source qui l'emporte.
         </p>
@@ -78,11 +78,11 @@ export function Introuvables({ d }: { d: Donnees }) {
           </table>
         </div>
         <p class="aide">
-          <strong>Sans source</strong> : l'acte n'a pas encore été cherché ou trouvé — c'est une piste ouverte.{' '}
-          <strong>Introuvable</strong> : on l'a cherché, il n'existe plus ou n'est pas accessible ; on pourra rouvrir la piste (en retirant la mention) si des registres sont retrouvés ou mis en ligne.
+          <strong>Sans source</strong> : l'acte n'a pas encore été cherché ou trouvé — c'est une piste ouverte.{' '}
+          <strong>Introuvable</strong> : on l'a cherché, il n'existe plus ou n'est pas accessible ; on pourra rouvrir la piste (en retirant la mention) si des registres sont retrouvés ou mis en ligne.
         </p>
         <p class="aide">
-          Effets : une pastille ∅ à la place du point d'exclamation, avec la raison au survol (écran <a href="#/personnes">Personnes</a>) ;
+          Effets : une pastille ∅ à la place du point d'exclamation, avec la raison au survol (écran <a href="#/personnes">Personnes</a>) ;
           le fait sort de la liste « À compléter », des ancêtres à sourcer de l'accueil et des actes à chercher par <a href="#/lieux">lieu</a> et sur la <a href="#/carte">carte</a> ;
           un filtre « Source introuvable » les retrouve ; le <a href="#/recit">récit</a> mentionne l'acte introuvable et sa raison en note.
           Il ne compte pas pour autant comme sourcé dans les pourcentages.
@@ -108,7 +108,7 @@ export function Introuvables({ d }: { d: Donnees }) {
                     <td><strong>{libelle(l.e)}</strong> <DateLieu e={l.e} /></td>
                     <td>
                       {l.e.introuvable!.cause ?? <span class="vide">non précisée</span>}
-                      {l.e.sources.length > 0 && <span class="contexte avertissement">Une source est attachée à l'événement : c'est elle qui compte.</span>}
+                      {l.e.sources.length > 0 && <span class="contexte avertissement">Une source est attachée à l'événement : c'est elle qui compte.</span>}
                     </td>
                   </tr>
                 ))}

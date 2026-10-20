@@ -60,7 +60,7 @@ function Courbe({ v, couleur }: { v: number[]; couleur: string }) {
   if (v.length < 2) return null
   const pts = v.map((x, i) => `${((i / (v.length - 1)) * W).toFixed(1)},${(H - 2 - x * (H - 4)).toFixed(1)}`).join(' ')
   return (
-    <svg class="courbe" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" role="img" aria-label={`Complétude de la branche : ${v.map(pc).join(', ')}`}>
+    <svg class="courbe" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" role="img" aria-label={`Complétude de la branche : ${v.map(pc).join(', ')}`}>
       <polyline points={`0,${H - 2} ${W},${H - 2}`} fill="none" stroke="var(--line)" />
       <polygon points={`0,${H - 2} ${pts} ${W},${H - 2}`} fill={couleur} opacity=".18" />
       <polyline points={pts} fill="none" stroke={couleur} stroke-width="2" vector-effect="non-scaling-stroke" />
@@ -153,18 +153,18 @@ function TexteEtape({ d, e }: { d: Donnees; e: Etape }) {
   switch (e.type) {
     case 'etranger': {
       const f = ind(e.id)?.sexe === 'F'
-      return <>{f ? 'Première ancêtre née' : 'Premier ancêtre né'} hors de {nomPays?.of(e.principal) ?? e.principal} : {qui(e.id)} ({nomPays?.of(e.pays) ?? e.pays}).</>
+      return <>{f ? 'Première ancêtre née' : 'Premier ancêtre né'} hors de {nomPays?.of(e.principal) ?? e.principal} : {qui(e.id)} ({nomPays?.of(e.pays) ?? e.pays}).</>
     }
-    case 'complete': return <><em>Dernière génération complète</em> : les {nombre(e.places)} places sont toutes occupées.</>
-    case 'mur': return <>Premier mur : {qui(e.piste.id)}, {manque(e.piste)}.</>
+    case 'complete': return <><em>Dernière génération complète</em> : les {nombre(e.places)} places sont toutes occupées.</>
+    case 'mur': return <>Premier mur : {qui(e.piste.id)}, {manque(e.piste)}.</>
     case 'sans-issue':
       return e.total > 3
-        ? <>{nombre(e.total)} ancêtres de la génération précédente ont un parent inconnu ou introuvable : leurs places restent vides.</>
-        : <>Sans issue : {e.pistes.map((p, i) => <span key={p.id}>{i ? ' ; ' : ''}{qui(p.id)}, {fermeture(p)}</span>)}.</>
+        ? <>{nombre(e.total)} ancêtres de la génération précédente ont un parent inconnu ou introuvable : leurs places restent vides.</>
+        : <>Sans issue : {e.pistes.map((p, i) => <span key={p.id}>{i ? ' ; ' : ''}{qui(p.id)}, {fermeture(p)}</span>)}.</>
     case 'implexe':
-      return <>Premier implexe : {e.implexe.ids.map((id, i) => <span key={id}>{i ? ' et ' : ''}<Nom d={d} id={id} /></span>)} {e.implexe.ids.length > 1 ? 'occupent' : 'occupe'} plusieurs places (Sosa {e.implexe.sosas[0].join(' et ')}).</>
-    case 'plus-fournie': return <><em>Génération la plus fournie</em> : {nombre(e.distincts)} ancêtres différents retrouvés.</>
-    case 'sources': return <>Les naissances ne sont presque plus sourcées : {nombre(e.sourcees)} sur {nombre(e.total)}.</>
+      return <>Premier implexe : {e.implexe.ids.map((id, i) => <span key={id}>{i ? ' et ' : ''}<Nom d={d} id={id} /></span>)} {e.implexe.ids.length > 1 ? 'occupent' : 'occupe'} plusieurs places (Sosa {e.implexe.sosas[0].join(' et ')}).</>
+    case 'plus-fournie': return <><em>Génération la plus fournie</em> : {nombre(e.distincts)} ancêtres différents retrouvés.</>
+    case 'sources': return <>Les naissances ne sont presque plus sourcées : {nombre(e.sourcees)} sur {nombre(e.total)}.</>
   }
 }
 
@@ -323,7 +323,7 @@ export function Ascendance({ d, setPerimetre }: { d: Donnees; setPerimetre: (p: 
       {a.pistes.length > 0 && (
         <Panneau titre="Pistes les plus proches"
           lien={<a href="#/personnes" onClick={vers('a-chercher')}>Les {nombre(a.pistes.length)} ancêtres dont un parent est à chercher</a>}
-          aide="Les ancêtres les plus récents dont un parent reste à trouver : c’est là que chaque découverte ouvre le plus de places.">
+          aide="Les ancêtres les plus récents dont un parent reste à trouver : c’est là que chaque découverte ouvre le plus de places.">
           <div class="asc-pistes">
             {a.pistes.slice(0, 12).map((p) => (
               <div class="asc-piste" key={p.id}>
@@ -338,7 +338,7 @@ export function Ascendance({ d, setPerimetre }: { d: Donnees; setPerimetre: (p: 
 
       <div class="asc-paire">
         {a.implexes.length > 0 && (
-          <Panneau titre="Implexe" aide={<>{nombre(a.nbImplexes)} ancêtres occupent plusieurs places, soit {nombre(a.places - a.distincts)} places en double. Les premiers à revenir :</>}>
+          <Panneau titre="Implexe" aide={<>{nombre(a.nbImplexes)} ancêtres occupent plusieurs places, soit {nombre(a.places - a.distincts)} places en double. Les premiers à revenir :</>}>
             <div class="jetons">
               {a.implexes.slice(0, 6).map((x) => (
                 <span class="jeton" key={x.ids.join()}>

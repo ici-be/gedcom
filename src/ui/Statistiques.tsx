@@ -52,7 +52,7 @@ function lignePrenom(p: RangPrenom) {
   const autres = p.variantes.filter(([v]) => sansAccents(v) !== sansAccents(p.nom))
   return {
     cle: p.cle,
-    libelle: <span title={p.variantes.map(([v, n]) => `${v} : ${nombre(n)}`).join('\n')}>{p.nom}{autres.length > 0 && <span class="variantes"> {autres.map(([v]) => v).join(', ')}</span>}</span>,
+    libelle: <span title={p.variantes.map(([v, n]) => `${v} : ${nombre(n)}`).join('\n')}>{p.nom}{autres.length > 0 && <span class="variantes"> {autres.map(([v]) => v).join(', ')}</span>}</span>,
     parts: [p.n],
   }
 }
@@ -374,7 +374,7 @@ export function Statistiques({ d, perimetre, setPerimetre }: Props) {
           <Legende series={TYPES} />
         </Section>
 
-        <Section titre="Ascendance" sous="Ancêtres retrouvés génération par génération, branches, lignées, pistes et implexe : tout est sur la page Ascendance." large>
+        <Section titre="Ascendance" sous="Ancêtres retrouvés génération par génération, branches, lignées, pistes et implexe : tout est sur la page Ascendance." large>
           <div class="chiffres">
             <Chiffre valeur={nombre(d.ancetres.size)} legende="ancêtres différents" detail={`${nombre(gens.length)} générations`} />
             <Chiffre valeur={String(derniereComplete)} legende="générations complètes" />

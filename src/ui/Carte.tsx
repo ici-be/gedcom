@@ -222,7 +222,7 @@ export function Carte({ d, perimetre, setPerimetre, focus }: Props) {
       <header class="titre-ecran">
         <h1>Carte</h1>
         <p class="sous-titre">
-          Un cercle par lieu : plus il est grand, plus il y a de faits ; sa couleur dit la part déjà sourcée.
+          Un cercle par lieu : plus il est grand, plus il y a de faits ; sa couleur dit la part déjà sourcée.
           Cliquez sur un cercle pour aller aux actes.
         </p>
       </header>
@@ -280,7 +280,7 @@ export function Carte({ d, perimetre, setPerimetre, focus }: Props) {
           {aVerifier.length > 0 && (
             <section class="panneau">
               <h2>À vérifier <span class="compte">{aVerifier.length}</span></h2>
-              <p class="aide">Plusieurs localités portent ce nom : c'est la plus proche des autres lieux de la même région qui a été retenue.</p>
+              <p class="aide">Plusieurs localités portent ce nom : c'est la plus proche des autres lieux de la même région qui a été retenue.</p>
               <ListeLieux lieux={aVerifier} action="Voir" agir={(l) => {
                 const c = marqueurs.current.get(l)
                 if (c && carte.current) { carte.current.setView(c.getLatLng(), 10); c.openPopup(); conteneur.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }) }
@@ -291,7 +291,7 @@ export function Carte({ d, perimetre, setPerimetre, focus }: Props) {
       )}
 
       <p class="astuce">
-        Les lieux sont reconnus dans une liste de localités livrée avec le site (GeoNames) : aucun nom n'est envoyé sur Internet.
+        Les lieux sont reconnus dans une liste de localités livrée avec le site (GeoNames) : aucun nom n'est envoyé sur Internet.
         Seul le fond de carte est téléchargé. Les positions placées à la main sont gardées dans ce navigateur
         {nbManuelles > 0 && <> ({nbManuelles}) · <button type="button" class="lien" onClick={exporter}>les exporter</button></>}
         {' · '}<label class="lien">les importer<input type="file" accept=".json,application/json" hidden onChange={(e) => importer(e.currentTarget.files?.[0])} /></label>.
@@ -306,7 +306,7 @@ function ListeLieux({ lieux, action, agir, actif }: { lieux: LieuCarte[]; action
       {lieux.map((l) => (
         <li key={l.lieu} class={actif === l.lieu ? 'actif' : ''}>
           <a href={'#/lieux/' + encodeURIComponent(l.lieu)}>{l.nom}</a>
-          <span class="contexte">{l.contexte}{l.position?.libelle && <> · retenu : {l.position.libelle}</>}</span>
+          <span class="contexte">{l.contexte}{l.position?.libelle && <> · retenu : {l.position.libelle}</>}</span>
           <span class="nombre">{nombre(l.faits)}</span>
           <button type="button" class="bouton discret" onClick={() => agir(l.lieu)}>{action}</button>
         </li>
@@ -326,7 +326,7 @@ function Bulle({ p, placer, retirer }: { p: Point; placer: (lieu: string) => voi
             {nombre(l.faits)} fait{l.faits > 1 ? 's' : ''} · <strong>{nombre(l.sansSource)}</strong> sans source
           </span>
           <Barre n={l.faits - l.sansSource} total={l.faits} />
-          {l.position?.qualite === 'incertain' && <span class="bulle-note">Position à vérifier : {l.position.libelle}</span>}
+          {l.position?.qualite === 'incertain' && <span class="bulle-note">Position à vérifier : {l.position.libelle}</span>}
           <span class="bulle-actions">
             {l.position?.qualite === 'manuel'
               ? <><span class="bulle-note">Placé à la main</span> <button type="button" class="lien" onClick={() => retirer(l.lieu)}>retirer</button></>

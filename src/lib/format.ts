@@ -19,7 +19,7 @@ const TYPES: Record<string, string> = { unmarried: 'Relation', residence: 'Rési
 
 export function libelle(e: Evenement): string {
   if ((e.tag === 'EVEN' || e.tag === 'FACT') && e.type) return TYPES[e.type.toLowerCase()] ?? e.type.charAt(0).toUpperCase() + e.type.slice(1)
-  if (e.tag === 'OCCU' && e.type) return 'Profession : ' + e.type
+  if (e.tag === 'OCCU' && e.type) return 'Profession : ' + e.type
   return LIBELLES[e.tag] ?? e.tag
 }
 

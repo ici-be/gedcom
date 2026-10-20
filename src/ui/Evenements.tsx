@@ -196,7 +196,7 @@ function Traces({ d, ev, traces }: { d: Donnees; ev: EvenementHistorique; traces
   }
   return (
     <div class="sous-titre ev-traces">
-      <p>On en trouvera peut-être des traces dans les actes de décès {deMois(ev)} de ces communes :</p>
+      <p>On en trouvera peut-être des traces dans les actes de décès {deMois(ev)} de ces communes :</p>
       <ul>
         {traces.map((t) => <li key={t.lieu}>{decouperLieu(t.lieu).nom}{aDistance(t)}, <Actes d={d} t={t} /></li>)}
       </ul>
@@ -241,7 +241,7 @@ export function PageEvenement({ d, id }: { d: Donnees; id: string }) {
                   <td class="sosa">{a?.sosa}</td>
                   <td class="nom"><Personne d={d} id={v.id} annees /></td>
                   <td>{v.age === undefined ? <span class="vide">–</span> : v.age < 1 ? 'moins d’un an' : `${v.age} an${v.age > 1 ? 's' : ''}`}</td>
-                  <td><a href={'#/lieux/' + encodeURIComponent(v.lieu)} title={v.lieu}>{decouperLieu(v.lieu).nom}</a>{v.probable && <span class="vide" title="Aucun acte daté près de l'événement : lieu déduit des actes précédent et suivant"> · sans doute</span>}</td>
+                  <td><a href={'#/lieux/' + encodeURIComponent(v.lieu)} title={v.lieu}>{decouperLieu(v.lieu).nom}</a>{v.probable && <span class="vide" title="Aucun acte daté près de l'événement : lieu déduit des actes précédent et suivant"> · sans doute</span>}</td>
                   {ponctuel(ev) && <td class="nombre">{v.km! < 1 ? 'sur place' : `${Math.round(v.km!)} km`}</td>}
                   <td><a href={'#/recit/' + encodeURIComponent(v.id)}>Récit</a></td>
                 </tr>

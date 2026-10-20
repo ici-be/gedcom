@@ -22,7 +22,7 @@ const SYMBOLES: Record<Etat, string> = { source: '✓', 'sans-source': '!', manq
 
 /** L'état d'un fait ; pour une source introuvable, la cause notée s'affiche au survol */
 export function Pastille({ etat, introuvable }: { etat: Etat; introuvable?: Introuvable }) {
-  const titre = NOMS_ETATS[etat] + (etat === 'introuvable' && introuvable?.cause ? ' : ' + introuvable.cause : '')
+  const titre = NOMS_ETATS[etat] + (etat === 'introuvable' && introuvable?.cause ? ' : ' + introuvable.cause : '')
   return (
     <span class={'pastille ' + etat} title={titre} aria-label={titre}>
       {SYMBOLES[etat]}
@@ -35,11 +35,11 @@ function BadgeSource({ s }: { s: string }) {
   const [ouvert, setOuvert] = useState(false)
   const url = lienDansSource(s)
   if (url) {
-    return <a class="badge-source lien-source" href={url} target="_blank" rel="noopener noreferrer" title={s} aria-label={'Source : ' + s}>S</a>
+    return <a class="badge-source lien-source" href={url} target="_blank" rel="noopener noreferrer" title={s} aria-label={'Source : ' + s}>S</a>
   }
   return (
     <span class="source-texte-conteneur">
-      <button type="button" class="badge-source texte" title={s} aria-label={'Source : ' + s} aria-expanded={ouvert} onClick={() => setOuvert(!ouvert)}>T</button>
+      <button type="button" class="badge-source texte" title={s} aria-label={'Source : ' + s} aria-expanded={ouvert} onClick={() => setOuvert(!ouvert)}>T</button>
       {ouvert && <span class="bulle-source" role="note">{s}</span>}
     </span>
   )
@@ -116,7 +116,7 @@ export function Personne({ d, id, annees, prenoms }: { d: Donnees; id: string; a
   return (
     <span class="personne">
       {url ? (
-        <a href={url} target="_blank" rel="noopener noreferrer" title={(coupe ? complet + ' · ' : '') + (d.homonymes.has(id) ? 'Homonymes : ouvre la recherche en ligne' : 'Ouvrir la fiche en ligne')}>
+        <a href={url} target="_blank" rel="noopener noreferrer" title={(coupe ? complet + ' · ' : '') + (d.homonymes.has(id) ? 'Homonymes : ouvre la recherche en ligne' : 'Ouvrir la fiche en ligne')}>
           {nom}
         </a>
       ) : (
@@ -128,7 +128,7 @@ export function Personne({ d, id, annees, prenoms }: { d: Donnees; id: string; a
 }
 
 /** Choisir une personne par son nom */
-export function ChoixPersonne({ d, valeur, choisir }: { d: Donnees; valeur: string; choisir: (id: string) => void }) {
+export function ChoixPersonne({ d, valeur, choisir, prenoms }: { d: Donnees; valeur: string; choisir: (id: string) => void; prenoms?: number }) {
   const [texte, setTexte] = useState('')
   const resultats = useMemo(() => {
     const mots = normaliser(texte).split(/\s+/).filter(Boolean)
@@ -144,7 +144,7 @@ export function ChoixPersonne({ d, valeur, choisir }: { d: Donnees; valeur: stri
   const actuel = d.arbre.individus.get(valeur)
   return (
     <div class="choix-personne">
-      <div class="actuel">{actuel ? <Personne d={d} id={actuel.id} annees /> : <span class="vide">aucune</span>}</div>
+      <div class="actuel">{actuel ? <Personne d={d} id={actuel.id} annees prenoms={prenoms} /> : <span class="vide">aucune</span>}</div>
       <input type="search" placeholder="Chercher un nom…" value={texte} onInput={(e) => setTexte(e.currentTarget.value)} aria-label="Chercher une personne" />
       {resultats.length > 0 && (
         <ul class="resultats">
@@ -223,7 +223,7 @@ export function AvisImpression({ impression, total, page, parPage }: { impressio
   const fin = Math.min(total, (page + 1) * parPage)
   return (
     <p class="avis-impression">
-      Lignes {(page * parPage + 1).toLocaleString('fr-BE')} à {fin.toLocaleString('fr-BE')} sur {total.toLocaleString('fr-BE')} : au-delà de {LIMITE_IMPRESSION.toLocaleString('fr-BE')} lignes, seule la page affichée est imprimée. Filtrez le tableau pour tout imprimer.
+      Lignes {(page * parPage + 1).toLocaleString('fr-BE')} à {fin.toLocaleString('fr-BE')} sur {total.toLocaleString('fr-BE')} : au-delà de {LIMITE_IMPRESSION.toLocaleString('fr-BE')} lignes, seule la page affichée est imprimée. Filtrez le tableau pour tout imprimer.
     </p>
   )
 }
@@ -233,7 +233,7 @@ export function EffacerFiltres({ actifs, effacer }: { actifs: string[]; effacer:
   const n = actifs.length
   return (
     <>
-      <button type="button" class={'bouton discret effacer-filtres' + (n ? ' actif' : '')} onClick={effacer} disabled={!n} title={n ? 'Filtres actifs : ' + actifs.join(' · ') : undefined}>
+      <button type="button" class={'bouton discret effacer-filtres' + (n ? ' actif' : '')} onClick={effacer} disabled={!n} title={n ? 'Filtres actifs : ' + actifs.join(' · ') : undefined}>
         {n ? `✕ Effacer ${n > 1 ? `les ${n} filtres` : 'le filtre'}` : 'Aucun filtre'}
       </button>
       {/* rappel des filtres sur la feuille imprimée */}

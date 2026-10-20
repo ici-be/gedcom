@@ -64,7 +64,7 @@ export function Communes({ d, perimetre, setPerimetre }: { d: Donnees; perimetre
     <section class="ecran">
       <header class="titre-ecran">
         <h1>Lieux</h1>
-        <p class="sous-titre">Les faits à sourcer, commune par commune : de quoi préparer une séance aux archives ou sur les registres en ligne.</p>
+        <p class="sous-titre">Les faits à sourcer, commune par commune : de quoi préparer une séance aux archives ou sur les registres en ligne.</p>
       </header>
       {!d.adresse && <p class="astuce bandeau-info">Pour que les noms deviennent des liens vers les fiches en ligne, indiquez l'adresse de votre arbre dans les <a href="#/">réglages de l'accueil</a>.</p>}
 
@@ -107,7 +107,7 @@ export function Communes({ d, perimetre, setPerimetre }: { d: Donnees; perimetre
                 <td class="nombre">{nombre(c.actes.length)}</td>
                 <td class="nombre">
                   {c.sansSource ? <strong>{nombre(c.sansSource)}</strong> : <span class="vide">0</span>}
-                  {c.introuvables > 0 && <span class="contexte" title="Sources notées introuvables : plus à chercher">+ {nombre(c.introuvables)} introuvable{c.introuvables > 1 ? 's' : ''}</span>}
+                  {c.introuvables > 0 && <span class="contexte" title="Sources notées introuvables : plus à chercher">+ {nombre(c.introuvables)} introuvable{c.introuvables > 1 ? 's' : ''}</span>}
                 </td>
                 <td class="progression">
                   <Barre n={c.sourcees} total={c.actes.length} />
@@ -203,7 +203,7 @@ export function Lieu({ d, lieu, perimetre, setPerimetre }: { d: Donnees; lieu: s
         </span>
         <button type="button" class="bouton discret" onClick={exporter}>Exporter en CSV</button>
       </div>
-      <p class="astuce">Cochez un acte quand vous l'avez trouvé : il est retenu dans ce navigateur. Il disparaît pour de bon quand la source est ajoutée sur votre arbre et que vous rechargez un nouvel export.</p>
+      <p class="astuce">Cochez un acte quand vous l'avez trouvé : il est retenu dans ce navigateur. Il disparaît pour de bon quand la source est ajoutée sur votre arbre et que vous rechargez un nouvel export.</p>
 
       {groupes.length === 0 && <p class="aucun">Rien à chercher ici. 🎉</p>}
       {groupes.map((g) => (
@@ -245,7 +245,7 @@ function Lectures({ lieu, position }: { lieu: string; position?: Position }) {
   return (
     <section class="groupe lectures">
       <h2>Lire sur {decoupe.commune}</h2>
-      <p class="astuce">Histoire du lieu, monographies, bulletins des cercles d'histoire, livres anciens : chaque lien lance la recherche sur le site indiqué.</p>
+      <p class="astuce">Histoire du lieu, monographies, bulletins des cercles d'histoire, livres anciens : chaque lien lance la recherche sur le site indiqué.</p>
       {rayons.map((r) => (
         <div key={r.titre} class="siecle">
           <h3>{r.titre}</h3>

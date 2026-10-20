@@ -164,7 +164,7 @@ export function BoutsDeBranche({ d, options }: { d: Donnees; options: OptionsFeu
   const p1 = resumes.get(1)
 
   return (
-    <svg ref={svg} class="feuille" viewBox="0 0 1400 990" role="img" aria-label="Les 128 bouts de branche : générations IX à XV">
+    <svg ref={svg} class="feuille" viewBox="0 0 1400 990" role="img" aria-label="Les 128 bouts de branche : générations IX à XV">
       <defs>
         <pattern id="hachures-verso" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
           <rect width="3" height="3" fill="#fff" />
@@ -193,7 +193,7 @@ export function BoutsDeBranche({ d, options }: { d: Donnees; options: OptionsFeu
       {quartiers}
 
       {/* Pied de page */}
-      {implexes && <text x="40" y={options.date ? 950 : 966} font-size="8.5" class="mut"><tspan class="so">◆</tspan> implexe : la même personne plus près au recto</text>}
+      {implexes && <text x="40" y={options.date ? 950 : 966} font-size="8.5" class="mut"><tspan class="so">◆</tspan> implexe : la même personne plus près au recto</text>}
       {options.date && <text x="40" y="966" font-size="8.5" class="mut">Établi le {options.date}</text>}
       <text x="1360" y="966" font-size="8.5" class="mut" text-anchor="end">Au recto, l’éventail des générations I à VIII</text>
     </svg>

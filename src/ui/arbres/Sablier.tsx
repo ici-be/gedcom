@@ -730,8 +730,8 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
   const avecUrl = options.url && !!d.adresse
   const avecBasDroite = avecQr || avecUrl
   const legende = [
-    (options.fratrie || (options.fratrieBase ?? options.fratrie)) && 'en italique : frères et sœurs',
-    options.italiques && 'date en italique : sans source',
+    (options.fratrie || (options.fratrieBase ?? options.fratrie)) && 'en italique : frères et sœurs',
+    options.italiques && 'date en italique : sans source',
     implexes && (communs.size ? '◆ implexe ou ancêtre commun aux deux' : '◆ implexe'),
   ].filter(Boolean).join(' · ')
   const nbGenDesc = niveaux.length

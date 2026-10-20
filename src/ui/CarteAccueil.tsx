@@ -83,7 +83,7 @@ export function CarteAccueil({ d }: { d: Donnees }) {
               ))}
             </ol>
             {carte.communes.length > 0 && (
-              <p class="aide">Communes les plus présentes : {carte.communes.map((c, i) => <span key={c.nom}>{i ? ', ' : ''}<a href={'#/carte'}>{c.nom}</a> ({nombre(c.n)})</span>)}.</p>
+              <p class="aide">Communes les plus présentes : {carte.communes.map((c, i) => <span key={c.nom}>{i ? ', ' : ''}<a href={'#/carte'}>{c.nom}</a> ({nombre(c.n)})</span>)}.</p>
             )}
             <p class="aide"><a href="#/migrations">Les migrations siècle par siècle →</a></p>
           </>
@@ -96,7 +96,7 @@ export function CarteAccueil({ d }: { d: Donnees }) {
             <g>
               {carte.points.map((c) => (
                 <circle key={c.nom} cx={c.xy[0].toFixed(1)} cy={c.xy[1].toFixed(1)} r={(1.6 + Math.sqrt(c.n) * 1.1).toFixed(1)}
-                  fill="#1f2523" fill-opacity="0.5" stroke="#fff" stroke-width="0.6"><title>{c.nom} : {c.n}</title></circle>
+                  fill="#1f2523" fill-opacity="0.5" stroke="#fff" stroke-width="0.6"><title>{c.nom} : {c.n}</title></circle>
               ))}
             </g>
           </svg>

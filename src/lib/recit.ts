@@ -351,11 +351,11 @@ function temoins(p: Plume, e: Evenement, sujet: Individu, epoux?: [Individu | un
   const res: Phrase[] = []
   const parrains = ['parrain', 'marraine'].filter((r) => parRole.has(r))
   if (parrains.length) {
-    res.push(phrase`${enumerer(parrains.map((r) => [`${r} : `, ...enumerer(parRole.get(r)!, ' ; ', ' ; ')]), ' ; ', ' ; ')}`)
+    res.push(phrase`${enumerer(parrains.map((r) => [`${r} : `, ...enumerer(parRole.get(r)!, ' ; ', ' ; ')]), ' ; ', ' ; ')}`)
   }
   for (const [role, l] of parRole) {
     if (role === 'parrain' || role === 'marraine') continue
-    res.push(phrase`${role}${l.length > 1 && role === 'témoin' ? 's' : ''} : ${enumerer(l, ' ; ', ' ; ')}`)
+    res.push(phrase`${role}${l.length > 1 && role === 'témoin' ? 's' : ''} : ${enumerer(l, ' ; ', ' ; ')}`)
   }
   return res
 }
@@ -367,7 +367,7 @@ function sources(p: Plume, l: string[]): Phrase | null {
     const u = /https?:\/\/(?:www\.)?([^/\s]+)\S*/.exec(s)
     return u ? [{ url: u[0], t: u[1] }] : [s]
   })
-  return phrase`Source${m.length > 1 ? 's' : ''} : ${enumerer(m, ' ; ', ' ; ')}`
+  return phrase`Source${m.length > 1 ? 's' : ''} : ${enumerer(m, ' ; ', ' ; ')}`
 }
 
 /** Ce qu'un acte apporte en note : sa note, ses témoins, ses sources */
@@ -375,7 +375,7 @@ function noteActe(p: Plume, e: Evenement | undefined, sujet: Individu, epoux?: [
   if (!e) return []
   const t = nettoyer(e.note)
   // « Source: introuvable (registres brûlés en 1914) » : dit tel quel, sauf si une source a été trouvée depuis
-  const perdu = e.introuvable && !e.sources.length ? phrase`Acte introuvable${e.introuvable.cause ? ` : ${e.introuvable.cause}` : ''}` : null
+  const perdu = e.introuvable && !e.sources.length ? phrase`Acte introuvable${e.introuvable.cause ? ` : ${e.introuvable.cause}` : ''}` : null
   return [t ? phrase`${t}` : null, perdu, ...temoins(p, e, sujet, epoux), sources(p, e.sources)].filter((x): x is Phrase => !!x)
 }
 
@@ -420,16 +420,16 @@ function faits(p: Plume, evenements: Evenement[], prefixeDomicile: string): Phra
     } else {
       const etiquette = (e.tag === 'EVEN' || e.tag === 'FACT') ? TYPES.find(([r]) => r.test(type))?.[1] ?? type : ETIQUETTES[e.tag] ?? type
       if (!etiquette) continue
-      const titre = e.tag === 'TITL' && e.type ? `Titre : ${e.type}` : etiquette
+      const titre = e.tag === 'TITL' && e.type ? `Titre : ${e.type}` : etiquette
       const note = nettoyer(e.note)
-      autres.push(phrase`${titre} ${quand(e.date)} ${lieu(p, e, true)}${note ? ` : ${note}` : ''}`)
+      autres.push(phrase`${titre} ${quand(e.date)} ${lieu(p, e, true)}${note ? ` : ${note}` : ''}`)
     }
   }
   const res: Phrase[] = []
   const avecAnnees = (c: string, l: string[]) => (l.length ? `${c}${c ? ' ' : ''}(${l.join(', ')})` : c)
-  if (domiciles.size) res.push(phrase`${prefixeDomicile} : ${[...domiciles].map(([c, l]) => avecAnnees(c, l)).join(' — ')}`)
-  if (militaire.length) res.push(phrase`Militaire : ${militaire.join(' ; ')}`)
-  for (const [etiquette, m] of registres) res.push(phrase`${etiquette} : ${[...m].map(([c, l]) => avecAnnees(c, l)).join(' — ')}`)
+  if (domiciles.size) res.push(phrase`${prefixeDomicile} : ${[...domiciles].map(([c, l]) => avecAnnees(c, l)).join(' — ')}`)
+  if (militaire.length) res.push(phrase`Militaire : ${militaire.join(' ; ')}`)
+  for (const [etiquette, m] of registres) res.push(phrase`${etiquette} : ${[...m].map(([c, l]) => avecAnnees(c, l)).join(' — ')}`)
   return [...res, ...autres]
 }
 
@@ -636,7 +636,7 @@ function autresUnions(p: Plume, c: Individu, fam: Famille): Phrase[] {
       ? phrase`${prenomUsuel(c)} s’était ${g(c, 'marié', 'mariée')} ${rang} ${quand(u.e?.date)} ${lieu(p, u.e, true)}${a ? `, alors qu’${il(c)} avait ${ans(a)}` : ''}, avec ${conjoint(p, u, a, true)}`
       : phrase`${prenomUsuel(c)} a aussi partagé la vie de ${conjoint(p, u, undefined, true)}`
     const enf = enfantsDe(p, u.fam)
-    return enf.length ? [ph, phrase`Le couple a eu ${compte(enf)} : ${listeEnfants(p, enf)}`] : [ph]
+    return enf.length ? [ph, phrase`Le couple a eu ${compte(enf)} : ${listeEnfants(p, enf)}`] : [ph]
   })
 }
 
@@ -784,8 +784,8 @@ function notice(p: Plume, ind: Individu, ctx: Contexte): Bloc[] {
     }
     if (enf.length) {
       const qui = u.conj ? 'Le couple a eu' : `${capitale(il(ind))} a eu`
-      if (ctx.profondeur > 0) courant.push(phrase`${qui} ${compte(enf)} :`)
-      else courant.push(phrase`${qui} ${compte(enf)} : ${listeEnfants(p, enf, ctx.ligne)}`)
+      if (ctx.profondeur > 0) courant.push(phrase`${qui} ${compte(enf)} :`)
+      else courant.push(phrase`${qui} ${compte(enf)} : ${listeEnfants(p, enf, ctx.ligne)}`)
     }
     precedent = u
   })
@@ -811,7 +811,7 @@ function notice(p: Plume, ind: Individu, ctx: Contexte): Bloc[] {
     const lits = us.length > 1 && avecEnfants.length > 0
     us.forEach((u, i) => {
       const enf = enfantsDe(p, u.fam)
-      if (lits) blocs.push({ type: 'p', italique: true, texte: [`Du ${LITS[i] ?? `${i + 1}e`} lit : ${enf.length ? '' : 'sans postérité'}`.trimEnd()] })
+      if (lits) blocs.push({ type: 'p', italique: true, texte: [`Du ${LITS[i] ?? `${i + 1}e`} lit : ${enf.length ? '' : 'sans postérité'}`.trimEnd()] })
       if (!enf.length) return
       p.descendants += enf.length
       blocs.push({
@@ -833,7 +833,7 @@ function noticeCouple(p: Plume, pl: Place[], k: number): Bloc[] {
     const qui = [h && [personne(h, true), ' ', { sosa: 2 * k, ancre: false }], f && [personne(f, true), ' ', { sosa: 2 * k + 1, ancre: false }]].filter(Boolean) as Morceau[][]
     const deja = [H.dejaVu, F.dejaVu].filter((x): x is number => !!x)
     const renvois = enumerer(deja.map((s) => [{ sosa: s, ancre: p.notices.has(s) }]))
-    return [{ type: 'p', ancres: [2 * k, 2 * k + 1], texte: phrase`${enumerer(qui)}, ${qui.length > 1 ? 'déjà présentés' : g(h ?? f, 'déjà présenté', 'déjà présentée')} plus haut : voir ${renvois}` }]
+    return [{ type: 'p', ancres: [2 * k, 2 * k + 1], texte: phrase`${enumerer(qui)}, ${qui.length > 1 ? 'déjà présentés' : g(h ?? f, 'déjà présenté', 'déjà présentée')} plus haut : voir ${renvois}` }]
   }
   const tete = h ?? f!
   return notice(p, tete, { profondeur: 0, niveau: 0, filiation: true, ligne: enfant.id, ancres: [2 * k, 2 * k + 1] })

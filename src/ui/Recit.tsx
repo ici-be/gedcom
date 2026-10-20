@@ -94,7 +94,7 @@ export function Recit({ d, id }: { d: Donnees; id?: string }) {
     <section class="ecran recit">
       <header class="titre-ecran">
         <h1 data-titre={`Récit de ${nomComplet(d.arbre.individus.get(cible)!)}`}>Récit</h1>
-        <p class="sous-titre">Une notice à la manière des livres de famille : la personne et ses descendants, puis ses ancêtres génération par génération, avec témoins, domiciles et registres en notes. Chaque nom mène au récit de cette personne ; chaque numéro entre crochets, à sa notice.</p>
+        <p class="sous-titre">Une notice à la manière des livres de famille : la personne et ses descendants, puis ses ancêtres génération par génération, avec témoins, domiciles et registres en notes. Chaque nom mène au récit de cette personne ; chaque numéro entre crochets, à sa notice.</p>
       </header>
 
       <section class="panneau rc-reglages">

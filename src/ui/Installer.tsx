@@ -70,7 +70,7 @@ export function ProposerInstallation() {
         <strong>Installer Lignées</strong>{' '}
         {ios
           ? <>: touchez <IconePartager /> <b>Partager</b>, puis <b>Sur l'écran d'accueil</b>. L'arbre s'ouvrira comme une application, même sans réseau.</>
-          : <>sur l'écran d'accueil : l'arbre s'ouvrira comme une application, même sans réseau.</>}
+          : <>sur l'écran d'accueil : l'arbre s'ouvrira comme une application, même sans réseau.</>}
       </p>
       <div class="installation-actions">
         {!ios && <button type="button" class="bouton principal" onClick={installer}>Installer</button>}

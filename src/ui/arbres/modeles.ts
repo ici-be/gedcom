@@ -138,7 +138,7 @@ export const MODELES: Modele[] = [
   {
     id: 'pyramide',
     titre: 'Arbre en pyramide',
-    description: 'L’arbre traditionnel : la personne de départ en bas, quatre à neuf générations en rangées, les cinq premières en cartouches avec photo, en plusieurs thèmes de couleurs.',
+    description: 'L’arbre traditionnel : la personne de départ en bas, quatre à neuf générations en rangées, les cinq premières en cartouches avec photo, en plusieurs thèmes de couleurs.',
     forme: 'arbre',
     papier: { format: 'A3', orientation: 'landscape' },
     generations: 8,
@@ -153,7 +153,7 @@ export const MODELES: Modele[] = [
   {
     id: 'sablier',
     titre: 'Ascendance et descendance',
-    description: 'L’arbre en sablier : la personne de départ au centre avec ses conjoints, ses ancêtres au-dessus et ses descendants en dessous, en plusieurs thèmes de couleurs.',
+    description: 'L’arbre en sablier : la personne de départ au centre avec ses conjoints, ses ancêtres au-dessus et ses descendants en dessous, en plusieurs thèmes de couleurs.',
     forme: 'arbre',
     papier: { format: 'A3', orientation: 'landscape' },
     generations: 6,

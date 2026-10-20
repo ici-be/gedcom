@@ -22,15 +22,15 @@ export function ChoixRacine({ d, setRacine }: { d: Donnees; setRacine: (id: stri
   return (
     <div class="choix-racine" ref={boite}>
       <button type="button" class="choix-racine-bouton" aria-expanded={ouvert} onClick={() => setOuvert(!ouvert)}
-        title={`Personne de départ${racine ? ' : ' + nomComplet(racine) : ''}`}>
+        title={`Personne de départ${racine ? ' : ' + nomComplet(racine) : ''}`}>
         <span class="choix-racine-sosa">Sosa 1</span>
         <span class="choix-racine-nom">{racine ? racine.prenom.split(/\s+/)[0] || racine.nom : 'à choisir'}</span>
         <span aria-hidden="true">▾</span>
       </button>
       {ouvert && (
         <div class="choix-racine-panneau" role="dialog" aria-label="Changer de personne de départ">
-          <p class="aide">Personne de départ des ancêtres, lignées, récits et arbres :</p>
-          <ChoixPersonne d={d} valeur={d.racine} choisir={(id) => { setRacine(id); setOuvert(false) }} />
+          <p class="aide">Personne de départ des ancêtres, lignées,<br />récits et arbres :</p>
+          <ChoixPersonne d={d} valeur={d.racine} prenoms={2} choisir={(id) => { setRacine(id); setOuvert(false) }} />
         </div>
       )}
     </div>

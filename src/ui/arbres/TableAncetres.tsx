@@ -175,7 +175,7 @@ export function TableAncetres({ d, options }: { d: Donnees; options: OptionsFeui
   })
 
   const p1 = resumes.get(1)
-  const legende = ['° naissance', '† décès', 'v. vers, av. avant, ap. après', options.italiques && 'date en italique : sans source', implexes && '◆ implexe : la même personne sous un plus petit numéro'].filter(Boolean).join(' · ')
+  const legende = ['° naissance', '† décès', 'v. vers, av. avant, ap. après', options.italiques && 'date en italique : sans source', implexes && '◆ implexe : la même personne sous un plus petit numéro'].filter(Boolean).join(' · ')
 
   return (
     <svg ref={svg} class={'feuille' + (options.italiques ? ' italiques' : '')} viewBox="0 0 1400 990" role="img" aria-label="Table des ancêtres par numéro Sosa">

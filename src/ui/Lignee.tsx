@@ -25,7 +25,7 @@ function Nom({ d, id, complet }: { d: Donnees; id: string; complet?: boolean }) 
   const texte = complet ? nomComplet(ind) : court(ind)
   const url = d.lien(ind)
   return url
-    ? <a class="nom" href={url} target="_blank" rel="noopener noreferrer" title={d.homonymes.has(id) ? 'Homonymes : ouvre la recherche en ligne' : 'Ouvrir la fiche en ligne'}>{texte}</a>
+    ? <a class="nom" href={url} target="_blank" rel="noopener noreferrer" title={d.homonymes.has(id) ? 'Homonymes : ouvre la recherche en ligne' : 'Ouvrir la fiche en ligne'}>{texte}</a>
     : <span class="nom">{texte}</span>
 }
 
@@ -250,7 +250,7 @@ export function Lignee({ d, cle }: { d: Donnees; cle: string }) {
         <h1>{titre}</h1>
         <p class="sous-titre">
           De {court(ancien)}{haut.naissance !== undefined ? `, né${ancien.sexe === 'F' ? 'e' : ''} ${haut.estimee ? 'vers' : 'en'} ${haut.naissance}` : ''}
-          , à {court(racine)} : {M.length} générations{span && span > 0 ? `, environ ${nombre(span)} ans` : ''}.
+          , à {court(racine)} : {M.length} générations{span && span > 0 ? `, environ ${nombre(span)} ans` : ''}.
         </p>
         <div class="bandeau-chiffres">
           <div><b>{M.length}</b><span>générations</span></div>

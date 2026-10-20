@@ -332,7 +332,7 @@ function FilLignee({ d, m, contours, positions, cle }: { d: Donnees; m: Calcul; 
     <section class="panneau">
       <header class="mg-entete">
         <h2>Le fil d’une lignée</h2>
-        <p class="aide">De père en père depuis un arrière-grand-parent, ou de mère en mère : la carte suit le chemin de la lignée, naissances, mariages et décès dans l’ordre du temps.</p>
+        <p class="aide">De père en père depuis un arrière-grand-parent, ou de mère en mère : la carte suit le chemin de la lignée, naissances, mariages et décès dans l’ordre du temps.</p>
       </header>
       <nav class="mg-choix" aria-label="Lignée">
         {choix.map((c) => <a key={c.cle} href={'#/migrations/siecles/' + c.cle} class={c.cle === actif ? 'actif' : ''} aria-current={c.cle === actif ? 'true' : undefined}>{c.nom}</a>)}
@@ -496,7 +496,7 @@ function Gravite({ d, m, contours }: { d: Donnees; m: Calcul; contours: Contours
               </tbody>
             </table>
           </div>
-          <p class="aide">« Depuis » : la génération la plus ancienne qui compte au moins deux naissances situées. « Plus grand saut » : le plus long écart entre deux générations successives du quartier, et la génération où il se produit.</p>
+          <p class="aide">« Depuis » : la génération la plus ancienne qui compte au moins deux naissances situées. « Plus grand saut » : le plus long écart entre deux générations successives du quartier, et la génération où il se produit.</p>
         </div>
       </div>
     </section>

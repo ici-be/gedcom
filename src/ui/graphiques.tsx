@@ -125,7 +125,7 @@ function ColonnesBrutes({ categories, series, format = (v) => String(Math.round(
                   const yHaut = y(bas + v)
                   const h = Math.max(0, y(bas) - yHaut)
                   const r = Math.min(3, barre / 4)
-                  const titre = <title>{`${c}${series.length > 1 ? ' · ' + s.nom : ''} : ${format(v)}${n !== undefined ? ` (${n.toLocaleString('fr-BE')} cas)` : ''}`}</title>
+                  const titre = <title>{`${c}${series.length > 1 ? ' · ' + s.nom : ''} : ${format(v)}${n !== undefined ? ` (${n.toLocaleString('fr-BE')} cas)` : ''}`}</title>
                   const opacite = n !== undefined && n < seuil ? 0.45 : 1
                   return (
                     <g key={s.nom}>
@@ -173,7 +173,7 @@ export function Classement({ lignes, couleurs, noms }: { lignes: Ligne[]; couleu
             <span class="rang">{i + 1}</span>
             <span class="libelle">{l.libelle}</span>
             <span class="total">{l.detail ?? total.toLocaleString('fr-BE')}</span>
-            <span class="piste" title={noms ? l.parts.map((p, j) => `${noms[j]} : ${p}`).join(' · ') : undefined}>
+            <span class="piste" title={noms ? l.parts.map((p, j) => `${noms[j]} : ${p}`).join(' · ') : undefined}>
               {l.parts.map((p, j) => p > 0 && <span key={j} style={{ width: `${(p / max) * 100}%`, background: couleurs[j] }} />)}
             </span>
           </li>
