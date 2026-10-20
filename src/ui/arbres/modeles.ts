@@ -47,6 +47,16 @@ export interface OptionsFeuille {
   photosDesc?: boolean
   /** Signatures dans les cases des descendants (sur le sablier et l'arbre du couple ; sinon comme `signatures`) */
   signaturesDesc?: boolean
+  /** Photos de la personne de départ et de son conjoint (sablier et arbre du couple ; sinon comme `photos`) */
+  photosCentre?: boolean
+  /** Signatures de la personne de départ et de son conjoint (sablier et arbre du couple ; sinon comme `signatures`) */
+  signaturesCentre?: boolean
+  /** Mariage de la personne de départ, sur le trait qui la relie à son conjoint (sinon comme `mariages`) */
+  mariagesCentre?: boolean
+  /** Commune de naissance dans les cases des ancêtres (sablier et arbre du couple ; vrai par défaut) */
+  lieuxAsc?: boolean
+  /** Commune de naissance de la personne de départ et de son conjoint (vrai par défaut) */
+  lieuxCentre?: boolean
   /** Conjoint et mariage dans les cartouches des descendants (sinon comme `mariages`) */
   mariagesDesc?: boolean
   /** Cases des descendants de même largeur : une place plus large pour ceux sans enfant, et les enfants d'un même parent empilés à la dernière génération (arbre du couple) */

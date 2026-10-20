@@ -384,16 +384,19 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
   const estImplexe = (c: Cote, p: Place) => !!p.dejaVu || c.pl.some((q) => q?.dejaVu === p.sosa) || (!!p.ind && p.sosa > 1 && communs.has(p.ind.id))
   /** Les couleurs d'un ancêtre : par génération, il garde la sienne ; sinon, d'après sa place sur la feuille */
   const couleurAsc = (v: number, s: number, sexe?: 'M' | 'F' | '?') => theme.case(theme.id === 'generations' ? s : v, sexe)
-  const photoDe = (i?: Individu, descendant = false) => {
+  const photoDe = (i?: Individu, groupe: 'asc' | 'centre' | 'desc' = 'asc') => {
     const ph = i?.photo
     if (!ph || ratees.has(ph.url)) return undefined
-    const active = descendant
+    const active = groupe === 'desc'
       ? (ph.signature ? (options.signaturesDesc ?? options.signatures ?? options.photosDesc ?? options.photos ?? true) : (options.photosDesc ?? options.photos ?? true))
-      : (ph.signature ? (options.signatures ?? options.photos ?? true) : (options.photos ?? true))
+      : groupe === 'centre'
+        ? (ph.signature ? (options.signaturesCentre ?? options.signatures ?? options.photos ?? true) : (options.photosCentre ?? options.photos ?? true))
+        : (ph.signature ? (options.signatures ?? options.photos ?? true) : (options.photos ?? true))
     return active ? ph : undefined
   }
-  /** La personne de départ et son conjoint, sans leur métier si on le souhaite */
-  const resumeCentre = (i: Individu) => (options.metiersCentre === false ? { ...resume(i), metier: undefined } : resume(i))
+  /** La personne de départ et son conjoint, sans leur métier ou leur commune de naissance si on le souhaite */
+  const resumeCentre = (i: Individu) => ({ ...resume(i), ...(options.metiersCentre === false && { metier: undefined }), ...(options.lieuxCentre === false && { commune: undefined }) })
+  const mariagesCentre = options.mariagesCentre ?? options.mariages
   const rater = (url: string) => () => setRatees((r) => new Set(r).add(url))
   const listeFratrie = (f: Individu[], base = false) => ((base ? options.fratrieBase ?? options.fratrie : options.fratrie) ? f : []).map((x) => ({ prenom: prenoms(x.prenom, 1) || '?', annee: anneeCourte(naissance(x))?.replace(/^\?$/, '') || undefined }))
   const formePhoto = options.formePhoto ?? 'carree'
@@ -553,7 +556,7 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
       const p = pl[s]
       const v = virtuel(s)
       const { G, g, cx, x, y, w, h, R } = pos(v)
-      const r = p.ind ? resume(p.ind) : undefined
+      const r = p.ind ? { ...resume(p.ind), ...(options.lieuxAsc === false && { commune: undefined }) } : undefined
 
       if (r && g < asc && (dessinee(2 * s) || dessinee(2 * s + 1))) {
         const P = pos(2 * v)
@@ -616,7 +619,7 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
         if (i === 1 && racine) textes.push(<text key={'vide-t' + i} x={x + w / 2} y={y + h / 2 + 3} font-size="9" text-anchor="middle" class="ns">aucun conjoint connu</text>)
         return
       }
-      cartouche('centre' + cote.cle, x, y, w, h, 0, resumeCentre(ind), estImplexe(cote, cote.pl[1]), couleurAsc(2 + i, 1, ind.sexe), photoDe(ind))
+      cartouche('centre' + cote.cle, x, y, w, h, 0, resumeCentre(ind), estImplexe(cote, cote.pl[1]), couleurAsc(2 + i, 1, ind.sexe), photoDe(ind, 'centre'))
       // Frères et sœurs de chacun, vers l'extérieur de la feuille
       const f = listeFratrie(cote.freres.get(1) ?? [], true)
       if (!f.length) return
@@ -630,25 +633,25 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
       const B = pos(3)
       trait('u' + union.famille.id, `M${A.x + A.w} ${yMilieu}H${B.x}`)
       origines.set(union, { x: CENTRE.cx, y: yMilieu })
-      if (options.mariages) mariageEntre(union.famille.id, unionDe(racine.id, union.famille.id), CENTRE.cx, yMilieu)
+      if (mariagesCentre) mariageEntre(union.famille.id, unionDe(racine.id, union.famille.id), CENTRE.cx, yMilieu)
     }
   } else if (racine) {
     const xCentre = CENTRE.cx - CENTRE.w / 2
     let gaucheRangee = xCentre
     const p1 = cotes[0].pl[1]
-    cartouche('centre', xCentre, rCentre.y, CENTRE.w, rCentre.h, 0, resumeCentre(racine), estImplexe(cotes[0], p1), theme.case(1, racine.sexe), photoDe(racine))
+    cartouche('centre', xCentre, rCentre.y, CENTRE.w, rCentre.h, 0, resumeCentre(racine), estImplexe(cotes[0], p1), theme.case(1, racine.sexe), photoDe(racine, 'centre'))
     for (const { union, cote } of ordre) {
       if (cote === 'milieu' || !union.conjoint) { origines.set(union, { x: CENTRE.cx, y: rCentre.y + rCentre.h }); continue }
       const xc = cote === 'droite' ? xCentre + CENTRE.w + CENTRE.ecart : xCentre - CENTRE.ecart - CENTRE.wConjoint
       const c = theme.famille === 'sexe' ? theme.case(1, union.conjoint.sexe) : NEUTRE
-      cartouche('conj' + union.famille.id, xc, rCentre.y, CENTRE.wConjoint, rCentre.h, 1, resumeCentre(union.conjoint), false, c, photoDe(union.conjoint))
+      cartouche('conj' + union.famille.id, xc, rCentre.y, CENTRE.wConjoint, rCentre.h, 1, resumeCentre(union.conjoint), false, c, photoDe(union.conjoint, 'centre'))
       const x1 = cote === 'droite' ? xCentre + CENTRE.w : xc + CENTRE.wConjoint
       const x2 = cote === 'droite' ? xc : xCentre
       const xm = (x1 + x2) / 2
       trait('u' + union.famille.id, `M${x1} ${yMilieu}H${x2}`)
       origines.set(union, { x: xm, y: yMilieu })
       if (cote === 'gauche') gaucheRangee = xc
-      if (options.mariages) mariageEntre(union.famille.id, unionDe(racine.id, union.famille.id), xm, yMilieu)
+      if (mariagesCentre) mariageEntre(union.famille.id, unionDe(racine.id, union.famille.id), xm, yMilieu)
     }
     // Frères et sœurs de la personne de départ : à gauche de la rangée
     const f = listeFratrie(cotes[0].freres.get(1) ?? [], true)
@@ -701,7 +704,7 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
         const debut: Morceau[] = marie ? [['∞ ', 'mut'], ...(m?.annee ? [[m.annee + ' ', m.sourcee ? undefined : 'nd'] as Morceau] : [])] : [['avec ', 'mut']]
         enPlus.push({ fs: [0, 9, 8.6, 8.2, 7.4][taille], parts: [...debut, [nom]], cls: 'mt' })
       }
-      cartouche('d' + n.ind.id, x, y, w, h, taille, r, false, couleurDesc(n), photoDe(n.ind, true), enPlus, false, n.profondeur === 1 ? 'enfants' : undefined)
+      cartouche('d' + n.ind.id, x, y, w, h, taille, r, false, couleurDesc(n), photoDe(n.ind, 'desc'), enPlus, false, n.profondeur === 1 ? 'enfants' : undefined)
     }
     versEnfants('e' + n.ind.id, { x: cx, y: y + h }, n.enfants)
   }

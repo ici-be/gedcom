@@ -39,6 +39,11 @@ interface Reglages {
   photosDesc?: boolean
   signaturesDesc?: boolean
   mariagesDesc?: boolean
+  photosCentre?: boolean
+  signaturesCentre?: boolean
+  mariagesCentre?: boolean
+  lieuxAsc?: boolean
+  lieuxCentre?: boolean
   equitable?: boolean
   fratrieBase?: boolean
   fratrieCases?: boolean
@@ -170,10 +175,14 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
   const photosDesc = reglages.photosDesc ?? photosActives
   const signaturesDesc = reglages.signaturesDesc ?? signaturesActives
   const mariagesDesc = reglages.mariagesDesc ?? reglages.mariages !== false
+  // Le couple (ou la personne de départ) suit les ancêtres tant qu'on ne l'a pas réglé à part
+  const photosCentre = reglages.photosCentre ?? photosActives
+  const signaturesCentre = reglages.signaturesCentre ?? signaturesActives
+  const mariagesCentre = reglages.mariagesCentre ?? reglages.mariages !== false
   const bordsArrondis = reglages.bordsArrondis !== false
   // Colonne du milieu dans le tableau des options : le couple ou la personne de départ
   const centre = modele.reglages.conjoint ? 'Couple' : 'Sosa 1'
-  const centreMin = modele.reglages.conjoint ? 'couple' : 'personne de départ'
+  const centreMin = modele.reglages.conjoint ? 'couple' : 'Sosa 1'
   // Métier des ancêtres : première génération en petits cartouches, la suivante en étiquettes verticales
   const genCartouches = modele.reglages.conjoint ? 3 : 4
   const options = {
@@ -203,6 +212,11 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
     photosDesc: modele.reglages.descendants ? photosDesc : photosActives,
     signaturesDesc: modele.reglages.descendants ? signaturesDesc : signaturesActives,
     mariagesDesc: modele.reglages.descendants ? mariagesDesc : reglages.mariages !== false,
+    photosCentre: modele.reglages.descendants ? photosCentre : photosActives,
+    signaturesCentre: modele.reglages.descendants ? signaturesCentre : signaturesActives,
+    mariagesCentre: modele.reglages.descendants ? mariagesCentre : reglages.mariages !== false,
+    lieuxAsc: reglages.lieuxAsc !== false,
+    lieuxCentre: reglages.lieuxCentre !== false,
     formePhoto,
     bordsArrondis,
     mariages: reglages.mariages !== false,
@@ -359,7 +373,8 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
                       <tbody>
                         <tr>
                           <th scope="row">Mariages</th>
-                          <td colSpan={2}><input type="checkbox" id="impression-mariages" aria-label={`Mariages et conjoints : ancêtres et ${centreMin}`} title="Année et commune du mariage" checked={reglages.mariages !== false} onChange={(e) => setReglages({ mariages: e.currentTarget.checked })} /></td>
+                          <td><input type="checkbox" id="impression-mariages" aria-label="Mariages des ancêtres" title="Année et commune du mariage" checked={reglages.mariages !== false} onChange={(e) => setReglages({ mariages: e.currentTarget.checked })} /></td>
+                          <td><input type="checkbox" id="impression-mariages-centre" aria-label={`Mariage du ${centreMin}`} title="Année et commune du mariage, sur le trait entre les conjoints" checked={mariagesCentre} onChange={(e) => setReglages({ mariagesCentre: e.currentTarget.checked })} /></td>
                           <td><input type="checkbox" id="impression-mariages-desc" aria-label="Conjoints des descendants" title="« ∞ année conjoint »" checked={mariagesDesc} onChange={(e) => setReglages({ mariagesDesc: e.currentTarget.checked })} /></td>
                         </tr>
                         <tr>
@@ -403,24 +418,27 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
                         </tr>
                         <tr>
                           <th scope="row">Commune de naissance</th>
-                          <td colSpan={2} class="sans">toujours</td>
+                          <td><input type="checkbox" id="impression-lieux-asc" aria-label="Commune de naissance des ancêtres" checked={reglages.lieuxAsc !== false} onChange={(e) => setReglages({ lieuxAsc: e.currentTarget.checked })} /></td>
+                          <td><input type="checkbox" id="impression-lieux-centre" aria-label={`Commune de naissance du ${centreMin}`} checked={reglages.lieuxCentre !== false} onChange={(e) => setReglages({ lieuxCentre: e.currentTarget.checked })} /></td>
                           <td><input type="checkbox" id="impression-lieux-desc" aria-label="Commune de naissance des descendants" checked={reglages.lieuxDesc !== false} onChange={(e) => setReglages({ lieuxDesc: e.currentTarget.checked })} /></td>
                         </tr>
                         <tr>
                           <th scope="row">Photos</th>
-                          <td colSpan={2}><input type="checkbox" id="impression-photos" aria-label={`Photos : ancêtres et ${centreMin}`} checked={photosActives} onChange={(e) => setReglages({ photos: e.currentTarget.checked })} /></td>
+                          <td><input type="checkbox" id="impression-photos" aria-label="Photos des ancêtres" checked={photosActives} onChange={(e) => setReglages({ photos: e.currentTarget.checked })} /></td>
+                          <td><input type="checkbox" id="impression-photos-centre" aria-label={`Photos du ${centreMin}`} checked={photosCentre} onChange={(e) => setReglages({ photosCentre: e.currentTarget.checked })} /></td>
                           <td><input type="checkbox" id="impression-photos-desc" aria-label="Photos des descendants" checked={photosDesc} onChange={(e) => setReglages({ photosDesc: e.currentTarget.checked })} /></td>
                         </tr>
                         <tr>
                           <th scope="row">Signatures</th>
-                          <td colSpan={2}><input type="checkbox" id="impression-signatures" aria-label={`Signatures : ancêtres et ${centreMin}`} checked={signaturesActives} onChange={(e) => setReglages({ signatures: e.currentTarget.checked })} /></td>
+                          <td><input type="checkbox" id="impression-signatures" aria-label="Signatures des ancêtres" checked={signaturesActives} onChange={(e) => setReglages({ signatures: e.currentTarget.checked })} /></td>
+                          <td><input type="checkbox" id="impression-signatures-centre" aria-label={`Signatures du ${centreMin}`} checked={signaturesCentre} onChange={(e) => setReglages({ signaturesCentre: e.currentTarget.checked })} /></td>
                           <td><input type="checkbox" id="impression-signatures-desc" aria-label="Signatures des descendants" checked={signaturesDesc} onChange={(e) => setReglages({ signaturesDesc: e.currentTarget.checked })} /></td>
                         </tr>
                       </tbody>
                     </table>
                   </div>
                   <div class="matrice-suite">
-                    {(photosActives || photosDesc) && <ChoixPortraits formePhoto={formePhoto} bordsArrondis={bordsArrondis} setReglages={setReglages} />}
+                    {(photosActives || photosCentre || photosDesc) && <ChoixPortraits formePhoto={formePhoto} bordsArrondis={bordsArrondis} setReglages={setReglages} />}
                     <label class="case">
                       <input type="checkbox" id="impression-italiques" checked={!!reglages.italiques} onChange={(e) => setReglages({ italiques: e.currentTarget.checked })} />
                       Dates sans source en italique
