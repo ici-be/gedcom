@@ -16,7 +16,7 @@ export default defineConfig({
         short_name: 'Lignées',
         description: 'Suivre les sources de son arbre généalogique à partir d’un fichier GEDCOM',
         lang: 'fr',
-        theme_color: '#3451d1',
+        theme_color: '#1f379f',
         background_color: '#f6f7f9',
         display: 'standalone',
         id: './',
