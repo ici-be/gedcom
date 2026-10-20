@@ -302,9 +302,11 @@ export function Individus({ d, perimetre, setPerimetre }: { d: Donnees; perimetr
                       <button type="button" class="deplier" aria-expanded={estOuvert} onClick={() => setOuvert(estOuvert ? null : l.ind.id)} title="Détails">
                         {estOuvert ? '▾' : '▸'}
                       </button>
-                      <Personne d={d} id={l.ind.id} />
-                      <Annees ind={l.ind} />
-                      {texteParents(l.parents) && <span class="filiation" title="D'après la note de la personne">{texteParents(l.parents)}</span>}
+                      <span class="nom-bloc">
+                        <Personne d={d} id={l.ind.id} prenoms={2} />
+                        {texteParents(l.parents) && <span class="filiation" title="D'après la note de la personne">{texteParents(l.parents)}</span>}
+                        <Annees ind={l.ind} />
+                      </span>
                     </td>
                     <td><CelluleFait f={l.s.naissance} /></td>
                     <td>

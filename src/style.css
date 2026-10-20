@@ -221,6 +221,10 @@ input[type="search"], input[type="url"], input[type="number"], select {
 .sosa .gen { display: block; font-weight: 400; color: var(--muted); font-size: 0.8rem; }
 .sosa .fratrie { color: var(--muted); margin-right: 3px; }
 .suivi td.nom { min-width: 200px; }
+/* prénoms et nom, puis les années en dessous */
+.suivi .nom-bloc { display: inline-block; vertical-align: top; max-width: calc(100% - 1.6em); }
+.suivi .nom-bloc .annees { display: block; margin-left: 0; }
+.suivi td.nom > .deplier { vertical-align: top; }
 .suivi td.score { white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--muted); }
 .deplier { border: 0; background: none; padding: 0 6px 0 0; color: var(--muted); }
 .personne a { font-weight: 700; text-decoration: none; }

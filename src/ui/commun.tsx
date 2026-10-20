@@ -9,6 +9,7 @@ import { annee } from '../lib/gedcom/dates'
 import { decouperLieu } from '../lib/communes'
 import { NOMS_ETATS, libelle, lienDansSource } from '../lib/format'
 import { nomComplet } from '../lib/parente'
+import { prenoms as premiersPrenoms } from '../lib/eventail'
 import { ecrire, lire } from '../lib/stockage'
 import { texteIntrouvable, type Introuvable } from '../lib/introuvable'
 
@@ -104,20 +105,22 @@ export function Annees({ ind }: { ind: Individu }) {
   return <span class="annees">{n === undefined ? '† ' + d : d === undefined ? n : `${n}–${d}`}</span>
 }
 
-/** Nom de la personne, avec lien vers sa fiche en ligne si l'adresse de l'arbre est connue */
-export function Personne({ d, id, annees }: { d: Donnees; id: string; annees?: boolean }) {
+/** Nom de la personne, avec lien vers sa fiche en ligne si l'adresse de l'arbre est connue ; `prenoms` : nombre de prénoms au plus */
+export function Personne({ d, id, annees, prenoms }: { d: Donnees; id: string; annees?: boolean; prenoms?: number }) {
   const ind = d.arbre.individus.get(id)
   if (!ind) return <span class="vide">?</span>
   const url = d.lien(ind)
-  const nom = nomComplet(ind)
+  const complet = nomComplet(ind)
+  const nom = prenoms ? nomComplet({ ...ind, prenom: premiersPrenoms(ind.prenom, prenoms) }) : complet
+  const coupe = nom !== complet
   return (
     <span class="personne">
       {url ? (
-        <a href={url} target="_blank" rel="noopener noreferrer" title={d.homonymes.has(id) ? 'Homonymes : ouvre la recherche en ligne' : 'Ouvrir la fiche en ligne'}>
+        <a href={url} target="_blank" rel="noopener noreferrer" title={(coupe ? complet + ' · ' : '') + (d.homonymes.has(id) ? 'Homonymes : ouvre la recherche en ligne' : 'Ouvrir la fiche en ligne')}>
           {nom}
         </a>
       ) : (
-        nom
+        coupe ? <span title={complet}>{nom}</span> : nom
       )}
       {annees && <> <Annees ind={ind} /></>}
     </span>
