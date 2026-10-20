@@ -32,10 +32,12 @@ interface Reglages {
   italiques?: boolean
   verso?: boolean
   photos?: boolean
+  signatures?: boolean
   formePhoto?: FormePhoto
   bordsArrondis?: boolean
   mariages?: boolean
   photosDesc?: boolean
+  signaturesDesc?: boolean
   mariagesDesc?: boolean
   equitable?: boolean
   fratrieBase?: boolean
@@ -91,6 +93,8 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
   const [reglages, setReglagesBrut] = useState<Reglages>(() => {
     const r = lire<Reglages>('impression', { date: true, qr: true, url: true })
     if (r.url === undefined) r.url = r.qr ?? true
+    if (r.signatures === undefined && r.photos !== undefined) r.signatures = r.photos
+    if (r.signaturesDesc === undefined && r.photosDesc !== undefined) r.signaturesDesc = r.photosDesc
     return r
   })
   const [zoom, setZoom] = useState(false)
@@ -160,9 +164,11 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
   }, [nomFichier])
   const fratrie = reglages.fratrie !== false
   const photosActives = reglages.photos !== false
+  const signaturesActives = reglages.signatures !== false
   const formePhoto: FormePhoto = FORMES_PHOTO.some((f) => f.id === reglages.formePhoto) ? reglages.formePhoto! : 'carree'
   const fratrieBase = reglages.fratrieBase ?? fratrie
   const photosDesc = reglages.photosDesc ?? photosActives
+  const signaturesDesc = reglages.signaturesDesc ?? signaturesActives
   const mariagesDesc = reglages.mariagesDesc ?? reglages.mariages !== false
   const bordsArrondis = reglages.bordsArrondis !== false
   const options = {
@@ -187,8 +193,10 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
     fratrieBase: modele.reglages.descendants ? fratrieBase : fratrie,
     italiques: reglages.italiques,
     photos: photosActives,
+    signatures: signaturesActives,
     equitable: !!modele.reglages.equitable && !!reglages.equitable,
     photosDesc: modele.reglages.descendants ? photosDesc : photosActives,
+    signaturesDesc: modele.reglages.descendants ? signaturesDesc : signaturesActives,
     mariagesDesc: modele.reglages.descendants ? mariagesDesc : reglages.mariages !== false,
     formePhoto,
     bordsArrondis,
@@ -402,18 +410,28 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
 
             {modele.reglages.photos && (
               <div class="groupe-options">
-                <span class="groupe-options-titre">Photos</span>
+                <span class="groupe-options-titre">Photos et signatures</span>
                 <div class="groupe-options-corps">
                   <div class="option-groupee">
                     <label class="case">
                       <input type="checkbox" id="impression-photos" checked={photosActives} onChange={(e) => setReglages({ photos: e.currentTarget.checked })} />
-                      {modele.reglages.descendants ? 'Photos et signatures (ancêtres et personne de départ)' : 'Afficher les photos et signatures'}
+                      {modele.reglages.descendants ? (modele.reglages.conjoint ? 'Photos (ancêtres et couple)' : 'Photos (ancêtres et personne de départ)') : 'Photos'}
+                    </label>
+                    <label class="case">
+                      <input type="checkbox" id="impression-signatures" checked={signaturesActives} onChange={(e) => setReglages({ signatures: e.currentTarget.checked })} />
+                      {modele.reglages.descendants ? (modele.reglages.conjoint ? 'Signatures (ancêtres et couple)' : 'Signatures (ancêtres et personne de départ)') : 'Signatures'}
                     </label>
                     {modele.reglages.descendants && (
-                      <label class="case">
-                        <input type="checkbox" id="impression-photos-desc" checked={photosDesc} onChange={(e) => setReglages({ photosDesc: e.currentTarget.checked })} />
-                        Photos et signatures des descendants
-                      </label>
+                      <>
+                        <label class="case">
+                          <input type="checkbox" id="impression-photos-desc" checked={photosDesc} onChange={(e) => setReglages({ photosDesc: e.currentTarget.checked })} />
+                          Photos des descendants
+                        </label>
+                        <label class="case">
+                          <input type="checkbox" id="impression-signatures-desc" checked={signaturesDesc} onChange={(e) => setReglages({ signaturesDesc: e.currentTarget.checked })} />
+                          Signatures des descendants
+                        </label>
+                      </>
                     )}
                     {(photosActives || (modele.reglages.descendants && photosDesc)) && (
                       <>
@@ -427,8 +445,10 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
                           <input type="checkbox" id="impression-photo-arrondie" checked={bordsArrondis} disabled={formePhoto === 'ovale'} onChange={(e) => setReglages({ bordsArrondis: e.currentTarget.checked })} />
                           Avec bords arrondis
                         </label>
-                        <span class="aide">(les signatures gardent leur forme)</span>
                       </>
+                    )}
+                    {(signaturesActives || (modele.reglages.descendants && signaturesDesc)) && (
+                      <span class="aide">(les signatures gardent leur forme)</span>
                     )}
                   </div>
                 </div>

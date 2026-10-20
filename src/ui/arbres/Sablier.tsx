@@ -384,7 +384,14 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
   const estImplexe = (c: Cote, p: Place) => !!p.dejaVu || c.pl.some((q) => q?.dejaVu === p.sosa) || (!!p.ind && p.sosa > 1 && communs.has(p.ind.id))
   /** Les couleurs d'un ancêtre : par génération, il garde la sienne ; sinon, d'après sa place sur la feuille */
   const couleurAsc = (v: number, s: number, sexe?: 'M' | 'F' | '?') => theme.case(theme.id === 'generations' ? s : v, sexe)
-  const photoDe = (i?: Individu, descendant = false) => ((descendant ? options.photosDesc ?? options.photos : options.photos) && i?.photo && !ratees.has(i.photo.url) ? i.photo : undefined)
+  const photoDe = (i?: Individu, descendant = false) => {
+    const ph = i?.photo
+    if (!ph || ratees.has(ph.url)) return undefined
+    const active = descendant
+      ? (ph.signature ? (options.signaturesDesc ?? options.signatures ?? options.photosDesc ?? options.photos ?? true) : (options.photosDesc ?? options.photos ?? true))
+      : (ph.signature ? (options.signatures ?? options.photos ?? true) : (options.photos ?? true))
+    return active ? ph : undefined
+  }
   /** La personne de départ et son conjoint, sans leur métier si on le souhaite */
   const resumeCentre = (i: Individu) => (options.metiersCentre === false ? { ...resume(i), metier: undefined } : resume(i))
   const rater = (url: string) => () => setRatees((r) => new Set(r).add(url))

@@ -378,7 +378,12 @@ export function Pyramide({ d, options }: { d: Donnees; options: OptionsFeuille }
   const { pl, resumes, freres, naissance, mariages } = donnees
   const implexes = pl.some((p) => p?.dejaVu)
   const estImplexe = (p: Place) => !!p.dejaVu || pl.some((q) => q?.dejaVu === p.sosa)
-  const photoDe = (p: Place) => (options.photos && p.ind?.photo && !ratees.has(p.ind.photo.url) ? p.ind.photo : undefined)
+  const photoDe = (p: Place) => {
+    const ph = p.ind?.photo
+    if (!ph || ratees.has(ph.url)) return undefined
+    const active = ph.signature ? (options.signatures ?? options.photos ?? true) : (options.photos ?? true)
+    return active ? ph : undefined
+  }
   const rater = (url: string) => () => setRatees((r) => new Set(r).add(url))
   const fratrieDe = (s: number) => (options.fratrie ? freres.get(s) ?? [] : []).map((x) => ({ prenom: prenoms(x.prenom, 1) || '?', annee: anneeCourte(naissance(x))?.replace(/^\?$/, '') || undefined }))
 
