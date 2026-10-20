@@ -19,6 +19,7 @@ interface Reglages {
   date: boolean
   jour?: string
   qr: boolean
+  url?: boolean
   papier?: Format
   barres?: boolean
   theme?: string
@@ -87,7 +88,11 @@ const dateLongue = (iso: string) => new Date(iso + 'T12:00:00').toLocaleDateStri
 
 export function Impression({ d, id }: { d: Donnees; id?: string }) {
   const modele = MODELES.find((m) => m.id === id) ?? MODELES[0]
-  const [reglages, setReglagesBrut] = useState<Reglages>(() => lire('impression', { date: true, qr: true }))
+  const [reglages, setReglagesBrut] = useState<Reglages>(() => {
+    const r = lire<Reglages>('impression', { date: true, qr: true, url: true })
+    if (r.url === undefined) r.url = r.qr ?? true
+    return r
+  })
   const [zoom, setZoom] = useState(false)
   const apercu = useRef<HTMLDivElement>(null)
   const glisse = useRef<{ x: number; y: number; gauche: number; haut: number } | null>(null)
@@ -163,6 +168,7 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
   const options = {
     date: reglages.date ? dateLongue(jour) : undefined,
     qr: reglages.qr && !!d.adresse,
+    url: (reglages.url ?? reglages.qr ?? true) && !!d.adresse,
     carte: !reglages.barres,
     theme,
     generations,
@@ -464,6 +470,10 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
                 <label class="case">
                   <input type="checkbox" id="impression-qr" checked={reglages.qr && !!d.adresse} disabled={!d.adresse} onChange={(e) => setReglages({ qr: e.currentTarget.checked })} />
                   Code QR vers l'arbre en ligne
+                </label>
+                <label class="case">
+                  <input type="checkbox" id="impression-url" checked={(reglages.url ?? reglages.qr ?? true) && !!d.adresse} disabled={!d.adresse} onChange={(e) => setReglages({ url: e.currentTarget.checked })} />
+                  Adresse (URL) de l'arbre en ligne
                 </label>
                 {!d.adresse && <span class="aide">Indiquez d'abord l'adresse de l'arbre en ligne dans les <a href="#/">réglages de l'accueil</a>.</span>}
               </div>

@@ -506,7 +506,9 @@ export function Pyramide({ d, options }: { d: Donnees; options: OptionsFeuille }
 
   const p1 = resumes.get(1)
   const titre = p1 ? [prenoms(p1.prenom, 2), p1.nom].filter(Boolean).join(' ') : 'Ascendance'
-  const adresse = options.qr ? d.adresse : ''
+  const avecQr = options.qr && !!d.adresse
+  const avecUrl = options.url && !!d.adresse
+  const avecBasDroite = avecQr || avecUrl
   const legende = [
     options.fratrie && 'en italique sous les cases : frères et sœurs',
     options.italiques && 'date en italique : sans source',
@@ -535,11 +537,15 @@ export function Pyramide({ d, options }: { d: Donnees; options: OptionsFeuille }
           {options.date ? `Établi le ${options.date}` : ''}{options.date && legende ? ' · ' : ''}{legende}
         </text>
       )}
-      {adresse && (
+      {avecBasDroite && (
         <g>
-          <CodeQR url={adresse} x={1306} y={906} taille={54} />
-          <text x="1296" y="948" font-size="8" class="cap mut" text-anchor="end">L’ARBRE EN LIGNE</text>
-          <text x="1296" y="960" font-size="8.5" class="mut" text-anchor="end" data-max="200">{adresse.replace(/^https?:\/\/(www\.)?/, '')}</text>
+          {avecQr && <CodeQR url={d.adresse} x={1306} y={906} taille={54} />}
+          {avecUrl && (
+            <>
+              <text x={avecQr ? 1296 : 1360} y="948" font-size="8" class="cap mut" text-anchor="end">L’ARBRE EN LIGNE</text>
+              <text x={avecQr ? 1296 : 1360} y="960" font-size="8.5" class="mut" text-anchor="end" data-max={avecQr ? 200 : 260}>{d.adresse.replace(/^https?:\/\/(www\.)?/, '')}</text>
+            </>
+          )}
         </g>
       )}
     </svg>

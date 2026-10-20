@@ -533,7 +533,9 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
   const W = 496
   const y0 = 822
   const yLegende = y0 + (GENERATIONS - 1) * 14 + 20
-  const adresse = options.qr ? d.adresse : ''
+  const avecQr = options.qr && !!d.adresse
+  const avecUrl = options.url && !!d.adresse
+  const avecBasDroite = avecQr || avecUrl
   // Sans contours (pas encore chargés) ou sans ancêtre sur la carte : les barres
   const carte = options.carte && contours && cadrer(contours, donnees.couleursCarte.keys())
 
@@ -628,11 +630,15 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
         </text>
       )}
       {options.date && <text x="40" y="966" font-size="8.5" class="mut">Établi le {options.date}</text>}
-      {adresse && (
+      {avecBasDroite && (
         <g>
-          <CodeQR url={adresse} x={1306} y={914} taille={54} />
-          <text x="1296" y="952" font-size="8" class="cap mut" text-anchor="end">L’ARBRE EN LIGNE</text>
-          <text x="1296" y="964" font-size="8.5" class="mut" text-anchor="end" data-max="230">{adresse.replace(/^https?:\/\/(www\.)?/, '')}</text>
+          {avecQr && <CodeQR url={d.adresse} x={1306} y={914} taille={54} />}
+          {avecUrl && (
+            <>
+              <text x={avecQr ? 1296 : 1360} y="952" font-size="8" class="cap mut" text-anchor="end">L’ARBRE EN LIGNE</text>
+              <text x={avecQr ? 1296 : 1360} y="964" font-size="8.5" class="mut" text-anchor="end" data-max={avecQr ? 230 : 280}>{d.adresse.replace(/^https?:\/\/(www\.)?/, '')}</text>
+            </>
+          )}
         </g>
       )}
     </svg>

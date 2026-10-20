@@ -716,7 +716,9 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
   const noms = cotes.map((c) => nomDe(c.pl[1]?.ind)).filter(Boolean)
   const titre = noms.length ? noms.join(' et ') : couple ? 'Arbre du couple' : 'Ascendance et descendance'
   const surTitre = couple ? 'ARBRE DU COUPLE' : 'ASCENDANCE ET DESCENDANCE'
-  const adresse = options.qr ? d.adresse : ''
+  const avecQr = options.qr && !!d.adresse
+  const avecUrl = options.url && !!d.adresse
+  const avecBasDroite = avecQr || avecUrl
   const legende = [
     (options.fratrie || (options.fratrieBase ?? options.fratrie)) && 'en italique : frères et sœurs',
     options.italiques && 'date en italique : sans source',
@@ -725,9 +727,9 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
   const nbGenDesc = niveaux.length
 
   const align = couple ? options.alignementTitre ?? 'gauche' : 'gauche'
-  const xTitre = align === 'centre' ? CENTRE.cx : align === 'droite' ? (adresse ? 1070 : 1360) : X0
+  const xTitre = align === 'centre' ? CENTRE.cx : align === 'droite' ? (avecBasDroite ? 1070 : 1360) : X0
   const ancreTitre = align === 'centre' ? 'middle' : align === 'droite' ? 'end' : undefined
-  const maxTitre = align === 'centre' ? (adresse ? 740 : 1200) : (adresse ? 900 : 1280)
+  const maxTitre = align === 'centre' ? (avecBasDroite ? 740 : 1200) : (avecBasDroite ? 900 : 1280)
 
   return (
     <svg ref={svg} class={'feuille pyramide sablier' + (options.italiques ? ' italiques' : '')} viewBox="0 0 1400 990" role="img" aria-label={`${couple ? 'Arbre du couple' : 'Ascendance et descendance de'} ${titre}`}>
@@ -751,11 +753,15 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
           {options.date ? `Établi le ${options.date}` : ''}{options.date && legende ? ' · ' : ''}{legende}
         </text>
       )}
-      {adresse && (
+      {avecBasDroite && (
         <g>
-          <CodeQR url={adresse} x={1306} y={914} taille={54} />
-          <text x="1296" y="956" font-size="8" class="cap mut" text-anchor="end">L’ARBRE EN LIGNE</text>
-          <text x="1296" y="968" font-size="8.5" class="mut" text-anchor="end" data-max="200">{adresse.replace(/^https?:\/\/(www\.)?/, '')}</text>
+          {avecQr && <CodeQR url={d.adresse} x={1306} y={914} taille={54} />}
+          {avecUrl && (
+            <>
+              <text x={avecQr ? 1296 : 1360} y="956" font-size="8" class="cap mut" text-anchor="end">L’ARBRE EN LIGNE</text>
+              <text x={avecQr ? 1296 : 1360} y="968" font-size="8.5" class="mut" text-anchor="end" data-max={avecQr ? 200 : 260}>{d.adresse.replace(/^https?:\/\/(www\.)?/, '')}</text>
+            </>
+          )}
         </g>
       )}
     </svg>

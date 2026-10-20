@@ -17,6 +17,8 @@ export interface OptionsFeuille {
   date?: string
   /** Code QR vers l'arbre en ligne (si son adresse est connue) */
   qr: boolean
+  /** Adresse (URL) de l'arbre en ligne (si son adresse est connue) */
+  url?: boolean
   /** Bas de la feuille : carte des lieux de naissance plutôt que barres par génération */
   carte?: boolean
   /** Frères et sœurs : au centre de l'éventail, ou sous chaque case de la pyramide */
