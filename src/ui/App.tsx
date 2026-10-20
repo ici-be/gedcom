@@ -38,6 +38,24 @@ function Logo() {
   )
 }
 
+// icônes du menu, au trait (16 × 16)
+const ICONES: Record<string, string> = {
+  accueil: 'M2 7l6-5 6 5v7H2z',
+  personnes: 'M8 2a3 3 0 1 1 0 6a3 3 0 1 1 0-6M2.5 14c.8-3 3-4.5 5.5-4.5s4.7 1.5 5.5 4.5',
+  lieux: 'M8 14.5s5-4.5 5-8.5a5 5 0 0 0-10 0c0 4 5 8.5 5 8.5zM8 4.6a1.4 1.4 0 1 1 0 2.8a1.4 1.4 0 1 1 0-2.8',
+  metiers: 'M2 5h12v9H2zM6 5V3h4v2',
+  carte: 'M1.5 3.5l4-1.5 5 2 4-1.5v10l-4 1.5-5-2-4 1.5zM5.5 2v10M10.5 4v10',
+  migrations: 'M2 11h9M8 8l3 3-3 3M14 5H5M8 2L5 5l3 3',
+  ascendance: 'M8 14V8M8 8L3.5 4M8 8l4.5-4M3.5 4V2M12.5 4V2',
+  recit: 'M3 2h7l3 3v9H3zM5.5 8h5M5.5 11h5',
+  statistiques: 'M2.5 14V9M6.5 14V5M10.5 14V7M14 14V2',
+  imprimer: 'M4 6V2h8v4M4 11H2.5V6h11v5H12M4 9h8v5H4z',
+}
+
+function Icone({ nom }: { nom: string }) {
+  return <svg class="icone-menu" viewBox="0 0 16 16" aria-hidden="true"><path d={ICONES[nom]} /></svg>
+}
+
 export function App() {
   const [route, setRoute] = useState(lireRoute)
   const [etat, setEtat] = useState<'demarrage' | 'lecture' | 'pret' | 'vide'>('demarrage')
@@ -258,30 +276,32 @@ export function App() {
 
   return (
     <>
-      <header class="bandeau">
-        <div class="bandeau-dedans">
+      <div class={donnees ? 'coque avec-menu' : 'coque'}>
+        <header class="bandeau">
           <a href="#/" class="marque"><Logo /><span>Lignées</span></a>
+          {donnees && <ChoixRacine d={donnees} setRacine={setRacine} />}
           {donnees && (
             <nav class="onglets">
-              <a href="#/" class={page === '' ? 'actif' : ''}>Accueil</a>
-              <a href="#/personnes" class={page === 'personnes' ? 'actif' : ''}>Personnes</a>
-              <a href="#/lieux" class={page === 'lieux' ? 'actif' : ''}>Lieux</a>
-              <a href="#/metiers" class={page === 'metiers' ? 'actif' : ''}>Métiers</a>
-              <a href="#/carte" class={page === 'carte' ? 'actif' : ''}>Carte</a>
-              <a href="#/migrations" class={page === 'migrations' ? 'actif' : ''}>Migrations</a>
-              <a href="#/ascendance" class={page === 'ascendance' || page === 'lignee' ? 'actif' : ''}>Ascendance</a>
-              <a href="#/recit" class={page === 'recit' || page === 'evenements' ? 'actif' : ''}>Récit</a>
-              <a href="#/statistiques" class={page === 'statistiques' ? 'actif' : ''}>Statistiques</a>
-              <a href="#/imprimer" class={page === 'imprimer' ? 'actif' : ''}>Imprimer</a>
+              <a href="#/" class={page === '' ? 'actif' : ''}><Icone nom="accueil" />Accueil</a>
+              <a href="#/personnes" class={page === 'personnes' ? 'actif' : ''}><Icone nom="personnes" />Personnes</a>
+              <a href="#/lieux" class={page === 'lieux' ? 'actif' : ''}><Icone nom="lieux" />Lieux</a>
+              <a href="#/metiers" class={page === 'metiers' ? 'actif' : ''}><Icone nom="metiers" />Métiers</a>
+              <a href="#/carte" class={page === 'carte' ? 'actif' : ''}><Icone nom="carte" />Carte</a>
+              <a href="#/migrations" class={page === 'migrations' ? 'actif' : ''}><Icone nom="migrations" />Migrations</a>
+              <a href="#/ascendance" class={page === 'ascendance' || page === 'lignee' ? 'actif' : ''}><Icone nom="ascendance" />Ascendance</a>
+              <a href="#/recit" class={page === 'recit' || page === 'evenements' ? 'actif' : ''}><Icone nom="recit" />Récit</a>
+              <a href="#/statistiques" class={page === 'statistiques' ? 'actif' : ''}><Icone nom="statistiques" />Statistiques</a>
+              <a href="#/imprimer" class={page === 'imprimer' ? 'actif' : ''}><Icone nom="imprimer" />Imprimer</a>
             </nav>
           )}
-          {donnees && <ChoixRacine d={donnees} setRacine={setRacine} />}
+        </header>
+        <div class="colonne">
+          <main class="page" ref={principal}>{contenu}</main>
+          <footer class="pied">
+            Vos données restent dans votre navigateur. · <a href="https://github.com/ici-be/gedcom" target="_blank" rel="noopener noreferrer">Code source</a>
+          </footer>
         </div>
-      </header>
-      <main class="page" ref={principal}>{contenu}</main>
-      <footer class="pied">
-        Vos données restent dans votre navigateur. · <a href="https://github.com/ici-be/gedcom" target="_blank" rel="noopener noreferrer">Code source</a>
-      </footer>
+      </div>
       <ProposerInstallation />
       {glisse && <div class="depot-global" aria-hidden="true"><p>Déposez le fichier pour {fichier ? 'mettre l’arbre à jour' : 'l’ouvrir'}</p></div>}
     </>

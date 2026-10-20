@@ -1,7 +1,6 @@
 import { render } from 'preact'
 import { registerSW } from 'virtual:pwa-register'
-import '@fontsource/atkinson-hyperlegible/400.css'
-import '@fontsource/atkinson-hyperlegible/700.css'
+import '@fontsource-variable/inter'
 import '@fontsource/fraunces/600.css'
 import '@fontsource/fraunces/700.css'
 import './style.css'
