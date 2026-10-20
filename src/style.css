@@ -439,6 +439,12 @@ th:not([aria-sort]) .tri .fleche { opacity: 0.35; }
 .pastille-theme { display: inline-block; width: 14px; height: 14px; border-radius: 4px; border: 1.5px solid; }
 .options-impression .case { display: inline-flex; align-items: center; gap: 6px; }
 .options-impression .case.inactif { opacity: 0.5; }
+.options-impression .alignement-titre { display: inline-flex; align-items: center; gap: 8px; }
+.groupe-boutons-align { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--panel); }
+.bouton-align { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 28px; border: none; background: transparent; color: var(--muted); cursor: pointer; padding: 0; }
+.bouton-align:hover { color: var(--fg); background: var(--panel-2); }
+.bouton-align.actif { background: var(--accent); color: var(--accent-fg); }
+.bouton-align + .bouton-align { border-left: 1px solid var(--line); }
 .options-impression .pas-generations .bouton.discret { padding: 3px 10px; line-height: 1.2; }
 .options-impression input[type="date"], .options-impression select { font: inherit; padding: 4px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--fg); }
 @media (max-width: 640px) { .groupe-options { grid-template-columns: 1fr; gap: 4px; } }

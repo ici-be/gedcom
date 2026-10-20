@@ -10,6 +10,7 @@ import { Couple, Sablier } from './Sablier'
 import { TableAncetres } from './TableAncetres'
 
 export type FormePhoto = 'ovale' | 'carree' | 'rectangulaire'
+export type AlignementTitre = 'gauche' | 'centre' | 'droite'
 
 export interface OptionsFeuille {
   /** Date imprimée en pied de page (« 13 octobre 2026 »), ou rien */
@@ -64,6 +65,8 @@ export interface OptionsFeuille {
   descendance?: number
   /** Famille de la personne de départ avec le conjoint de l'arbre du couple (la première union par défaut) */
   conjoint?: string
+  /** Alignement du titre, avant-titre et sous-titre en bas de feuille ('gauche' par défaut) */
+  alignementTitre?: AlignementTitre
 }
 
 export type Format = 'A4' | 'A3' | 'A2'
@@ -90,6 +93,8 @@ export interface Modele {
     equitable?: boolean
     /** Choix du conjoint (arbre du couple) */
     conjoint?: boolean
+    /** Alignement du titre (gauche, centré, droite) */
+    alignementTitre?: boolean
     fratrie: string
     mariages: string
   }
@@ -146,7 +151,7 @@ export const MODELES: Modele[] = [
     forme: 'arbre',
     papier: { format: 'A3', orientation: 'landscape' },
     generations: 6,
-    reglages: { theme: true, sablierGenerations: true, descendants: true, photos: true, conjoint: true, equitable: true, fratrie: 'Frères et sœurs de chacun (sous ou à côté de la case)', mariages: 'Mariages et conjoints (année et commune)' },
+    reglages: { theme: true, sablierGenerations: true, descendants: true, photos: true, conjoint: true, equitable: true, alignementTitre: true, fratrie: 'Frères et sœurs de chacun (sous ou à côté de la case)', mariages: 'Mariages et conjoints (année et commune)' },
     Feuille: Couple,
   },
 ]

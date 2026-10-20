@@ -270,13 +270,14 @@ describe('arbre en sablier (ascendance et descendance)', async () => {
 
 
 describe('arbre du couple', async () => {
-  const { rangeesSablier, conjointsDe } = await import('../src/ui/arbres/Sablier')
+  const { rangeesSablier, conjointsDe, coupleAEnfantsAutreConjoint } = await import('../src/ui/arbres/Sablier')
   const { MODELES } = await import('../src/ui/arbres/modeles')
 
-  test('présent dans le catalogue, avec le choix du conjoint', () => {
+  test('présent dans le catalogue, avec le choix du conjoint et l’alignement du titre', () => {
     const couple = MODELES.find((m) => m.id === 'couple')
     expect(couple?.reglages.sablierGenerations).toBe(true)
     expect(couple?.reglages.conjoint).toBe(true)
+    expect(couple?.reglages.alignementTitre).toBe(true)
   })
 
   test('rangees du couple : une génération de plus par moitié, sans chevauchement', () => {
@@ -285,7 +286,11 @@ describe('arbre du couple', async () => {
         const r = rangeesSablier(a, Array(d).fill(false), true, true)
         expect(r.length).toBe(a + 1 + d)
         // les parents de chacun ont leurs frères et sœurs sous la case, les grands-parents passent en étiquettes à la génération IV
-        expect(r.find((x) => x.sens === 'asc' && x.g === 1)?.fratrie).toBeGreaterThan(0)
+        const f1 = r.find((x) => x.sens === 'asc' && x.g === 1)?.fratrie ?? 0
+        expect(f1).toBeGreaterThan(0)
+        // aux générations III (g=2) et IV (g=3), la fratrie dispose de hauteur pour accueillir 3 lignes
+        if (a >= 2) expect(r.find((x) => x.sens === 'asc' && x.g === 2)?.fratrie).toBeGreaterThan(f1)
+        if (a >= 3) expect(r.find((x) => x.sens === 'asc' && x.g === 3)?.fratrie).toBeGreaterThan(0)
         if (a >= 4) expect(r.find((x) => x.sens === 'asc' && x.g === 4)?.vertical).toBe(true)
         for (let i = 1; i < r.length; i++) expect(r[i - 1].y + r[i - 1].h + r[i - 1].fratrie).toBeLessThan(r[i].y)
         expect(r[r.length - 1].y + r[r.length - 1].h).toBeLessThanOrEqual(920)
@@ -299,5 +304,38 @@ describe('arbre du couple', async () => {
     const c = conjointsDe(arbre, pere)
     expect(c.length).toBe(1)
     expect(c[0].conjoint.nom).toBe('Lambert')
+  })
+
+  test('enfants avec un autre conjoint pour l’arbre du couple', () => {
+    const arbre = lireArbre(GED)
+    const jean = arbre.individus.get('@I2@')!
+    const marie = arbre.individus.get('@I3@')!
+
+    // Sans autre union : ni Jean ni Marie n'ont d'enfants ailleurs
+    expect(coupleAEnfantsAutreConjoint(arbre, jean, marie, '@F1@')).toBe(false)
+
+    // Jean a une autre épouse, mais aucun enfant avec elle : toujours faux
+    const gedSansEnfant = GED.replace(
+      '0 @F1@ FAM',
+      '0 @I10@ INDI\n1 NAME Jeanne /Martin/\n1 SEX F\n1 FAMS @F3@\n0 @F3@ FAM\n1 HUSB @I2@\n1 WIFE @I10@\n0 @F1@ FAM',
+    ).replace('1 FAMS @F1@', '1 FAMS @F1@\n1 FAMS @F3@')
+    const arbreSansEnfant = lireArbre(gedSansEnfant)
+    expect(coupleAEnfantsAutreConjoint(arbreSansEnfant, arbreSansEnfant.individus.get('@I2@'), arbreSansEnfant.individus.get('@I3@'), '@F1@')).toBe(false)
+
+    // Jean a un enfant avec une autre épouse : vrai
+    const gedAvecEnfantJean = gedSansEnfant.replace(
+      '0 @F1@ FAM',
+      '0 @I11@ INDI\n1 NAME Julie /Dupont/\n1 SEX F\n1 FAMC @F3@\n0 @F1@ FAM',
+    ).replace('0 @F3@ FAM\n1 HUSB @I2@\n1 WIFE @I10@', '0 @F3@ FAM\n1 HUSB @I2@\n1 WIFE @I10@\n1 CHIL @I11@')
+    const arbreAvecEnfantJean = lireArbre(gedAvecEnfantJean)
+    expect(coupleAEnfantsAutreConjoint(arbreAvecEnfantJean, arbreAvecEnfantJean.individus.get('@I2@'), arbreAvecEnfantJean.individus.get('@I3@'), '@F1@')).toBe(true)
+
+    // Marie a un enfant avec un autre conjoint : vrai
+    const gedAvecEnfantMarie = GED.replace(
+      '0 @F1@ FAM',
+      '0 @I10@ INDI\n1 NAME Henri /Moreau/\n1 SEX M\n1 FAMS @F3@\n0 @I11@ INDI\n1 NAME Claire /Moreau/\n1 SEX F\n1 FAMC @F3@\n0 @F3@ FAM\n1 HUSB @I10@\n1 WIFE @I3@\n1 CHIL @I11@\n0 @F1@ FAM',
+    ).replace('0 @I3@ INDI\n1 NAME Marie /Lambert/\n1 SEX F\n1 BAPM\n2 DATE 2 MAR 1952\n2 PLAC Malines, Anvers, Belgique\n2 SOUR @S1@\n3 PAGE folio 12\n1 FAMS @F1@', '0 @I3@ INDI\n1 NAME Marie /Lambert/\n1 SEX F\n1 BAPM\n2 DATE 2 MAR 1952\n2 PLAC Malines, Anvers, Belgique\n2 SOUR @S1@\n3 PAGE folio 12\n1 FAMS @F1@\n1 FAMS @F3@')
+    const arbreAvecEnfantMarie = lireArbre(gedAvecEnfantMarie)
+    expect(coupleAEnfantsAutreConjoint(arbreAvecEnfantMarie, arbreAvecEnfantMarie.individus.get('@I2@'), arbreAvecEnfantMarie.individus.get('@I3@'), '@F1@')).toBe(true)
   })
 })

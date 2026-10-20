@@ -201,7 +201,14 @@ export function rangeesSablier(asc: number, descVerticales: boolean[], fratrie: 
     // Pour le couple, chaque moitié de la feuille porte une ascendance : les cases ont la taille de la génération suivante
     const ge = couple ? g + 1 : g
     const vertical = ge >= 5
-    brut.push({ sens: 'asc', g, vertical, h: vertical ? 120 : [0, 64, 64, 68, 92][ge], fratrie: fratrie && !vertical && ge >= 2 ? 34 : 0 })
+    const fH = couple && g === 2 ? 38 : couple && g === 3 ? 30 : 34
+    brut.push({
+      sens: 'asc',
+      g,
+      vertical,
+      h: vertical ? 120 : [0, 64, 64, 68, 92][ge],
+      fratrie: fratrie && !vertical && ge >= 2 ? fH : 0,
+    })
   }
   brut.push({ sens: 'centre', g: 0, vertical: false, h: 74, fratrie: 0 })
   descVerticales.forEach((v, i) => brut.push({ sens: 'desc', g: i + 1, vertical: v, h: v ? 120 : i === descVerticales.length - 1 && pile > 1 ? Math.max(64, pile * H_PILE + (pile - 1) * GAP_PILE) : 64, fratrie: 0 }))
@@ -229,6 +236,28 @@ export function conjointsDe(arbre: Arbre, ind: Individu): { famille: string; con
       const conjoint = conjointDans(arbre, f, ind.id)
       return conjoint ? [{ famille: f.id, conjoint }] : []
     })
+}
+
+/** Vérifie si une personne a des enfants avec un autre conjoint (ou dans une autre union) que celui du couple */
+export function aEnfantsAutreConjoint(arbre: Arbre, ind: Individu, autreConjoint?: Individu, familleCoupleId?: string): boolean {
+  for (const fId of ind.fams) {
+    if (familleCoupleId && fId === familleCoupleId) continue
+    const fam = arbre.familles.get(fId)
+    if (!fam || !fam.enfants.some((id) => arbre.individus.has(id))) continue
+    const conjoint = conjointDans(arbre, fam, ind.id)
+    if (conjoint) {
+      if (conjoint.id !== autreConjoint?.id) return true
+    } else {
+      return true
+    }
+  }
+  return false
+}
+
+/** Vérifie si l'un ou l'autre membre du couple a des enfants avec un autre conjoint */
+export function coupleAEnfantsAutreConjoint(arbre: Arbre, a?: Individu, b?: Individu, familleCoupleId?: string): boolean {
+  if (!a || !b) return false
+  return aEnfantsAutreConjoint(arbre, a, b, familleCoupleId) || aEnfantsAutreConjoint(arbre, b, a, familleCoupleId)
 }
 
 /** Une ascendance dessinée : celle de la personne de départ, ou de chacun des deux membres du couple */
@@ -276,12 +305,14 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
     const unions = racine ? descendance(d.arbre, racine, desc, naissance) : []
     let ordre: ReturnType<typeof ordreUnions>
     let personnes: (Individu | undefined)[]
+    let enfantsAutreConjoint = false
     if (couple) {
       // Le conjoint choisi (le premier par défaut) ; l'homme à gauche, la femme à droite
       const choisie = unions.find((u) => u.conjoint && u.famille.id === options.conjoint) ?? unions.find((u) => u.conjoint)
       ordre = choisie ? [{ union: choisie, cote: 'milieu' }] : []
       const conjoint = choisie?.conjoint
       personnes = racine?.sexe === 'F' && conjoint?.sexe === 'M' ? [conjoint, racine] : [racine, conjoint]
+      enfantsAutreConjoint = coupleAEnfantsAutreConjoint(d.arbre, racine, conjoint, choisie?.famille.id)
     } else {
       ordre = ordreUnions(unions)
       personnes = [racine]
@@ -319,7 +350,7 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
     const ids = cotes.map((c) => new Set(c.pl.filter((p) => p?.ind && p.sosa > 1).map((p) => p.ind!.id)))
     const uniques = new Set(ids.flatMap((s) => [...s])).size
     const communs = new Set(ids.length > 1 ? [...ids[0]].filter((id) => ids[1].has(id)) : [])
-    return { racine, resume, cotes, naissance, ordre, feuilles, niveaux, unionDe, uniques, communs }
+    return { racine, resume, cotes, naissance, ordre, feuilles, niveaux, unionDe, uniques, communs, enfantsAutreConjoint }
   }, [d, options.mariages, options.equitable, options.conjoint, asc, desc, couple])
 
   useLayoutEffect(() => {
@@ -330,7 +361,7 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
     return () => { vivant = false }
   })
 
-  const { racine, resume, cotes, naissance, ordre, feuilles, niveaux, unionDe, communs } = donnees
+  const { racine, resume, cotes, naissance, ordre, feuilles, niveaux, unionDe, communs, enfantsAutreConjoint } = donnees
   const theme = trouverThemePyramide(options.theme)
   const decal = couple ? 1 : 0
 
@@ -553,8 +584,10 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
       if (!f.length) continue
       if (R.fratrie) {
         const fs = [0, 0, 8.4, 7.8, 7][G]
-        const l = lignesFratrie(f, w - 4, Math.floor((R.fratrie - 4) / (fs * LH)), fs)
-        textes.push(<g key={cle + 'f' + s}>{l.map((m, j) => <text key={j} x={cx.toFixed(1)} y={(y + h + 4 + fs * (0.8 + j * LH)).toFixed(1)} font-size={fs} data-fs={fs} data-max={Math.round(w - 2)} text-anchor="middle" class="fr"><Morceaux parts={m} /></text>)}</g>)
+        const lh = couple && g === 3 ? 1.05 : LH
+        const nbLignes = couple && (g === 2 || g === 3) ? 3 : Math.floor((R.fratrie - 4) / (fs * lh))
+        const l = lignesFratrie(f, w - 4, nbLignes, fs)
+        textes.push(<g key={cle + 'f' + s}>{l.map((m, j) => <text key={j} x={cx.toFixed(1)} y={(y + h + 4 + fs * (0.8 + j * lh)).toFixed(1)} font-size={fs} data-fs={fs} data-max={Math.round(w - 2)} text-anchor="middle" class="fr"><Morceaux parts={m} /></text>)}</g>)
       } else {
         const versGauche = v === 2
         const xt = versGauche ? x - 12 : x + w + 12
@@ -691,6 +724,11 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
   ].filter(Boolean).join(' · ')
   const nbGenDesc = niveaux.length
 
+  const align = couple ? options.alignementTitre ?? 'gauche' : 'gauche'
+  const xTitre = align === 'centre' ? CENTRE.cx : align === 'droite' ? (adresse ? 1070 : 1360) : X0
+  const ancreTitre = align === 'centre' ? 'middle' : align === 'droite' ? 'end' : undefined
+  const maxTitre = align === 'centre' ? (adresse ? 740 : 1200) : (adresse ? 900 : 1280)
+
   return (
     <svg ref={svg} class={'feuille pyramide sablier' + (options.italiques ? ' italiques' : '')} viewBox="0 0 1400 990" role="img" aria-label={`${couple ? 'Arbre du couple' : 'Ascendance et descendance de'} ${titre}`}>
       <rect width="1400" height="990" fill="#fff" />
@@ -703,10 +741,10 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
         ? <g key={i} transform={`translate(22,${R.y + R.h / 2}) rotate(-90)`}><text x="0" y="3" font-size="7" class="cap mut" text-anchor="middle" data-max={R.h - 4}>{nomDesc(R.g)}</text></g>
         : <text key={i} x="22" y={R.y + R.h / 2 + 4} font-size="10" class="disp mut" text-anchor="middle">{romain(R.g + 1)}</text>)}
 
-      <text x={X0} y="920" font-size="9.5" class="cap mut">{surTitre}</text>
-      <text x={X0} y="944" font-size="24" class="disp" data-max="900">{titre}</text>
-      <text x={X0} y="960" font-size="10.5" class="mut" data-max="900">
-        {asc} génération{asc > 1 ? 's' : ''} d’ancêtres{couple ? ' de chacun' : ''} · {donnees.uniques} ancêtres identifiés · {nbDescendants} descendant{nbDescendants > 1 ? 's' : ''}{couple && nbDescendants ? ` commun${nbDescendants > 1 ? 's' : ''}` : ''}{nbGenDesc ? ` sur ${nbGenDesc} génération${nbGenDesc > 1 ? 's' : ''}` : ''}
+      <text x={xTitre} y="920" font-size="9.5" class="cap mut" text-anchor={ancreTitre} data-max={maxTitre}>{surTitre}</text>
+      <text x={xTitre} y="944" font-size="24" class="disp" text-anchor={ancreTitre} data-max={maxTitre}>{titre}</text>
+      <text x={xTitre} y="960" font-size="10.5" class="mut" text-anchor={ancreTitre} data-max={maxTitre}>
+        {asc} génération{asc > 1 ? 's' : ''} d’ancêtres{couple ? ' de chacun' : ''} · {donnees.uniques} ancêtres identifiés · {nbDescendants} descendant{nbDescendants > 1 ? 's' : ''}{couple && enfantsAutreConjoint && nbDescendants ? ` commun${nbDescendants > 1 ? 's' : ''}` : ''}{nbGenDesc ? ` sur ${nbGenDesc} génération${nbGenDesc > 1 ? 's' : ''}` : ''}
       </text>
       {(legende || options.date) && (
         <text x={X0} y="976" font-size="8.5" class="mut" data-max="900">

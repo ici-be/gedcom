@@ -6,11 +6,12 @@ import '@fontsource/fira-sans-condensed/latin-400.css'
 import '@fontsource/fira-sans-condensed/latin-400-italic.css'
 import '@fontsource/fira-sans-condensed/latin-500.css'
 import '@fontsource/fira-sans-condensed/latin-600.css'
+import type { JSX } from 'preact'
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks'
 import type { Donnees } from '../lib/donnees'
 import { nomFichierArbre, nomFichierCouple } from '../lib/format'
 import { ecrire, lire } from '../lib/stockage'
-import { MODELES, type Format, type FormePhoto } from './arbres/modeles'
+import { MODELES, type AlignementTitre, type Format, type FormePhoto } from './arbres/modeles'
 import { bornerGenerationsPyramide, FORMES_PHOTO, GENERATIONS_PYRAMIDE, GEN_MAX_PYRAMIDE, GEN_MIN_PYRAMIDE, THEMES_PYRAMIDE, trouverThemePyramide } from './arbres/Pyramide'
 import { ASC_MAX_SABLIER, ASC_MIN_SABLIER, bornerAscendance, bornerDescendance, conjointsDe, DESC_MAX_SABLIER, DESC_MIN_SABLIER } from './arbres/Sablier'
 
@@ -25,6 +26,7 @@ interface Reglages {
   ascendance?: number
   descendance?: number
   conjoint?: string
+  alignementTitre?: AlignementTitre
   fratrie?: boolean
   italiques?: boolean
   verso?: boolean
@@ -46,6 +48,39 @@ interface Reglages {
 }
 
 const PAPIERS: Record<Format, [number, number]> = { A4: [210, 297], A3: [297, 420], A2: [420, 594] }
+
+const ICONES_ALIGN: Record<AlignementTitre, JSX.Element> = {
+  gauche: (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <line x1="2" y1="3" x2="14" y2="3" />
+      <line x1="2" y1="7" x2="9" y2="7" />
+      <line x1="2" y1="11" x2="14" y2="11" />
+      <line x1="2" y1="15" x2="7" y2="15" />
+    </svg>
+  ),
+  centre: (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <line x1="2" y1="3" x2="14" y2="3" />
+      <line x1="4.5" y1="7" x2="11.5" y2="7" />
+      <line x1="2" y1="11" x2="14" y2="11" />
+      <line x1="5.5" y1="15" x2="10.5" y2="15" />
+    </svg>
+  ),
+  droite: (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <line x1="2" y1="3" x2="14" y2="3" />
+      <line x1="7" y1="7" x2="14" y2="7" />
+      <line x1="2" y1="11" x2="14" y2="11" />
+      <line x1="9" y1="15" x2="14" y2="15" />
+    </svg>
+  ),
+}
+
+const BOUTONS_ALIGN: { id: AlignementTitre; titre: string }[] = [
+  { id: 'gauche', titre: 'Aligner à gauche' },
+  { id: 'centre', titre: 'Centrer' },
+  { id: 'droite', titre: 'Aligner à droite' },
+]
 
 const aujourdHui = () => new Date().toISOString().slice(0, 10)
 const dateLongue = (iso: string) => new Date(iso + 'T12:00:00').toLocaleDateString('fr-BE', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -134,6 +169,7 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
     ascendance,
     descendance,
     conjoint,
+    alignementTitre: reglages.alignementTitre,
     fratrie,
     lieuxDesc: reglages.lieuxDesc !== false,
     metiersDesc: reglages.metiersDesc !== false,
@@ -396,6 +432,25 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
             <div class="groupe-options">
               <span class="groupe-options-titre">Pied de page</span>
               <div class="groupe-options-corps">
+                {modele.reglages.alignementTitre && (
+                  <div class="case alignement-titre">
+                    <span>Alignement du titre</span>
+                    <div class="groupe-boutons-align" role="group" aria-label="Alignement du titre">
+                      {BOUTONS_ALIGN.map((b) => (
+                        <button
+                          key={b.id}
+                          type="button"
+                          class={'bouton-align' + ((reglages.alignementTitre ?? 'gauche') === b.id ? ' actif' : '')}
+                          title={b.titre}
+                          aria-label={b.titre}
+                          onClick={() => setReglages({ alignementTitre: b.id })}
+                        >
+                          {ICONES_ALIGN[b.id]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <div class="option-groupee">
                   <label class="case">
                     <input type="checkbox" id="impression-date" checked={reglages.date} onChange={(e) => setReglages({ date: e.currentTarget.checked })} />
