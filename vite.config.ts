@@ -48,6 +48,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        // les images de partage ne servent qu'aux réseaux sociaux
+        globIgnores: ['partage-print-*.png'],
         // les listes de localités ne sont téléchargées que pour les pays de l'arbre, puis gardées
         runtimeCaching: [
           { urlPattern: /\/geo\/[\w]+\.json$/, handler: 'StaleWhileRevalidate', options: { cacheName: 'lieux' } },
