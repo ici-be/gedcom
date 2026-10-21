@@ -450,9 +450,21 @@ th:not([aria-sort]) .tri .fleche { opacity: 0.35; }
 
 /* ---------- arbres à imprimer ---------- */
 .outils-impression { display: flex; flex-direction: column; gap: 12px; }
-.modeles { display: flex; gap: 6px; flex-wrap: wrap; }
-.modeles a { padding: 5px 12px; border-radius: 999px; border: 1px solid var(--line); text-decoration: none; color: var(--fg); }
-.modeles a.actif { border-color: var(--accent); color: var(--accent); font-weight: 700; }
+.choix-modeles { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+.modele { display: flex; flex-direction: column; gap: 12px; padding: 12px; background: var(--panel); border: 1.5px solid var(--line); border-radius: 14px; color: var(--fg); text-decoration: none; box-shadow: var(--shadow); transition: border-color .15s, box-shadow .15s; }
+.modele:hover { border-color: var(--accent); }
+.modele.actif { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg), var(--shadow); }
+.modele-feuille { display: block; aspect-ratio: 4 / 3; border-radius: 6px; overflow: hidden; background: #fff; box-shadow: 0 0 0 1px rgb(0 0 0 / 12%), 0 3px 8px rgb(20 30 60 / 14%); }
+.vignette { display: block; width: 100%; height: 100%; }
+.modele-texte { display: flex; flex-direction: column; gap: 3px; padding: 0 4px 4px; min-width: 0; }
+.modele-texte strong { font: 650 1.1rem/1.2 var(--display); text-wrap: balance; }
+.modele-texte .aide { margin: 0; }
+.modele-repere { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--accent); }
+@media (max-width: 520px) {
+  .choix-modeles { grid-template-columns: 1fr; gap: 10px; }
+  .modele { flex-direction: row; align-items: center; }
+  .modele-feuille { flex: 0 0 38%; }
+}
 .modele-choisi { display: flex; flex-direction: column; gap: 4px; }
 .options-impression { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; }
 .options-impression.groupes-options { flex-direction: column; align-items: stretch; gap: 10px; border-top: 1px solid var(--line); padding-top: 14px; }
@@ -867,7 +879,7 @@ a.asc-piste-g:hover { color: var(--accent); }
   .groupe { border: 0; padding: 0; break-inside: auto; }
 
   /* arbre à imprimer : la feuille seule, à la taille du papier (règle @page posée par la page) */
-  .arbre-imprime > .titre-ecran, .arbre-imprime > .outils-impression { display: none !important; }
+  .arbre-imprime > .titre-ecran, .arbre-imprime > .outils-impression, .arbre-imprime > .choix-modeles, .arbre-imprime > .apercu-outils { display: none !important; }
   .arbre-imprime .apercu { overflow: visible; max-height: none; box-shadow: none; border-radius: 0; }
   .arbre-imprime svg.feuille { display: block; }
   .arbre-imprime svg.feuille + svg.feuille { border-top: 0; break-before: page; }

@@ -11,6 +11,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks'
 import type { Donnees } from '../lib/donnees'
 import { nomFichierArbre, nomFichierCouple } from '../lib/format'
 import { ecrire, lire } from '../lib/stockage'
+import { Vignette, VIGNETTES } from './arbres/Vignettes'
 import { MODELES, type AlignementTitre, type Format, type FormePhoto } from './arbres/modeles'
 import { bornerGenerationsPyramide, FORMES_PHOTO, GENERATIONS_PYRAMIDE, GEN_MAX_PYRAMIDE, GEN_MIN_PYRAMIDE, THEMES_PYRAMIDE, trouverThemePyramide } from './arbres/Pyramide'
 import { ASC_MAX_SABLIER, ASC_MIN_SABLIER, bornerAscendance, bornerDescendance, conjointsDe, DESC_MAX_SABLIER, DESC_MIN_SABLIER } from './arbres/Sablier'
@@ -236,18 +237,36 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
         <p class="sous-titre">Une feuille prête pour l'imprimeur ou pour un PDF, faite à partir de l'ascendance du Sosa 1.</p>
       </header>
 
+      {MODELES.length > 1 && (
+        <nav class="choix-modeles" aria-label="Type d’arbre">
+          {MODELES.map((m) => (
+            <a key={m.id} href={'#/imprimer/' + m.id} class={'modele' + (m.id === modele.id ? ' actif' : '')} aria-current={m.id === modele.id ? 'true' : undefined}>
+              <span class="modele-feuille"><Vignette id={m.id} /></span>
+              <span class="modele-texte">
+                <span class="modele-repere">{VIGNETTES[m.id]?.repere}</span>
+                <strong>{m.titre}</strong>
+                <span class="aide">{VIGNETTES[m.id]?.resume ?? m.description}</span>
+              </span>
+            </a>
+          ))}
+        </nav>
+      )}
+
+      <div class="ligne apercu-outils">
+        <span class="aide">{zoom ? 'Aperçu agrandi : tirer la feuille pour la déplacer' : 'Aperçu réduit'}</span>
+        <button type="button" class="bouton discret" onClick={() => setZoom(!zoom)}>{zoom ? 'Réduire' : 'Agrandir'}</button>
+      </div>
+
+      <div ref={apercu} class={'apercu' + (zoom ? ' zoom' : '')}
+        onPointerDown={saisir} onPointerMove={tirer} onPointerUp={lacher} onPointerCancel={lacher}>
+        <modele.Feuille d={d} options={options} />
+        {verso && <verso.Feuille d={d} options={options} />}
+      </div>
+
       <div class="outils-impression">
-        {MODELES.length > 1 && (
-          <nav class="modeles" aria-label="Modèles">
-            {MODELES.map((m) => (
-              <a key={m.id} href={'#/imprimer/' + m.id} class={m.id === modele.id ? 'actif' : ''}>{m.titre}</a>
-            ))}
-          </nav>
-        )}
         <section class="panneau">
           <div class="modele-choisi">
             <h2>{modele.titre}</h2>
-            <p class="aide">{modele.description}</p>
             <p class="aide">Prévu pour du {modele.papier.format} {orientation} · {modele.reglages.sablierGenerations ? `${ascendance} gén. d'ancêtres, ${descendance} gén. de descendants` : `${generations} générations`}</p>
             {modele.verso && <p class="aide">Au verso, si on le souhaite : {modele.verso.titre.toLocaleLowerCase('fr')}, {modele.verso.description}.</p>}
           </div>
@@ -533,17 +552,8 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
             <span class="aide">Dans la fenêtre d'impression : papier {format} {orientation}, marges « aucune », échelle « par défaut » (100 %), graphiques d'arrière-plan activés.{verso && ' Avec le verso, recto verso retourné sur le bord court.'} Pour un PDF, choisir « Enregistrer au format PDF » : il s’appellera {nomFichier}.pdf.</span>
           </div>
         </section>
-        <div class="ligne apercu-outils">
-          <span class="aide">{zoom ? 'Aperçu agrandi : tirer la feuille pour la déplacer' : 'Aperçu réduit'}</span>
-          <button type="button" class="bouton discret" onClick={() => setZoom(!zoom)}>{zoom ? 'Réduire' : 'Agrandir'}</button>
-        </div>
       </div>
 
-      <div ref={apercu} class={'apercu' + (zoom ? ' zoom' : '')}
-        onPointerDown={saisir} onPointerMove={tirer} onPointerUp={lacher} onPointerCancel={lacher}>
-        <modele.Feuille d={d} options={options} />
-        {verso && <verso.Feuille d={d} options={options} />}
-      </div>
     </section>
   )
 }
