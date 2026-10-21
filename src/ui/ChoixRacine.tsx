@@ -29,7 +29,7 @@ export function ChoixRacine({ d, setRacine }: { d: Donnees; setRacine: (id: stri
       </button>
       {ouvert && (
         <div class="choix-racine-panneau" role="dialog" aria-label="Changer de personne de départ">
-          <p class="aide">Personne de départ des ancêtres, lignées,<br />récits et arbres :</p>
+          <p class="aide">Personne de départ :</p>
           <ChoixPersonne d={d} valeur={d.racine} prenoms={2} choisir={(id) => { setRacine(id); setOuvert(false) }} />
         </div>
       )}
