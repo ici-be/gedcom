@@ -105,9 +105,9 @@ export interface ThemePyramide {
 }
 
 export const FORMES_PHOTO: { id: FormePhoto; titre: string }[] = [
-  { id: 'ovale', titre: T('Ovale') },
-  { id: 'carree', titre: T('Carrée') },
-  { id: 'rectangulaire', titre: T('Rectangulaire') },
+  { id: 'ovale', titre: T('Ovales') },
+  { id: 'carree', titre: T('Carrés') },
+  { id: 'rectangulaire', titre: T('Rectangulaires') },
 ]
 
 function parSexe(id: string, titre: string, M: CouleurCase, F: CouleurCase, inconnu: CouleurCase, lien = '#9aa19d'): ThemePyramide {
