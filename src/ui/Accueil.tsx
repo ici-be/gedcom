@@ -27,8 +27,22 @@ export function Depot({ ouvrir, compact }: { ouvrir: (f: File) => void; compact?
       <input ref={champ} type="file" accept=".ged,.zip,.GED,.ZIP" hidden onChange={(e) => choisir(e.currentTarget.files)} />
       {!compact && <p class="depot-titre">Déposez ici votre export GEDCOM</p>}
       {compact
-        ? <p><button type="button" class="bouton" onClick={() => champ.current?.click()}>Mettre à jour le fichier</button><span class="aide">ou déposez le nouvel export ici</span></p>
+        ? <p><button type="button" class="bouton" onClick={() => champ.current?.click()}>Mettre à jour le fichier Gedcom</button><span class="aide">ou déposez le nouvel export ici</span></p>
         : <p>Le fichier .ged, ou directement le .zip téléchargé depuis Geneanet. <button type="button" class="bouton" onClick={() => champ.current?.click()}>Choisir un fichier</button></p>}
+    </div>
+  )
+}
+
+/** Page /print/, dans le menu, tant qu'aucun fichier n'est chargé */
+export function AideGedcom() {
+  return (
+    <div class="menu-aide">
+      <p><strong>Pour commencer</strong> : mettez d’abord votre fichier Gedcom avec le bouton ci-dessous (ou déposez-le sur la page).</p>
+      <p>
+        Sur Geneanet, il s’exporte depuis <a href="https://gw.geneanet.org/my-tree/operations/export" target="_blank" rel="noopener noreferrer">Mon arbre → Exporter</a>.
+        Pour imprimer un arbre avec des photos, cochez « Liens web vers les photos principales des individus ».
+      </p>
+      <p>Un export Gedcom d’un autre site ou logiciel (Heredis, Ancestris, Gramps, RootsMagic…) convient aussi.</p>
     </div>
   )
 }
@@ -38,10 +52,9 @@ export function Bienvenue({ ouvrir, erreur, impression }: { ouvrir: (f: File) =>
     <section class="ecran bienvenue">
       <header class="titre-ecran">
         <h1>Imprimer votre arbre</h1>
-        <p class="sous-titre">Déposez l’export GEDCOM de votre arbre pour en préparer un tirage : arbre d’ascendance, descendants, éventail… Le fichier est lu par votre navigateur et n’est envoyé nulle part.</p>
+        <p class="sous-titre">Déposez l’export Gedcom de votre arbre pour en préparer un tirage : arbre d’ascendance, descendants, éventail… Le fichier est lu par votre navigateur et n’est envoyé nulle part.</p>
       </header>
       {erreur && <p class="erreur" role="alert">{erreur}</p>}
-      <Depot ouvrir={ouvrir} />
     </section>
   )
   return (

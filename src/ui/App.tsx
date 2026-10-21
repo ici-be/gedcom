@@ -5,7 +5,7 @@ import { charger, chargerUrl } from '../lib/chargement'
 import { parametreDistant, racineDansAdresse, trouverIndividu } from '../lib/distant'
 import { adresseDevinee } from '../lib/geneanet'
 import { ecrire, garderFichier, lire, lireFichier, oublierFichier, oublierTout } from '../lib/stockage'
-import { Bienvenue, Depot, TableauDeBord } from './Accueil'
+import { AideGedcom, Bienvenue, Depot, TableauDeBord } from './Accueil'
 import { Individus } from './Individus'
 import { Communes, Lieu } from './Communes'
 import { Metiers, PageMetier } from './Metiers'
@@ -292,7 +292,7 @@ export function App() {
 
   return (
     <>
-      <div class={donnees ? 'coque avec-menu' : 'coque'}>
+      <div class={donnees || MODE_IMPRESSION ? 'coque avec-menu' : 'coque'}>
         <header class="bandeau">
           <a href={MODE_IMPRESSION ? '#/imprimer' : '#/'} class="marque"><Logo /><span>Lignées</span></a>
           {donnees && <ChoixRacine d={donnees} setRacine={setRacine} />}
@@ -311,7 +311,8 @@ export function App() {
             </nav>
           )}
           {donnees && MODE_IMPRESSION && <BoutonDons ouvrir={() => setDons('menu')} />}
-          {donnees && <Depot ouvrir={ouvrir} compact />}
+          {MODE_IMPRESSION && !donnees && etat === 'vide' && <AideGedcom />}
+          {(donnees || (MODE_IMPRESSION && etat === 'vide')) && <Depot ouvrir={ouvrir} compact />}
         </header>
         <div class="colonne">
           <main class="page" ref={principal}>{contenu}</main>

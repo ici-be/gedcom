@@ -137,6 +137,10 @@ h1, h2, h3 { font-family: var(--display); font-weight: 650; letter-spacing: -0.0
   background: color-mix(in srgb, var(--accent) 16%, transparent); border: 3px dashed var(--accent); }
 .depot-global p { background: var(--panel); color: var(--fg); padding: 14px 22px; border-radius: 999px; font: 700 1.15rem var(--display); box-shadow: var(--shadow); }
 /* Page /print/ : bouton des dons dans le menu, et la carte qui s'ouvre en bas à droite */
+.menu-aide { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; padding: 0 6px; font-size: 0.86rem; color: var(--muted); }
+.menu-aide p { margin: 0; }
+.menu-aide strong { color: var(--fg); }
+@media (min-width: 900px) { .avec-menu .menu-aide + .depot { margin-top: 0; } }
 .bouton-dons { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--ko-bg); color: var(--fg); font: inherit; font-size: 0.88rem; font-weight: 600; cursor: pointer; text-align: left; }
 .bouton-dons:hover { border-color: var(--ko); }
 @media (min-width: 900px) { .avec-menu .bouton-dons { margin-top: auto; } .avec-menu .bouton-dons + .depot { margin-top: 0; } }
