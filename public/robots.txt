@@ -1,0 +1,7 @@
+# Les moteurs de recherche ne lisent robots.txt qu'à la racine du domaine : ce fichier doit aussi être servi sur https://ici.be/robots.txt
+# (ici il est publié sur /gedcom/robots.txt, où il ne sert que de modèle).
+# Seule la page /gedcom/print est à indexer ; les scripts et styles restent accessibles pour que la page s'affiche correctement.
+User-agent: *
+Allow: /gedcom/print
+Allow: /gedcom/assets/
+Disallow: /gedcom/
