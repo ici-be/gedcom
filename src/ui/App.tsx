@@ -5,7 +5,7 @@ import { charger, chargerUrl } from '../lib/chargement'
 import { parametreDistant, racineDansAdresse, trouverIndividu } from '../lib/distant'
 import { adresseDevinee } from '../lib/geneanet'
 import { ecrire, garderFichier, lire, lireFichier, oublierFichier, oublierTout } from '../lib/stockage'
-import { Bienvenue, TableauDeBord } from './Accueil'
+import { Bienvenue, Depot, TableauDeBord } from './Accueil'
 import { Individus } from './Individus'
 import { Communes, Lieu } from './Communes'
 import { Metiers, PageMetier } from './Metiers'
@@ -24,8 +24,12 @@ import { ChoixRacine } from './ChoixRacine'
 
 interface Fichier { nom: string; importe: string; arbre: Arbre }
 
+// /print/ : seule la page d'impression, sans le reste du menu
+const MODE_IMPRESSION = /\/print(\/(index\.html)?)?$/.test(location.pathname)
+
 function lireRoute(): string[] {
-  return location.hash.replace(/^#\/?/, '').split('/').map(decodeURIComponent)
+  const r = location.hash.replace(/^#\/?/, '').split('/').map(decodeURIComponent)
+  return MODE_IMPRESSION && r[0] !== 'imprimer' ? ['imprimer'] : r
 }
 
 function Logo() {
@@ -157,7 +161,7 @@ export function App() {
       nouveauReleve.current = true
       setFichier({ nom: c.nom, importe, arbre: c.arbre })
       setEtat('pret')
-      location.hash = '#/'
+      location.hash = MODE_IMPRESSION ? '#/imprimer' : '#/'
     } catch (e) {
       setErreur(e instanceof Error ? e.message : String(e))
       setEtat(fichier ? 'pret' : 'vide')
@@ -194,7 +198,7 @@ export function App() {
     setRacineBrute('')
     setAdresseBrute('')
     setEtat('vide')
-    location.hash = '#/'
+    location.hash = MODE_IMPRESSION ? '#/imprimer' : '#/'
   }
 
   const racineEffective = useMemo(() => {
@@ -244,7 +248,7 @@ export function App() {
   let contenu
   if (etat === 'demarrage') contenu = null
   else if (etat === 'lecture') contenu = <div class="attente" role="status"><span class="rouet" />Lecture de l'arbre…</div>
-  else if (!donnees || !fichier || !bilan) contenu = <Bienvenue ouvrir={ouvrir} erreur={erreur} />
+  else if (!donnees || !fichier || !bilan) contenu = <Bienvenue ouvrir={ouvrir} erreur={erreur} impression={MODE_IMPRESSION} />
   else if (page === 'personnes') contenu = <Individus d={donnees} perimetre={perimetre} setPerimetre={setPerimetre} />
   else if (page === 'lieux' && route[1]) contenu = <Lieu d={donnees} lieu={route[1]} perimetre={perimetre} setPerimetre={setPerimetre} />
   else if (page === 'lieux') contenu = <Communes d={donnees} perimetre={perimetre} setPerimetre={setPerimetre} />
@@ -270,7 +274,7 @@ export function App() {
   else contenu = (
     <>
       {erreur && <p class="erreur" role="alert">{erreur}</p>}
-      <TableauDeBord d={donnees} bilan={bilan} precedent={relevePrecedent(releves, fichier.importe, baseDuFichier(fichier.arbre, fichier.nom))} fichier={fichier} ouvrir={ouvrir} setAdresse={setAdresse} setPerimetre={setPerimetre} oublier={oublier} />
+      <TableauDeBord d={donnees} bilan={bilan} precedent={relevePrecedent(releves, fichier.importe, baseDuFichier(fichier.arbre, fichier.nom))} fichier={fichier} setAdresse={setAdresse} setPerimetre={setPerimetre} oublier={oublier} />
     </>
   )
 
@@ -278,9 +282,9 @@ export function App() {
     <>
       <div class={donnees ? 'coque avec-menu' : 'coque'}>
         <header class="bandeau">
-          <a href="#/" class="marque"><Logo /><span>Lignées</span></a>
+          <a href={MODE_IMPRESSION ? '#/imprimer' : '#/'} class="marque"><Logo /><span>Lignées</span></a>
           {donnees && <ChoixRacine d={donnees} setRacine={setRacine} />}
-          {donnees && (
+          {donnees && !MODE_IMPRESSION && (
             <nav class="onglets">
               <a href="#/" class={page === '' ? 'actif' : ''}><Icone nom="accueil" />Accueil</a>
               <a href="#/personnes" class={page === 'personnes' ? 'actif' : ''}><Icone nom="personnes" />Personnes</a>
@@ -294,6 +298,7 @@ export function App() {
               <a href="#/imprimer" class={page === 'imprimer' ? 'actif' : ''}><Icone nom="imprimer" />Imprimer</a>
             </nav>
           )}
+          {donnees && <Depot ouvrir={ouvrir} compact />}
         </header>
         <div class="colonne">
           <main class="page" ref={principal}>{contenu}</main>

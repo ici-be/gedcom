@@ -1,3 +1,5 @@
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { defineConfig } from 'vite'
 import preact from '@preact/preset-vite'
 import { VitePWA } from 'vite-plugin-pwa'
@@ -6,8 +8,20 @@ export default defineConfig({
   // Chemins relatifs : le site marche quel que soit le nom du dépôt GitHub Pages
   base: './',
   worker: { format: 'es' },
+  // deux pages d'entrée : le site, et /print/ (l'impression seule)
+  build: { rollupOptions: { input: { main: resolve(__dirname, 'index.html'), print: resolve(__dirname, 'print/index.html') } } },
   plugins: [
     preact(),
+    // la page /print/ est un cran plus bas : le manifeste ajouté par le plugin PWA doit remonter d'un dossier
+    {
+      name: 'manifeste-print',
+      apply: 'build',
+      enforce: 'post',
+      closeBundle: { order: 'post', sequential: true, handler() {
+        const f = resolve(__dirname, 'dist/print/index.html')
+        if (existsSync(f)) writeFileSync(f, readFileSync(f, 'utf8').replace('"./manifest.webmanifest"', '"../manifest.webmanifest"'))
+      } },
+    },
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg'],

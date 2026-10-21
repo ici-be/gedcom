@@ -27,13 +27,23 @@ export function Depot({ ouvrir, compact }: { ouvrir: (f: File) => void; compact?
       <input ref={champ} type="file" accept=".ged,.zip,.GED,.ZIP" hidden onChange={(e) => choisir(e.currentTarget.files)} />
       {!compact && <p class="depot-titre">Déposez ici votre export GEDCOM</p>}
       {compact
-        ? <p><button type="button" class="bouton" onClick={() => champ.current?.click()}>Mettre à jour le fichier</button> <span class="aide">ou déposez le nouvel export ici</span></p>
+        ? <p><button type="button" class="bouton" onClick={() => champ.current?.click()}>Mettre à jour le fichier</button><span class="aide">ou déposez le nouvel export ici</span></p>
         : <p>Le fichier .ged, ou directement le .zip téléchargé depuis Geneanet. <button type="button" class="bouton" onClick={() => champ.current?.click()}>Choisir un fichier</button></p>}
     </div>
   )
 }
 
-export function Bienvenue({ ouvrir, erreur }: { ouvrir: (f: File) => void; erreur?: string }) {
+export function Bienvenue({ ouvrir, erreur, impression }: { ouvrir: (f: File) => void; erreur?: string; impression?: boolean }) {
+  if (impression) return (
+    <section class="ecran bienvenue">
+      <header class="titre-ecran">
+        <h1>Imprimer votre arbre</h1>
+        <p class="sous-titre">Déposez l’export GEDCOM de votre arbre pour en préparer un tirage : arbre d’ascendance, descendants, éventail… Le fichier est lu par votre navigateur et n’est envoyé nulle part.</p>
+      </header>
+      {erreur && <p class="erreur" role="alert">{erreur}</p>}
+      <Depot ouvrir={ouvrir} />
+    </section>
+  )
   return (
     <section class="ecran bienvenue">
       <header class="titre-ecran">
@@ -109,13 +119,12 @@ interface PropsTableau {
   bilan: Bilan
   precedent?: Releve
   fichier: { nom: string; importe: string }
-  ouvrir: (f: File) => void
   setAdresse: (a: string) => void
   setPerimetre: (p: Perimetre) => void
   oublier: () => void
 }
 
-export function TableauDeBord({ d, bilan, precedent, fichier, ouvrir, setAdresse, setPerimetre, oublier }: PropsTableau) {
+export function TableauDeBord({ d, bilan, precedent, fichier, setAdresse, setPerimetre, oublier }: PropsTableau) {
   const [saisie, setSaisie] = useState(d.adresse)
   const devinee = adresseDevinee(d.arbre.origine)
   const racine = d.arbre.individus.get(d.racine)
@@ -150,7 +159,6 @@ export function TableauDeBord({ d, bilan, precedent, fichier, ouvrir, setAdresse
           <h1>{racine ? <>Arbre de {racine.prenom} {racine.nom}</> : 'Votre arbre'}</h1>
           <p class="sous-titre">{fichier.nom} · chargé le {new Date(fichier.importe).toLocaleString('fr-BE', { dateStyle: 'long', timeStyle: 'short' })}</p>
         </div>
-        <Depot ouvrir={ouvrir} compact />
       </header>
 
       <div class="cartes">

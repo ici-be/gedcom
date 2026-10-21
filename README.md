@@ -12,7 +12,7 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   des provinces et départements de naissance des ancêtres (plus foncés qu'il y en est né, un point par commune) ;
   les progrès depuis l'export précédent du même arbre (les chiffres des ancêtres seulement si la personne de
   départ n'a pas changé). Un nouvel export se dépose n'importe où sur la page, ou par « Mettre à jour le
-  fichier » en haut de l'accueil. Réglage : adresse de l'arbre en ligne. La personne de départ (Sosa 1) se
+  fichier » dans le menu de gauche, sur toutes les pages. Réglage : adresse de l'arbre en ligne. La personne de départ (Sosa 1) se
   change en haut de chaque page.
 - **Personnes** : naissance (ou baptême), mariage(s) et décès (ou inhumation) de chaque personne, avec
   leur état : ✓ sourcé, ! renseigné sans source, ✕ manquant. Les ancêtres sont numérotés
@@ -90,7 +90,7 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   en père ou de mère en mère, aussi accessible depuis la page Lignée) ; **Quartiers** (le point moyen des
   naissances de chaque génération, quartier par quartier) ; **Au fil des années** (les ancêtres en vie année par
   année, qu'on peut faire défiler, et la distance entre parent et enfant au fil du temps).
-- **Imprimer** : des arbres prêts pour l'imprimeur ou pour un PDF. Premier modèle, l'**éventail des
+- **Imprimer** (aussi seul, sans les autres onglets, sur `/print/` : le menu n'y montre que le titre, la personne de départ et la mise à jour du fichier) : des arbres prêts pour l'imprimeur ou pour un PDF. Premier modèle, l'**éventail des
   origines** (A3 paysage) : huit générations sur 220°, chaque ancêtre teinté selon sa province ou sa région
   de naissance (reconnue grâce aux listes de localités de la carte), avec les quatre quartiers. En bas de la
   feuille, au choix : la carte des provinces et départements de naissance (Belgique, France, Pays-Bas,
