@@ -24,6 +24,7 @@ import { ProposerInstallation } from './Installer'
 import { ChoixRacine } from './ChoixRacine'
 import { BoutonDons, CarteDons } from './Dons'
 import { ChoixLangue } from './ChoixLangue'
+import { Demo } from './Demo'
 import { definirLangue, estLangue, LANGUES, langueDuNavigateur, t, type Langue } from '../lib/i18n'
 
 interface Fichier { nom: string; importe: string; arbre: Arbre }
@@ -208,6 +209,7 @@ export function App() {
     addEventListener('afterprint', fin)
     return () => removeEventListener('afterprint', fin)
   }, [])
+  const [demo, setDemo] = useState(false)
   const [glisse, setGlisse] = useState(false)
   const ouvrirRef = useRef(ouvrir)
   ouvrirRef.current = ouvrir
@@ -328,6 +330,7 @@ export function App() {
           <a href={MODE_IMPRESSION ? '#/imprimer' : '#/'} class="marque"><Logo /><span>Lignées</span></a>
           {donnees && <ChoixRacine d={donnees} setRacine={setRacine} />}
           {(MODE_IMPRESSION || page === 'imprimer') && <ChoixLangue langue={langue} choisir={setLangue} />}
+          {MODE_IMPRESSION && <button type="button" class="bouton-demo" onClick={() => setDemo(true)}><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z" /></svg>{t('Voir la démo')}</button>}
           {donnees && !MODE_IMPRESSION && (
             <nav class="onglets">
               <a href="#/" class={page === '' ? 'actif' : ''}><Icone nom="accueil" />Accueil</a>
@@ -356,6 +359,7 @@ export function App() {
           </footer>
         </div>
       </div>
+      {demo && <Demo fermer={() => setDemo(false)} />}
       {dons && <CarteDons apresImpression={dons === 'impression'} fermer={() => setDons('')} />}
       <ProposerInstallation />
       {glisse && <div class="depot-global" aria-hidden="true"><p>{fichier ? t('Déposez le fichier pour mettre l’arbre à jour') : t('Déposez le fichier pour l’ouvrir')}</p></div>}
