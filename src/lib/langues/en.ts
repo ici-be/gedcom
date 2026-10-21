@@ -313,7 +313,6 @@ export const EN: Record<string, string> = {
   "Choisir la personne": "Choose the person",
   "Choisir l’arbre": "Choose the tree",
   "Déposez votre fichier GEDCOM ici": "Drop your GEDCOM file here",
-  "ou cliquez pour le choisir · .ged": "or click to choose it · .ged",
   "Rien n’est envoyé sur Internet.": "Nothing is sent over the Internet.",
   "2 184 personnes · 612 familles": "2,184 people · 612 families",
   "Qui est au centre de l’arbre ?": "Who is at the centre of the tree?",
@@ -325,4 +324,6 @@ export const EN: Record<string, string> = {
   "Feuille envoyée à l’impression": "Sheet sent to print",
   "Teinté selon la province de naissance": "Tinted by province of birth",
   "148 Ko": "148 KB",
+  "ou cliquez pour le choisir · .ged ou .zip": "or click to choose it · .ged or .zip",
+  "52 Ko": "52 KB",
 }

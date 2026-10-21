@@ -63,6 +63,7 @@ export function Demo({ fermer }: { fermer: () => void }) {
     const jauge = q('.demo-jauge div'), eventail = q('.demo-eventail')
     const reduit = matchMedia('(prefers-reduced-motion: reduce)').matches
     let minuteurs: number[] = []
+    let passage = 0
 
     const planifie = (ms: number, fn: () => void) => { minuteurs.push(window.setTimeout(fn, ms * RYTHME)) }
     const centre = (e: HTMLElement, dx = 0.5, dy = 0.5): [number, number] => {
@@ -93,6 +94,10 @@ export function Demo({ fermer }: { fermer: () => void }) {
     const joue = () => {
       remise()
       if (reduit) { final(); return }
+      // un passage sur deux, le fichier déposé est une archive .zip
+      const zip = passage++ % 2 === 1
+      el.querySelectorAll('.demo-nom').forEach((e) => { e.textContent = zip ? 'famille.zip' : 'famille.ged' })
+      q('.demo-taille').textContent = t(zip ? '52 Ko' : '148 Ko')
       jauge.style.transition = `width ${DUREE * RYTHME}ms linear`; jauge.style.width = '100%'
       montre(0)
       // 1. le fichier glisse jusqu'à la zone de dépôt
@@ -179,12 +184,12 @@ export function Demo({ fermer }: { fermer: () => void }) {
               <div class="demo-depot">
                 <div class="vide">
                   <strong>{t('Déposez votre fichier GEDCOM ici')}</strong><br />
-                  <small>{t('ou cliquez pour le choisir · .ged')}</small><br />
+                  <small>{t('ou cliquez pour le choisir · .ged ou .zip')}</small><br />
                   <small>{t('Rien n’est envoyé sur Internet.')}</small>
                 </div>
                 <div class="lu">
                   <div class="coche">✓</div><br />
-                  <strong>famille.ged</strong><br />
+                  <strong class="demo-nom">famille.ged</strong><br />
                   <small>{t('2 184 personnes · 612 familles')}</small>
                 </div>
               </div>
@@ -243,7 +248,7 @@ export function Demo({ fermer }: { fermer: () => void }) {
             </section>
             <div class="demo-fichier">
               <svg width="18" height="22" viewBox="0 0 18 22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M2 1h9l5 5v15H2z" /><path d="M11 1v5h5" /></svg>
-              <span>famille.ged <small>{t('148 Ko')}</small></span>
+              <span><span class="demo-nom">famille.ged</span> <small class="demo-taille">{t('148 Ko')}</small></span>
             </div>
             <div class="demo-souris"><svg width="22" height="22" viewBox="0 0 22 22"><path d="M3 2v15l4-3.6 2.8 6 2.6-1.2-2.8-5.9H16z" fill="#fff" stroke="#111" stroke-width="1.4" stroke-linejoin="round" /></svg></div>
           </div>
