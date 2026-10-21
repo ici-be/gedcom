@@ -136,7 +136,28 @@ h1, h2, h3 { font-family: var(--display); font-weight: 650; letter-spacing: -0.0
 .depot-global { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; pointer-events: none;
   background: color-mix(in srgb, var(--accent) 16%, transparent); border: 3px dashed var(--accent); }
 .depot-global p { background: var(--panel); color: var(--fg); padding: 14px 22px; border-radius: 999px; font: 700 1.15rem var(--display); box-shadow: var(--shadow); }
-/* Sosa 1 dans le bandeau */
+/* Page /print/ : bouton des dons dans le menu, et la carte qui s'ouvre en bas à droite */
+.bouton-dons { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--ko-bg); color: var(--fg); font: inherit; font-size: 0.88rem; font-weight: 600; cursor: pointer; text-align: left; }
+.bouton-dons:hover { border-color: var(--ko); }
+@media (min-width: 900px) { .avec-menu .bouton-dons { margin-top: auto; } .avec-menu .bouton-dons + .depot { margin-top: 0; } }
+.coeur { width: 15px; height: 15px; flex: none; fill: none; stroke: var(--ko); stroke-width: 1.5; stroke-linejoin: round; }
+.dons-carte { position: fixed; z-index: 60; right: max(16px, env(safe-area-inset-right, 0px)); bottom: max(16px, env(safe-area-inset-bottom, 0px)); width: min(430px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow: auto;
+  display: flex; flex-direction: column; gap: 10px; padding: 16px 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow), 0 12px 36px rgb(10 20 50 / 22%); }
+.dons-carte:focus { outline: none; }
+.dons-carte h2 { display: flex; align-items: center; gap: 8px; font-size: 1.05rem; padding-right: 28px; }
+.dons-carte .aide { margin: 0; }
+.dons-fermer { position: absolute; top: 8px; right: 10px; border: 0; background: none; color: var(--muted); font-size: 1.4rem; line-height: 1; cursor: pointer; }
+.dons-assos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.dons-assos li { display: flex; flex-direction: column; gap: 8px; padding: 10px 0; border-top: 1px solid var(--line); }
+.dons-assos li > div:first-child { display: flex; flex-direction: column; }
+.dons-liens { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.dons-compteur { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--line); padding-top: 10px; }
+.dons-total { margin: 0; font-size: 0.9rem; }
+.dons-merci { margin: 0; color: var(--ok); font-weight: 600; font-size: 0.9rem; }
+.dons-formulaire { display: grid; grid-template-columns: auto 1fr; gap: 6px 10px; align-items: center; }
+.dons-formulaire input, .dons-formulaire select { min-width: 0; font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); }
+.dons-formulaire .bouton, .dons-formulaire .aide, .dons-formulaire .erreur { grid-column: 1 / -1; }
+
 .choix-racine { position: relative; margin-left: auto; }
 .choix-racine-bouton { display: inline-flex; gap: 8px; align-items: center; border: 1px solid var(--line); background: var(--panel); color: var(--fg);
   border-radius: 8px; padding: 5px 12px; font: inherit; cursor: pointer; max-width: 190px; }
@@ -840,7 +861,7 @@ a.asc-piste-g:hover { color: var(--accent); }
   html { font-size: 8pt; }
   body { font-size: 9pt; background: #fff; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .bandeau, .pied, .sous-titre, .astuce, .bandeau-info, .retour, .pagination, .barre-resultats .bouton, .deplier, .erreur, .installation { display: none !important; }
+  .dons-carte, .bandeau, .pied, .sous-titre, .astuce, .bandeau-info, .retour, .pagination, .barre-resultats .bouton, .deplier, .erreur, .installation { display: none !important; }
   .coque, .colonne { display: block; }
   .page { max-width: none; padding: 0; }
   .ecran { gap: 6px; }

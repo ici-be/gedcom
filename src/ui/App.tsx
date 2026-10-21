@@ -21,6 +21,7 @@ import { Filiation } from './Filiation'
 import { Introuvables } from './Introuvables'
 import { ProposerInstallation } from './Installer'
 import { ChoixRacine } from './ChoixRacine'
+import { BoutonDons, CarteDons } from './Dons'
 
 interface Fichier { nom: string; importe: string; arbre: Arbre }
 
@@ -169,6 +170,17 @@ export function App() {
   }
 
   // Un nouvel export se dépose n'importe où dans la page, quelle qu'elle soit
+  // Page /print/ : la carte des dons s'ouvre depuis le menu, et d'elle-même à la fin d'une impression (une fois par visite)
+  const [dons, setDons] = useState<'' | 'menu' | 'impression'>('')
+  useEffect(() => {
+    if (!MODE_IMPRESSION) return
+    const fin = () => {
+      try { if (sessionStorage.getItem('dons-propose')) return; sessionStorage.setItem('dons-propose', '1') } catch { /* tant pis : la carte s'ouvre */ }
+      setDons('impression')
+    }
+    addEventListener('afterprint', fin)
+    return () => removeEventListener('afterprint', fin)
+  }, [])
   const [glisse, setGlisse] = useState(false)
   const ouvrirRef = useRef(ouvrir)
   ouvrirRef.current = ouvrir
@@ -298,6 +310,7 @@ export function App() {
               <a href="#/imprimer" class={page === 'imprimer' ? 'actif' : ''}><Icone nom="imprimer" />Imprimer</a>
             </nav>
           )}
+          {donnees && MODE_IMPRESSION && <BoutonDons ouvrir={() => setDons('menu')} />}
           {donnees && <Depot ouvrir={ouvrir} compact />}
         </header>
         <div class="colonne">
@@ -307,6 +320,7 @@ export function App() {
           </footer>
         </div>
       </div>
+      {dons && <CarteDons apresImpression={dons === 'impression'} fermer={() => setDons('')} />}
       <ProposerInstallation />
       {glisse && <div class="depot-global" aria-hidden="true"><p>Déposez le fichier pour {fichier ? 'mettre l’arbre à jour' : 'l’ouvrir'}</p></div>}
     </>

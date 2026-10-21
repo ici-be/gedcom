@@ -213,3 +213,18 @@ Preact + TypeScript + Vite. La lecture du fichier se fait dans un *worker* (`src
 
 Le dépôt se publie sur GitHub Pages par `.github/workflows/publier.yml` à chaque `git push` sur `main`
 (une fois : *Settings → Pages → Source : GitHub Actions*).
+
+## Dons (page `/print/`)
+
+Sur `/print/`, un bouton « Soutenir une association » (menu de gauche) ouvre une carte, qui s'ouvre aussi d'elle-même à la fin d'une impression (une fois par visite). Les associations, leurs liens et la phrase sur l'attestation fiscale se changent dans `src/lib/dons.ts`.
+
+### Compteur de dons déclarés (facultatif)
+
+Les gens indiquent ce qu'ils ont donné (montant et association) ; un total et un nombre de dons s'affichent. Les dons sont enregistrés dans une feuille Google Sheets, par une petite application Google Apps Script :
+
+1. Créer un Google Sheets, renommer la première feuille « Dons » et écrire en première ligne : `Date`, `Association`, `Montant`.
+2. Extensions → Apps Script, y coller le contenu de `scripts/dons-apps-script.gs`.
+3. Déployer → Nouveau déploiement → type « Application web » : exécuter en tant que soi-même, accès « Tout le monde ». Autoriser l'accès à la feuille.
+4. Copier l'adresse de l'application web (`https://script.google.com/macros/s/…/exec`) dans `URL_COMPTEUR` de `src/lib/dons.ts`.
+
+Tant que `URL_COMPTEUR` est vide, la carte ne montre que les liens. Le total est déclaratif : n'importe qui peut ajouter une ligne (montant entre 1 et 10 000 €), et on peut corriger la feuille à la main. Seuls le montant, l'association et la date d'envoi sont enregistrés. Après toute modification du script, redéployer (Gérer les déploiements → nouvelle version).
