@@ -7,6 +7,7 @@ import { adresseDevinee, normaliserAdresse } from '../lib/geneanet'
 import { nombre, pourcent } from '../lib/format'
 import { aChercher } from '../lib/suivi'
 import { Barre, Personne } from './commun'
+import { ChoixModeles } from './arbres/Vignettes'
 import { CarteAccueil } from './CarteAccueil'
 import { preparerAFaire } from './Individus'
 
@@ -49,12 +50,14 @@ export function AideGedcom() {
 
 export function Bienvenue({ ouvrir, erreur, impression }: { ouvrir: (f: File) => void; erreur?: string; impression?: boolean }) {
   if (impression) return (
-    <section class="ecran bienvenue">
+    <section class="ecran">
       <header class="titre-ecran">
-        <h1>Imprimer votre arbre</h1>
+        <h1>Arbres à imprimer</h1>
+        <p class="sous-titre">Une feuille prête pour l'imprimeur ou pour un PDF, faite à partir de l'ascendance du Sosa 1.</p>
         <p class="sous-titre">Déposez l’export Gedcom de votre arbre pour en préparer un tirage : arbre d’ascendance, descendants, éventail… Le fichier est lu par votre navigateur et n’est envoyé nulle part.</p>
       </header>
       {erreur && <p class="erreur" role="alert">{erreur}</p>}
+      <ChoixModeles />
     </section>
   )
   return (
