@@ -320,7 +320,7 @@ export function App() {
         <div class="colonne">
           <main class="page" ref={principal}>{contenu}</main>
           <footer class="pied">
-            Vos données restent dans votre navigateur. · <a href="https://github.com/ici-be/gedcom" target="_blank" rel="noopener noreferrer">Code source</a>
+            Vos données restent dans votre navigateur.
           </footer>
         </div>
       </div>
