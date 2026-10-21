@@ -313,6 +313,9 @@ export function App() {
           {donnees && MODE_IMPRESSION && <BoutonDons ouvrir={() => setDons('menu')} />}
           {MODE_IMPRESSION && !donnees && etat === 'vide' && <AideGedcom />}
           {(donnees || (MODE_IMPRESSION && etat === 'vide')) && <Depot ouvrir={ouvrir} compact />}
+          {MODE_IMPRESSION && donnees && (
+            <button type="button" class="lien danger oublier-menu" onClick={() => { if (confirm('Effacer le fichier et les réglages gardés dans ce navigateur ?')) oublier() }}>Oublier mes données</button>
+          )}
         </header>
         <div class="colonne">
           <main class="page" ref={principal}>{contenu}</main>

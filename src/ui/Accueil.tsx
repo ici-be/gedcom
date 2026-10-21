@@ -41,6 +41,7 @@ export function AideGedcom() {
       <p><strong>Pour commencer</strong> : mettez d’abord votre fichier Gedcom avec le bouton ci-dessous (ou déposez-le sur la page).</p>
       <p>
         Sur Geneanet, il s’exporte depuis <a href="https://gw.geneanet.org/my-tree/operations/export" target="_blank" rel="noopener noreferrer">Mon arbre → Exporter</a>.
+        Le mieux est de déposer le dossier .zip complet tel qu’il est téléchargé, sans le décompresser.
         Pour imprimer un arbre avec des photos, cochez « Liens web vers les photos principales des individus ».
       </p>
       <p>Un export Gedcom d’un autre site ou logiciel (Heredis, Ancestris, Gramps, RootsMagic…) convient aussi.</p>

@@ -137,6 +137,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 650; letter-spacing: -0.0
   background: color-mix(in srgb, var(--accent) 16%, transparent); border: 3px dashed var(--accent); }
 .depot-global p { background: var(--panel); color: var(--fg); padding: 14px 22px; border-radius: 999px; font: 700 1.15rem var(--display); box-shadow: var(--shadow); }
 /* Page /print/ : bouton des dons dans le menu, et la carte qui s'ouvre en bas à droite */
+.oublier-menu { align-self: center; font-size: 0.82rem; }
 .menu-aide { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; padding: 0 6px; font-size: 0.86rem; color: var(--muted); }
 .menu-aide p { margin: 0; }
 .menu-aide strong { color: var(--fg); }
