@@ -15,6 +15,7 @@ import { ChoixModeles } from './arbres/Vignettes'
 import { MODELES, type AlignementTitre, type Format, type FormePhoto } from './arbres/modeles'
 import { bornerGenerationsPyramide, FORMES_PHOTO, GENERATIONS_PYRAMIDE, GEN_MAX_PYRAMIDE, GEN_MIN_PYRAMIDE, THEMES_PYRAMIDE, trouverThemePyramide } from './arbres/Pyramide'
 import { ASC_MAX_SABLIER, ASC_MIN_SABLIER, bornerAscendance, bornerDescendance, conjointsDe, DESC_MAX_SABLIER, DESC_MIN_SABLIER } from './arbres/Sablier'
+import { locale, t, T } from '../lib/i18n'
 
 interface Reglages {
   date: boolean
@@ -86,13 +87,13 @@ const ICONES_ALIGN: Record<AlignementTitre, JSX.Element> = {
 }
 
 const BOUTONS_ALIGN: { id: AlignementTitre; titre: string }[] = [
-  { id: 'gauche', titre: 'Aligner à gauche' },
-  { id: 'centre', titre: 'Centrer' },
-  { id: 'droite', titre: 'Aligner à droite' },
+  { id: 'gauche', titre: T('Aligner à gauche') },
+  { id: 'centre', titre: T('Centrer') },
+  { id: 'droite', titre: T('Aligner à droite') },
 ]
 
 const aujourdHui = () => new Date().toISOString().slice(0, 10)
-const dateLongue = (iso: string) => new Date(iso + 'T12:00:00').toLocaleDateString('fr-BE', { day: 'numeric', month: 'long', year: 'numeric' })
+const dateLongue = (iso: string) => new Date(iso + 'T12:00:00').toLocaleDateString(locale(), { day: 'numeric', month: 'long', year: 'numeric' })
 
 export function Impression({ d, id }: { d: Donnees; id?: string }) {
   const modele = MODELES.find((m) => m.id === id) ?? MODELES[0]
@@ -142,7 +143,7 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
   // Le format prévu par le modèle, ou un plus petit pour une imprimante de bureau
   const formats = (['A4', 'A3', 'A2'] as Format[]).filter((f) => PAPIERS[f][0] <= PAPIERS[modele.papier.format][0])
   const format = reglages.papier && formats.includes(reglages.papier) ? reglages.papier : modele.papier.format
-  const orientation = modele.papier.orientation === 'landscape' ? 'paysage' : 'portrait'
+  const orientation = modele.papier.orientation === 'landscape' ? t('paysage') : t('portrait')
   const [court, long] = PAPIERS[format]
   const [largeur, hauteur] = modele.papier.orientation === 'landscape' ? [long, court] : [court, long]
 
@@ -182,8 +183,8 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
   const mariagesCentre = reglages.mariagesCentre ?? reglages.mariages !== false
   const bordsArrondis = reglages.bordsArrondis !== false
   // Colonne du milieu dans le tableau des options : le couple ou la personne de départ
-  const centre = modele.reglages.conjoint ? 'Couple' : 'Sosa 1'
-  const centreMin = modele.reglages.conjoint ? 'couple' : 'Sosa 1'
+  const centre = modele.reglages.conjoint ? t('Couple') : t('Sosa 1')
+  const centreMin = modele.reglages.conjoint ? t('du couple') : t('du Sosa 1')
   // Métier des ancêtres : première génération en petits cartouches, la suivante en étiquettes verticales
   const genCartouches = modele.reglages.conjoint ? 3 : 4
   const options = {
@@ -233,15 +234,15 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
       <style>{`@page { size: ${format} ${modele.papier.orientation}; margin: 0; }
 @media print { .arbre-imprime .apercu svg.feuille { width: ${largeur}mm !important; height: ${hauteur - 1}mm !important; } }`}</style>
       <header class="titre-ecran">
-        <h1>Arbres à imprimer</h1>
-        <p class="sous-titre">Une feuille prête pour l'imprimeur ou pour un PDF, faite à partir de l'ascendance du Sosa 1.</p>
+        <h1>{t('Arbres à imprimer')}</h1>
+        <p class="sous-titre">{t('Une feuille prête pour l’imprimeur ou pour un PDF, faite à partir de l’ascendance du Sosa 1.')}</p>
       </header>
 
       {MODELES.length > 1 && <ChoixModeles actif={modele.id} />}
 
       <div class="ligne apercu-outils">
-        <span class="aide">{zoom ? 'Aperçu agrandi : tirer la feuille pour la déplacer' : 'Aperçu réduit'}</span>
-        <button type="button" class="bouton discret" onClick={() => setZoom(!zoom)}>{zoom ? 'Réduire' : 'Agrandir'}</button>
+        <span class="aide">{zoom ? t('Aperçu agrandi : tirer la feuille pour la déplacer') : t('Aperçu réduit')}</span>
+        <button type="button" class="bouton discret" onClick={() => setZoom(!zoom)}>{zoom ? t('Réduire') : t('Agrandir')}</button>
       </div>
 
       <div ref={apercu} class={'apercu' + (zoom ? ' zoom' : '')}
@@ -253,90 +254,90 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
       <div class="outils-impression">
         <section class="panneau">
           <div class="modele-choisi">
-            <h2>{modele.titre}</h2>
-            <p class="aide">Prévu pour du {modele.papier.format} {orientation} · {modele.reglages.sablierGenerations ? `${ascendance} gén. d'ancêtres, ${descendance} gén. de descendants` : `${generations} générations`}</p>
-            {modele.verso && <p class="aide">Au verso, si on le souhaite : {modele.verso.titre.toLocaleLowerCase('fr')}, {modele.verso.description}.</p>}
+            <h2>{t(modele.titre)}</h2>
+            <p class="aide">{t('Prévu pour du {format} {orientation} · {detail}', { format: modele.papier.format, orientation, detail: modele.reglages.sablierGenerations ? t('{a} gén. d’ancêtres, {d} gén. de descendants', { a: ascendance, d: descendance }) : t('{n} générations', { n: generations }) })}</p>
+            {modele.verso && <p class="aide">{t('Au verso, si on le souhaite : {titre}, {description}.', { titre: t(modele.verso.titre).toLocaleLowerCase(locale()), description: t(modele.verso.description) })}</p>}
           </div>
           <div class="options-impression groupes-options">
             <div class="groupe-options">
-              <span class="groupe-options-titre">Feuille</span>
+              <span class="groupe-options-titre">{t('Feuille')}</span>
               <div class="groupe-options-corps">
                 {formats.length > 1 && (
                   <label class="case">
-                    Papier
+                    {t('Papier')}
                     <select id="impression-papier" value={format} onChange={(e) => setReglages({ papier: e.currentTarget.value as Format })}>
-                      {formats.map((f) => <option key={f} value={f}>{f} {orientation} ({(modele.papier.orientation === 'landscape' ? [...PAPIERS[f]].reverse() : PAPIERS[f]).join(' × ')} mm){f !== modele.papier.format ? ', réduit' : ''}</option>)}
+                      {formats.map((f) => <option key={f} value={f}>{f} {orientation} ({(modele.papier.orientation === 'landscape' ? [...PAPIERS[f]].reverse() : PAPIERS[f]).join(' × ')} mm){f !== modele.papier.format ? ', ' + t('réduit') : ''}</option>)}
                     </select>
                   </label>
                 )}
                 {modele.reglages.generations && (
                   <div class="case pas-generations">
-                    <label for="impression-generations">Générations</label>
-                    <button type="button" class="bouton discret" title="Enlever une génération" aria-label="Enlever une génération"
+                    <label for="impression-generations">{t('Générations')}</label>
+                    <button type="button" class="bouton discret" title={t('Enlever une génération')} aria-label={t('Enlever une génération')}
                       disabled={generations <= GEN_MIN_PYRAMIDE} onClick={() => setReglages({ generations: generations - 1 })}>−</button>
                     <select id="impression-generations" value={generations} onChange={(e) => setReglages({ generations: Number(e.currentTarget.value) })}>
                       {GENERATIONS_PYRAMIDE.map((n) => (
-                        <option key={n} value={n}>{n} générations ({2 ** n - 1} places, jusqu’au Sosa {2 ** n - 1})</option>
+                        <option key={n} value={n}>{t('{n} générations ({places} places, jusqu’au Sosa {max})', { n, places: 2 ** n - 1, max: 2 ** n - 1 })}</option>
                       ))}
                     </select>
-                    <button type="button" class="bouton discret" title="Ajouter une génération" aria-label="Ajouter une génération"
+                    <button type="button" class="bouton discret" title={t('Ajouter une génération')} aria-label={t('Ajouter une génération')}
                       disabled={generations >= GEN_MAX_PYRAMIDE} onClick={() => setReglages({ generations: generations + 1 })}>+</button>
                   </div>
                 )}
                 {conjoints.length > 1 && (
                   <label class="case">
-                    Conjoint
+                    {t('Conjoint')}
                     <select id="impression-conjoint" value={conjoint} onChange={(e) => setReglages({ conjoint: e.currentTarget.value })}>
-                      {conjoints.map((c) => <option key={c.famille} value={c.famille}>{[c.conjoint.prenom, c.conjoint.nom.toLocaleUpperCase('fr')].filter(Boolean).join(' ') || 'conjoint sans nom'}</option>)}
+                      {conjoints.map((c) => <option key={c.famille} value={c.famille}>{[c.conjoint.prenom, c.conjoint.nom.toLocaleUpperCase('fr')].filter(Boolean).join(' ') || t('conjoint sans nom')}</option>)}
                     </select>
                   </label>
                 )}
                 {modele.reglages.sablierGenerations && (
                   <>
                     <div class="case pas-generations">
-                      <label for="impression-ascendance">Ancêtres</label>
-                      <button type="button" class="bouton discret" title="Enlever une génération d'ascendance" aria-label="Enlever une génération d'ascendance"
+                      <label for="impression-ascendance">{t('Ancêtres')}</label>
+                      <button type="button" class="bouton discret" title={t('Enlever une génération d’ascendance')} aria-label={t('Enlever une génération d’ascendance')}
                         disabled={ascendance <= ASC_MIN_SABLIER} onClick={() => setReglages({ ascendance: ascendance - 1 })}>−</button>
                       <select id="impression-ascendance" value={ascendance} onChange={(e) => setReglages({ ascendance: Number(e.currentTarget.value) })}>
                         {Array.from({ length: ASC_MAX_SABLIER - ASC_MIN_SABLIER + 1 }, (_, i) => ASC_MIN_SABLIER + i).map((n) => (
-                          <option key={n} value={n}>{n} génération{n > 1 ? 's' : ''} ({2 ** (n + 1) - 2} ancêtres max)</option>
+                          <option key={n} value={n}>{t('{n} génération{n?|s} ({max} ancêtres max)', { n, max: 2 ** (n + 1) - 2 })}</option>
                         ))}
                       </select>
-                      <button type="button" class="bouton discret" title="Ajouter une génération d'ascendance" aria-label="Ajouter une génération d'ascendance"
+                      <button type="button" class="bouton discret" title={t('Ajouter une génération d’ascendance')} aria-label={t('Ajouter une génération d’ascendance')}
                         disabled={ascendance >= ASC_MAX_SABLIER} onClick={() => setReglages({ ascendance: ascendance + 1 })}>+</button>
                     </div>
                     <div class="case pas-generations">
-                      <label for="impression-descendance">Descendants</label>
-                      <button type="button" class="bouton discret" title="Enlever une génération de descendance" aria-label="Enlever une génération de descendance"
+                      <label for="impression-descendance">{t('Descendants')}</label>
+                      <button type="button" class="bouton discret" title={t('Enlever une génération de descendance')} aria-label={t('Enlever une génération de descendance')}
                         disabled={descendance <= DESC_MIN_SABLIER} onClick={() => setReglages({ descendance: descendance - 1 })}>−</button>
                       <select id="impression-descendance" value={descendance} onChange={(e) => setReglages({ descendance: Number(e.currentTarget.value) })}>
                         {Array.from({ length: DESC_MAX_SABLIER - DESC_MIN_SABLIER + 1 }, (_, i) => DESC_MIN_SABLIER + i).map((n) => (
-                          <option key={n} value={n}>{n} génération{n > 1 ? 's' : ''} ({n === 1 ? 'enfants' : n === 2 ? 'petits-enfants' : 'arrière-petits-enfants'})</option>
+                          <option key={n} value={n}>{t('{n} génération{n?|s} ({qui})', { n, qui: t(n === 1 ? 'enfants' : n === 2 ? 'petits-enfants' : 'arrière-petits-enfants') })}</option>
                         ))}
                       </select>
-                      <button type="button" class="bouton discret" title="Ajouter une génération de descendance" aria-label="Ajouter une génération de descendance"
+                      <button type="button" class="bouton discret" title={t('Ajouter une génération de descendance')} aria-label={t('Ajouter une génération de descendance')}
                         disabled={descendance >= DESC_MAX_SABLIER} onClick={() => setReglages({ descendance: descendance + 1 })}>+</button>
                     </div>
                   </>
                 )}
                 {modele.reglages.bas && (
                   <label class="case">
-                    Bas de la feuille
+                    {t('Bas de la feuille')}
                     <select id="impression-bas" value={reglages.barres ? 'barres' : 'carte'} onChange={(e) => setReglages({ barres: e.currentTarget.value === 'barres' })}>
-                      <option value="carte">Carte des lieux de naissance</option>
-                      <option value="barres">Origine par génération (barres)</option>
+                      <option value="carte">{t('Carte des lieux de naissance')}</option>
+                      <option value="barres">{t('Origine par génération (barres)')}</option>
                     </select>
                   </label>
                 )}
                 {modele.reglages.theme && (
                   <label class="case">
-                    Thème de couleurs
+                    {t('Thème de couleurs')}
                     <select id="impression-theme" value={theme} onChange={(e) => setReglages({ theme: e.currentTarget.value })}>
-                      <optgroup label="Sans distinction de sexe">
-                        {themesAutres.map((t) => <option key={t.id} value={t.id}>{t.titre}</option>)}
+                      <optgroup label={t('Sans distinction de sexe')}>
+                        {themesAutres.map((th) => <option key={th.id} value={th.id}>{t(th.titre)}</option>)}
                       </optgroup>
-                      <optgroup label="Deux teintes (homme / femme)">
-                        {themesSexe.map((t) => <option key={t.id} value={t.id}>{t.titre}</option>)}
+                      <optgroup label={t('Deux teintes (homme / femme)')}>
+                        {themesSexe.map((th) => <option key={th.id} value={th.id}>{t(th.titre)}</option>)}
                       </optgroup>
                     </select>
                     <span class="pastilles-theme" aria-hidden="true">
@@ -347,21 +348,21 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
                   </label>
                 )}
                 {modele.reglages.equitable && (
-                  <label class="case" title="Les descendants sans enfant gardent une case aussi large que les autres ; à la dernière génération, les enfants d'un même parent sont empilés">
+                  <label class="case" title={t('Les descendants sans enfant gardent une case aussi large que les autres ; à la dernière génération, les enfants d’un même parent sont empilés')}>
                     <input type="checkbox" id="impression-equitable" checked={!!reglages.equitable} onChange={(e) => setReglages({ equitable: e.currentTarget.checked })} />
-                    Cases égales pour les descendants
+                    {t('Cases égales pour les descendants')}
                   </label>
                 )}
                 {modele.reglages.descendants && (
                   <label class="case">
                     <input type="checkbox" id="impression-tous-prenoms" checked={!!reglages.tousPrenoms} onChange={(e) => setReglages({ tousPrenoms: e.currentTarget.checked })} />
-                    Tous les prénoms dans le titre
+                    {t('Tous les prénoms dans le titre')}
                   </label>
                 )}
                 {modele.verso && (
-                  <label class="case" title={modele.verso.description}>
+                  <label class="case" title={t(modele.verso.description)}>
                     <input type="checkbox" id="impression-verso" checked={!!reglages.verso} onChange={(e) => setReglages({ verso: e.currentTarget.checked })} />
-                    Verso : {modele.verso.titre.toLocaleLowerCase('fr')}
+                    {t('Verso : {titre}', { titre: t(modele.verso.titre).toLocaleLowerCase(locale()) })}
                   </label>
                 )}
               </div>
@@ -369,76 +370,76 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
 
             {modele.reglages.descendants ? (
               <div class="groupe-options">
-                <span class="groupe-options-titre">Contenu</span>
+                <span class="groupe-options-titre">{t('Contenu')}</span>
                 <div class="groupe-options-corps">
                   <div class="matrice-options-cadre">
                     <table class="matrice-options">
                       <thead>
-                        <tr><td /><th scope="col">Ancêtres</th><th scope="col">{centre}</th><th scope="col">Descendants</th></tr>
+                        <tr><td /><th scope="col">{t('Ancêtres')}</th><th scope="col">{centre}</th><th scope="col">{t('Descendants')}</th></tr>
                       </thead>
                       <tbody>
                         <tr>
-                          <th scope="row">Mariages</th>
-                          <td><input type="checkbox" id="impression-mariages" aria-label="Mariages des ancêtres" title="Année et commune du mariage" checked={reglages.mariages !== false} onChange={(e) => setReglages({ mariages: e.currentTarget.checked })} /></td>
-                          <td><input type="checkbox" id="impression-mariages-centre" aria-label={`Mariage du ${centreMin}`} title="Année et commune du mariage, sur le trait entre les conjoints" checked={mariagesCentre} onChange={(e) => setReglages({ mariagesCentre: e.currentTarget.checked })} /></td>
-                          <td><input type="checkbox" id="impression-mariages-desc" aria-label="Conjoints des descendants" title="« ∞ année conjoint »" checked={mariagesDesc} onChange={(e) => setReglages({ mariagesDesc: e.currentTarget.checked })} /></td>
+                          <th scope="row">{t('Mariages')}</th>
+                          <td><input type="checkbox" id="impression-mariages" aria-label={t('Mariages des ancêtres')} title={t('Année et commune du mariage')} checked={reglages.mariages !== false} onChange={(e) => setReglages({ mariages: e.currentTarget.checked })} /></td>
+                          <td><input type="checkbox" id="impression-mariages-centre" aria-label={t('Mariage {qui}', { qui: centreMin })} title={t('Année et commune du mariage, sur le trait entre les conjoints')} checked={mariagesCentre} onChange={(e) => setReglages({ mariagesCentre: e.currentTarget.checked })} /></td>
+                          <td><input type="checkbox" id="impression-mariages-desc" aria-label={t('Conjoints des descendants')} title={t('« ∞ année conjoint »')} checked={mariagesDesc} onChange={(e) => setReglages({ mariagesDesc: e.currentTarget.checked })} /></td>
                         </tr>
                         <tr>
-                          <th scope="row">Frères et sœurs</th>
-                          <td><input type="checkbox" id="impression-fratrie" aria-label="Frères et sœurs des ancêtres" title="Sous ou à côté de la case" checked={fratrie} onChange={(e) => setReglages({ fratrie: e.currentTarget.checked })} /></td>
+                          <th scope="row">{t('Frères et sœurs')}</th>
+                          <td><input type="checkbox" id="impression-fratrie" aria-label={t('Frères et sœurs des ancêtres')} title={t('Sous ou à côté de la case')} checked={fratrie} onChange={(e) => setReglages({ fratrie: e.currentTarget.checked })} /></td>
                           <td>
                             {modele.reglages.conjoint ? (
-                              <select id="impression-fratrie-base" aria-label="Frères et sœurs du couple" title="En petites cases : empilées à côté de chaque membre du couple, reliées à leurs parents ; en texte s'il y en a trop"
+                              <select id="impression-fratrie-base" aria-label={t('Frères et sœurs du couple')} title={t('En petites cases : empilées à côté de chaque membre du couple, reliées à leurs parents ; en texte s’il y en a trop')}
                                 value={!fratrieBase ? 'non' : reglages.fratrieCases ? 'cases' : 'texte'}
                                 onChange={(e) => { const v = e.currentTarget.value; setReglages({ fratrieBase: v !== 'non', ...(v !== 'non' && { fratrieCases: v === 'cases' }) }) }}>
-                                <option value="non">non</option>
-                                <option value="texte">en texte</option>
-                                <option value="cases">en cases</option>
+                                <option value="non">{t('non')}</option>
+                                <option value="texte">{t('en texte')}</option>
+                                <option value="cases">{t('en cases')}</option>
                               </select>
                             ) : (
-                              <input type="checkbox" id="impression-fratrie-base" aria-label="Frères et sœurs de la personne de départ" checked={fratrieBase} onChange={(e) => setReglages({ fratrieBase: e.currentTarget.checked })} />
+                              <input type="checkbox" id="impression-fratrie-base" aria-label={t('Frères et sœurs de la personne de départ')} checked={fratrieBase} onChange={(e) => setReglages({ fratrieBase: e.currentTarget.checked })} />
                             )}
                           </td>
                           <td class="sans">—</td>
                         </tr>
                         <tr>
-                          <th scope="row">Métier</th>
+                          <th scope="row">{t('Métier')}</th>
                           <td>
                             {ascendance >= genCartouches ? (
                               <span class="matrice-sous">
-                                <label title="Dans les petits cartouches, le métier s'écrit en petit sous le reste du texte">
+                                <label title={t('Dans les petits cartouches, le métier s’écrit en petit sous le reste du texte')}>
                                   <input type="checkbox" id="impression-metiers-cartouches" checked={!!reglages.metiersCartouches} onChange={(e) => setReglages({ metiersCartouches: e.currentTarget.checked })} />
-                                  gén. {genCartouches}
+                                  {t('gén. {n}', { n: genCartouches })}
                                 </label>
                                 {ascendance >= genCartouches + 1 && (
-                                  <label title="Sur les étiquettes verticales, le métier s'écrit en petit sous le reste du texte">
+                                  <label title={t('Sur les étiquettes verticales, le métier s’écrit en petit sous le reste du texte')}>
                                     <input type="checkbox" id="impression-metiers-etiquettes" checked={!!reglages.metiersEtiquettes} onChange={(e) => setReglages({ metiersEtiquettes: e.currentTarget.checked })} />
-                                    gén. {genCartouches + 1}
+                                    {t('gén. {n}', { n: genCartouches + 1 })}
                                   </label>
                                 )}
                               </span>
                             ) : <span class="sans">—</span>}
                           </td>
-                          <td><input type="checkbox" id="impression-metiers-centre" aria-label={modele.reglages.conjoint ? 'Métier du couple central' : 'Métier de la personne de départ et de ses conjoints'} checked={reglages.metiersCentre !== false} onChange={(e) => setReglages({ metiersCentre: e.currentTarget.checked })} /></td>
-                          <td><input type="checkbox" id="impression-metiers-desc" aria-label="Métier des descendants" checked={reglages.metiersDesc !== false} onChange={(e) => setReglages({ metiersDesc: e.currentTarget.checked })} /></td>
+                          <td><input type="checkbox" id="impression-metiers-centre" aria-label={modele.reglages.conjoint ? t('Métier du couple central') : t('Métier de la personne de départ et de ses conjoints')} checked={reglages.metiersCentre !== false} onChange={(e) => setReglages({ metiersCentre: e.currentTarget.checked })} /></td>
+                          <td><input type="checkbox" id="impression-metiers-desc" aria-label={t('Métier des descendants')} checked={reglages.metiersDesc !== false} onChange={(e) => setReglages({ metiersDesc: e.currentTarget.checked })} /></td>
                         </tr>
                         <tr>
-                          <th scope="row">Commune de naissance</th>
-                          <td><input type="checkbox" id="impression-lieux-asc" aria-label="Commune de naissance des ancêtres" checked={reglages.lieuxAsc !== false} onChange={(e) => setReglages({ lieuxAsc: e.currentTarget.checked })} /></td>
-                          <td><input type="checkbox" id="impression-lieux-centre" aria-label={`Commune de naissance du ${centreMin}`} checked={reglages.lieuxCentre !== false} onChange={(e) => setReglages({ lieuxCentre: e.currentTarget.checked })} /></td>
-                          <td><input type="checkbox" id="impression-lieux-desc" aria-label="Commune de naissance des descendants" checked={reglages.lieuxDesc !== false} onChange={(e) => setReglages({ lieuxDesc: e.currentTarget.checked })} /></td>
+                          <th scope="row">{t('Commune de naissance')}</th>
+                          <td><input type="checkbox" id="impression-lieux-asc" aria-label={t('Commune de naissance des ancêtres')} checked={reglages.lieuxAsc !== false} onChange={(e) => setReglages({ lieuxAsc: e.currentTarget.checked })} /></td>
+                          <td><input type="checkbox" id="impression-lieux-centre" aria-label={t('Commune de naissance {qui}', { qui: centreMin })} checked={reglages.lieuxCentre !== false} onChange={(e) => setReglages({ lieuxCentre: e.currentTarget.checked })} /></td>
+                          <td><input type="checkbox" id="impression-lieux-desc" aria-label={t('Commune de naissance des descendants')} checked={reglages.lieuxDesc !== false} onChange={(e) => setReglages({ lieuxDesc: e.currentTarget.checked })} /></td>
                         </tr>
                         <tr>
-                          <th scope="row">Photos</th>
-                          <td><input type="checkbox" id="impression-photos" aria-label="Photos des ancêtres" checked={photosActives} onChange={(e) => setReglages({ photos: e.currentTarget.checked })} /></td>
-                          <td><input type="checkbox" id="impression-photos-centre" aria-label={`Photos du ${centreMin}`} checked={photosCentre} onChange={(e) => setReglages({ photosCentre: e.currentTarget.checked })} /></td>
-                          <td><input type="checkbox" id="impression-photos-desc" aria-label="Photos des descendants" checked={photosDesc} onChange={(e) => setReglages({ photosDesc: e.currentTarget.checked })} /></td>
+                          <th scope="row">{t('Photos')}</th>
+                          <td><input type="checkbox" id="impression-photos" aria-label={t('Photos des ancêtres')} checked={photosActives} onChange={(e) => setReglages({ photos: e.currentTarget.checked })} /></td>
+                          <td><input type="checkbox" id="impression-photos-centre" aria-label={t('Photos {qui}', { qui: centreMin })} checked={photosCentre} onChange={(e) => setReglages({ photosCentre: e.currentTarget.checked })} /></td>
+                          <td><input type="checkbox" id="impression-photos-desc" aria-label={t('Photos des descendants')} checked={photosDesc} onChange={(e) => setReglages({ photosDesc: e.currentTarget.checked })} /></td>
                         </tr>
                         <tr>
-                          <th scope="row">Signatures</th>
-                          <td><input type="checkbox" id="impression-signatures" aria-label="Signatures des ancêtres" checked={signaturesActives} onChange={(e) => setReglages({ signatures: e.currentTarget.checked })} /></td>
-                          <td><input type="checkbox" id="impression-signatures-centre" aria-label={`Signatures du ${centreMin}`} checked={signaturesCentre} onChange={(e) => setReglages({ signaturesCentre: e.currentTarget.checked })} /></td>
-                          <td><input type="checkbox" id="impression-signatures-desc" aria-label="Signatures des descendants" checked={signaturesDesc} onChange={(e) => setReglages({ signaturesDesc: e.currentTarget.checked })} /></td>
+                          <th scope="row">{t('Signatures')}</th>
+                          <td><input type="checkbox" id="impression-signatures" aria-label={t('Signatures des ancêtres')} checked={signaturesActives} onChange={(e) => setReglages({ signatures: e.currentTarget.checked })} /></td>
+                          <td><input type="checkbox" id="impression-signatures-centre" aria-label={t('Signatures {qui}', { qui: centreMin })} checked={signaturesCentre} onChange={(e) => setReglages({ signaturesCentre: e.currentTarget.checked })} /></td>
+                          <td><input type="checkbox" id="impression-signatures-desc" aria-label={t('Signatures des descendants')} checked={signaturesDesc} onChange={(e) => setReglages({ signaturesDesc: e.currentTarget.checked })} /></td>
                         </tr>
                       </tbody>
                     </table>
@@ -447,7 +448,7 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
                     {(photosActives || photosCentre || photosDesc) && <ChoixPortraits formePhoto={formePhoto} bordsArrondis={bordsArrondis} setReglages={setReglages} />}
                     <label class="case">
                       <input type="checkbox" id="impression-italiques" checked={!!reglages.italiques} onChange={(e) => setReglages({ italiques: e.currentTarget.checked })} />
-                      Dates sans source en italique
+                      {t('Dates sans source en italique')}
                     </label>
                   </div>
                 </div>
@@ -455,33 +456,33 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
             ) : (
               <>
                 <div class="groupe-options">
-                  <span class="groupe-options-titre">Contenu</span>
+                  <span class="groupe-options-titre">{t('Contenu')}</span>
                   <div class="groupe-options-corps">
                     <label class="case">
                       <input type="checkbox" id="impression-mariages" checked={reglages.mariages !== false} onChange={(e) => setReglages({ mariages: e.currentTarget.checked })} />
-                      {modele.reglages.mariages}
+                      {t(modele.reglages.mariages)}
                     </label>
                     <label class="case">
                       <input type="checkbox" id="impression-fratrie" checked={fratrie} onChange={(e) => setReglages({ fratrie: e.currentTarget.checked })} />
-                      {modele.reglages.fratrie}
+                      {t(modele.reglages.fratrie)}
                     </label>
                     <label class="case">
                       <input type="checkbox" id="impression-italiques" checked={!!reglages.italiques} onChange={(e) => setReglages({ italiques: e.currentTarget.checked })} />
-                      Dates sans source en italique
+                      {t('Dates sans source en italique')}
                     </label>
                   </div>
                 </div>
                 {modele.reglages.photos && (
                   <div class="groupe-options">
-                    <span class="groupe-options-titre">Photos</span>
+                    <span class="groupe-options-titre">{t('Photos')}</span>
                     <div class="groupe-options-corps">
                       <label class="case">
                         <input type="checkbox" id="impression-photos" checked={photosActives} onChange={(e) => setReglages({ photos: e.currentTarget.checked })} />
-                        Photos
+                        {t('Photos')}
                       </label>
                       <label class="case">
                         <input type="checkbox" id="impression-signatures" checked={signaturesActives} onChange={(e) => setReglages({ signatures: e.currentTarget.checked })} />
-                        Signatures
+                        {t('Signatures')}
                       </label>
                       {photosActives && <ChoixPortraits formePhoto={formePhoto} bordsArrondis={bordsArrondis} setReglages={setReglages} />}
                     </div>
@@ -491,19 +492,19 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
             )}
 
             <div class="groupe-options">
-              <span class="groupe-options-titre">Pied de page</span>
+              <span class="groupe-options-titre">{t('Pied de page')}</span>
               <div class="groupe-options-corps">
                 {modele.reglages.alignementTitre && (
                   <div class="case alignement-titre">
-                    <span>Alignement du titre</span>
-                    <div class="groupe-boutons-align" role="group" aria-label="Alignement du titre">
+                    <span>{t('Alignement du titre')}</span>
+                    <div class="groupe-boutons-align" role="group" aria-label={t('Alignement du titre')}>
                       {BOUTONS_ALIGN.map((b) => (
                         <button
                           key={b.id}
                           type="button"
                           class={'bouton-align' + ((reglages.alignementTitre ?? 'gauche') === b.id ? ' actif' : '')}
-                          title={b.titre}
-                          aria-label={b.titre}
+                          title={t(b.titre)}
+                          aria-label={t(b.titre)}
                           onClick={() => setReglages({ alignementTitre: b.id })}
                         >
                           {ICONES_ALIGN[b.id]}
@@ -515,28 +516,28 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
                 <div class="option-groupee">
                   <label class="case">
                     <input type="checkbox" id="impression-date" checked={reglages.date} onChange={(e) => setReglages({ date: e.currentTarget.checked })} />
-                    Date
+                    {t('Date')}
                   </label>
                   {reglages.date && (
-                    <input type="date" id="impression-jour" value={jour} aria-label="Date imprimée"
+                    <input type="date" id="impression-jour" value={jour} aria-label={t('Date imprimée')}
                       onInput={(e) => setReglages({ jour: e.currentTarget.value || undefined })} />
                   )}
                 </div>
-                <label class="case" title="Vers l'arbre en ligne">
+                <label class="case" title={t('Vers l’arbre en ligne')}>
                   <input type="checkbox" id="impression-qr" checked={reglages.qr && !!d.adresse} disabled={!d.adresse} onChange={(e) => setReglages({ qr: e.currentTarget.checked })} />
-                  Code QR
+                  {t('Code QR')}
                 </label>
-                <label class="case" title="De l'arbre en ligne">
+                <label class="case" title={t('De l’arbre en ligne')}>
                   <input type="checkbox" id="impression-url" checked={(reglages.url ?? reglages.qr ?? true) && !!d.adresse} disabled={!d.adresse} onChange={(e) => setReglages({ url: e.currentTarget.checked })} />
-                  Adresse (URL)
+                  {t('Adresse (URL)')}
                 </label>
-                {!d.adresse && <span class="aide">Indiquez d'abord l'adresse de l'arbre en ligne dans les <a href="#/">réglages de l'accueil</a>.</span>}
+                {!d.adresse && <span class="aide">{t('Indiquez d’abord l’adresse de l’arbre en ligne dans les')} <a href="#/">{t('réglages de l’accueil')}</a>.</span>}
               </div>
             </div>
           </div>
           <div class="ligne">
-            <button type="button" class="bouton principal" onClick={() => window.print()}>Imprimer</button>
-            <span class="aide">Dans la fenêtre d'impression : papier {format} {orientation}, marges « aucune », échelle « par défaut » (100 %), graphiques d'arrière-plan activés.{verso && ' Avec le verso, recto verso retourné sur le bord court.'} Pour un PDF, choisir « Enregistrer au format PDF » : il s’appellera {nomFichier}.pdf.</span>
+            <button type="button" class="bouton principal" onClick={() => window.print()}>{t('Imprimer')}</button>
+            <span class="aide">{t('Dans la fenêtre d’impression : papier {format} {orientation}, marges « aucune », échelle « par défaut » (100 %), graphiques d’arrière-plan activés.', { format, orientation })}{verso && ' ' + t('Avec le verso, recto verso retourné sur le bord court.')} {t('Pour un PDF, choisir « Enregistrer au format PDF » : il s’appellera {nom}.pdf.', { nom: nomFichier })}</span>
           </div>
         </section>
       </div>
@@ -550,14 +551,14 @@ function ChoixPortraits({ formePhoto, bordsArrondis, setReglages }: { formePhoto
   return (
     <span class="option-groupee">
       <label class="case">
-        Portraits
+        {t('Portraits')}
         <select id="impression-forme-photo" value={formePhoto} onChange={(e) => setReglages({ formePhoto: e.currentTarget.value as FormePhoto })}>
-          {FORMES_PHOTO.map((f) => <option key={f.id} value={f.id}>{f.titre}</option>)}
+          {FORMES_PHOTO.map((f) => <option key={f.id} value={f.id}>{t(f.titre)}</option>)}
         </select>
       </label>
-      <label class={'case' + (formePhoto === 'ovale' ? ' inactif' : '')} title={formePhoto === 'ovale' ? 'S’applique aux portraits carrés ou rectangulaires' : undefined}>
+      <label class={'case' + (formePhoto === 'ovale' ? ' inactif' : '')} title={formePhoto === 'ovale' ? t('S’applique aux portraits carrés ou rectangulaires') : undefined}>
         <input type="checkbox" id="impression-photo-arrondie" checked={bordsArrondis} disabled={formePhoto === 'ovale'} onChange={(e) => setReglages({ bordsArrondis: e.currentTarget.checked })} />
-        bords arrondis
+        {t('bords arrondis')}
       </label>
     </span>
   )

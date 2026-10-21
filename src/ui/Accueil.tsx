@@ -10,6 +10,7 @@ import { Barre, Personne } from './commun'
 import { ChoixModeles } from './arbres/Vignettes'
 import { CarteAccueil } from './CarteAccueil'
 import { preparerAFaire } from './Individus'
+import { t } from '../lib/i18n'
 
 export function Depot({ ouvrir, compact }: { ouvrir: (f: File) => void; compact?: boolean }) {
   const [survol, setSurvol] = useState(false)
@@ -26,10 +27,10 @@ export function Depot({ ouvrir, compact }: { ouvrir: (f: File) => void; compact?
       onDrop={(e) => { e.preventDefault(); setSurvol(false); choisir(e.dataTransfer?.files) }}
     >
       <input ref={champ} type="file" accept=".ged,.zip,.GED,.ZIP" hidden onChange={(e) => choisir(e.currentTarget.files)} />
-      {!compact && <p class="depot-titre">Déposez ici votre export GEDCOM</p>}
+      {!compact && <p class="depot-titre">{t('Déposez ici votre export GEDCOM')}</p>}
       {compact
-        ? <p><button type="button" class="bouton" onClick={() => champ.current?.click()}>Mettre à jour le fichier Gedcom</button><span class="aide">ou déposez le nouvel export ici</span></p>
-        : <p>Le fichier .ged, ou directement le .zip téléchargé depuis Geneanet. <button type="button" class="bouton" onClick={() => champ.current?.click()}>Choisir un fichier</button></p>}
+        ? <p><button type="button" class="bouton" onClick={() => champ.current?.click()}>{t('Mettre à jour le fichier Gedcom')}</button><span class="aide">{t('ou déposez le nouvel export ici')}</span></p>
+        : <p>{t('Le fichier .ged, ou directement le .zip téléchargé depuis Geneanet.')} <button type="button" class="bouton" onClick={() => champ.current?.click()}>{t('Choisir un fichier')}</button></p>}
     </div>
   )
 }
@@ -38,13 +39,13 @@ export function Depot({ ouvrir, compact }: { ouvrir: (f: File) => void; compact?
 export function AideGedcom() {
   return (
     <div class="menu-aide">
-      <p><strong>Pour commencer</strong> : mettez d’abord votre fichier Gedcom avec le bouton ci-dessous (ou déposez-le sur la page).</p>
+      <p><strong>{t('Pour commencer')}</strong>{t(' : mettez d’abord votre fichier Gedcom avec le bouton ci-dessous (ou déposez-le sur la page).')}</p>
       <p>
-        Sur Geneanet, il s’exporte depuis <a href="https://gw.geneanet.org/my-tree/operations/export" target="_blank" rel="noopener noreferrer">Mon arbre → Exporter</a>.
-        Le mieux est de déposer le dossier .zip complet tel qu’il est téléchargé, sans le décompresser.
-        Pour imprimer un arbre avec des photos, cochez « Liens web vers les photos principales des individus ».
+        {t('Sur Geneanet, il s’exporte depuis')} <a href="https://gw.geneanet.org/my-tree/operations/export" target="_blank" rel="noopener noreferrer">{t('Mon arbre → Exporter')}</a>.{' '}
+        {t('Le mieux est de déposer le dossier .zip complet tel qu’il est téléchargé, sans le décompresser.')}{' '}
+        {t('Pour imprimer un arbre avec des photos, cochez « Liens web vers les photos principales des individus ».')}
       </p>
-      <p>Un export Gedcom d’un autre site ou logiciel (Heredis, Ancestris, Gramps, RootsMagic…) convient aussi.</p>
+      <p>{t('Un export Gedcom d’un autre site ou logiciel (Heredis, Ancestris, Gramps, RootsMagic…) convient aussi.')}</p>
     </div>
   )
 }
@@ -53,9 +54,9 @@ export function Bienvenue({ ouvrir, erreur, impression }: { ouvrir: (f: File) =>
   if (impression) return (
     <section class="ecran">
       <header class="titre-ecran">
-        <h1>Arbres à imprimer</h1>
-        <p class="sous-titre">Une feuille prête pour l'imprimeur ou pour un PDF, faite à partir de l'ascendance du Sosa 1.</p>
-        <p class="sous-titre">Déposez l’export Gedcom de votre arbre pour en préparer un tirage : arbre d’ascendance, descendants, éventail… Le fichier est lu par votre navigateur et n’est envoyé nulle part.</p>
+        <h1>{t('Arbres à imprimer')}</h1>
+        <p class="sous-titre">{t('Une feuille prête pour l’imprimeur ou pour un PDF, faite à partir de l’ascendance du Sosa 1.')}</p>
+        <p class="sous-titre">{t('Déposez l’export Gedcom de votre arbre pour en préparer un tirage : arbre d’ascendance, descendants, éventail… Le fichier est lu par votre navigateur et n’est envoyé nulle part.')}</p>
       </header>
       {erreur && <p class="erreur" role="alert">{erreur}</p>}
       <ChoixModeles />

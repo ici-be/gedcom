@@ -90,7 +90,7 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   en père ou de mère en mère, aussi accessible depuis la page Lignée) ; **Quartiers** (le point moyen des
   naissances de chaque génération, quartier par quartier) ; **Au fil des années** (les ancêtres en vie année par
   année, qu'on peut faire défiler, et la distance entre parent et enfant au fil du temps).
-- **Imprimer** (aussi seul, sans les autres onglets, sur `/print/` : le menu n'y montre que le titre, la personne de départ et la mise à jour du fichier) : des arbres prêts pour l'imprimeur ou pour un PDF. Premier modèle, l'**éventail des
+- **Imprimer** (aussi seul, sans les autres onglets, sur `/print/` : le menu n'y montre que le titre, la personne de départ et la mise à jour du fichier). La page et les feuilles imprimées existent en français, anglais et néerlandais (boutons FR · EN · NL du menu, ou `?lang=en` dans l'adresse ; sinon la langue du navigateur) : les textes français servent de clés, les traductions sont dans `src/lib/langues/` : des arbres prêts pour l'imprimeur ou pour un PDF. Premier modèle, l'**éventail des
   origines** (A3 paysage) : huit générations sur 220°, chaque ancêtre teinté selon sa province ou sa région
   de naissance (reconnue grâce aux listes de localités de la carte), avec les quatre quartiers. En bas de la
   feuille, au choix : la carte des provinces et départements de naissance (Belgique, France, Pays-Bas,

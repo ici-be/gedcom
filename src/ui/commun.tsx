@@ -12,6 +12,7 @@ import { nomComplet } from '../lib/parente'
 import { prenoms as premiersPrenoms } from '../lib/eventail'
 import { ecrire, lire } from '../lib/stockage'
 import { texteIntrouvable, type Introuvable } from '../lib/introuvable'
+import { t } from '../lib/i18n'
 
 /** Recherche sans accents ni majuscules */
 export function normaliser(s: string): string {
@@ -116,7 +117,7 @@ export function Personne({ d, id, annees, prenoms }: { d: Donnees; id: string; a
   return (
     <span class="personne">
       {url ? (
-        <a href={url} target="_blank" rel="noopener noreferrer" title={(coupe ? complet + ' · ' : '') + (d.homonymes.has(id) ? 'Homonymes : ouvre la recherche en ligne' : 'Ouvrir la fiche en ligne')}>
+        <a href={url} target="_blank" rel="noopener noreferrer" title={(coupe ? complet + ' · ' : '') + (d.homonymes.has(id) ? t('Homonymes : ouvre la recherche en ligne') : t('Ouvrir la fiche en ligne'))}>
           {nom}
         </a>
       ) : (
@@ -144,8 +145,8 @@ export function ChoixPersonne({ d, valeur, choisir, prenoms }: { d: Donnees; val
   const actuel = d.arbre.individus.get(valeur)
   return (
     <div class="choix-personne">
-      <div class="actuel">{actuel ? <Personne d={d} id={actuel.id} annees prenoms={prenoms} /> : <span class="vide">aucune</span>}</div>
-      <input type="search" placeholder="Chercher un nom…" value={texte} onInput={(e) => setTexte(e.currentTarget.value)} aria-label="Chercher une personne" />
+      <div class="actuel">{actuel ? <Personne d={d} id={actuel.id} annees prenoms={prenoms} /> : <span class="vide">{t('aucune')}</span>}</div>
+      <input type="search" placeholder={t('Chercher un nom…')} value={texte} onInput={(e) => setTexte(e.currentTarget.value)} aria-label={t('Chercher une personne')} />
       {resultats.length > 0 && (
         <ul class="resultats">
           {resultats.map((ind) => (

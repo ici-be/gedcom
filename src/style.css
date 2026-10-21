@@ -138,6 +138,10 @@ h1, h2, h3 { font-family: var(--display); font-weight: 650; letter-spacing: -0.0
 .depot-global p { background: var(--panel); color: var(--fg); padding: 14px 22px; border-radius: 999px; font: 700 1.15rem var(--display); box-shadow: var(--shadow); }
 /* Page /print/ : bouton des dons dans le menu, et la carte qui s'ouvre en bas à droite */
 .oublier-menu { align-self: center; font-size: 0.82rem; }
+.choix-langue { display: flex; gap: 2px; padding: 2px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel-2); align-self: flex-start; }
+.choix-langue button { padding: 4px 10px; border: 0; border-radius: 8px; background: none; color: var(--muted); font: inherit; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.04em; cursor: pointer; }
+.choix-langue button:hover { color: var(--fg); }
+.choix-langue button.actif { background: var(--panel); color: var(--accent); box-shadow: var(--shadow); }
 .menu-aide { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; padding: 0 6px; font-size: 0.86rem; color: var(--muted); }
 .menu-aide p { margin: 0; }
 .menu-aide strong { color: var(--fg); }

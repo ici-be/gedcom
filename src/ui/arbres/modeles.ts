@@ -3,6 +3,7 @@
 
 import type { FunctionComponent } from 'preact'
 import type { Donnees } from '../../lib/donnees'
+import { T } from '../../lib/i18n'
 import { BoutsDeBranche } from './BoutsDeBranche'
 import { EventailOrigines } from './EventailOrigines'
 import { Pyramide } from './Pyramide'
@@ -122,52 +123,52 @@ export interface Modele {
 export const MODELES: Modele[] = [
   {
     id: 'origines',
-    titre: 'Éventail des origines',
-    description: 'Huit générations sur 220°, chaque ancêtre teinté selon sa province de naissance, avec les quatre quartiers et l’origine des ancêtres par génération.',
+    titre: T('Éventail des origines'),
+    description: T('Huit générations sur 220°, chaque ancêtre teinté selon sa province de naissance, avec les quatre quartiers et l’origine des ancêtres par génération.'),
     forme: 'eventail',
     papier: { format: 'A3', orientation: 'landscape' },
     generations: 8,
-    reglages: { bas: true, fratrie: 'Frères et sœurs du Sosa 1 (au centre)', mariages: 'Mariages des parents (boule teintée et année)' },
+    reglages: { bas: true, fratrie: T('Frères et sœurs du Sosa 1 (au centre)'), mariages: T('Mariages des parents (boule teintée et année)') },
     Feuille: EventailOrigines,
     verso: {
-      titre: 'Les 128 bouts de branche',
-      description: 'chaque case du bord de l’éventail prolongée d’un petit éventail des générations IX à XV',
+      titre: T('Les 128 bouts de branche'),
+      description: T('chaque case du bord de l’éventail prolongée d’un petit éventail des générations IX à XV'),
       Feuille: BoutsDeBranche,
     },
   },
   {
     id: 'pyramide',
-    titre: 'Arbre en pyramide',
-    description: 'L’arbre traditionnel : la personne de départ en bas, quatre à neuf générations en rangées, les cinq premières en cartouches avec photo, en plusieurs thèmes de couleurs.',
+    titre: T('Arbre en pyramide'),
+    description: T('L’arbre traditionnel : la personne de départ en bas, quatre à neuf générations en rangées, les cinq premières en cartouches avec photo, en plusieurs thèmes de couleurs.'),
     forme: 'arbre',
     papier: { format: 'A3', orientation: 'landscape' },
     generations: 8,
-    reglages: { theme: true, generations: true, photos: true, fratrie: 'Frères et sœurs de chacun (sous ou à côté de la case)', mariages: 'Mariages des parents (année et commune au-dessus de la case)' },
+    reglages: { theme: true, generations: true, photos: true, fratrie: T('Frères et sœurs de chacun (sous ou à côté de la case)'), mariages: T('Mariages des parents (année et commune au-dessus de la case)') },
     Feuille: Pyramide,
     verso: {
-      titre: 'La table des ancêtres',
-      description: 'chaque case du recto par son numéro Sosa, avec dates, communes de naissance et de décès et métier',
+      titre: T('La table des ancêtres'),
+      description: T('chaque case du recto par son numéro Sosa, avec dates, communes de naissance et de décès et métier'),
       Feuille: TableAncetres,
     },
   },
   {
     id: 'sablier',
-    titre: 'Ascendance et descendance',
-    description: 'L’arbre en sablier : la personne de départ au centre avec ses conjoints, ses ancêtres au-dessus et ses descendants en dessous, en plusieurs thèmes de couleurs.',
+    titre: T('Ascendance et descendance'),
+    description: T('L’arbre en sablier : la personne de départ au centre avec ses conjoints, ses ancêtres au-dessus et ses descendants en dessous, en plusieurs thèmes de couleurs.'),
     forme: 'arbre',
     papier: { format: 'A3', orientation: 'landscape' },
     generations: 6,
-    reglages: { theme: true, sablierGenerations: true, descendants: true, photos: true, fratrie: 'Frères et sœurs de chacun (sous ou à côté de la case)', mariages: 'Mariages et conjoints (année et commune)' },
+    reglages: { theme: true, sablierGenerations: true, descendants: true, photos: true, fratrie: T('Frères et sœurs de chacun (sous ou à côté de la case)'), mariages: T('Mariages et conjoints (année et commune)') },
     Feuille: Sablier,
   },
   {
     id: 'couple',
-    titre: 'Arbre du couple',
-    description: 'La personne de départ et son conjoint côte à côte au centre, les ancêtres de chacun au-dessus (ceux de l’homme à gauche, ceux de la femme à droite) et leurs descendants communs en dessous, en plusieurs thèmes de couleurs.',
+    titre: T('Arbre du couple'),
+    description: T('La personne de départ et son conjoint côte à côte au centre, les ancêtres de chacun au-dessus (ceux de l’homme à gauche, ceux de la femme à droite) et leurs descendants communs en dessous, en plusieurs thèmes de couleurs.'),
     forme: 'arbre',
     papier: { format: 'A3', orientation: 'landscape' },
     generations: 6,
-    reglages: { theme: true, sablierGenerations: true, descendants: true, photos: true, conjoint: true, equitable: true, alignementTitre: true, fratrie: 'Frères et sœurs de chacun (sous ou à côté de la case)', mariages: 'Mariages et conjoints (année et commune)' },
+    reglages: { theme: true, sablierGenerations: true, descendants: true, photos: true, conjoint: true, equitable: true, alignementTitre: true, fratrie: T('Frères et sœurs de chacun (sous ou à côté de la case)'), mariages: T('Mariages et conjoints (année et commune)') },
     Feuille: Couple,
   },
 ]

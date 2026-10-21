@@ -20,6 +20,7 @@ import {
   Bloc, cadrePortrait, caser, compteFreres, compteFreresEtSoeurs, LIBELLES, lignesCartouche, lignesEtiquette, lignesFratrie, Morceaux, Portrait,
   trouverThemePyramide, type CouleurCase, type Ligne, type Mariage, type Morceau,
 } from './Pyramide'
+import { t } from '../../lib/i18n'
 
 export const ASC_MIN_SABLIER = 1
 export const ASC_MAX_SABLIER = 6
@@ -476,7 +477,7 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
     const max = CENTRE.ecart - 6
     const m: Partial<Mariage> = u.m ?? {}
     if (!u.marie) {
-      textes.push(<text key={'mu' + cle} x={xm} y={(yMilieu - 5).toFixed(1)} font-size="9" data-fs="9" data-max={max} text-anchor="middle" class="mar mut">avec</text>)
+      textes.push(<text key={'mu' + cle} x={xm} y={(yMilieu - 5).toFixed(1)} font-size="9" data-fs="9" data-max={max} text-anchor="middle" class="mar mut">{t('avec')}</text>)
       return
     }
     textes.push(<text key={'mu' + cle} x={xm} y={(yMilieu - (m.commune ? 15 : 5)).toFixed(1)} font-size="9" data-fs="9" data-max={max} text-anchor="middle" class="mar">
@@ -574,10 +575,10 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
 
       if (!r) {
         caseVide(cle + 'c' + s, x, y, w, h, R.vertical ? 1.5 : 3)
-        const t = LIBELLES[p.etat](s)
+        const libelle = LIBELLES[p.etat](s)
         textes.push(R.vertical
-          ? <g key={cle + 'x' + s} transform={`translate(${cx},${y + h / 2}) rotate(-90)`}><text x="0" y={(Math.min(w, 9) * 0.35).toFixed(1)} font-size={Math.min(7.5, w * 0.68)} text-anchor="middle" class="ns" data-max={h - 8}>{t}</text></g>
-          : <text key={cle + 'x' + s} x={cx} y={y + h / 2 + 3} font-size={G >= 4 ? 7.5 : 9} text-anchor="middle" class="ns" data-max={w - 8}>{t}</text>)
+          ? <g key={cle + 'x' + s} transform={`translate(${cx},${y + h / 2}) rotate(-90)`}><text x="0" y={(Math.min(w, 9) * 0.35).toFixed(1)} font-size={Math.min(7.5, w * 0.68)} text-anchor="middle" class="ns" data-max={h - 8}>{libelle}</text></g>
+          : <text key={cle + 'x' + s} x={cx} y={y + h / 2 + 3} font-size={G >= 4 ? 7.5 : 9} text-anchor="middle" class="ns" data-max={w - 8}>{libelle}</text>)
         continue
       }
 
@@ -616,7 +617,7 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
       const ind = cote.pl[1]?.ind
       if (!ind) {
         caseVide('vide' + i, x, y, w, h, 3)
-        if (i === 1 && racine) textes.push(<text key={'vide-t' + i} x={x + w / 2} y={y + h / 2 + 3} font-size="9" text-anchor="middle" class="ns">aucun conjoint connu</text>)
+        if (i === 1 && racine) textes.push(<text key={'vide-t' + i} x={x + w / 2} y={y + h / 2 + 3} font-size="9" text-anchor="middle" class="ns">{t('aucun conjoint connu')}</text>)
         return
       }
       cartouche('centre' + cote.cle, x, y, w, h, 0, resumeCentre(ind), estImplexe(cote, cote.pl[1]), couleurAsc(2 + i, 1, ind.sexe), photoDe(ind, 'centre'))
@@ -701,7 +702,7 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
       if ((options.mariagesDesc ?? options.mariages) && n.conjoint) {
         const { marie, m } = unionDe(n.ind.id, n.famille)
         const nom = [prenoms(n.conjoint.prenom, 1), n.conjoint.nom.toLocaleUpperCase('fr')].filter(Boolean).join(' ')
-        const debut: Morceau[] = marie ? [['∞ ', 'mut'], ...(m?.annee ? [[m.annee + ' ', m.sourcee ? undefined : 'nd'] as Morceau] : [])] : [['avec ', 'mut']]
+        const debut: Morceau[] = marie ? [['∞ ', 'mut'], ...(m?.annee ? [[m.annee + ' ', m.sourcee ? undefined : 'nd'] as Morceau] : [])] : [[t('avec') + ' ', 'mut']]
         enPlus.push({ fs: [0, 9, 8.6, 8.2, 7.4][taille], parts: [...debut, [nom]], cls: 'mt' })
       }
       cartouche('d' + n.ind.id, x, y, w, h, taille, r, false, couleurDesc(n), photoDe(n.ind, 'desc'), enPlus, false, n.profondeur === 1 ? 'enfants' : undefined)
@@ -713,26 +714,28 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
     const hs = Math.min(R.h, 64)
     trait('sans', `M${CENTRE.cx} ${couple ? yMilieu : rCentre.y + rCentre.h}V${R.y}`)
     caseVide('sans', CENTRE.cx - 130, R.y, 260, hs, 3)
-    textes.push(<text key="sans-t" x={CENTRE.cx} y={R.y + hs / 2 + 3} font-size="9" text-anchor="middle" class="ns">{couple ? 'aucun enfant commun connu' : 'aucun enfant connu'}</text>)
+    textes.push(<text key="sans-t" x={CENTRE.cx} y={R.y + hs / 2 + 3} font-size="9" text-anchor="middle" class="ns">{couple ? t('aucun enfant commun connu') : t('aucun enfant connu')}</text>)
   }
 
   // ——— Marges et pied de page ———
-  const NOMS_DESC = ['ENFANT', 'PETIT-ENFANT', 'ARRIÈRE-PETIT-ENFANT']
-  const nomDesc = (g: number) => { const n = niveaux[g - 1]?.length ?? 0; return `${n} ${n > 1 ? NOMS_DESC[g - 1].replace('PETIT', 'PETITS') + 'S' : NOMS_DESC[g - 1]}` }
+  const nomDesc = (g: number) => {
+    const n = niveaux[g - 1]?.length ?? 0
+    return maj(t(g === 1 ? '{n} enfant{n?|s}' : g === 2 ? '{n} petit{n?|s}-enfant{n?|s}' : '{n} arrière-petit{n?|s}-enfant{n?|s}', { n }))
+  }
   const nomDe = (i?: Individu) => {
     const r = i ? resume(i) : undefined
     return r ? [prenoms(r.prenom, options.tousPrenoms ? 99 : 1), r.nom].filter(Boolean).join(' ') : ''
   }
   const noms = cotes.map((c) => nomDe(c.pl[1]?.ind)).filter(Boolean)
-  const titre = noms.length ? noms.join(' et ') : couple ? 'Arbre du couple' : 'Ascendance et descendance'
-  const surTitre = couple ? 'ARBRE DU COUPLE' : 'ASCENDANCE ET DESCENDANCE'
+  const titre = noms.length ? noms.join(' ' + t('et') + ' ') : couple ? t('Arbre du couple') : t('Ascendance et descendance')
+  const surTitre = maj(couple ? t('Arbre du couple') : t('Ascendance et descendance'))
   const avecQr = options.qr && !!d.adresse
   const avecUrl = options.url && !!d.adresse
   const avecBasDroite = avecQr || avecUrl
   const legende = [
-    (options.fratrie || (options.fratrieBase ?? options.fratrie)) && 'en italique : frères et sœurs',
-    options.italiques && 'date en italique : sans source',
-    implexes && (communs.size ? '◆ implexe ou ancêtre commun aux deux' : '◆ implexe'),
+    (options.fratrie || (options.fratrieBase ?? options.fratrie)) && t('en italique : frères et sœurs'),
+    options.italiques && t('date en italique : sans source'),
+    implexes && (communs.size ? t('◆ implexe ou ancêtre commun aux deux') : t('◆ implexe')),
   ].filter(Boolean).join(' · ')
   const nbGenDesc = niveaux.length
 
@@ -742,7 +745,7 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
   const maxTitre = align === 'centre' ? (avecBasDroite ? 740 : 1200) : (avecBasDroite ? 900 : 1280)
 
   return (
-    <svg ref={svg} class={'feuille pyramide sablier' + (options.italiques ? ' italiques' : '')} viewBox="0 0 1400 990" role="img" aria-label={`${couple ? 'Arbre du couple' : 'Ascendance et descendance de'} ${titre}`}>
+    <svg ref={svg} class={'feuille pyramide sablier' + (options.italiques ? ' italiques' : '')} viewBox="0 0 1400 990" role="img" aria-label={couple ? t('Arbre du couple') + ' ' + titre : t('Ascendance et descendance de {titre}', { titre })}>
       <rect width="1400" height="990" fill="#fff" />
       <g>{traits}</g>
       <g>{cases}</g>
@@ -756,11 +759,11 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
       <text x={xTitre} y="920" font-size="9.5" class="cap mut" text-anchor={ancreTitre} data-max={maxTitre}>{surTitre}</text>
       <text x={xTitre} y="944" font-size="24" class="disp" text-anchor={ancreTitre} data-max={maxTitre}>{titre}</text>
       <text x={xTitre} y="960" font-size="10.5" class="mut" text-anchor={ancreTitre} data-max={maxTitre}>
-        {asc} génération{asc > 1 ? 's' : ''} d’ancêtres{couple ? ' de chacun' : ''} · {donnees.uniques} ancêtres identifiés · {nbDescendants} descendant{nbDescendants > 1 ? 's' : ''}{couple && enfantsAutreConjoint && nbDescendants ? ` commun${nbDescendants > 1 ? 's' : ''}` : ''}{nbGenDesc ? ` sur ${nbGenDesc} génération${nbGenDesc > 1 ? 's' : ''}` : ''}
+        {t('{n} génération{n?|s} d’ancêtres', { n: asc })}{couple ? ' ' + t('de chacun') : ''} · {t('{n} ancêtres identifiés', { n: donnees.uniques })} · {t('{n} descendant{n?|s}', { n: nbDescendants })}{couple && enfantsAutreConjoint && nbDescendants ? ' ' + t('commun{n?|s}', { n: nbDescendants }) : ''}{nbGenDesc ? ' ' + t('sur {n} génération{n?|s}', { n: nbGenDesc }) : ''}
       </text>
       {(legende || options.date) && (
         <text x={X0} y="976" font-size="8.5" class="mut" data-max="900">
-          {options.date ? `Établi le ${options.date}` : ''}{options.date && legende ? ' · ' : ''}{legende}
+          {options.date ? t('Établi le {date}', { date: options.date }) : ''}{options.date && legende ? ' · ' : ''}{legende}
         </text>
       )}
       {avecBasDroite && (
@@ -768,7 +771,7 @@ function ArbreSablier({ d, options, couple }: { d: Donnees; options: OptionsFeui
           {avecQr && <CodeQR url={d.adresse} x={1306} y={914} taille={54} />}
           {avecUrl && (
             <>
-              <text x={avecQr ? 1296 : 1360} y="956" font-size="8" class="cap mut" text-anchor="end">L’ARBRE EN LIGNE</text>
+              <text x={avecQr ? 1296 : 1360} y="956" font-size="8" class="cap mut" text-anchor="end">{maj(t('L’arbre en ligne'))}</text>
               <text x={avecQr ? 1296 : 1360} y="968" font-size="8.5" class="mut" text-anchor="end" data-max={avecQr ? 200 : 260}>{d.adresse.replace(/^https?:\/\/(www\.)?/, '')}</text>
             </>
           )}

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'preact/hooks'
 import type { Donnees } from '../lib/donnees'
 import { nomComplet } from '../lib/parente'
 import { ChoixPersonne } from './commun'
+import { t } from '../lib/i18n'
 
 export function ChoixRacine({ d, setRacine }: { d: Donnees; setRacine: (id: string) => void }) {
   const [ouvert, setOuvert] = useState(false)
@@ -22,14 +23,14 @@ export function ChoixRacine({ d, setRacine }: { d: Donnees; setRacine: (id: stri
   return (
     <div class="choix-racine" ref={boite}>
       <button type="button" class="choix-racine-bouton" aria-expanded={ouvert} onClick={() => setOuvert(!ouvert)}
-        title={`Personne de départ${racine ? ' : ' + nomComplet(racine) : ''}`}>
-        <span class="choix-racine-sosa">Sosa 1</span>
-        <span class="choix-racine-nom">{racine ? racine.prenom.split(/\s+/)[0] || racine.nom : 'à choisir'}</span>
+        title={t('Personne de départ') + (racine ? t(' : ') + nomComplet(racine) : '')}>
+        <span class="choix-racine-sosa">{t('Sosa 1')}</span>
+        <span class="choix-racine-nom">{racine ? racine.prenom.split(/\s+/)[0] || racine.nom : t('à choisir')}</span>
         <span aria-hidden="true">▾</span>
       </button>
       {ouvert && (
-        <div class="choix-racine-panneau" role="dialog" aria-label="Changer de personne de départ">
-          <p class="aide">Personne de départ :</p>
+        <div class="choix-racine-panneau" role="dialog" aria-label={t('Changer de personne de départ')}>
+          <p class="aide">{t('Personne de départ :')}</p>
           <ChoixPersonne d={d} valeur={d.racine} prenoms={2} choisir={(id) => { setRacine(id); setOuvert(false) }} />
         </div>
       )}

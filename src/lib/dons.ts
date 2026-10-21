@@ -1,5 +1,7 @@
 // Les associations proposées sur la page /print/, et le compteur de dons déclarés (une feuille Google, voir scripts/dons-apps-script.gs).
-// Pour changer d'association ou de seuil : modifier ce fichier seulement.
+// Pour changer d'association ou de seuil : modifier ce fichier seulement (et les traductions des textes, dans src/lib/langues).
+
+import { T } from './i18n'
 
 export interface Association {
   /** nom court, aussi enregistré dans la feuille */
@@ -13,14 +15,14 @@ export interface Association {
 export const ASSOCIATIONS: Association[] = [
   {
     nom: 'DoucheFLUX',
-    resume: 'Centre de jour bruxellois pour personnes sans chez-soi : douche, lessive, soins et accompagnement.',
+    resume: T('Centre de jour bruxellois pour personnes sans chez-soi : douche, lessive, soins et accompagnement.'),
     site: 'https://doucheflux.be/',
     don: 'https://doucheflux.be/faites-un-don/dons/',
     donorinfo: 'https://www.donorinfo.be/fr/faire-un-don/doucheflux-asbl',
   },
   {
     nom: 'APEDAF',
-    resume: 'Parents d’enfants déficients auditifs francophones : accompagnement des jeunes sourds et malentendants et de leurs proches.',
+    resume: T('Parents d’enfants déficients auditifs francophones : accompagnement des jeunes sourds et malentendants et de leurs proches.'),
     site: 'https://apedaf.be',
     don: 'https://apedaf.be/wordpress/faire-un-don/',
     donorinfo: 'https://www.donorinfo.be/fr/faire-un-don/apedaf-association-des-parents-denfants-deficients-auditifs-francophones',

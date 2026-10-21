@@ -1,6 +1,8 @@
 // Carte des origines (bas de l'éventail imprimé) : contours des provinces et départements, cadrage sur
 // les régions où sont nés des ancêtres, et légende groupée par pays.
 
+import { t, T } from './i18n'
+
 /** Contenu de public/geo/contours.json (scripts/contours.py) : anneaux en [lon×100, lat×100, …] par code de région */
 export interface Contours { r: Record<string, number[][]> }
 
@@ -16,7 +18,7 @@ export function zone(code: string): string {
   return 'C'
 }
 
-const NOMS_DOM: Record<string, string> = { 'FR.971': 'Guadeloupe', 'FR.972': 'Martinique', 'FR.973': 'Guyane', 'FR.974': 'La Réunion', 'FR.976': 'Mayotte' }
+const NOMS_DOM: Record<string, string> = { 'FR.971': T('Guadeloupe'), 'FR.972': T('Martinique'), 'FR.973': T('Guyane'), 'FR.974': T('La Réunion'), 'FR.976': T('Mayotte') }
 
 export interface Zone {
   zone: string
@@ -38,7 +40,7 @@ export function zones(poids: Map<string, number>): Zone[] {
     parZone.set(z, e)
   }
   for (const z of parZone.values()) {
-    z.titre = z.zone === 'C' ? 'Europe' : z.zone === 'IB' ? (z.codes.some((c) => c.startsWith('IE.')) ? 'Îles Britanniques' : 'Royaume-Uni') : NOMS_DOM[z.zone] ?? z.zone
+    z.titre = z.zone === 'C' ? t('Europe') : z.zone === 'IB' ? (z.codes.some((c) => c.startsWith('IE.')) ? t('Îles Britanniques') : t('Royaume-Uni')) : t(NOMS_DOM[z.zone] ?? z.zone)
   }
   return [...parZone.values()].sort((a, b) => b.n - a.n)
 }
@@ -158,16 +160,16 @@ export function grouper(entrees: Entree[], nomPays: (code: string) => string | u
   const groupes: (Groupe & { total: number })[] = []
   for (const [pays, liste] of parPays) {
     const horsCarte = pays === '*'
-    const nom = (e: Entree) => horsCarte ? [e.nom, nomPays(e.pays ?? '')].filter(Boolean).join(', ') || '?' : e.nom ?? 'sans précision'
+    const nom = (e: Entree) => horsCarte ? [e.nom, nomPays(e.pays ?? '')].filter(Boolean).join(', ') || '?' : e.nom ?? t('sans précision')
     const tri = [...liste].sort((a, b) => b.n - a.n)
     const lignes = tri.filter((e) => e.couleur !== autres).map((e) => ({ nom: nom(e), couleur: e.couleur, n: e.n }))
     // « sans précision » en fin de liste
     const reste = tri.filter((e) => e.couleur === autres).sort((a, b) => (a.nom ? 0 : 1) - (b.nom ? 0 : 1))
     if (reste.length) lignes.push({ nom: reste.map(nom).join(', '), couleur: autres, n: reste.reduce((s, e) => s + e.n, 0) })
-    groupes.push({ titre: horsCarte ? 'Autres pays' : nomPays(pays) ?? pays, lignes, total: liste.reduce((s, e) => s + e.n, 0) })
+    groupes.push({ titre: horsCarte ? t('Autres pays') : nomPays(pays) ?? pays, lignes, total: liste.reduce((s, e) => s + e.n, 0) })
   }
   // « Autres pays » toujours en dernier
-  return groupes.sort((a, b) => (a.titre === 'Autres pays' ? 1 : 0) - (b.titre === 'Autres pays' ? 1 : 0) || b.total - a.total)
+  return groupes.sort((a, b) => (a.titre === t('Autres pays') ? 1 : 0) - (b.titre === t('Autres pays') ? 1 : 0) || b.total - a.total)
     .map(({ titre, lignes }) => ({ titre, lignes }))
 }
 

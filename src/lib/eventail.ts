@@ -1,6 +1,7 @@
 // Arbres imprimables : l'ascendance place par place (numéros Sosa) et la géométrie des éventails.
 
 import type { Arbre, Evenement, Individu } from './gedcom/arbre'
+import { langue, t, T } from './i18n'
 import type { DateGed } from './gedcom/dates'
 import { etatParents } from './parente'
 import { marie, type Fait, type Suivi } from './suivi'
@@ -70,12 +71,13 @@ export interface Resume {
   metier?: string
 }
 
-const QUALIFS: Partial<Record<DateGed['qualif'], string>> = { vers: 'v. ', estimé: 'v. ', calculé: 'v. ', entre: 'v. ', avant: 'av. ', après: 'ap. ' }
+const QUALIFS: Partial<Record<DateGed['qualif'], string>> = { vers: T('v. '), estimé: T('v. '), calculé: T('v. '), entre: T('v. '), avant: T('av. '), après: T('ap. ') }
 
 export function anneeCourte(e?: Evenement): string | undefined {
   const a = e?.date?.debut?.annee
   if (a === undefined) return e && (e.avere || e.lieu) ? '?' : undefined
-  return (QUALIFS[e!.date!.qualif] ?? '') + a
+  const q = QUALIFS[e!.date!.qualif]
+  return (q ? t(q) : '') + a
 }
 
 const connue = (a?: string) => (a && a !== '?' ? a : undefined)
@@ -166,20 +168,22 @@ export function anglesDepuis(racine: number, sosa: number, ouverture: number): {
 
 // ——— Régions de naissance ———
 
-let nomsPays: Intl.DisplayNames | undefined
+const nomsPays = new Map<string, Intl.DisplayNames>()
 
 export function nomPays(code?: string): string | undefined {
   if (!code) return undefined
   try {
-    nomsPays ??= new Intl.DisplayNames(['fr'], { type: 'region' })
-    return nomsPays.of(code)
+    const l = langue()
+    if (!nomsPays.has(l)) nomsPays.set(l, new Intl.DisplayNames([l], { type: 'region' }))
+    return nomsPays.get(l)!.of(code)
   } catch {
     return code
   }
 }
 
-export const LIEU_INCONNU = 'Lieu inconnu'
-export const LIEU_NON_SITUE = 'Lieu non situé'
+/** Ces deux libellés servent aussi de clés : on les traduit à l'affichage, avec t() */
+export const LIEU_INCONNU = T('Lieu inconnu')
+export const LIEU_NON_SITUE = T('Lieu non situé')
 
 /** Région (sans le pays) et pays d'un lieu : ceux de la localité reconnue, sinon ceux que mentionne le lieu */
 export function situerRegion(lieu: string, position: { region?: string; pays?: string } | undefined): { region?: string; pays?: string } {
@@ -272,7 +276,7 @@ export function fratrie(arbre: Arbre, racine: string, naissance: (ind: Individu)
 
 /** « Pierre », « Pierre et Paul », « Pierre, Paul et Jacques » */
 export function enumerer(l: string[]): string {
-  return l.length < 2 ? l.join('') : l.slice(0, -1).join(', ') + ' et ' + l[l.length - 1]
+  return l.length < 2 ? l.join('') : l.slice(0, -1).join(', ') + ' ' + t('et') + ' ' + l[l.length - 1]
 }
 
 /** Les enfants regroupés par nom de famille, dans l'ordre de la première naissance */
@@ -282,7 +286,7 @@ export function parNom<T extends { nom: string }>(enfants: T[]): { nom: string; 
   return [...g.entries()].map(([nom, enfants]) => ({ nom, enfants }))
 }
 
-const NOMBRES = ['', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf', 'dix', 'onze', 'douze']
+const NOMBRES = ['', T('un'), T('deux'), T('trois'), T('quatre'), T('cinq'), T('six'), T('sept'), T('huit'), T('neuf'), T('dix'), T('onze'), T('douze')]
 
 /**
  * Le titre de la feuille, en morceaux entre lesquels couper de préférence :
@@ -296,7 +300,7 @@ export function morceauxTitre(enfants: { prenom: string; nom: string }[], parent
     return gs.map((g, i) => enumerer(g.enfants.map((e) => e.prenom)) + (g.nom ? ' ' + g.nom : '') + (i < gs.length - 1 ? ',' : ''))
   }
   const n = NOMBRES[enfants.length] ?? String(enfants.length)
-  return [`Les ${n} enfants de`, ...parents.map((p, i) => (i ? 'et ' : '') + p)]
+  return [t('Les {n} enfants de', { n: t(n) }), ...parents.map((p, i) => (i ? t('et') + ' ' : '') + p)]
 }
 
 /** `tient` : faux si rien ne tenait, même à la plus petite taille */

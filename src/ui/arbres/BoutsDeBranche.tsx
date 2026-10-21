@@ -12,6 +12,7 @@ import {
 } from '../../lib/eventail'
 import { ajuster, AUTRES, couleursRegions, GRIS, INCONNU } from './feuille'
 import type { OptionsFeuille } from './modeles'
+import { t } from '../../lib/i18n'
 
 /** Générations ajoutées au verso : IX à XV */
 const PROFONDEUR = 7
@@ -31,9 +32,9 @@ const maj = (s: string) => s.toLocaleUpperCase('fr')
 const rayon = (k: number) => R0 + ((R - R0) * k) / PROFONDEUR
 
 const LIBELLES: Partial<Record<Place['etat'], (sosa: number) => string>> = {
-  inconnu: (s) => (s % 2 ? 'mère inconnue' : 'père inconnu'),
-  introuvable: () => 'introuvable',
-  'a-chercher': () => 'à trouver',
+  inconnu: (s) => t(s % 2 ? 'mère inconnue' : 'père inconnu'),
+  introuvable: () => t('introuvable'),
+  'a-chercher': () => t('à trouver'),
 }
 
 /** Ce qu'on retient d'une branche : ses ancêtres identifiés (une personne vue deux fois compte une fois) et la génération atteinte */
@@ -77,8 +78,8 @@ export function BoutsDeBranche({ d, options }: { d: Donnees; options: OptionsFeu
       ancetres++
     }
     const legende = ordre.filter((r) => auVerso.has(r) && couleurs.has(r)).map((r) => ({ nom: r, couleur: couleurs.get(r)! }))
-    if (ordre.some((r) => auVerso.has(r) && !couleurs.has(r))) legende.push({ nom: 'Autres régions', couleur: AUTRES })
-    if (auVerso.has(LIEU_INCONNU) || auVerso.has(LIEU_NON_SITUE)) legende.push({ nom: 'Lieu inconnu ou non situé', couleur: INCONNU })
+    if (ordre.some((r) => auVerso.has(r) && !couleurs.has(r))) legende.push({ nom: t('Autres régions'), couleur: AUTRES })
+    if (auVerso.has(LIEU_INCONNU) || auVerso.has(LIEU_NON_SITUE)) legende.push({ nom: t('Lieu inconnu ou non situé'), couleur: INCONNU })
     return { pl, resumes, regions, couleur, legende, ancetres }
   }, [d, positions])
 
@@ -133,7 +134,7 @@ export function BoutsDeBranche({ d, options }: { d: Donnees; options: OptionsFeu
       const p = pl[b]
       const r = resumes.get(b)
       const { connus, atteinte, aTrouver } = bilanBranche(pl, b)
-      const etat = r ? (connus ? `${connus} ancêtre${connus > 1 ? 's' : ''} · jusqu’à ${romain(atteinte + 1)}` : aTrouver ? 'parents à trouver' : 'lignée close')
+      const etat = r ? (connus ? t('{n} ancêtre{n?|s} · jusqu’à {g}', { n: connus, g: romain(atteinte + 1) }) : aTrouver ? t('parents à trouver') : t('lignée close'))
         : undefined
       fans.push(
         <g key={b}>
@@ -149,15 +150,15 @@ export function BoutsDeBranche({ d, options }: { d: Donnees; options: OptionsFeu
     }
     return (
       <g key={sq}>
-        <text x="40" y={y0 + 10} font-size="10" class="cap mut">QUARTIER <tspan class="nm" fill="#1f2523">{maj(resumes.get(sq)?.nom || '?')}</tspan></text>
-        <text x="1360" y={y0 + 10} font-size="9" class="mut" text-anchor="end">Sosa {debut} à {debut + 31} · {n} ancêtre{n > 1 ? 's' : ''} identifié{n > 1 ? 's' : ''} au-delà</text>
+        <text x="40" y={y0 + 10} font-size="10" class="cap mut">{maj(t('Quartier'))} <tspan class="nm" fill="#1f2523">{maj(resumes.get(sq)?.nom || '?')}</tspan></text>
+        <text x="1360" y={y0 + 10} font-size="9" class="mut" text-anchor="end">{t('Sosa {de} à {a} · {n} ancêtre{n?|s} identifié{n?|s} au-delà', { de: debut, a: debut + 31, n })}</text>
         <line x1="40" x2="1360" y1={y0 + 15} y2={y0 + 15} stroke={GRIS} stroke-width="0.7" />
         {fans}
       </g>
     )
   })
 
-  const entrees = [...legende.map((l) => ({ ...l, motif: false })), { nom: 'Parent à trouver ou inconnu', couleur: 'url(#hachures-verso)', motif: true }]
+  const entrees = [...legende.map((l) => ({ ...l, motif: false })), { nom: t('Parent à trouver ou inconnu'), couleur: 'url(#hachures-verso)', motif: true }]
   const lignesLegende = Math.ceil(entrees.length / Math.ceil(entrees.length / 5))
   const colonnesLegende = Math.ceil(entrees.length / lignesLegende)
   const implexes = pl.some((p, s) => s >= PREMIERE && s < 2 * PREMIERE && p?.dejaVu)
@@ -174,10 +175,10 @@ export function BoutsDeBranche({ d, options }: { d: Donnees; options: OptionsFeu
       <rect width="1400" height="990" fill="#fff" />
 
       {/* Titre et légende */}
-      <text x="40" y="64" font-size="11" class="cap mut">ASCENDANCE{p1 ? ` DE ${maj([p1.prenom.split(' ')[0], p1.nom].filter(Boolean).join(' '))}` : ''} · GÉNÉRATIONS IX À XV</text>
-      <text x="40" y="100" font-size="30" class="disp">Les 128 bouts de branche</text>
+      <text x="40" y="64" font-size="11" class="cap mut">{maj(p1 ? t('Ascendance de {nom}', { nom: [p1.prenom.split(' ')[0], p1.nom].filter(Boolean).join(' ') }) : t('Ascendance'))} · {maj(t('Générations IX à XV'))}</text>
+      <text x="40" y="100" font-size="30" class="disp">{t('Les 128 bouts de branche')}</text>
       <text x="40" y="124" font-size="12" class="mut" data-max="760">
-        Chaque case du bord de l’éventail, prolongée de sept générations · {ancetres} ancêtres identifiés au-delà de la huitième génération
+        {t('Chaque case du bord de l’éventail, prolongée de sept générations · {n} ancêtres identifiés au-delà de la huitième génération', { n: ancetres })}
       </text>
       {entrees.map((l, i) => {
         const x = 1360 - (colonnesLegende - Math.floor(i / lignesLegende)) * 128
@@ -193,9 +194,9 @@ export function BoutsDeBranche({ d, options }: { d: Donnees; options: OptionsFeu
       {quartiers}
 
       {/* Pied de page */}
-      {implexes && <text x="40" y={options.date ? 950 : 966} font-size="8.5" class="mut"><tspan class="so">◆</tspan> implexe : la même personne plus près au recto</text>}
-      {options.date && <text x="40" y="966" font-size="8.5" class="mut">Établi le {options.date}</text>}
-      <text x="1360" y="966" font-size="8.5" class="mut" text-anchor="end">Au recto, l’éventail des générations I à VIII</text>
+      {implexes && <text x="40" y={options.date ? 950 : 966} font-size="8.5" class="mut"><tspan class="so">◆</tspan> {t('implexe : la même personne plus près au recto')}</text>}
+      {options.date && <text x="40" y="966" font-size="8.5" class="mut">{t('Établi le {date}', { date: options.date })}</text>}
+      <text x="1360" y="966" font-size="8.5" class="mut" text-anchor="end">{t('Au recto, l’éventail des générations I à VIII')}</text>
     </svg>
   )
 }

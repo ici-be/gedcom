@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'preact/hooks'
 import { ecrire, lire } from '../lib/stockage'
+import { t } from '../lib/i18n'
 
 // Sur smartphone, proposer d'ajouter Lignées à l'écran d'accueil (application installée, hors ligne).
 // Android (Chrome, Edge, Samsung…) : le navigateur fournit l'invite, déclenchée par le bouton.
@@ -65,16 +66,16 @@ export function ProposerInstallation() {
   }
 
   return (
-    <aside class="installation" aria-label="Installer l'application">
+    <aside class="installation" aria-label={t('Installer l’application')}>
       <p>
-        <strong>Installer Lignées</strong>{' '}
+        <strong>{t('Installer Lignées')}</strong>{' '}
         {ios
-          ? <>: touchez <IconePartager /> <b>Partager</b>, puis <b>Sur l'écran d'accueil</b>. L'arbre s'ouvrira comme une application, même sans réseau.</>
-          : <>sur l'écran d'accueil : l'arbre s'ouvrira comme une application, même sans réseau.</>}
+          ? <>{t(': touchez')} <IconePartager /> <b>{t('Partager')}</b>, {t('puis')} <b>{t('Sur l’écran d’accueil')}</b>. {t('L’arbre s’ouvrira comme une application, même sans réseau.')}</>
+          : <>{t('sur l’écran d’accueil : l’arbre s’ouvrira comme une application, même sans réseau.')}</>}
       </p>
       <div class="installation-actions">
-        {!ios && <button type="button" class="bouton principal" onClick={installer}>Installer</button>}
-        <button type="button" class="bouton discret" onClick={ecarter}>{ios ? 'Fermer' : 'Plus tard'}</button>
+        {!ios && <button type="button" class="bouton principal" onClick={installer}>{t('Installer')}</button>}
+        <button type="button" class="bouton discret" onClick={ecarter}>{ios ? t('Fermer') : t('Plus tard')}</button>
       </div>
     </aside>
   )

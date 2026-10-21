@@ -1,3 +1,4 @@
+import { Fragment } from 'preact'
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import type { Arbre } from '../lib/gedcom/arbre'
 import { baseDuFichier, bilan as faireBilan, calculer, relevePrecedent, VERSION_BILAN, type Perimetre, type Releve } from '../lib/donnees'
@@ -22,6 +23,8 @@ import { Introuvables } from './Introuvables'
 import { ProposerInstallation } from './Installer'
 import { ChoixRacine } from './ChoixRacine'
 import { BoutonDons, CarteDons } from './Dons'
+import { ChoixLangue } from './ChoixLangue'
+import { definirLangue, estLangue, langueDuNavigateur, t, type Langue } from '../lib/i18n'
 
 interface Fichier { nom: string; importe: string; arbre: Arbre }
 
@@ -31,6 +34,14 @@ const MODE_IMPRESSION = /\/print(\/(index\.html)?)?$/.test(location.pathname)
 function lireRoute(): string[] {
   const r = location.hash.replace(/^#\/?/, '').split('/').map(decodeURIComponent)
   return MODE_IMPRESSION && r[0] !== 'imprimer' ? ['imprimer'] : r
+}
+
+/** La langue de la page d'impression : celle de l'adresse (?lang=en), sinon la dernière choisie, sinon celle du navigateur */
+function langueInitiale(): Langue {
+  const demandee = new URLSearchParams(location.search).get('lang')
+  if (estLangue(demandee)) return demandee
+  const gardee = lire<unknown>('langue', null)
+  return estLangue(gardee) ? gardee : langueDuNavigateur()
 }
 
 function Logo() {
@@ -63,6 +74,8 @@ function Icone({ nom }: { nom: string }) {
 
 export function App() {
   const [route, setRoute] = useState(lireRoute)
+  const [langue, setLangueBrute] = useState<Langue>(langueInitiale)
+  const setLangue = (l: Langue) => { setLangueBrute(l); ecrire('langue', l) }
   const [etat, setEtat] = useState<'demarrage' | 'lecture' | 'pret' | 'vide'>('demarrage')
   const [erreur, setErreur] = useState<string>()
   const [fichier, setFichier] = useState<Fichier | null>(null)
@@ -124,7 +137,7 @@ export function App() {
         setFichier({ nom: c.nom, importe, arbre: c.arbre })
         setEtat('pret')
       }).catch(async (e) => {
-        setErreur(e instanceof Error ? e.message : String(e))
+        setErreur(t(e instanceof Error ? e.message : String(e)))
         const g = await lireFichier()
         if (!g) { setEtat('vide'); return }
         try {
@@ -164,7 +177,7 @@ export function App() {
       setEtat('pret')
       location.hash = MODE_IMPRESSION ? '#/imprimer' : '#/'
     } catch (e) {
-      setErreur(e instanceof Error ? e.message : String(e))
+      setErreur(t(e instanceof Error ? e.message : String(e)))
       setEtat(fichier ? 'pret' : 'vide')
     }
   }
@@ -236,6 +249,10 @@ export function App() {
   }, [bilan])
 
   const page = route[0] || ''
+  // Seules la page d'impression et /print/ sont traduites ; le reste du site reste en français
+  const langueEffective: Langue = MODE_IMPRESSION || page === 'imprimer' ? langue : 'fr'
+  definirLangue(langueEffective)
+  useEffect(() => { document.documentElement.lang = langueEffective }, [langueEffective])
 
   // Le titre de l'onglet suit celui de la page (son h1, ou un data-titre plus précis), y compris quand il arrive après coup
   const principal = useRef<HTMLElement>(null)
@@ -259,7 +276,7 @@ export function App() {
   }, [page])
   let contenu
   if (etat === 'demarrage') contenu = null
-  else if (etat === 'lecture') contenu = <div class="attente" role="status"><span class="rouet" />Lecture de l'arbre…</div>
+  else if (etat === 'lecture') contenu = <div class="attente" role="status"><span class="rouet" />{t('Lecture de l’arbre…')}</div>
   else if (!donnees || !fichier || !bilan) contenu = <Bienvenue ouvrir={ouvrir} erreur={erreur} impression={MODE_IMPRESSION} />
   else if (page === 'personnes') contenu = <Individus d={donnees} perimetre={perimetre} setPerimetre={setPerimetre} />
   else if (page === 'lieux' && route[1]) contenu = <Lieu d={donnees} lieu={route[1]} perimetre={perimetre} setPerimetre={setPerimetre} />
@@ -279,7 +296,7 @@ export function App() {
   else if (page === 'statistiques') contenu = <Statistiques d={donnees} perimetre={perimetre} setPerimetre={setPerimetre} />
   else if (page === 'imprimer') contenu = Impression
     ? <Impression d={donnees} id={route[1]} />
-    : <div class="attente" role="status"><span class="rouet" />Préparation de l'arbre…</div>
+    : <div class="attente" role="status"><span class="rouet" />{t('Préparation de l’arbre…')}</div>
   else if (page === 'filiation') contenu = <Filiation d={donnees} />
   else if (page === 'introuvables') contenu = <Introuvables d={donnees} />
   else if (page === 'metiers') contenu = <Metiers d={donnees} perimetre={perimetre} setPerimetre={setPerimetre} />
@@ -296,6 +313,7 @@ export function App() {
         <header class="bandeau">
           <a href={MODE_IMPRESSION ? '#/imprimer' : '#/'} class="marque"><Logo /><span>Lignées</span></a>
           {donnees && <ChoixRacine d={donnees} setRacine={setRacine} />}
+          {(MODE_IMPRESSION || page === 'imprimer') && <ChoixLangue langue={langue} choisir={setLangue} />}
           {donnees && !MODE_IMPRESSION && (
             <nav class="onglets">
               <a href="#/" class={page === '' ? 'actif' : ''}><Icone nom="accueil" />Accueil</a>
@@ -314,19 +332,19 @@ export function App() {
           {MODE_IMPRESSION && !donnees && etat === 'vide' && <AideGedcom />}
           {(donnees || (MODE_IMPRESSION && etat === 'vide')) && <Depot ouvrir={ouvrir} compact />}
           {MODE_IMPRESSION && donnees && (
-            <button type="button" class="lien danger oublier-menu" onClick={() => { if (confirm('Effacer le fichier et les réglages gardés dans ce navigateur ?')) oublier() }}>Oublier mes données</button>
+            <button type="button" class="lien danger oublier-menu" onClick={() => { if (confirm(t('Effacer le fichier et les réglages gardés dans ce navigateur ?'))) oublier() }}>{t('Oublier mes données')}</button>
           )}
         </header>
         <div class="colonne">
-          <main class="page" ref={principal}>{contenu}</main>
+          <main class="page" ref={principal}><Fragment key={langueEffective}>{contenu}</Fragment></main>
           <footer class="pied">
-            Vos données restent dans votre navigateur.
+            {t('Vos données restent dans votre navigateur.')}
           </footer>
         </div>
       </div>
       {dons && <CarteDons apresImpression={dons === 'impression'} fermer={() => setDons('')} />}
       <ProposerInstallation />
-      {glisse && <div class="depot-global" aria-hidden="true"><p>Déposez le fichier pour {fichier ? 'mettre l’arbre à jour' : 'l’ouvrir'}</p></div>}
+      {glisse && <div class="depot-global" aria-hidden="true"><p>{fichier ? t('Déposez le fichier pour mettre l’arbre à jour') : t('Déposez le fichier pour l’ouvrir')}</p></div>}
     </>
   )
 }

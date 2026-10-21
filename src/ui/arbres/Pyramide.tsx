@@ -15,6 +15,7 @@ import type { FormePhoto, OptionsFeuille } from './modeles'
 import { chargerPolices, largeur } from './mesure'
 import { ajuster } from './feuille'
 import { CodeQR } from './EventailOrigines'
+import { t, T } from '../../lib/i18n'
 
 export const GEN_MIN_PYRAMIDE = 4
 export const GEN_MAX_PYRAMIDE = 9
@@ -104,9 +105,9 @@ export interface ThemePyramide {
 }
 
 export const FORMES_PHOTO: { id: FormePhoto; titre: string }[] = [
-  { id: 'ovale', titre: 'Ovale' },
-  { id: 'carree', titre: 'Carrée' },
-  { id: 'rectangulaire', titre: 'Rectangulaire' },
+  { id: 'ovale', titre: T('Ovale') },
+  { id: 'carree', titre: T('Carrée') },
+  { id: 'rectangulaire', titre: T('Rectangulaire') },
 ]
 
 function parSexe(id: string, titre: string, M: CouleurCase, F: CouleurCase, inconnu: CouleurCase, lien = '#9aa19d'): ThemePyramide {
@@ -133,14 +134,14 @@ const TONS_GENERATIONS: CouleurCase[] = [
 ]
 
 export const THEMES_PYRAMIDE: ThemePyramide[] = [
-  parSexe('classique', 'Bleu et rose', { trait: '#3d6fb4', fond: '#eef3fa' }, { trait: '#c4547a', fond: '#fbeff3' }, { trait: '#8b928e', fond: '#f4f4f1' }),
-  parSexe('herbier', 'Sauge et terre cuite', { trait: '#2f6b58', fond: '#ebf3ef' }, { trait: '#b85a3a', fond: '#fbf0eb' }, { trait: '#848b86', fond: '#f3f4f1' }, '#98a19c'),
-  parSexe('archives', 'Ardoise et ocre', { trait: '#3b536b', fond: '#edf1f6' }, { trait: '#a87524', fond: '#faf3e4' }, { trait: '#83878b', fond: '#f3f3f1' }, '#999d9f'),
-  parSexe('velours', 'Forêt et prune', { trait: '#2d5a48', fond: '#ebf3ef' }, { trait: '#893d5a', fond: '#f8eef2' }, { trait: '#858886', fond: '#f3f3f1' }, '#999c9a'),
-  parSexe('sepia', 'Sépia et ambre', { trait: '#6e5036', fond: '#f4ede3' }, { trait: '#a16232', fond: '#fbf1e4' }, { trait: '#8c8277', fond: '#f4f1ec' }, '#a69b8e'),
+  parSexe('classique', T('Bleu et rose'), { trait: '#3d6fb4', fond: '#eef3fa' }, { trait: '#c4547a', fond: '#fbeff3' }, { trait: '#8b928e', fond: '#f4f4f1' }),
+  parSexe('herbier', T('Sauge et terre cuite'), { trait: '#2f6b58', fond: '#ebf3ef' }, { trait: '#b85a3a', fond: '#fbf0eb' }, { trait: '#848b86', fond: '#f3f4f1' }, '#98a19c'),
+  parSexe('archives', T('Ardoise et ocre'), { trait: '#3b536b', fond: '#edf1f6' }, { trait: '#a87524', fond: '#faf3e4' }, { trait: '#83878b', fond: '#f3f3f1' }, '#999d9f'),
+  parSexe('velours', T('Forêt et prune'), { trait: '#2d5a48', fond: '#ebf3ef' }, { trait: '#893d5a', fond: '#f8eef2' }, { trait: '#858886', fond: '#f3f3f1' }, '#999c9a'),
+  parSexe('sepia', T('Sépia et ambre'), { trait: '#6e5036', fond: '#f4ede3' }, { trait: '#a16232', fond: '#fbf1e4' }, { trait: '#8c8277', fond: '#f4f1ec' }, '#a69b8e'),
   {
     id: 'quartiers',
-    titre: 'Quatre quartiers (branches des grands-parents)',
+    titre: T('Quatre quartiers (branches des grands-parents)'),
     famille: 'autre',
     apercu: QUARTIERS,
     lien: '#9aa19d',
@@ -154,7 +155,7 @@ export const THEMES_PYRAMIDE: ThemePyramide[] = [
   },
   {
     id: 'generations',
-    titre: 'Par génération (dégradé par rangée)',
+    titre: T('Par génération (dégradé par rangée)'),
     famille: 'autre',
     apercu: [TONS_GENERATIONS[0], TONS_GENERATIONS[2], TONS_GENERATIONS[5], TONS_GENERATIONS[7]],
     lien: '#9aa19d',
@@ -162,7 +163,7 @@ export const THEMES_PYRAMIDE: ThemePyramide[] = [
   },
   {
     id: 'gravure',
-    titre: 'Gravure (ivoire et encre)',
+    titre: T('Gravure (ivoire et encre)'),
     famille: 'autre',
     apercu: [{ trait: '#4a524e', fond: '#f8f6f0' }],
     lien: '#9aa19d',
@@ -177,9 +178,9 @@ export function trouverThemePyramide(id = THEME_DEFAUT): ThemePyramide {
 }
 
 export const LIBELLES: Record<string, (sosa: number) => string> = {
-  inconnu: (s) => (s % 2 ? 'mère inconnue' : 'père inconnu'),
-  introuvable: () => 'introuvable',
-  'a-chercher': () => 'à trouver',
+  inconnu: (s) => t(s % 2 ? 'mère inconnue' : 'père inconnu'),
+  introuvable: () => t('introuvable'),
+  'a-chercher': () => t('à trouver'),
 }
 
 const maj = (s: string) => s.toLocaleUpperCase('fr')
@@ -234,9 +235,9 @@ export function compteFreres(f: Individu[]): string {
   const h = f.filter((x) => x.sexe === 'M').length
   const fe = f.filter((x) => x.sexe === 'F').length
   const n = f.length
-  if (h === n) return n === 1 ? '1 frère' : `${n} frères`
-  if (fe === n) return n === 1 ? '1 sœur' : `${n} sœurs`
-  return `${n} frères et sœurs`
+  if (h === n) return t('{n} frère{n?|s}', { n })
+  if (fe === n) return t('{n} sœur{n?|s}', { n })
+  return t('{n} frères et sœurs', { n })
 }
 
 /** Les frères et les sœurs comptés séparément : « 4 frères », « 4 frères et une sœur », « un frère et 2 sœurs » */
@@ -245,11 +246,11 @@ export function compteFreresEtSoeurs(f: Individu[]): string {
   const soeur = f.filter((x) => x.sexe === 'F').length
   const autre = f.length - frere - soeur
   const parts = [
-    frere && (frere === 1 ? 'un frère' : `${frere} frères`),
-    soeur && (soeur === 1 ? 'une sœur' : `${soeur} sœurs`),
-    autre && `${autre} de sexe inconnu`,
+    frere && (frere === 1 ? t('un frère') : t('{n} frères', { n: frere })),
+    soeur && (soeur === 1 ? t('une sœur') : t('{n} sœurs', { n: soeur })),
+    autre && t('{n} de sexe inconnu', { n: autre }),
   ].filter(Boolean) as string[]
-  return parts.length > 1 ? `${parts.slice(0, -1).join(', ')} et ${parts[parts.length - 1]}` : parts[0] ?? ''
+  return parts.length > 1 ? `${parts.slice(0, -1).join(', ')} ${t('et')} ${parts[parts.length - 1]}` : parts[0] ?? ''
 }
 
 /**
@@ -282,7 +283,7 @@ export function lignesFratrie(f: { prenom: string; annee?: string }[], max: numb
     const l = couper([...f.slice(0, k).map((x): Morceau[] => [[x.prenom]]), [[`+ ${f.length - k}`, 'mut']]])
     if (l.length <= nbLignes) return l
   }
-  return [[[`${f.length} frères et sœurs`, 'mut']]]
+  return [[[t('{n} frères et sœurs', { n: f.length }), 'mut']]]
 }
 
 /** Lignes centrées verticalement dans une boîte, à partir de `x` (ancre donnée) */
@@ -437,10 +438,10 @@ export function Pyramide({ d, options }: { d: Donnees; options: OptionsFeuille }
 
     if (!r) {
       cases.push(<rect key={s} x={x} y={y} width={w} height={h} rx={R.vertical ? 1.5 : 3} fill="#fff" stroke="#c9c9c2" stroke-dasharray="3 2.5" stroke-width="0.8" />)
-      const t = LIBELLES[p.etat](s)
+      const libelle = LIBELLES[p.etat](s)
       textes.push(R.vertical
-        ? <g key={'x' + s} transform={`translate(${cx},${y + h / 2}) rotate(-90)`}><text x="0" y={(Math.min(w, 9) * 0.35).toFixed(1)} font-size={Math.min(7.5, w * 0.68)} text-anchor="middle" class="ns" data-max={h - 8}>{t}</text></g>
-        : <text key={'x' + s} x={cx} y={y + h / 2 + 3} font-size={g >= 4 ? 7.5 : 9} text-anchor="middle" class="ns" data-max={w - 8}>{t}</text>)
+        ? <g key={'x' + s} transform={`translate(${cx},${y + h / 2}) rotate(-90)`}><text x="0" y={(Math.min(w, 9) * 0.35).toFixed(1)} font-size={Math.min(7.5, w * 0.68)} text-anchor="middle" class="ns" data-max={h - 8}>{libelle}</text></g>
+        : <text key={'x' + s} x={cx} y={y + h / 2 + 3} font-size={g >= 4 ? 7.5 : 9} text-anchor="middle" class="ns" data-max={w - 8}>{libelle}</text>)
       continue
     }
 
@@ -510,19 +511,19 @@ export function Pyramide({ d, options }: { d: Donnees; options: OptionsFeuille }
   }
 
   const p1 = resumes.get(1)
-  const titre = p1 ? [prenoms(p1.prenom, 2), p1.nom].filter(Boolean).join(' ') : 'Ascendance'
+  const titre = p1 ? [prenoms(p1.prenom, 2), p1.nom].filter(Boolean).join(' ') : t('Ascendance')
   const avecQr = options.qr && !!d.adresse
   const avecUrl = options.url && !!d.adresse
   const avecBasDroite = avecQr || avecUrl
   const legende = [
-    options.fratrie && 'en italique sous les cases : frères et sœurs',
-    options.italiques && 'date en italique : sans source',
-    implexes && '◆ implexe',
-    options.numeros && 'chiffre dans la case : numéro Sosa, fiche au verso',
+    options.fratrie && t('en italique sous les cases : frères et sœurs'),
+    options.italiques && t('date en italique : sans source'),
+    implexes && t('◆ implexe'),
+    options.numeros && t('chiffre dans la case : numéro Sosa, fiche au verso'),
   ].filter(Boolean).join(' · ')
 
   return (
-    <svg ref={svg} class={'feuille pyramide' + (options.italiques ? ' italiques' : '')} viewBox="0 0 1400 990" role="img" aria-label={`Arbre d’ascendance de ${titre}`}>
+    <svg ref={svg} class={'feuille pyramide' + (options.italiques ? ' italiques' : '')} viewBox="0 0 1400 990" role="img" aria-label={t('Arbre d’ascendance de {titre}', { titre })}>
       <rect width="1400" height="990" fill="#fff" />
       <g>{traits}</g>
       <g>{cases}</g>
@@ -534,12 +535,12 @@ export function Pyramide({ d, options }: { d: Donnees; options: OptionsFeuille }
       ))}
 
       {/* Titre en bas à gauche, à côté de la personne de départ */}
-      <text x={X0} y="906" font-size="9.5" class="cap mut">ASCENDANCE</text>
+      <text x={X0} y="906" font-size="9.5" class="cap mut">{maj(t('Ascendance'))}</text>
       <text x={X0} y="932" font-size="24" class="disp" data-max="480">{titre}</text>
-      <text x={X0} y="949" font-size="10.5" class="mut" data-max="480">{generations} générations · {donnees.uniques} ancêtres identifiés</text>
+      <text x={X0} y="949" font-size="10.5" class="mut" data-max="480">{t('{g} générations · {n} ancêtres identifiés', { g: generations, n: donnees.uniques })}</text>
       {(legende || options.date) && (
         <text x={X0} y="966" font-size="8.5" class="mut" data-max="520">
-          {options.date ? `Établi le ${options.date}` : ''}{options.date && legende ? ' · ' : ''}{legende}
+          {options.date ? t('Établi le {date}', { date: options.date }) : ''}{options.date && legende ? ' · ' : ''}{legende}
         </text>
       )}
       {avecBasDroite && (
@@ -547,7 +548,7 @@ export function Pyramide({ d, options }: { d: Donnees; options: OptionsFeuille }
           {avecQr && <CodeQR url={d.adresse} x={1306} y={906} taille={54} />}
           {avecUrl && (
             <>
-              <text x={avecQr ? 1296 : 1360} y="948" font-size="8" class="cap mut" text-anchor="end">L’ARBRE EN LIGNE</text>
+              <text x={avecQr ? 1296 : 1360} y="948" font-size="8" class="cap mut" text-anchor="end">{maj(t('L’arbre en ligne'))}</text>
               <text x={avecQr ? 1296 : 1360} y="960" font-size="8.5" class="mut" text-anchor="end" data-max={avecQr ? 200 : 260}>{d.adresse.replace(/^https?:\/\/(www\.)?/, '')}</text>
             </>
           )}

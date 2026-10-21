@@ -18,6 +18,7 @@ import type { OptionsFeuille } from './modeles'
 import { chargerPolices, largeur, type Police } from './mesure'
 import { FondCarte } from './FondCarte'
 import { ajuster, AUTRES, couleursRegions, GRIS, INCONNU, TEINTES } from './feuille'
+import { t, T } from '../../lib/i18n'
 
 const GENERATIONS = GENERATIONS_RECTO
 const OUVERTURE = 220
@@ -178,9 +179,9 @@ function caser(lignes: Ligne[], hauteur: number): Ligne[] {
 }
 
 const LIBELLES: Record<string, (sosa: number) => string> = {
-  inconnu: (s) => (s % 2 ? 'mère inconnue' : 'père inconnu'),
-  introuvable: () => 'introuvable',
-  'a-chercher': () => 'à trouver',
+  inconnu: (s) => t(s % 2 ? 'mère inconnue' : 'père inconnu'),
+  introuvable: () => t('introuvable'),
+  'a-chercher': () => t('à trouver'),
 }
 
 interface Bout { t: string; cls?: string; police: Police; k?: number; dx?: number }
@@ -381,8 +382,8 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
     const couleurs = couleursRegions(ordre)
     const couleur = (reg: string) => couleurs.get(reg) ?? (reg === LIEU_INCONNU || reg === LIEU_NON_SITUE ? INCONNU : AUTRES)
     const legende: { nom: string; couleur: string }[] = ordre.slice(0, TEINTES.length).map((r) => ({ nom: r, couleur: couleurs.get(r)! }))
-    if (ordre.length > TEINTES.length) legende.push({ nom: 'Autres régions', couleur: AUTRES })
-    if (pl.some((p) => p?.ind && !p.dejaVu && p.sosa > 1 && [LIEU_INCONNU, LIEU_NON_SITUE].includes(regions.get(p.sosa)!))) legende.push({ nom: 'Lieu inconnu ou non situé', couleur: INCONNU })
+    if (ordre.length > TEINTES.length) legende.push({ nom: t('Autres régions'), couleur: AUTRES })
+    if (pl.some((p) => p?.ind && !p.dejaVu && p.sosa > 1 && [LIEU_INCONNU, LIEU_NON_SITUE].includes(regions.get(p.sosa)!))) legende.push({ nom: t('Lieu inconnu ou non situé'), couleur: INCONNU })
 
     const uniques = pl.filter((p) => p?.ind && !p.dejaVu && p.sosa > 1)
     const communes = new Set<string>()
@@ -425,7 +426,7 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
       }
     }
     const groupes = grouper([...entrees.values()], nomPays, AUTRES)
-    if (inconnus) groupes.push({ titre: '', lignes: [{ nom: 'Lieu inconnu ou non situé', couleur: INCONNU, n: inconnus }] })
+    if (inconnus) groupes.push({ titre: '', lignes: [{ nom: t('Lieu inconnu ou non situé'), couleur: INCONNU, n: inconnus }] })
     return { pl, resumes, regions, couleur, legende, ancetres: uniques.length, communes: communes.size, nbRegions, parGeneration, couleursCarte, poidsCarte, groupes, mariages }
   }, [d, positions, options.mariages])
 
@@ -505,13 +506,13 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
   const p1 = resumes.get(1)
   const parents = [2, 3].map((s) => resumes.get(s)).filter((r): r is Resume => !!r).map((r) => [prenoms(r.prenom, 1), r.nom].filter(Boolean).join(' '))
   const morceaux = avecFratrie ? morceauxTitre(enfants.map((e) => ({ prenom: prenoms(e.prenom, 1), nom: e.nom })), parents)
-    : p1 ? morceauxTitre([p1], []) : ['Ascendance']
+    : p1 ? morceauxTitre([p1], []) : [t('Ascendance')]
   const titre = morceaux.join(' ')
   // Le titre et le sous-titre sur autant de lignes qu'il faut pour rester à distance de l'éventail
   const [blocTitre, blocSous] = useMemo(() => {
-    const t = blocAGauche(morceaux, 72, [32, 30, 28, 26, 24, 22], 4, 1.12, 'titre')
-    const st = blocAGauche([`et ${avecFratrie ? 'leurs' : 'ses'} ancêtres,`, 'selon leur lieu de naissance'], t.bas + 12, [12, 11], 2, 1.3, 'texte')
-    return [t, st]
+    const bt = blocAGauche(morceaux, 72, [32, 30, 28, 26, 24, 22], 4, 1.12, 'titre')
+    const st = blocAGauche([avecFratrie ? t('et leurs ancêtres,') : t('et ses ancêtres,'), t('selon leur lieu de naissance')], bt.bas + 12, [12, 11], 2, 1.3, 'texte')
+    return [bt, st]
   }, [titre, avecFratrie, polices])
   const quartiers = [4, 5, 6, 7].map((s, i) => {
     const a1 = -OUVERTURE / 2 + (i * OUVERTURE) / 4
@@ -523,7 +524,7 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
         <path id={'q' + s} d={arc(O, R + 24, a1, a2)} fill="none" />
         <text font-size={10.5} text-anchor="middle" class="cap">
           <textPath href={'#q' + s} startOffset="50%">
-            <tspan class="mut">QUARTIER </tspan><tspan class="nm">{maj(nomQ || '?')}</tspan>
+            <tspan class="mut">{maj(t('Quartier'))} </tspan><tspan class="nm">{maj(nomQ || '?')}</tspan>
           </textPath>
         </text>
       </g>
@@ -540,7 +541,7 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
   const carte = options.carte && contours && cadrer(contours, donnees.couleursCarte.keys())
 
   return (
-    <svg ref={svg} class={'feuille' + (options.italiques ? ' italiques' : '')} viewBox="0 0 1400 990" role="img" aria-label={`Éventail des origines de ${titre}`}>
+    <svg ref={svg} class={'feuille' + (options.italiques ? ' italiques' : '')} viewBox="0 0 1400 990" role="img" aria-label={t('Éventail des origines de {titre}', { titre })}>
       <defs>
         <pattern id="hachures" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
           <rect width="6" height="6" fill="#fff" />
@@ -575,21 +576,21 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
       })}
 
       {/* Titre et chiffres */}
-      <text x={MARGE_GAUCHE} y="64" font-size="11" class="cap mut">ASCENDANCE</text>
+      <text x={MARGE_GAUCHE} y="64" font-size="11" class="cap mut">{maj(t('Ascendance'))}</text>
       {blocTitre.lignes.map((l) => <text key={'t' + l.y} x={MARGE_GAUCHE} y={l.y.toFixed(1)} font-size={blocTitre.fs} class="disp" data-max={l.max}>{l.t}</text>)}
       {blocSous.lignes.map((l) => <text key={'s' + l.y} x={MARGE_GAUCHE} y={l.y.toFixed(1)} font-size={blocSous.fs} class="mut" data-max={l.max}>{l.t}</text>)}
       <g text-anchor="end">
-        {([[donnees.ancetres, 'ancêtres identifiés'], [donnees.communes, 'communes de naissance'], [donnees.nbRegions, 'provinces et régions']] as const).map(([v, l], i) => (
+        {([[donnees.ancetres, T('ancêtres identifiés')], [donnees.communes, T('communes de naissance')], [donnees.nbRegions, T('provinces et régions')]] as const).map(([v, l], i) => (
           <g key={l}>
             <text x="1360" y={82 + i * 42} font-size="26" class="disp">{v}</text>
-            <text x="1360" y={96 + i * 42} font-size="9.5" class="mut">{l}</text>
+            <text x="1360" y={96 + i * 42} font-size="9.5" class="mut">{t(l)}</text>
           </g>
         ))}
       </g>
 
       {/* Lieux de naissance sur la carte, ou origine par génération */}
       {carte ? <CarteOrigines contours={contours!} couleurs={donnees.couleursCarte} poids={donnees.poidsCarte} groupes={donnees.groupes} /> : <>
-      <text x={O.cx} y={y0 - 12} font-size="10" class="cap mut" text-anchor="middle">ORIGINE DES ANCÊTRES CONNUS, PAR GÉNÉRATION</text>
+      <text x={O.cx} y={y0 - 12} font-size="10" class="cap mut" text-anchor="middle">{maj(t('Origine des ancêtres connus, par génération'))}</text>
       {donnees.parGeneration.map(({ g, connus, segments }, j) => {
         const y = y0 + j * 14
         let x = x0
@@ -623,19 +624,19 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
       {(options.italiques || implexes || boules.length > 0) && (
         <text x="40" y={options.date ? 950 : 966} font-size="8.5" class="mut">
           {[
-            boules.length > 0 && <>● mariage : teinte de la province où il a eu lieu, année jusqu’à la génération VI</>,
-            options.italiques && <><tspan class="ns">italique</tspan> : date sans source</>,
-            implexes && '◆ implexe',
+            boules.length > 0 && <>{t('● mariage : teinte de la province où il a eu lieu, année jusqu’à la génération VI')}</>,
+            options.italiques && <><tspan class="ns">{t('italique')}</tspan>{t(' : date sans source')}</>,
+            implexes && t('◆ implexe'),
           ].filter(Boolean).map((x, i) => <Fragment key={i}>{i > 0 && ' · '}{x}</Fragment>)}
         </text>
       )}
-      {options.date && <text x="40" y="966" font-size="8.5" class="mut">Établi le {options.date}</text>}
+      {options.date && <text x="40" y="966" font-size="8.5" class="mut">{t('Établi le {date}', { date: options.date })}</text>}
       {avecBasDroite && (
         <g>
           {avecQr && <CodeQR url={d.adresse} x={1306} y={914} taille={54} />}
           {avecUrl && (
             <>
-              <text x={avecQr ? 1296 : 1360} y="952" font-size="8" class="cap mut" text-anchor="end">L’ARBRE EN LIGNE</text>
+              <text x={avecQr ? 1296 : 1360} y="952" font-size="8" class="cap mut" text-anchor="end">{maj(t('L’arbre en ligne'))}</text>
               <text x={avecQr ? 1296 : 1360} y="964" font-size="8.5" class="mut" text-anchor="end" data-max={avecQr ? 230 : 280}>{d.adresse.replace(/^https?:\/\/(www\.)?/, '')}</text>
             </>
           )}

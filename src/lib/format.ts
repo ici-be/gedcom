@@ -2,6 +2,7 @@
 
 import type { Evenement } from './gedcom/arbre'
 import type { Etat } from './suivi'
+import { locale, t } from './i18n'
 
 const LIBELLES: Record<string, string> = {
   BIRT: 'Naissance', BAPM: 'Baptême', CHR: 'Baptême', CHRA: 'Baptême adulte', BARM: 'Bar-mitsva', BASM: 'Bat-mitsva',
@@ -49,18 +50,18 @@ export function pourcent(n: number, total: number): string {
 }
 
 export function nombre(n: number): string {
-  return n.toLocaleString('fr-BE')
+  return n.toLocaleString(locale())
 }
 
 /** Nom proposé pour le PDF d'un arbre imprimé : « Genealogie_Bruno_Veyckemans_2026-10-15 » (sans accents ni espaces) */
 export function nomFichierArbre(prenom: string, nom: string, jour: string): string {
   const propre = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9-]+/g, '_').replace(/^_+|_+$/g, '')
-  return ['Genealogie', propre(prenom.split(/\s+/)[0] ?? ''), propre(nom), jour].filter(Boolean).join('_')
+  return [t('Genealogie'), propre(prenom.split(/\s+/)[0] ?? ''), propre(nom), jour].filter(Boolean).join('_')
 }
 
 /** Nom proposé pour le PDF de l'arbre du couple : « Genealogie_Cambier-Foulquet_2026-10-19 » (le nom de famille d'un seul s'ils sont identiques) */
 export function nomFichierCouple(nom1: string, nom2: string, jour: string): string {
   const propre = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9-]+/g, '_').replace(/^_+|_+$/g, '')
   const noms = [propre(nom1), propre(nom2)].filter(Boolean)
-  return ['Genealogie', [...new Set(noms)].join('-'), jour].filter(Boolean).join('_')
+  return [t('Genealogie'), [...new Set(noms)].join('-'), jour].filter(Boolean).join('_')
 }

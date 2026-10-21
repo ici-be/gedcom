@@ -13,6 +13,7 @@ import { ajuster } from './feuille'
 import { chargerPolices, largeur } from './mesure'
 import type { OptionsFeuille } from './modeles'
 import { bornerGenerationsPyramide, trouverThemePyramide, type Morceau, Morceaux } from './Pyramide'
+import { t } from '../../lib/i18n'
 
 const X0 = 40
 const LARG = 1320
@@ -144,7 +145,7 @@ export function TableAncetres({ d, options }: { d: Donnees; options: OptionsFeui
       const yb = y + fsTitre * LH * 0.78 + 4 * k
       return (
         <g key={'g' + l.g}>
-          <text x={x} y={yb.toFixed(1)} font-size={fsTitre.toFixed(2)} class="cap mut">GÉNÉRATION <tspan class="nm" fill="#1f2523">{romain(l.g + 1)}</tspan></text>
+          <text x={x} y={yb.toFixed(1)} font-size={fsTitre.toFixed(2)} class="cap mut">{maj(t('Génération'))} <tspan class="nm" fill="#1f2523">{romain(l.g + 1)}</tspan></text>
           <text x={(x + W).toFixed(1)} y={yb.toFixed(1)} font-size={(fsTitre * 0.9).toFixed(2)} class="mut" text-anchor="end">{l.connus} / {2 ** l.g}</text>
           <line x1={x} x2={(x + W).toFixed(1)} y1={(yb + 3 * k).toFixed(1)} y2={(yb + 3 * k).toFixed(1)} stroke="#3c4441" stroke-width="0.7" />
         </g>
@@ -159,7 +160,7 @@ export function TableAncetres({ d, options }: { d: Donnees; options: OptionsFeui
     const xt = x + larg + 9 * k
     const maxTexte = x + W - xt
     const pn = prenoms(r.prenom, 2)
-    const detail: Morceau[] = p.dejaVu ? [[`◆ voir le n° ${p.dejaVu}`, 'so']] : morceauxDetail(r, deces.get(s), maxTexte, fsDetail)
+    const detail: Morceau[] = p.dejaVu ? [[t('◆ voir le n° {n}', { n: p.dejaVu }), 'so']] : morceauxDetail(r, deces.get(s), maxTexte, fsDetail)
     return (
       <g key={s}>
         <text x={(x + larg).toFixed(1)} y={y1.toFixed(1)} font-size={fsNom.toFixed(2)} class="mut an" text-anchor="end">{s}</text>
@@ -175,25 +176,25 @@ export function TableAncetres({ d, options }: { d: Donnees; options: OptionsFeui
   })
 
   const p1 = resumes.get(1)
-  const legende = ['° naissance', '† décès', 'v. vers, av. avant, ap. après', options.italiques && 'date en italique : sans source', implexes && '◆ implexe : la même personne sous un plus petit numéro'].filter(Boolean).join(' · ')
+  const legende = [t('° naissance'), t('† décès'), t('v. vers, av. avant, ap. après'), options.italiques && t('date en italique : sans source'), implexes && t('◆ implexe : la même personne sous un plus petit numéro')].filter(Boolean).join(' · ')
 
   return (
-    <svg ref={svg} class={'feuille' + (options.italiques ? ' italiques' : '')} viewBox="0 0 1400 990" role="img" aria-label="Table des ancêtres par numéro Sosa">
+    <svg ref={svg} class={'feuille' + (options.italiques ? ' italiques' : '')} viewBox="0 0 1400 990" role="img" aria-label={t('Table des ancêtres par numéro Sosa')}>
       <rect width="1400" height="990" fill="#fff" />
 
       {/* Titre */}
-      <text x={X0} y="64" font-size="11" class="cap mut">ASCENDANCE{p1 ? ` DE ${maj([prenoms(p1.prenom, 1), p1.nom].filter(Boolean).join(' '))}` : ''} · GÉNÉRATIONS I À {romain(generations)}</text>
-      <text x={X0} y="100" font-size="30" class="disp">Table des ancêtres</text>
+      <text x={X0} y="64" font-size="11" class="cap mut">{maj(p1 ? t('Ascendance de {nom}', { nom: [prenoms(p1.prenom, 1), p1.nom].filter(Boolean).join(' ') }) : t('Ascendance'))} · {maj(t('Générations I à {g}', { g: romain(generations) }))}</text>
+      <text x={X0} y="100" font-size="30" class="disp">{t('Table des ancêtres')}</text>
       <text x={X0} y="124" font-size="12" class="mut" data-max="900">
-        Chaque case du recto par son numéro Sosa · {uniques} ancêtres identifiés · le père d’un numéro n porte le numéro 2n, la mère 2n + 1
+        {t('Chaque case du recto par son numéro Sosa · {n} ancêtres identifiés · le père d’un numéro n porte le numéro 2n, la mère 2n + 1', { n: uniques })}
       </text>
 
       {corps}
 
       {/* Pied de page */}
       <text x={X0} y={options.date ? 950 : 966} font-size="8.5" class="mut" data-max="900">{legende}</text>
-      {options.date && <text x={X0} y="966" font-size="8.5" class="mut">Établi le {options.date}</text>}
-      <text x="1360" y="966" font-size="8.5" class="mut" text-anchor="end">Au recto, l’arbre en pyramide des générations I à {romain(generations)}</text>
+      {options.date && <text x={X0} y="966" font-size="8.5" class="mut">{t('Établi le {date}', { date: options.date })}</text>}
+      <text x="1360" y="966" font-size="8.5" class="mut" text-anchor="end">{t('Au recto, l’arbre en pyramide des générations I à {g}', { g: romain(generations) })}</text>
     </svg>
   )
 }
