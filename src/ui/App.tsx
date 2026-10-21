@@ -24,12 +24,19 @@ import { ProposerInstallation } from './Installer'
 import { ChoixRacine } from './ChoixRacine'
 import { BoutonDons, CarteDons } from './Dons'
 import { ChoixLangue } from './ChoixLangue'
-import { definirLangue, estLangue, langueDuNavigateur, t, type Langue } from '../lib/i18n'
+import { definirLangue, estLangue, LANGUES, langueDuNavigateur, t, type Langue } from '../lib/i18n'
 
 interface Fichier { nom: string; importe: string; arbre: Arbre }
 
-// /print/ : seule la page d'impression, sans le reste du menu
-const MODE_IMPRESSION = /\/print(\/(index\.html)?)?$/.test(location.pathname)
+// /print/ et /print+fr-be/, /print+en-gb/, /print+nl-be/ : seule la page d'impression, sans le reste du menu
+const PAGE_IMPRESSION = /\/print(?:(?:\+|%2B)([a-z]{2})(?:-[a-z]{2})?)?(?:\/(?:index\.html)?)?$/i.exec(location.pathname)
+const MODE_IMPRESSION = !!PAGE_IMPRESSION
+
+/** L'adresse de la page d'impression dans une langue : /print+fr-be/, /print+en-gb/, /print+nl-be/ (le fichier gardé dans le navigateur suit) */
+function adresseImpression(l: Langue): string {
+  const racine = location.pathname.replace(/print(?:(?:\+|%2B)[^/]*)?\/?(?:index\.html)?$/i, '')
+  return racine + 'print+' + LANGUES.find((x) => x.id === l)!.locale.toLowerCase() + '/' + location.search.replace(/[?&]lang=[^&]*/, '') + location.hash
+}
 
 function lireRoute(): string[] {
   const r = location.hash.replace(/^#\/?/, '').split('/').map(decodeURIComponent)
@@ -38,6 +45,8 @@ function lireRoute(): string[] {
 
 /** La langue de la page d'impression : celle de l'adresse (?lang=en), sinon la dernière choisie, sinon celle du navigateur */
 function langueInitiale(): Langue {
+  const dansAdresse = PAGE_IMPRESSION?.[1]?.toLowerCase()
+  if (estLangue(dansAdresse)) return dansAdresse
   const demandee = new URLSearchParams(location.search).get('lang')
   if (estLangue(demandee)) return demandee
   const gardee = lire<unknown>('langue', null)
@@ -75,7 +84,12 @@ function Icone({ nom }: { nom: string }) {
 export function App() {
   const [route, setRoute] = useState(lireRoute)
   const [langue, setLangueBrute] = useState<Langue>(langueInitiale)
-  const setLangue = (l: Langue) => { setLangueBrute(l); ecrire('langue', l) }
+  const setLangue = (l: Langue) => {
+    ecrire('langue', l)
+    // sur /print/, chaque langue a son adresse
+    if (MODE_IMPRESSION) location.href = adresseImpression(l)
+    else setLangueBrute(l)
+  }
   const [etat, setEtat] = useState<'demarrage' | 'lecture' | 'pret' | 'vide'>('demarrage')
   const [erreur, setErreur] = useState<string>()
   const [fichier, setFichier] = useState<Fichier | null>(null)
