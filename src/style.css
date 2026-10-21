@@ -158,6 +158,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 650; letter-spacing: -0.0
 .dons-formulaire input, .dons-formulaire select { min-width: 0; font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); }
 .dons-formulaire .bouton, .dons-formulaire .aide, .dons-formulaire .erreur { grid-column: 1 / -1; }
 
+/* Sosa 1 dans le bandeau */
 .choix-racine { position: relative; margin-left: auto; }
 .choix-racine-bouton { display: inline-flex; gap: 8px; align-items: center; border: 1px solid var(--line); background: var(--panel); color: var(--fg);
   border-radius: 8px; padding: 5px 12px; font: inherit; cursor: pointer; max-width: 190px; }
