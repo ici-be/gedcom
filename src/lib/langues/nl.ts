@@ -325,5 +325,4 @@ export const NL: Record<string, string> = {
   "Feuille envoyée à l’impression": "Blad naar de printer gestuurd",
   "Teinté selon la province de naissance": "Ingekleurd volgens de provincie van geboorte",
   "148 Ko": "148 kB",
-  "Démo animée d’environ dix secondes, avec un arbre fictif.": "Geanimeerde demo van ongeveer tien seconden, met een fictieve boom.",
 }

@@ -325,5 +325,4 @@ export const EN: Record<string, string> = {
   "Feuille envoyée à l’impression": "Sheet sent to print",
   "Teinté selon la province de naissance": "Tinted by province of birth",
   "148 Ko": "148 KB",
-  "Démo animée d’environ dix secondes, avec un arbre fictif.": "Animated demo of about ten seconds, with a fictional tree.",
 }

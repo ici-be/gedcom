@@ -3,7 +3,9 @@
 import { useEffect, useRef } from 'preact/hooks'
 import { t } from '../lib/i18n'
 
+// la démo est écrite pour dix secondes ; tous les délais sont multipliés par RYTHME
 const DUREE = 10200
+const RYTHME = 2
 
 // éventail fictif : 6 générations sur 220°, chaque quartier teinté par une province
 function point(cx: number, cy: number, r: number, a: number): string {
@@ -28,7 +30,7 @@ const SEGMENTS: Segment[] = (() => {
       r.push({
         d: secteur(cx, cy, r1, r2, a1 + 0.35, a2 - 0.35),
         province: ((quartier + (alea(g * 100 + i) > 0.62 ? 1 : 0)) % 5) + 1,
-        retard: (g - 1) * 0.28 + (i / nb) * 0.2,
+        retard: ((g - 1) * 0.28 + (i / nb) * 0.2) * RYTHME,
         opacite: 0.55 + alea(n++) * 0.4,
       })
     }
@@ -62,7 +64,7 @@ export function Demo({ fermer }: { fermer: () => void }) {
     const reduit = matchMedia('(prefers-reduced-motion: reduce)').matches
     let minuteurs: number[] = []
 
-    const planifie = (ms: number, fn: () => void) => { minuteurs.push(window.setTimeout(fn, ms)) }
+    const planifie = (ms: number, fn: () => void) => { minuteurs.push(window.setTimeout(fn, ms * RYTHME)) }
     const centre = (e: HTMLElement, dx = 0.5, dy = 0.5): [number, number] => {
       const s = scene.getBoundingClientRect(), r = e.getBoundingClientRect()
       return [r.left - s.left + r.width * dx, r.top - s.top + r.height * dy]
@@ -91,7 +93,7 @@ export function Demo({ fermer }: { fermer: () => void }) {
     const joue = () => {
       remise()
       if (reduit) { final(); return }
-      jauge.style.transition = `width ${DUREE}ms linear`; jauge.style.width = '100%'
+      jauge.style.transition = `width ${DUREE * RYTHME}ms linear`; jauge.style.width = '100%'
       montre(0)
       // 1. le fichier glisse jusqu'à la zone de dépôt
       planifie(300, () => {
@@ -113,7 +115,7 @@ export function Demo({ fermer }: { fermer: () => void }) {
         const s = q('.demo-saisie'); s.classList.remove('vide'); s.textContent = ''
         const txt = 'Marie Dup'
         let k = 0
-        const tape = () => { if (k < txt.length) { s.textContent += txt[k++]; minuteurs.push(window.setTimeout(tape, 85)) } else q('.demo-resultats').classList.add('on') }
+        const tape = () => { if (k < txt.length) { s.textContent += txt[k++]; minuteurs.push(window.setTimeout(tape, 85 * RYTHME)) } else q('.demo-resultats').classList.add('on') }
         tape()
       })
       planifie(4200, () => vers(q('.demo-res1'), 0.35))
@@ -247,7 +249,6 @@ export function Demo({ fermer }: { fermer: () => void }) {
           </div>
         </div>
         <div class="demo-jauge" aria-hidden="true"><div /></div>
-        <p class="aide demo-note">{t('Démo animée d’environ dix secondes, avec un arbre fictif.')}</p>
       </div>
     </div>
   )
