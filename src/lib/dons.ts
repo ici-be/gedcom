@@ -28,10 +28,10 @@ export const ASSOCIATIONS: Association[] = [
 ]
 
 /** Phrase sur l'attestation fiscale ; '' pour ne rien dire */
-export const MENTION_FISCALE = 'Une attestation fiscale est délivrée à partir de 40 € de dons par an.'
+export const MENTION_FISCALE = '' /** Une attestation fiscale est délivrée à partir de 40 € de dons par an. */
 
 /** Adresse de l'application web Google Apps Script (« Déployer → Application web »). Vide : pas de compteur, seulement les liens. */
-export const URL_COMPTEUR = ''
+export const URL_COMPTEUR = 'https://script.google.com/macros/s/AKfycbyHZ8zybk-rgOXTozU2tx1Qq6ww7AFuPbUECHMFpwLwqmb9btGhX_DIViivxP55XGVJ/exec'
 
 export interface TotalDons { dons: number; total: number }
 

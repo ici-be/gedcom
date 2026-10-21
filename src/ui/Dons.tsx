@@ -12,6 +12,9 @@ export function BoutonDons({ ouvrir }: { ouvrir: () => void }) {
   return <button type="button" class="bouton-dons" onClick={ouvrir}><Coeur />Soutenir une association</button>
 }
 
+/** Valeur enregistrée dans la feuille quand le don va ailleurs */
+const AUTRE = 'Autre'
+
 function Declaration({ onDeclare }: { onDeclare: () => void }) {
   const [ouvert, setOuvert] = useState(false)
   const [montant, setMontant] = useState('')
@@ -34,10 +37,11 @@ function Declaration({ onDeclare }: { onDeclare: () => void }) {
         : (
           <form class="dons-formulaire" onSubmit={valider}>
             <label for="don-montant">Montant (€)</label>
-            <input id="don-montant" type="number" min="1" max="10000" step="1" inputMode="numeric" required placeholder="20" value={montant} onInput={(e) => setMontant(e.currentTarget.value)} />
+            <input id="don-montant" type="number" min="1" max="10000" step="1" inputMode="numeric" required placeholder="5" value={montant} onInput={(e) => setMontant(e.currentTarget.value)} />
             <label for="don-asso">À</label>
             <select id="don-asso" value={asso} onChange={(e) => setAsso(e.currentTarget.value)}>
               {ASSOCIATIONS.map((a) => <option key={a.nom} value={a.nom}>{a.nom}</option>)}
+              <option value={AUTRE}>Une autre association de mon choix</option>
             </select>
             <button type="submit" class="bouton" disabled={envoi === 'en-cours'}>Ajouter au total</button>
             {envoi === 'echec' && <p class="erreur" role="alert">L’envoi n’a pas abouti, réessayez plus tard.</p>}
