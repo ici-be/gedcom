@@ -26,11 +26,15 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
+      # un nom par essai : « Re-run jobs » garde l'archive de l'essai précédent, et deploy-pages refuse d'en trouver deux
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
+          name: github-pages-${{ github.run_attempt }}
       - id: deploiement
         uses: actions/deploy-pages@v4
+        with:
+          artifact_name: github-pages-${{ github.run_attempt }}
       # La page d'impression seule, sur https://ici.be/gedcom-print/ (dépôt gedcom-print, clé de déploiement en secret)
       - run: node scripts/site-print.mjs
       - uses: peaceiris/actions-gh-pages@v4
