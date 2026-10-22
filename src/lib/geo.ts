@@ -311,6 +311,11 @@ export async function situer(lieux: string[], charger: (fichier: string) => Prom
 
 // ——— Lieux de l'arbre situés une fois pour toutes (carte, arbres imprimables) ———
 
+/** Adresse d'un fichier de données du site (geo/…), aussi depuis les pages /print/, /print+en-gb/… qui sont un dossier plus bas */
+export function depuisRacine(chemin: string): string {
+  return location.pathname.replace(/[^/]*$/, '').replace(/print(?:(?:\+|%2B)[^/]*)?\/$/i, '') + chemin
+}
+
 let enCache: { cle: object; promesse: Promise<Map<string, Position>> } | undefined
 
 /** Situe tous les lieux d'un arbre ; le résultat est gardé tant que l'arbre ne change pas */
@@ -320,7 +325,7 @@ export function situerArbre(arbre: { individus: Map<string, { evenements: { lieu
   for (const ind of arbre.individus.values()) for (const e of ind.evenements) if (e.lieu) lieux.add(e.lieu)
   for (const fam of arbre.familles.values()) for (const e of fam.evenements) if (e.lieu) lieux.add(e.lieu)
   const charger = async (f: string): Promise<Repertoire> => {
-    const r = await fetch(`geo/${f}.json`)
+    const r = await fetch(depuisRacine(`geo/${f}.json`))
     if (!r.ok) throw new Error(f)
     return r.json()
   }

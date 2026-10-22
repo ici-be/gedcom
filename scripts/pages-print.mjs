@@ -3,7 +3,8 @@
 // À relancer si print/index.html change : node scripts/pages-print.mjs
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 
-const SITE = 'https://ici.be/gedcom/'
+// les pages d'impression sont publiées à part, sur https://ici.be/gedcom-print/ (la page par défaut à la racine) : c'est leur adresse de référence
+const SITE = 'https://ici.be/gedcom-print/'
 const PAGES = [
   { dossier: 'print+fr-be', lang: 'fr-BE', hreflang: 'fr-BE', titre: 'Imprimer son arbre généalogique · Lignées',
     alt: 'Un éventail de huit générations d’ancêtres, teinté selon les provinces de naissance.',
@@ -19,7 +20,7 @@ const PAGES = [
 const nu = readFileSync('print/index.html', 'utf8').replace(/ *<(link rel="(canonical|alternate)"|meta (property="og:|name="twitter:))[^>]*>\n/g, '')
 const liens = [
   ...PAGES.map((p) => `    <link rel="alternate" hreflang="${p.hreflang}" href="${SITE}${p.dossier}/" />`),
-  `    <link rel="alternate" hreflang="x-default" href="${SITE}print/" />`,
+  `    <link rel="alternate" hreflang="x-default" href="${SITE}" />`,
 ].join('\n')
 
 const echapper = (s) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
@@ -30,7 +31,7 @@ const partage = (p) => [
   `<meta property="og:site_name" content="Lignées" />`,
   `<meta property="og:title" content="${echapper(p.titre)}" />`,
   `<meta property="og:description" content="${echapper(p.description)}" />`,
-  `<meta property="og:url" content="${SITE}${p.dossier}/" />`,
+  `<meta property="og:url" content="${SITE}${p.dossier ? p.dossier + '/' : ''}" />`,
   `<meta property="og:locale" content="${p.lang.replace('-', '_')}" />`,
   ...PAGES.filter((x) => x !== p).map((x) => `<meta property="og:locale:alternate" content="${x.lang.replace('-', '_')}" />`),
   `<meta property="og:image" content="${SITE}partage-print-${p.lang.slice(0, 2)}.png" />`,
@@ -43,10 +44,10 @@ const partage = (p) => [
   `<meta name="twitter:image" content="${SITE}partage-print-${p.lang.slice(0, 2)}.png" />`,
 ].map((l) => `    ${l}`).join('\n')
 
-const entete = (html, canonique, p) => html.replace(/<title>[^<]*<\/title>/, (t) => `${t}\n    <link rel="canonical" href="${SITE}${canonique}/" />\n${liens}\n${partage(p)}`)
+const entete = (html, canonique, p) => html.replace(/<title>[^<]*<\/title>/, (t) => `${t}\n    <link rel="canonical" href="${SITE}${canonique ? canonique + '/' : ''}" />\n${liens}\n${partage(p)}`)
 
 // la page par défaut (/print/) : la langue du navigateur, avec les mêmes liens vers les autres
-writeFileSync('print/index.html', entete(nu, 'print', { ...PAGES[0], dossier: 'print' }))
+writeFileSync('print/index.html', entete(nu, '', { ...PAGES[0], dossier: '' }))
 
 for (const p of PAGES) {
   const html = nu

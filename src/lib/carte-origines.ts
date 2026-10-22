@@ -1,6 +1,7 @@
 // Carte des origines (bas de l'éventail imprimé) : contours des provinces et départements, cadrage sur
 // les régions où sont nés des ancêtres, et légende groupée par pays.
 
+import { depuisRacine } from './geo'
 import { t, T } from './i18n'
 
 /** Contenu de public/geo/contours.json (scripts/contours.py) : anneaux en [lon×100, lat×100, …] par code de région */
@@ -62,7 +63,7 @@ export function aCadrer(contours: Contours, z: Zone, principale: boolean): strin
 let enCache: Promise<Contours> | undefined
 
 export function chargerContours(): Promise<Contours> {
-  enCache ??= fetch('geo/contours.json').then((r) => {
+  enCache ??= fetch(depuisRacine('geo/contours.json')).then((r) => {
     if (!r.ok) throw new Error('contours')
     return r.json() as Promise<Contours>
   })

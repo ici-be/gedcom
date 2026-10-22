@@ -30,7 +30,8 @@ import { definirLangue, estLangue, LANGUES, langueDuNavigateur, t, type Langue }
 interface Fichier { nom: string; importe: string; arbre: Arbre }
 
 // /print/ et /print+fr-be/, /print+en-gb/, /print+nl-be/ : seule la page d'impression, sans le reste du menu
-const PAGE_IMPRESSION = /\/print(?:(?:\+|%2B)([a-z]{2})(?:-[a-z]{2})?)?(?:\/(?:index\.html)?)?$/i.exec(location.pathname)
+// (de même à la racine de https://ici.be/gedcom-print/, le site qui ne publie que l'impression)
+const PAGE_IMPRESSION = /\/(?:print(?:(?:\+|%2B)([a-z]{2})(?:-[a-z]{2})?)?|gedcom-print)(?:\/(?:index\.html)?)?$/i.exec(location.pathname)
 const MODE_IMPRESSION = !!PAGE_IMPRESSION
 
 /** L'adresse de la page d'impression dans une langue : /print+fr-be/, /print+en-gb/, /print+nl-be/ (le fichier gardé dans le navigateur suit) */
