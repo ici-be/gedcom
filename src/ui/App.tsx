@@ -25,6 +25,7 @@ import { ChoixRacine } from './ChoixRacine'
 import { BoutonDons, CarteDons } from './Dons'
 import { ChoixLangue } from './ChoixLangue'
 import { Demo } from './Demo'
+import { depuisRacine } from '../lib/geo'
 import { definirLangue, estLangue, LANGUES, langueDuNavigateur, t, type Langue } from '../lib/i18n'
 
 interface Fichier { nom: string; importe: string; arbre: Arbre }
@@ -36,8 +37,7 @@ const MODE_IMPRESSION = !!PAGE_IMPRESSION
 
 /** L'adresse de la page d'impression dans une langue : /print+fr-be/, /print+en-gb/, /print+nl-be/ (le fichier gardé dans le navigateur suit) */
 function adresseImpression(l: Langue): string {
-  const racine = location.pathname.replace(/print(?:(?:\+|%2B)[^/]*)?\/?(?:index\.html)?$/i, '')
-  return racine + 'print+' + LANGUES.find((x) => x.id === l)!.locale.toLowerCase() + '/' + location.search.replace(/[?&]lang=[^&]*/, '') + location.hash
+  return depuisRacine('') + 'print+' + LANGUES.find((x) => x.id === l)!.locale.toLowerCase() + '/' + location.search.replace(/[?&]lang=[^&]*/, '') + location.hash
 }
 
 function lireRoute(): string[] {

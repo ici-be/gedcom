@@ -313,7 +313,7 @@ export async function situer(lieux: string[], charger: (fichier: string) => Prom
 
 /** Adresse d'un fichier de données du site (geo/…), aussi depuis les pages /print/, /print+en-gb/… qui sont un dossier plus bas */
 export function depuisRacine(chemin: string): string {
-  return location.pathname.replace(/[^/]*$/, '').replace(/print(?:(?:\+|%2B)[^/]*)?\/$/i, '') + chemin
+  return location.pathname.replace(/[^/]*$/, '').replace(/\/print(?:(?:\+|%2B)[^/]*)?\/$/i, '/') + chemin
 }
 
 let enCache: { cle: object; promesse: Promise<Map<string, Position>> } | undefined
