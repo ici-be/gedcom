@@ -147,6 +147,8 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   reconnus aussi. La page liste ces personnes (ancêtres d'abord, par numéro Sosa), signale celles qui ont
   pourtant une signature dans l'arbre, et offre une case à cocher par personne pour retenir celles déjà
   modifiées sur Geneanet : les cases tiennent dans le navigateur jusqu'au prochain fichier chargé.
+  Dans **Personnes**, une petite plume suit le nom de qui a sa signature dans l'arbre, une croix celui
+  de qui ne savait pas signer ; la fiche dépliée montre la signature, ou la mention et sa précision.
 
 Pour chaque événement, un badge **S** (bleu) ouvre la source en ligne ; un badge **T** (orange)
 montre une source écrite en texte.

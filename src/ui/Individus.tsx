@@ -304,6 +304,7 @@ export function Individus({ d, perimetre, setPerimetre }: { d: Donnees; perimetr
                       </button>
                       <span class="nom-bloc">
                         <Personne d={d} id={l.ind.id} prenoms={2} />
+                        <Signature ind={l.ind} />
                         {texteParents(l.parents) && <span class="filiation" title="D'après la note de la personne">{texteParents(l.parents)}</span>}
                         <Annees ind={l.ind} />
                       </span>
@@ -336,6 +337,29 @@ export function Individus({ d, perimetre, setPerimetre }: { d: Donnees; perimetr
   )
 }
 
+/** Une croix tracée à la plume, comme au bas des actes de ceux qui ne savaient pas signer */
+function Croix() {
+  return <svg class="marque-croix" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 2.6 9.2 9.6M9 2.4 2.8 9.4" /></svg>
+}
+
+/** Après le nom : une plume si sa signature est dans l'arbre, une croix s'il ne savait pas signer */
+function Signature({ ind }: { ind: Individu }) {
+  return (
+    <>
+      {ind.photo?.signature && (
+        <span class="marque-signature" title="Signature dans l'arbre" role="img" aria-label="Signature dans l'arbre">
+          <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M10.5 1.5C7 2.5 4.6 5 3.4 8.6M10.5 1.5c-.2 2.6-2 4.7-5 5.6M3.4 8.6 2 10.5" /></svg>
+        </span>
+      )}
+      {ind.illettre && (
+        <span class="marque-signature" title={'Ne savait pas signer' + (ind.illettre.precision ? ` (${ind.illettre.precision})` : '')} role="img" aria-label="Ne savait pas signer">
+          <Croix />
+        </span>
+      )}
+    </>
+  )
+}
+
 /** Tous les événements de la personne et de ses unions, avec leurs sources */
 function Details({ d, ind }: { d: Donnees; ind: Individu }) {
   const { pere, mere } = parents(d.arbre, ind)
@@ -350,6 +374,12 @@ function Details({ d, ind }: { d: Donnees; ind: Individu }) {
         ) : 'Parents non renseignés'}
         {ind.metiers.length > 0 && <> · <LiensMetiers d={d} valeurs={ind.metiers} /></>}
       </p>
+      {ind.photo?.signature && (
+        <figure class="photo signature fiche-signature"><img src={ind.photo.url} alt={`Signature de ${nomComplet(ind)}`} loading="lazy" /></figure>
+      )}
+      {ind.illettre && (
+        <p class="fiche-illettre"><Croix />{ind.sexe === 'F' ? 'Illettrée' : 'Illettré'} : ne savait pas signer{ind.illettre.precision && <> ({ind.illettre.precision})</>} · <a href="#/illettres">d'après la note</a></p>
+      )}
       <ul class="evenements">
         {ind.evenements.filter((e) => e.tag !== 'OCCU').map((e, i) => (
           <li key={i}>
