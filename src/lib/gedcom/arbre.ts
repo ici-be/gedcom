@@ -4,6 +4,7 @@ import { enfant, lireNoeuds, valeur, type Noeud } from './lecture'
 import { lireDate, type DateGed } from './dates'
 import { lireFiliation, type Filiation } from '../filiation'
 import { lireIntrouvable, type Introuvable } from '../introuvable'
+import { lireIllettre, type Illettre } from '../illettre'
 
 export interface Evenement {
   tag: string
@@ -39,6 +40,8 @@ export interface Individu {
   note?: string
   /** Parent inconnu ou introuvable, d'après la note (« Filiation: père inconnu »…) */
   filiation?: Filiation
+  /** Ne savait pas signer, d'après la note (« Signature: illettré ») */
+  illettre?: Illettre
   /** Photo principale en ligne (« 1 OBJE », « 2 FILE https://… ») : visage, ou signature si c'est un PNG */
   photo?: Photo
 }
@@ -203,6 +206,8 @@ export function lireArbre(texte: string): Arbre {
       if (ind.note) {
         const f = lireFiliation(ind.note)
         if (f) ind.filiation = f
+        const i = lireIllettre(ind.note)
+        if (i) ind.illettre = i
       }
       arbre.individus.set(ind.id, ind)
     } else if (n.tag === 'FAM' && n.xref) {

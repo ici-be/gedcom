@@ -20,6 +20,7 @@ import { Recit } from './Recit'
 import { ListeEvenements, PageEvenement } from './Evenements'
 import { Filiation } from './Filiation'
 import { Introuvables } from './Introuvables'
+import { Illettres } from './Illettres'
 import { ProposerInstallation } from './Installer'
 import { ChoixRacine } from './ChoixRacine'
 import { BoutonDons, CarteDons } from './Dons'
@@ -316,6 +317,7 @@ export function App() {
     : <div class="attente" role="status"><span class="rouet" />{t('Préparation de l’arbre…')}</div>
   else if (page === 'filiation') contenu = <Filiation d={donnees} />
   else if (page === 'introuvables') contenu = <Introuvables d={donnees} />
+  else if (page === 'illettres') contenu = <Illettres key={fichier.importe} d={donnees} importe={fichier.importe} />
   else if (page === 'metiers') contenu = <Metiers d={donnees} perimetre={perimetre} setPerimetre={setPerimetre} />
   else contenu = (
     <>

@@ -266,7 +266,7 @@ function nettoyer(t?: string): string {
     .replace(/\S*https?:\/\/\S+/g, ' ')
     .split('\n')
     .map((l) => l.replace(/\s+/g, ' ').trim())
-    .filter((l) => l && !/^(annexes?|sources?|voir|lien|liens|image)\s*:?\s*$/i.test(l) && !/^filiation\s*:/i.test(l))
+    .filter((l) => l && !/^(annexes?|sources?|voir|lien|liens|image)\s*:?\s*$/i.test(l) && !/^(filiation|signatures?)\s*:/i.test(l))
     .join(' ')
     .replace(/\s+([,.;:])/g, '$1')
     .trim()

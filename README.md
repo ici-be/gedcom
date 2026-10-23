@@ -140,6 +140,13 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   compléter », ni compté parmi les ancêtres à sourcer, les actes à chercher par lieu ou sur la carte,
   sans compter pour autant comme sourcé. Un filtre « Source introuvable » les retrouve, et le récit
   cite l'acte introuvable et sa raison en note.
+- **Illettrés** (`#/illettres`) : une personne qui ne savait pas signer se note dans sa **note**
+  (sur Geneanet : rubrique « Notes ») par une ligne `Signature: illettré`, suivie si l'on veut de l'acte
+  qui l'établit : `Signature: ne sait pas signer (acte de mariage, Ath 1820)`. Accents, majuscules et
+  accords libres ; `illettrée`, `ne savait pas écrire`, `analphabète`, `une croix`, `une marque` sont
+  reconnus aussi. La page liste ces personnes (ancêtres d'abord, par numéro Sosa), signale celles qui ont
+  pourtant une signature dans l'arbre, et offre une case à cocher par personne pour retenir celles déjà
+  modifiées sur Geneanet : les cases tiennent dans le navigateur jusqu'au prochain fichier chargé.
 
 Pour chaque événement, un badge **S** (bleu) ouvre la source en ligne ; un badge **T** (orange)
 montre une source écrite en texte.
