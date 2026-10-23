@@ -7,6 +7,7 @@ import { MENTIONS, texteParent } from '../lib/filiation'
 import { comparerSosa, etatParents, filiationContredite, nomComplet } from '../lib/parente'
 import { nombre } from '../lib/format'
 import { Annees, Copier, Personne } from './commun'
+import { RetourAnnotations } from './Annotations'
 
 export function Filiation({ d }: { d: Donnees }) {
   const notes = useMemo(() => {
@@ -29,6 +30,7 @@ export function Filiation({ d }: { d: Donnees }) {
 
   return (
     <section class="ecran">
+      <RetourAnnotations />
       <header class="titre-ecran">
         <h1>Parents inconnus ou introuvables</h1>
         <p class="sous-titre">Dire qu'un parent n'est pas à chercher, pour que la recherche se concentre sur les vraies pistes.</p>

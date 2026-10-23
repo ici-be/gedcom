@@ -205,9 +205,7 @@ export function TableauDeBord({ d, bilan, precedent, fichier, setAdresse, setPer
       </div>
 
       <p class="astuce">Un « fait », c'est une naissance (ou un baptême), un mariage ou un décès (ou une inhumation). Il est sourcé quand au moins une source y est attachée.</p>
-      <p class="astuce">Un parent qu'il ne sert à rien de chercher (enfant naturel, enfant trouvé, registres perdus) se signale dans la note de la personne : <a href="#/filiation">« Filiation: père inconnu »…</a></p>
-      <p class="astuce">Un acte qui ne se trouvera pas (registres brûlés, lacune) se signale dans la note de l'événement, pour ne plus le compter parmi les sources à chercher : <a href="#/introuvables">« Source: introuvable (les archives ont brûlé en 1914) »</a></p>
-      <p class="astuce">Une personne qui ne savait pas écrire se signale dans sa note, pour ne plus chercher sa signature : <a href="#/illettres">« Signature: illettré »</a></p>
+      <p class="astuce">Un parent inconnu, un acte introuvable, une personne qui ne savait pas signer : ce que le GEDCOM ne sait pas dire s'écrit dans les notes, voir les <a href="#/annotations">annotations</a>.</p>
 
       <section class="panneau reglages">
         <h2>Réglages</h2>

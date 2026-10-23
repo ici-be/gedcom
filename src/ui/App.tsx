@@ -21,6 +21,7 @@ import { ListeEvenements, PageEvenement } from './Evenements'
 import { Filiation } from './Filiation'
 import { Introuvables } from './Introuvables'
 import { Illettres } from './Illettres'
+import { Annotations } from './Annotations'
 import { ProposerInstallation } from './Installer'
 import { ChoixRacine } from './ChoixRacine'
 import { BoutonDons, CarteDons } from './Dons'
@@ -77,6 +78,7 @@ const ICONES: Record<string, string> = {
   ascendance: 'M8 14V8M8 8L3.5 4M8 8l4.5-4M3.5 4V2M12.5 4V2',
   recit: 'M3 2h7l3 3v9H3zM5.5 8h5M5.5 11h5',
   statistiques: 'M2.5 14V9M6.5 14V5M10.5 14V7M14 14V2',
+  annotations: 'M2 2.5h5.5l6 6-5 5-6-6zM5 4.5a1 1 0 1 1 0 2a1 1 0 1 1 0-2',
   imprimer: 'M4 6V2h8v4M4 11H2.5V6h11v5H12M4 9h8v5H4z',
 }
 
@@ -315,6 +317,7 @@ export function App() {
   else if (page === 'imprimer') contenu = Impression
     ? <Impression d={donnees} id={route[1]} />
     : <div class="attente" role="status"><span class="rouet" />{t('Préparation de l’arbre…')}</div>
+  else if (page === 'annotations') contenu = <Annotations d={donnees} />
   else if (page === 'filiation') contenu = <Filiation d={donnees} />
   else if (page === 'introuvables') contenu = <Introuvables d={donnees} />
   else if (page === 'illettres') contenu = <Illettres key={fichier.importe} d={donnees} importe={fichier.importe} />
@@ -345,6 +348,7 @@ export function App() {
               <a href="#/ascendance" class={page === 'ascendance' || page === 'lignee' ? 'actif' : ''}><Icone nom="ascendance" />Ascendance</a>
               <a href="#/recit" class={page === 'recit' || page === 'evenements' ? 'actif' : ''}><Icone nom="recit" />Récit</a>
               <a href="#/statistiques" class={page === 'statistiques' ? 'actif' : ''}><Icone nom="statistiques" />Statistiques</a>
+              <a href="#/annotations" class={['annotations', 'filiation', 'introuvables', 'illettres'].includes(page) ? 'actif' : ''}><Icone nom="annotations" />Annotations</a>
               <a href="#/imprimer" class={page === 'imprimer' ? 'actif' : ''}><Icone nom="imprimer" />Imprimer</a>
             </nav>
           )}

@@ -9,6 +9,7 @@ import { comparerSosa, nomComplet } from '../lib/parente'
 import { ecrire, lire } from '../lib/stockage'
 import { nombre } from '../lib/format'
 import { Annees, Copier, Personne } from './commun'
+import { RetourAnnotations } from './Annotations'
 
 interface Coches { importe: string; ids: string[] }
 
@@ -39,6 +40,7 @@ export function Illettres({ d, importe }: { d: Donnees; importe: string }) {
 
   return (
     <section class="ecran">
+      <RetourAnnotations />
       <header class="titre-ecran">
         <h1>Illettrés</h1>
         <p class="sous-titre">Dire qu'une personne ne savait pas signer, pour ne plus chercher sa signature d'un acte à l'autre.</p>

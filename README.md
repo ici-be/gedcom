@@ -114,6 +114,9 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   sur sa moitié de la feuille (1 à 6 générations), leurs descendants communs en dessous (1 à 3 générations), avec les
   mêmes options que le sablier ; un ancêtre commun aux deux est marqué ◆.
   D'autres modèles s'ajoutent dans `src/ui/arbres/modeles.ts`.
+- **Annotations** (`#/annotations`, dans le menu) : ce que le GEDCOM ne sait pas dire s'écrit dans les notes
+  de l'arbre ; la page présente les trois mentions ci-dessous (à copier), leur nombre dans l'arbre, et
+  renvoie vers la page de chacune, qui ramène aux annotations.
 - **Parents inconnus ou introuvables** (`#/filiation`) : le GEDCOM n'a aucun champ pour dire qu'un
   parent n'est pas à chercher. On l'écrit dans la **note de la personne** (sur Geneanet : rubrique
   « Notes » de l'enfant), qui revient dans chaque export, par une ligne « Filiation: … » (pas de `#` : la

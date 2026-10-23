@@ -9,6 +9,7 @@ import { comparerSosa, nomComplet } from '../lib/parente'
 import { aChercher } from '../lib/suivi'
 import { libelle, nombre } from '../lib/format'
 import { Copier, DateLieu, Personne } from './commun'
+import { RetourAnnotations } from './Annotations'
 
 const EXEMPLES: { mot: string; sens: string }[] = [
   { mot: 'Source: introuvable (les archives de 1789 à 1820 ont brûlé en 1914)', sens: 'Registres détruits : incendie, guerre, inondation.' },
@@ -45,6 +46,7 @@ export function Introuvables({ d }: { d: Donnees }) {
 
   return (
     <section class="ecran">
+      <RetourAnnotations />
       <header class="titre-ecran">
         <h1>Sources introuvables</h1>
         <p class="sous-titre">Dire qu'un acte ne se trouvera pas, pour ne plus retomber dessus en cherchant les sources qui manquent.</p>
