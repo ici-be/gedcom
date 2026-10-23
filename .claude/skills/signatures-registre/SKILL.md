@@ -64,6 +64,9 @@ Scripts (Python, Pillow + numpy seulement) :
 6. Si besoin, ajuster :
    - un trait réglé traverse la signature et en coupe des morceaux → `--garder-lignes` ;
    - une tache ou un bout de texte voisin reste → resserrer la zone ;
+   - deux signatures imbriquées (une ligne qui remonte dans celle du dessus) → zone en
+     plusieurs rectangles, `--zone "x0,y0,x1,y1+x0,y0,x1,y1:Nom"` (l'encre hors de leur
+     union est ignorée), en escalier autour des jambages ;
    - image très grande (scan haute définition) → `--echelle 1`.
 7. **Trier selon l'arbre** : déplacer dans `<sous-dossier>/déjà dans l'arbre/` les
    signatures des personnes dont le média principal est déjà un PNG (« SIGNATURE
