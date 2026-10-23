@@ -1,5 +1,8 @@
 /* Lignées : gris ardoise, accent indigo, Inter partout ; menu à gauche. */
 :root {
+  /* graphe des relations : 8 teintes de métiers (ordre fixe, validé daltonisme), types de liens, personne sans couleur */
+  --g1: #2a78d6; --g2: #eb6834; --g3: #1baf7a; --g4: #eda100; --g5: #e87ba4; --g6: #008300; --g7: #6250d6; --g8: #e34948;
+  --g-famille: #7d8696; --g-parrain: #6250d6; --g-temoin: #2a78d6; --g-cotemoin: #eb6834; --g-vide: #a3abb8;
   --bg: #f6f7f9;
   --panel: #ffffff;
   --panel-2: #f1f3f6;
@@ -44,6 +47,8 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
+  --g1: #3987e5; --g2: #d95926; --g3: #199e70; --g4: #c98500; --g5: #d55181; --g6: #008300; --g7: #9085e9; --g8: #e66767;
+  --g-famille: #8a93a3; --g-parrain: #9085e9; --g-temoin: #3987e5; --g-cotemoin: #d95926; --g-vide: #5b6472;
     --bg: #0f1115; --panel: #171a21; --panel-2: #1f232c; --fg: #e6e8ee; --muted: #9aa3b2; --line: #2a2f3a; --souligne: #4a5160;
     --accent: #8fa2ff; --accent-fg: #0b1020; --accent-bg: #1d2547; --or: #fbbf24;
     --ok: #6fd49b; --ok-bg: #12301f; --mid: #ffc76e; --mid-bg: #3a2d12; --ko: #ff978a; --ko-bg: #3d1c18;
@@ -52,6 +57,8 @@
   }
 }
 :root[data-theme="dark"] {
+  --g1: #3987e5; --g2: #d95926; --g3: #199e70; --g4: #c98500; --g5: #d55181; --g6: #008300; --g7: #9085e9; --g8: #e66767;
+  --g-famille: #8a93a3; --g-parrain: #9085e9; --g-temoin: #3987e5; --g-cotemoin: #d95926; --g-vide: #5b6472;
   --bg: #0f1115; --panel: #171a21; --panel-2: #1f232c; --fg: #e6e8ee; --muted: #9aa3b2; --line: #2a2f3a; --souligne: #4a5160;
   --accent: #8fa2ff; --accent-fg: #0b1020; --accent-bg: #1d2547; --or: #fbbf24;
   --ok: #6fd49b; --ok-bg: #12301f; --mid: #ffc76e; --mid-bg: #3a2d12; --ko: #ff978a; --ko-bg: #3d1c18;
@@ -1036,3 +1043,79 @@ a.asc-piste-g:hover { color: var(--accent); }
   .demo-etapes li { font-size: 0.7rem; }
 }
 @media (prefers-reduced-motion: reduce) { .demo-vue, .demo-papier .seg, .demo-fichier, .demo-souris { transition: none; } .demo-curtxt { animation: none; } }
+
+/* ---------- graphe des relations ---------- */
+.graphe-reglages { flex-direction: column; align-items: stretch; gap: 12px; }
+.graphe-ligne { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: flex-end; }
+.graphe-personne { flex: 1 1 320px; max-width: 560px; }
+.graphe-etiquette { font-size: 0.85rem; color: var(--muted); font-weight: 700; align-self: center; }
+.filtres label.graphe-type { gap: 6px; font-size: 0.9rem; align-self: center; }
+.graphe-couleur { margin-left: auto; }
+.graphe-type svg, .graphe-liens svg { width: 22px; height: 8px; flex: none; overflow: visible; }
+svg[class^="trait-"] line { stroke-width: 2; stroke-linecap: round; }
+.trait-famille line { stroke: var(--g-famille); }
+.trait-parrain line { stroke: var(--g-parrain); }
+.trait-temoin line { stroke: var(--g-temoin); stroke-dasharray: 5 3; }
+.trait-cotemoin line { stroke: var(--g-cotemoin); stroke-dasharray: 1.5 3.5; }
+.choix-metiers { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.choix-metiers .puces { display: contents; list-style: none; }
+.choix-metiers .puces li { display: inline-flex; align-items: center; gap: 6px; padding: 3px 4px 3px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel-2); font-size: 0.9rem; }
+.choix-metiers .puces li.tout-retirer { border: 0; background: none; padding: 0 4px; }
+.choix-metiers .puces button:not(.lien) { border: 0; background: none; width: 22px; height: 22px; border-radius: 50%; color: var(--muted); font-size: 1.05rem; line-height: 1; }
+.choix-metiers .puces button:not(.lien):hover { background: var(--line); color: var(--fg); }
+.choix-metiers .compte, .graphe-classement .compte { font-size: 0.75rem; padding: 0 7px; background: var(--panel); color: var(--muted); border: 1px solid var(--line); }
+.choix-metiers-recherche { position: relative; flex: 1 1 260px; max-width: 420px; }
+.choix-metiers-recherche input { width: 100%; }
+.choix-metiers-recherche .resultats { max-height: 340px; overflow-y: auto; }
+.choix-metiers-recherche .resultats button { display: flex; justify-content: space-between; gap: 8px; }
+.choix-metiers-recherche .resultats button.tout { color: var(--accent); font-weight: 600; }
+.pastille-couleur { display: inline-block; flex: none; width: 10px; height: 10px; border-radius: 50%; }
+.pastille-couleur.creuse { border: 2px solid var(--g-vide); width: 10px; height: 10px; box-sizing: border-box; }
+
+.graphe-cadre { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; }
+.graphe-toile { position: relative; height: max(460px, calc(100vh - 330px)); background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.graphe-toile canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+.graphe-haut { position: absolute; top: 12px; left: 12px; display: flex; gap: 8px; align-items: center; }
+.graphe-haut input { width: 230px; background: color-mix(in srgb, var(--panel) 90%, transparent); }
+.graphe-compte { font-size: 0.85rem; color: var(--muted); }
+.graphe-bilan { position: absolute; top: 14px; right: 14px; font-size: 0.85rem; color: var(--muted); text-align: right; background: color-mix(in srgb, var(--panel) 85%, transparent); padding: 2px 6px; border-radius: 6px; }
+.graphe-calcul { display: inline-flex; align-items: center; gap: 6px; }
+.graphe-calcul .rouet { width: 12px; height: 12px; border-width: 2px; }
+.graphe-bilan strong { color: var(--fg); font-variant-numeric: tabular-nums; }
+.graphe-legende { position: absolute; left: 12px; bottom: 12px; list-style: none; margin: 0; padding: 8px 10px; display: flex; flex-direction: column; gap: 3px; font-size: 0.82rem; background: color-mix(in srgb, var(--panel) 88%, transparent); border: 1px solid var(--line); border-radius: 8px; max-width: calc(100% - 80px); }
+.graphe-legende li { display: flex; align-items: center; gap: 7px; }
+.graphe-zoom { position: absolute; right: 12px; bottom: 12px; display: flex; flex-direction: column; gap: 6px; }
+.graphe-zoom button { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); font-size: 1.15rem; color: var(--fg); box-shadow: var(--shadow); }
+.graphe-zoom button:hover { border-color: var(--accent); }
+.graphe-zoom svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.graphe-vide { position: absolute; inset: 0; margin: auto; height: fit-content; max-width: 30em; padding: 0 20px; text-align: center; color: var(--muted); pointer-events: none; }
+
+.graphe-fiche { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; max-height: max(460px, calc(100vh - 330px)); overflow-y: auto; }
+.graphe-fiche h2 { font-size: 1.05rem; margin: 0; }
+.graphe-fiche h3 { font-size: 0.85rem; color: var(--muted); margin: 6px 0 0; font-weight: 700; }
+.graphe-fiche p { margin: 0; }
+.graphe-fiche-tete { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.graphe-fiche .fermer { border: 0; background: none; font-size: 1.3rem; line-height: 1; color: var(--muted); padding: 0 4px; }
+.graphe-fiche .fermer:hover { color: var(--fg); }
+.graphe-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.graphe-liens { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.graphe-liens li { display: flex; gap: 10px; align-items: baseline; padding: 7px 0; border-top: 1px solid var(--line); }
+.graphe-liens li:first-child { border-top: 0; }
+.graphe-liens .contexte { display: block; color: var(--muted); font-size: 0.85rem; }
+.graphe-classement { margin: 0; padding: 0 0 0 1.6em; display: flex; flex-direction: column; gap: 2px; }
+.graphe-classement li { padding: 3px 0; }
+.graphe-classement li::marker { color: var(--muted); font-size: 0.85em; }
+.graphe-classement .ligne { display: flex; align-items: center; gap: 6px; }
+.graphe-classement button { flex: 1; min-width: 0; border: 0; background: none; padding: 0; text-align: left; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.graphe-classement button:hover { color: var(--accent); }
+.graphe-classement .compte { flex: none; }
+@media (max-width: 1099px) {
+  .graphe-cadre { grid-template-columns: minmax(0, 1fr); }
+  .graphe-fiche { max-height: none; }
+  .graphe-couleur { margin-left: 0; }
+}
+@media (max-width: 599px) {
+  .graphe-toile { height: 70vh; }
+  .graphe-haut input { width: 160px; }
+  .graphe-legende { font-size: 0.75rem; }
+}

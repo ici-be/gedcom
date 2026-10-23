@@ -114,6 +114,18 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   sur sa moitié de la feuille (1 à 6 générations), leurs descendants communs en dessous (1 à 3 générations), avec les
   mêmes options que le sablier ; un ancêtre commun aux deux est marqué ◆.
   D'autres modèles s'ajoutent dans `src/ui/arbres/modeles.ts`.
+- **Graphe des relations** (`#/graphe`) : qui côtoyait qui. On choisit les personnes — l'**entourage**
+  d'une personne (1 à 5 liens autour d'elle), un ou **plusieurs métiers** (recherche, puces colorées,
+  « ajouter les N » pour prendre d'un coup toutes les variantes de « music » ou « chant »), un **nom** ou un
+  **lieu** d'acte (avec `*` et `?`), avec ou sans leur famille proche — et les liens à montrer : famille,
+  parrains et marraines, témoins, co-témoins (témoins du même acte). Les témoins sont lus acte par acte
+  (`2 ASSO` sous BIRT, BAPM, DEAT, MARR ; les `1 ASSO @F…@` de Geneanet, qui les répètent, sont ignorés) ;
+  témoins et parrains d'une naissance sont aussi reliés aux parents, qui les ont choisis, mais pas ceux d'un
+  mariage ou d'un décès. Couleur au choix : métier (8 teintes fixes), sources, ancêtres. Un clic sur une
+  personne met en évidence ses voisins et ouvre sa fiche, où chaque lien est expliqué (« témoin à son mariage
+  (1820) », « sa marraine (1823) », « parrain au baptême de son enfant Jean (1800) »…) ; « Son entourage »
+  recentre le graphe sur elle. Dessin sur canvas, simulation dans un worker : quelques milliers de personnes
+  restent fluides (au-delà de 6 000, il faut préciser la recherche).
 - **Annotations** (`#/annotations`, dans le menu) : ce que le GEDCOM ne sait pas dire s'écrit dans les notes
   de l'arbre ; la page présente les trois mentions ci-dessous (à copier), leur nombre dans l'arbre, et
   renvoie vers la page de chacune, qui ramène aux annotations.
