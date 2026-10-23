@@ -164,6 +164,23 @@ def extraire(img, rects, autres=(), echelle=2, garder_lignes=False, marge=6, deb
             continue  # tracé d'une signature voisine
         # Texte de l'acte qui ne fait qu'effleurer la zone : écarté
         garder[k] = moi >= 0.25 * t
+    # Petite tache isolée (poussière, pâté) à l'écart de l'écriture : écartée. Les points
+    # d'initiales (« J. B. ») sont gardés, ils sont proches des lettres.
+    grands = np.zeros(n, bool)
+    plus_grand_garde = max((tailles[k] for k in tailles if garder[k]), default=0)
+    for k in tailles:
+        grands[k] = garder[k] and tailles[k] >= 0.1 * plus_grand_garde
+    voisinage = Image.fromarray(grands[lab].astype(np.uint8) * 255)
+    for _ in range(6):  # environ 15 px de l'image d'origine
+        voisinage = voisinage.filter(ImageFilter.MaxFilter(5 * echelle + 1))
+    voisinage = np.asarray(voisinage) > 0
+    proches = np.bincount(lab[voisinage], minlength=n)
+    for k in tailles:
+        if garder[k] and not grands[k] and proches[k] == 0:
+            # Un bout de trait allongé (fin de paraphe estompée) reste ; une tache ronde part.
+            ys, xs = np.nonzero(lab == k)
+            long_, large = max(np.ptp(xs), np.ptp(ys)) + 1, min(np.ptp(xs), np.ptp(ys)) + 1
+            garder[k] = long_ >= 3 * large and long_ >= 8 * echelle
     masque = garder[lab]
     e = np.where(masque | (np.asarray(Image.fromarray(masque.astype(np.uint8) * 255)
                                       .filter(ImageFilter.MaxFilter(3))) > 0), e, 0.0)

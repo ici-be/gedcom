@@ -87,7 +87,11 @@ gardé entier, même s'il en déborde (hampes, boucles, paraphes — jusqu'à 60
 sauf s'il appartient surtout à une autre zone ou ne fait qu'effleurer la zone (texte de
 l'acte). Il faut donc **déclarer toutes les signatures de la page** dans le même appel,
 et passer celle de l'officier (non extraite) en `--exclure "x0,y0,x1,y1"`, pour que
-chaque tracé aille à la bonne personne. Ne jamais rogner une zone pour écarter un
+chaque tracé aille à la bonne personne. Même chose pour une ligne de texte imprimé ou
+écrit juste au-dessus des signatures (« … donné lecture. ») : `--exclure` sur cette
+ligne, sinon un mot qui touche la zone y est rattaché. Les petites taches rondes isolées
+(à plus de ~15 px de l'écriture) sont retirées ; les points d'initiales, proches des
+lettres, et les bouts de trait allongés restent. Ne jamais rogner une zone pour écarter un
 morceau voisin : vérifier sur la planche de contrôle que les hampes et barres hautes
 (b, d, l, t, majuscules) et les jambages (g, j, p, y) sont entiers en les comparant à
 l'original agrandi.
