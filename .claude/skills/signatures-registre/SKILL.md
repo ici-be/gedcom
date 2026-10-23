@@ -24,10 +24,13 @@ Script : `.claude/skills/signatures-registre/extraire_signatures.py` (Pillow + n
    des zones sont dans ce repère.
 2. **Repérer chaque signature** et lui donner un rectangle `x0,y0,x1,y1` un peu large
    (quelques pixels de marge), sans mordre sur une signature voisine ni sur le texte tapé.
+   **Ne jamais extraire la signature de l'officier d'état civil** (ni celle du curé ou
+   du greffier qui dresse l'acte) : Bruno n'en a pas l'usage. C'est en général le
+   paraphe isolé en bout de ligne ou en fin d'acte.
 3. **Nommer le signataire** : lire la signature et la recouper avec le texte de l'acte
-   (comparants, témoins, parents, officier). Nom au format `Prénom Nom` ;
+   (comparants, témoins, parents). Nom au format `Prénom Nom` ;
    si un seul élément est lisible, le garder tel quel (`M. De Maseneire`) ; si c'est
-   illisible, un nom descriptif (`Officier d'état civil`, `Signature illisible 1`).
+   illisible, un nom descriptif (`Signature illisible 1`).
    Signaler dans la réponse les noms incertains.
 4. **Vérifier les zones** avec un aperçu, puis le regarder avec Read :
    ```
