@@ -61,13 +61,25 @@ def seuil_otsu(valeurs):
     return float(bords[np.argmax(var)])
 
 
-def traits_horizontaux(masque, longueur):
-    """Pixels appartenant à des segments horizontaux d'au moins `longueur` pixels."""
+def traits_horizontaux(masque, longueur, trou=0):
+    """Pixels appartenant à des segments horizontaux d'au moins `longueur` pixels, coupés
+    au plus de `trou` pixels (trait pâle en pointillé)."""
     h, w = masque.shape
     if w < longueur:
         return np.zeros_like(masque)
     # Une ligne légèrement inclinée occupe deux rangées : on fusionne avec la voisine.
     m = masque | np.roll(masque, 1, axis=0) | np.roll(masque, -1, axis=0)
+    if trou:
+        # Fermeture horizontale seulement : les pointillés sont reliés, les lettres d'une ligne
+        # de texte ne sont pas fondues en bande.
+        r = trou // 2
+        def fenetre(a):
+            c = np.concatenate([np.zeros((h, r + 1), np.int32),
+                                np.cumsum(a, axis=1, dtype=np.int32),
+                                np.repeat(np.cumsum(a, axis=1, dtype=np.int32)[:, -1:], r, axis=1)], axis=1)
+            return c[:, 2 * r + 1:] - c[:, :w]
+        m = fenetre(m) > 0
+        m = fenetre(~m) == 0
     c = np.concatenate([np.zeros((h, 1), np.int32), np.cumsum(m, axis=1, dtype=np.int32)], axis=1)
     plein = (c[:, longueur:] - c[:, :-longueur]) >= int(0.95 * longueur)
     ligne = np.zeros((h, w), np.int32)
@@ -82,6 +94,26 @@ def traits_horizontaux(masque, longueur):
     for dy in range(-3, 4):
         epaisseur += np.roll(masque, dy, axis=0)
     return ligne & (epaisseur <= 5)
+
+
+def traits_regles(masque, longueur, trou=0, pentes=tuple(np.round(np.arange(-0.25, 0.26, 0.05), 2))):
+    """Traits réglés horizontaux ou légèrement inclinés (feuille de travers, pli) : l'image est
+    cisaillée pour chaque pente, de sorte que le trait y devienne horizontal."""
+    h, w = masque.shape
+    pad = int(max(abs(p) for p in pentes) * w / 2) + 2
+    resultat = np.zeros_like(masque)
+    for pente in pentes:
+        decal = np.round(pente * (np.arange(w) - w / 2)).astype(int)
+        if not decal.any():
+            resultat |= traits_horizontaux(masque, longueur, trou)
+            continue
+        grand = np.zeros((h + 2 * pad, w), bool)
+        for x in range(w):
+            grand[pad - decal[x]:pad - decal[x] + h, x] = masque[:, x]
+        trouve = traits_horizontaux(grand, longueur, trou)
+        for x in range(w):
+            resultat[:, x] |= trouve[pad - decal[x]:pad - decal[x] + h, x]
+    return resultat
 
 
 def composantes(masque):
@@ -121,6 +153,33 @@ def composantes(masque):
     return lab, dict(zip(ids.tolist(), tailles.tolist()))
 
 
+def prolonger(lab, faible, portee):
+    """Étend chaque tracé franc (étiquette > 0) aux pixels d'encre pâle (`faible`) qui le
+    prolongent, de proche en proche le long de l'encre et sur `portee` pixels au plus : les
+    déliés, plus clairs que les pleins, restent attachés à leur lettre. Un pixel pâle va au
+    tracé le plus proche, deux tracés voisins ne sont donc pas soudés."""
+    lab = lab.copy()
+    h, w = lab.shape
+    for _ in range(portee):
+        libre = faible & (lab == 0)
+        if not libre.any():
+            break
+        neuf = np.zeros_like(lab)
+        for dy in (-1, 0, 1):
+            for dx in (-1, 0, 1):
+                if dy == 0 and dx == 0:
+                    continue
+                v = np.zeros_like(lab)
+                v[max(dy, 0):h + min(dy, 0), max(dx, 0):w + min(dx, 0)] = \
+                    lab[max(-dy, 0):h + min(-dy, 0), max(-dx, 0):w + min(-dx, 0)]
+                neuf = np.where((neuf == 0) & (v > 0), v, neuf)
+        neuf = np.where(libre, neuf, 0)
+        if not neuf.any():
+            break
+        lab = np.where(neuf > 0, neuf, lab)
+    return lab
+
+
 def extraire(img, rects, autres=(), echelle=2, garder_lignes=False, marge=6, debord=60):
     """Les traits sont gardés entiers : un tracé qui touche la zone y est rattaché même s'il en
     déborde (hampe d'un « b », barre d'un « t »), sauf s'il appartient surtout à une autre zone
@@ -144,26 +203,58 @@ def extraire(img, rects, autres=(), echelle=2, garder_lignes=False, marge=6, deb
     dedans = union(rects)
     s = max(seuil_otsu(e[dedans & (e > 0.02)]) if (dedans & (e > 0.02)).any() else 0.2, 0.12)
     masque = e >= s
+    # Seuillage par hystérésis : l'encre pâle (déliés, plume qui s'épuise) n'est gardée que
+    # si elle prolonge un tracé franc.
+    faible = e >= s * 0.45
 
     if not garder_lignes:
         masque &= ~traits_horizontaux(masque, longueur=max(40 * echelle, masque.shape[1] // 3))
+        # Trait réglé ou pli pâle, souvent en pointillé et un peu incliné : retiré de l'encre
+        # pâle seulement, pour que la propagation ne le suive pas ; là où il croise une lettre,
+        # l'encre franche de la lettre reste.
+        faible &= ~traits_regles(faible, longueur=max(40 * echelle, masque.shape[1] // 6),
+                                 trou=4 * echelle) | masque
 
-    lab, tailles = composantes(masque)
-    if not tailles:
+    lab, francs = composantes(masque)
+    if not francs:
         return None
-    n = max(tailles) + 1
+    lab = prolonger(lab, faible, portee=12 * echelle)
+    n = max(francs) + 1
+    ids, nb = np.unique(lab[lab > 0], return_counts=True)
+    tailles = dict(zip(ids.tolist(), nb.tolist()))
     chez_moi = np.bincount(lab[dedans], minlength=n)
     chez_autres = [np.bincount(lab[union(r)], minlength=n) for r in autres]
-    plus_grand = max(chez_moi[1:].max(), 1)
+    plus_grand = max((francs[k] for k in francs if chez_moi[k]), default=1)
     garder = np.zeros(n, bool)
+    petits = []
     for k, t in tailles.items():
         moi = chez_moi[k]
-        if moi == 0 or t < max(6 * echelle * echelle, 0.02 * plus_grand):
-            continue  # hors zone, ou tache de grain du papier
+        if moi == 0:
+            continue  # hors zone
         if any(c[k] > moi for c in chez_autres):
             continue  # tracé d'une signature voisine
-        # Texte de l'acte qui ne fait qu'effleurer la zone : écarté
-        garder[k] = moi >= 0.25 * t
+        if moi < 0.25 * t:
+            continue  # texte de l'acte qui ne fait qu'effleurer la zone
+        if francs[k] < max(6 * echelle * echelle, 0.02 * plus_grand):
+            petits.append(k)  # grain du papier, ou morceau d'un délié coupé : vu plus bas
+        else:
+            garder[k] = True
+    # Un petit morceau qui touche, par son encre pâle, un tracé gardé en est un fragment
+    # (délié interrompu) : il est gardé. Seul, c'est du grain du papier.
+    voisins = np.zeros((n, n), bool)
+    for a_, b_ in ((lab[:, 1:], lab[:, :-1]), (lab[1:, :], lab[:-1, :]),
+                   (lab[1:, 1:], lab[:-1, :-1]), (lab[1:, :-1], lab[:-1, 1:])):
+        contact = (a_ > 0) & (b_ > 0) & (a_ != b_)
+        voisins[a_[contact], b_[contact]] = True
+    voisins |= voisins.T
+    ajout = True
+    while ajout:
+        ajout = False
+        for k in list(petits):
+            if voisins[k][garder].any():
+                garder[k] = True
+                petits.remove(k)
+                ajout = True
     # Petite tache isolée (poussière, pâté) à l'écart de l'écriture : écartée. Les points
     # d'initiales (« J. B. ») sont gardés, ils sont proches des lettres.
     grands = np.zeros(n, bool)

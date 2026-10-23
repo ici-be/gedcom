@@ -95,11 +95,18 @@ ligne, sinon un mot qui touche la zone y est rattaché. Les petites taches ronde
 lettres, et les bouts de trait allongés restent. Ne jamais rogner une zone pour écarter un
 morceau voisin : vérifier sur la planche de contrôle que les hampes et barres hautes
 (b, d, l, t, majuscules) et les jambages (g, j, p, y) sont entiers en les comparant à
-l'original agrandi.
+l'original agrandi. Regarder aussi les **déliés** (traits fins tracés en montant : premier
+jambage d'un M, crochet d'un G, attaque d'une majuscule) : s'il en manque un morceau, ce
+n'est pas normal, il faut chercher pourquoi (zone, exclusion trop large) plutôt que livrer.
 
 ## Ce que fait le script
 
 Fond du papier estimé (maximum local adouci) puis divisé pour neutraliser jaunissement
-et ombres ; seuil d'Otsu sur l'encre ; effacement des traits horizontaux longs et minces
-(lignes du registre) ; suppression des petites taches ; alpha adouci sur les bords ;
-rattachement des tracés entiers à la zone qui en contient le plus ; recadrage serré. Résultat : RGBA, RVB noir, transparence = absence d'encre.
+et ombres ; seuil d'Otsu sur l'encre, avec hystérésis : l'encre pâle (déliés, plume qui
+s'épuise, jusqu'à 45 % du seuil) est gardée quand elle prolonge un tracé franc, chaque
+pixel pâle allant au tracé le plus proche le long de l'encre ; effacement des traits
+horizontaux longs et minces (lignes du registre), et retrait de l'encre pâle des traits
+réglés ou plis légèrement inclinés, même en pointillé (l'encre franche des lettres qu'ils
+croisent reste) ; suppression des petites taches, sauf les morceaux de délié qui touchent
+un tracé gardé ; alpha adouci sur les bords ; rattachement des tracés entiers à la zone
+qui en contient le plus ; recadrage serré. Résultat : RGBA, RVB noir, transparence = absence d'encre.
