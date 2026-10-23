@@ -105,7 +105,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 650; letter-spacing: -0.0
 
 .ecran { display: flex; flex-direction: column; gap: 18px; }
 .titre-ecran h1 { font-size: clamp(1.6rem, 3.6vw, 2.15rem); letter-spacing: -0.025em; }
-.sous-titre { color: var(--muted); margin: 6px 0 0; max-width: 70ch; }
+.sous-titre { color: var(--muted); margin: 6px 0 0; }
 .astuce, .aide { color: var(--muted); font-size: 0.9rem; margin: 0; }
 .retour { margin: 0; }
 .erreur { background: var(--ko-bg); color: var(--ko); padding: 10px 14px; border-radius: var(--radius); margin: 0 0 12px; }
@@ -844,7 +844,6 @@ a.asc-piste-g:hover { color: var(--accent); }
 .ev-titre .icone-evt { color: var(--accent); }
 .ev-h1 { display: flex; align-items: center; gap: 10px; }
 .ev-h1 .icone-evt { width: 0.9em; height: 0.9em; color: var(--accent); }
-.ev-entete .sous-titre { max-width: none; }
 .ev-traces p { margin: 0; }
 .ev-traces ul { margin: 4px 0 0; padding-left: 1.2em; }
 .ev-tableau .ev-date { white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--muted); }
