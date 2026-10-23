@@ -121,32 +121,52 @@ def composantes(masque):
     return lab, dict(zip(ids.tolist(), tailles.tolist()))
 
 
-def extraire(img, rects, echelle=2, garder_lignes=False, marge=6):
-    boite = (min(r[0] for r in rects), min(r[1] for r in rects), max(r[2] for r in rects), max(r[3] for r in rects))
+def extraire(img, rects, autres=(), echelle=2, garder_lignes=False, marge=6, debord=60):
+    """Les traits sont gardés entiers : un tracé qui touche la zone y est rattaché même s'il en
+    déborde (hampe d'un « b », barre d'un « t »), sauf s'il appartient surtout à une autre zone
+    (`autres`) ou au texte de l'acte."""
+    l, h = img.size
+    boite = (max(min(r[0] for r in rects) - debord, 0), max(min(r[1] for r in rects) - debord, 0),
+             min(max(r[2] for r in rects) + debord, l), min(max(r[3] for r in rects) + debord, h))
     gris = np.asarray(ImageOps.grayscale(img.crop(boite)))
     if echelle != 1:
         gris = np.asarray(Image.fromarray(gris).resize(
             (gris.shape[1] * echelle, gris.shape[0] * echelle), Image.LANCZOS))
     e = encre(gris)
-    # Zone en plusieurs rectangles (signatures imbriquées) : l'encre hors de leur union est ignorée.
-    dedans = np.zeros(e.shape, bool)
-    for x0, y0, x1, y1 in rects:
-        dedans[(y0 - boite[1]) * echelle:(y1 - boite[1]) * echelle, (x0 - boite[0]) * echelle:(x1 - boite[0]) * echelle] = True
-    e = np.where(dedans, e, 0.0)
-    s = max(seuil_otsu(e[e > 0.02]) if (e > 0.02).any() else 0.2, 0.12)
+
+    def union(rs):
+        m = np.zeros(e.shape, bool)
+        for x0, y0, x1, y1 in rs:
+            m[max(y0 - boite[1], 0) * echelle:max(y1 - boite[1], 0) * echelle,
+              max(x0 - boite[0], 0) * echelle:max(x1 - boite[0], 0) * echelle] = True
+        return m
+
+    dedans = union(rects)
+    s = max(seuil_otsu(e[dedans & (e > 0.02)]) if (dedans & (e > 0.02)).any() else 0.2, 0.12)
     masque = e >= s
 
     if not garder_lignes:
         masque &= ~traits_horizontaux(masque, longueur=max(40 * echelle, masque.shape[1] // 3))
 
-    # Petites taches (grain du papier, poussière) : supprimées.
     lab, tailles = composantes(masque)
-    if tailles:
-        mini = max(6 * echelle * echelle, int(0.002 * max(tailles.values()) * 10))
-        garder = np.zeros(max(tailles) + 1, bool)
-        for k, t in tailles.items():
-            garder[k] = t >= mini
-        masque = garder[lab]
+    if not tailles:
+        return None
+    n = max(tailles) + 1
+    chez_moi = np.bincount(lab[dedans], minlength=n)
+    chez_autres = [np.bincount(lab[union(r)], minlength=n) for r in autres]
+    plus_grand = max(chez_moi[1:].max(), 1)
+    garder = np.zeros(n, bool)
+    for k, t in tailles.items():
+        moi = chez_moi[k]
+        if moi == 0 or t < max(6 * echelle * echelle, 0.02 * plus_grand):
+            continue  # hors zone, ou tache de grain du papier
+        if any(c[k] > moi for c in chez_autres):
+            continue  # tracé d'une signature voisine
+        # Texte de l'acte qui ne fait qu'effleurer la zone : écarté
+        garder[k] = moi >= 0.25 * t
+    masque = garder[lab]
+    e = np.where(masque | (np.asarray(Image.fromarray(masque.astype(np.uint8) * 255)
+                                      .filter(ImageFilter.MaxFilter(3))) > 0), e, 0.0)
 
     # Alpha doux : bords anti-crénelés autour du masque (dilaté d'un pixel).
     proche = np.asarray(Image.fromarray(masque.astype(np.uint8) * 255).filter(ImageFilter.MaxFilter(3))) > 0
@@ -185,6 +205,9 @@ def main():
     p.add_argument("image")
     p.add_argument("--zone", action="append", type=lire_zone, required=True)
     p.add_argument("--sortie", help="dossier des PNG")
+    p.add_argument("--exclure", action="append", default=[], type=lambda t: lire_zone(t)[0],
+                   help="zone à ne pas extraire mais dont les tracés ne doivent pas déborder ailleurs "
+                        "(paraphe de l'officier, texte voisin) : x0,y0,x1,y1[+…]")
     p.add_argument("--apercu", help="image de contrôle avec les zones dessinées")
     p.add_argument("--echelle", type=int, default=2, help="agrandissement avant traitement (défaut 2)")
     p.add_argument("--garder-lignes", action="store_true", help="ne pas effacer les traits réglés")
@@ -200,8 +223,9 @@ def main():
     os.makedirs(a.sortie, exist_ok=True)
     if a.fond_controle:
         os.makedirs(a.fond_controle, exist_ok=True)
-    for rects, nom in a.zone:
-        sig = extraire(img, rects, a.echelle, a.garder_lignes)
+    for i, (rects, nom) in enumerate(a.zone):
+        autres = [r for j, (r, _) in enumerate(a.zone) if j != i] + a.exclure
+        sig = extraire(img, rects, autres, a.echelle, a.garder_lignes)
         if sig is None:
             print(f"rien trouvé dans {rects} ({nom})", file=sys.stderr)
             continue

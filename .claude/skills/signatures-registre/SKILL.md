@@ -64,9 +64,8 @@ Scripts (Python, Pillow + numpy seulement) :
 6. Si besoin, ajuster :
    - un trait réglé traverse la signature et en coupe des morceaux → `--garder-lignes` ;
    - une tache ou un bout de texte voisin reste → resserrer la zone ;
-   - deux signatures imbriquées (une ligne qui remonte dans celle du dessus) → zone en
-     plusieurs rectangles, `--zone "x0,y0,x1,y1+x0,y0,x1,y1:Nom"` (l'encre hors de leur
-     union est ignorée), en escalier autour des jambages ;
+   - une signature imbriquée dans une autre → zone en plusieurs rectangles,
+     `--zone "x0,y0,x1,y1+x0,y0,x1,y1:Nom"` ;
    - image très grande (scan haute définition) → `--echelle 1`.
 7. **Trier selon l'arbre** : déplacer dans `<sous-dossier>/déjà dans l'arbre/` les
    signatures des personnes dont le média principal est déjà un PNG (« SIGNATURE
@@ -83,9 +82,19 @@ Dans la réponse, un tableau par signature : fichier, personne de l'arbre (ident
 à vérifier). Donner la date du GEDCOM utilisé ; s'il a plus d'un mois, proposer à Bruno
 d'en fournir un plus récent.
 
+Les zones n'ont pas besoin d'être ajustées au pixel : un tracé qui touche la zone est
+gardé entier, même s'il en déborde (hampes, boucles, paraphes — jusqu'à 60 px autour),
+sauf s'il appartient surtout à une autre zone ou ne fait qu'effleurer la zone (texte de
+l'acte). Il faut donc **déclarer toutes les signatures de la page** dans le même appel,
+et passer celle de l'officier (non extraite) en `--exclure "x0,y0,x1,y1"`, pour que
+chaque tracé aille à la bonne personne. Ne jamais rogner une zone pour écarter un
+morceau voisin : vérifier sur la planche de contrôle que les hampes et barres hautes
+(b, d, l, t, majuscules) et les jambages (g, j, p, y) sont entiers en les comparant à
+l'original agrandi.
+
 ## Ce que fait le script
 
 Fond du papier estimé (maximum local adouci) puis divisé pour neutraliser jaunissement
 et ombres ; seuil d'Otsu sur l'encre ; effacement des traits horizontaux longs et minces
 (lignes du registre) ; suppression des petites taches ; alpha adouci sur les bords ;
-recadrage serré. Résultat : RGBA, RVB noir, transparence = absence d'encre.
+rattachement des tracés entiers à la zone qui en contient le plus ; recadrage serré. Résultat : RGBA, RVB noir, transparence = absence d'encre.
