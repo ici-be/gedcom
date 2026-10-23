@@ -6,7 +6,9 @@ description: Extraire la ou les signatures d'une image de vieux registre (acte d
 # Extraire les signatures d'un acte
 
 Dossiers (non commités, voir `.gitignore`) :
-- images d'entrée : `_skills/Images pour signatures/` (ou le chemin donné) ;
+- images d'entrée : `_skills/Images pour signatures/` (ou le chemin donné) — seules les
+  images à la racine du dossier sont à traiter ; le sous-dossier `old/` contient celles
+  déjà traitées ;
 - sortie : `_skills/Signatures/`.
 
 Script : `.claude/skills/signatures-registre/extraire_signatures.py` (Pillow + numpy seulement).
@@ -39,6 +41,8 @@ Script : `.claude/skills/signatures-registre/extraire_signatures.py` (Pillow + n
    - un trait réglé traverse la signature et en coupe des morceaux → `--garder-lignes` ;
    - une tache ou un bout de texte voisin reste → resserrer la zone ;
    - image très grande (scan haute définition) → `--echelle 1`.
+7. **Ranger l'image traitée** : une fois les signatures extraites et vérifiées, déplacer
+   l'image d'entrée dans `_skills/Images pour signatures/old/`.
 
 `$SCRATCH` = le dossier scratchpad de la session.
 
