@@ -273,6 +273,13 @@ def extraire(img, rects, autres=(), echelle=2, garder_lignes=False, marge=6, deb
             long_, large = max(np.ptp(xs), np.ptp(ys)) + 1, min(np.ptp(xs), np.ptp(ys)) + 1
             garder[k] = long_ >= 3 * large and long_ >= 8 * echelle
     masque = garder[lab]
+    # Délié coupé en pointillé (plume presque sèche) : les petits trous entre deux morceaux
+    # gardés sont comblés s'il y a là un peu d'encre, même très pâle. La fermeture ne comble
+    # que des trous étroits et le papier nu (œil d'un « e ») n'est jamais pris.
+    k = 2 * (3 * echelle // 2) + 1
+    ferme = np.asarray(Image.fromarray(masque.astype(np.uint8) * 255)
+                       .filter(ImageFilter.MaxFilter(k)).filter(ImageFilter.MinFilter(k))) > 0
+    masque |= ferme & (e >= s * 0.25)
     e = np.where(masque | (np.asarray(Image.fromarray(masque.astype(np.uint8) * 255)
                                       .filter(ImageFilter.MaxFilter(3))) > 0), e, 0.0)
 

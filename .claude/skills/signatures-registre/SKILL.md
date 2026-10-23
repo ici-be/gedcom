@@ -108,5 +108,6 @@ pixel pâle allant au tracé le plus proche le long de l'encre ; effacement des 
 horizontaux longs et minces (lignes du registre), et retrait de l'encre pâle des traits
 réglés ou plis légèrement inclinés, même en pointillé (l'encre franche des lettres qu'ils
 croisent reste) ; suppression des petites taches, sauf les morceaux de délié qui touchent
-un tracé gardé ; alpha adouci sur les bords ; rattachement des tracés entiers à la zone
+un tracé gardé ; petits trous d'un délié en pointillé comblés là où il reste un peu
+d'encre ; alpha adouci sur les bords ; rattachement des tracés entiers à la zone
 qui en contient le plus ; recadrage serré. Résultat : RGBA, RVB noir, transparence = absence d'encre.
