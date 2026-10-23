@@ -9,7 +9,11 @@ Dossiers (non commités, voir `.gitignore`) :
 - images d'entrée : `_skills/Images pour signatures/` (ou le chemin donné) — seules les
   images à la racine du dossier sont à traiter ; le sous-dossier `old/` contient celles
   déjà traitées ;
-- sortie : `_skills/Signatures/`.
+- sortie : un sous-dossier par image traitée dans `_skills/Signatures/`, nommé d'après
+  l'acte : `<Type d'acte> <Nom> - <Nom> <année>`, par exemple
+  `Mariage Louis De Maseneire - Aline De Ryck 1928`, `Baptême Jean Dupont 1754`
+  (année omise si elle n'apparaît pas sur l'image ; nom de famille seul si le prénom
+  est inconnu). Si le dossier existe déjà pour un autre acte, ajouter ` (2)`.
 
 Script : `.claude/skills/signatures-registre/extraire_signatures.py` (Pillow + numpy seulement).
 
@@ -33,7 +37,7 @@ Script : `.claude/skills/signatures-registre/extraire_signatures.py` (Pillow + n
    Corriger les rectangles qui coupent une signature ou en englobent une autre.
 5. **Extraire** (même commande, avec `--sortie` et une vérification sur fond blanc) :
    ```
-   … --sortie "_skills/Signatures" --fond-controle "$SCRATCH/controle"
+   … --sortie "_skills/Signatures/<sous-dossier de l'acte>" --fond-controle "$SCRATCH/controle"
    ```
    Regarder les images de `$SCRATCH/controle` (les assembler en une planche si elles
    sont nombreuses). Un fichier existant n'est jamais écrasé : le script ajoute ` (2)`.
