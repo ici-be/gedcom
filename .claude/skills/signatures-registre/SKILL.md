@@ -15,7 +15,14 @@ Dossiers (non commités, voir `.gitignore`) :
   (année omise si elle n'apparaît pas sur l'image ; nom de famille seul si le prénom
   est inconnu). Si le dossier existe déjà pour un autre acte, ajouter ` (2)`.
 
-Script : `.claude/skills/signatures-registre/extraire_signatures.py` (Pillow + numpy seulement).
+  Dans chaque sous-dossier, les signatures déjà présentes dans l'arbre vont dans
+  `déjà dans l'arbre/` : ce qui reste à la racine du sous-dossier est à téléverser.
+
+Scripts (Python, Pillow + numpy seulement) :
+- `.claude/skills/signatures-registre/extraire_signatures.py` : découpe et nettoyage ;
+- `.claude/skills/signatures-registre/chercher_dans_arbre.py` : recherche des signataires
+  dans le GEDCOM de Bruno (par défaut le plus récent `~/Cricket/**/bveyckemans_*.ged`,
+  ou `--ged FICHIER`).
 
 ## Étapes
 
@@ -28,10 +35,20 @@ Script : `.claude/skills/signatures-registre/extraire_signatures.py` (Pillow + n
    du greffier qui dresse l'acte) : Bruno n'en a pas l'usage. C'est en général le
    paraphe isolé en bout de ligne ou en fin d'acte.
 3. **Nommer le signataire** : lire la signature et la recouper avec le texte de l'acte
-   (comparants, témoins, parents). Nom au format `Prénom Nom` ;
-   si un seul élément est lisible, le garder tel quel (`M. De Maseneire`) ; si c'est
-   illisible, un nom descriptif (`Signature illisible 1`).
-   Signaler dans la réponse les noms incertains.
+   (comparants, témoins, parents), puis avec l'arbre :
+   ```
+   python3 .claude/skills/signatures-registre/chercher_dans_arbre.py --vers ANNÉE_ACTE \
+     "Louis Demaeseneire" "M. De Maseneire" "Vanhove" …
+   ```
+   (`--vers` écarte les personnes pas encore nées ou déjà mortes ; sans année connue,
+   l'omettre.) Le script tolère les graphies (De Maeseneire / Demaseneire, ij/y, ck/ch…)
+   et affiche dates, parents et conjoints : choisir le candidat cohérent avec l'acte
+   (les mariés et leurs parents se tiennent entre eux ; un « M. » peut être la mariée).
+   Une personne identifiée prend le nom de l'arbre au format `Prénom Nom`, avec le prénom
+   usuel (`Marie Elisabeth Vanhove` → `Elisa Vanhove` si elle signe ainsi, sinon le
+   premier prénom). Pas dans l'arbre : le nom tel que lu ; illisible : un nom descriptif
+   (`Signature illisible 1`). L'arbre aide aussi à nommer le sous-dossier (prénoms des
+   mariés, année). Signaler dans la réponse les noms incertains.
 4. **Vérifier les zones** avec un aperçu, puis le regarder avec Read :
    ```
    python3 .claude/skills/signatures-registre/extraire_signatures.py "IMAGE" \
@@ -48,10 +65,20 @@ Script : `.claude/skills/signatures-registre/extraire_signatures.py` (Pillow + n
    - un trait réglé traverse la signature et en coupe des morceaux → `--garder-lignes` ;
    - une tache ou un bout de texte voisin reste → resserrer la zone ;
    - image très grande (scan haute définition) → `--echelle 1`.
-7. **Ranger l'image traitée** : une fois les signatures extraites et vérifiées, déplacer
+7. **Trier selon l'arbre** : déplacer dans `<sous-dossier>/déjà dans l'arbre/` les
+   signatures des personnes dont le média principal est déjà un PNG (« SIGNATURE
+   PRÉSENTE »). L'export Geneanet ne contient que le média principal : une personne
+   avec une photo JPG peut avoir sa signature en média secondaire, la signaler
+   « à vérifier » plutôt que la déplacer.
+8. **Ranger l'image traitée** : une fois les signatures extraites et vérifiées, déplacer
    l'image d'entrée dans `_skills/Images pour signatures/old/`.
 
 `$SCRATCH` = le dossier scratchpad de la session.
+
+Dans la réponse, un tableau par signature : fichier, personne de l'arbre (identifiant
+`@I…@`, dates) ou « pas dans l'arbre », et statut (déjà dans l'arbre / à téléverser /
+à vérifier). Donner la date du GEDCOM utilisé ; s'il a plus d'un mois, proposer à Bruno
+d'en fournir un plus récent.
 
 ## Ce que fait le script
 
