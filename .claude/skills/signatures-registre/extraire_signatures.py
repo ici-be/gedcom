@@ -6,7 +6,8 @@ Usage :
   extraire_signatures.py IMAGE --sortie DOSSIER     --zone "x0,y0,x1,y1:Nom" ...
 
 Chaque zone est un rectangle en pixels de l'image d'origine suivi du nom du
-fichier voulu (sans extension). Le fond du papier est estimé puis retiré, les
+fichier voulu (sans extension) ; pour des signatures imbriquées, une zone peut
+réunir plusieurs rectangles : "x0,y0,x1,y1+x0,y0,x1,y1:Nom". Le fond du papier est estimé puis retiré, les
 traits réglés horizontaux longs sont effacés, les petites taches sont
 supprimées, et la signature est recadrée au plus près.
 
@@ -22,12 +23,17 @@ from PIL import Image, ImageDraw, ImageFilter, ImageOps
 
 
 def lire_zone(texte):
-    m = re.fullmatch(r"\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?::(.*))?", texte)
+    """« x0,y0,x1,y1[+x0,y0,x1,y1…]:Nom » → (rectangles, nom)."""
+    rect = r"\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*\d+\s*"
+    m = re.fullmatch(rf"({rect}(?:\+{rect})*)(?::(.*))?", texte)
     if not m:
         raise argparse.ArgumentTypeError(f"zone invalide : {texte!r} (attendu x0,y0,x1,y1:Nom)")
-    x0, y0, x1, y1 = map(int, m.groups()[:4])
-    nom = (m.group(5) or "").strip() or f"signature_{x0}_{y0}"
-    return (min(x0, x1), min(y0, y1), max(x0, x1), max(y0, y1)), nom
+    rects = []
+    for r in m.group(1).split("+"):
+        x0, y0, x1, y1 = map(int, r.split(","))
+        rects.append((min(x0, x1), min(y0, y1), max(x0, x1), max(y0, y1)))
+    nom = (m.group(2) or "").strip() or f"signature_{rects[0][0]}_{rects[0][1]}"
+    return rects, nom
 
 
 def nom_de_fichier(nom):
@@ -115,12 +121,18 @@ def composantes(masque):
     return lab, dict(zip(ids.tolist(), tailles.tolist()))
 
 
-def extraire(img, boite, echelle=2, garder_lignes=False, marge=6):
+def extraire(img, rects, echelle=2, garder_lignes=False, marge=6):
+    boite = (min(r[0] for r in rects), min(r[1] for r in rects), max(r[2] for r in rects), max(r[3] for r in rects))
     gris = np.asarray(ImageOps.grayscale(img.crop(boite)))
     if echelle != 1:
         gris = np.asarray(Image.fromarray(gris).resize(
             (gris.shape[1] * echelle, gris.shape[0] * echelle), Image.LANCZOS))
     e = encre(gris)
+    # Zone en plusieurs rectangles (signatures imbriquées) : l'encre hors de leur union est ignorée.
+    dedans = np.zeros(e.shape, bool)
+    for x0, y0, x1, y1 in rects:
+        dedans[(y0 - boite[1]) * echelle:(y1 - boite[1]) * echelle, (x0 - boite[0]) * echelle:(x1 - boite[0]) * echelle] = True
+    e = np.where(dedans, e, 0.0)
     s = max(seuil_otsu(e[e > 0.02]) if (e > 0.02).any() else 0.2, 0.12)
     masque = e >= s
 
@@ -158,9 +170,12 @@ def extraire(img, boite, echelle=2, garder_lignes=False, marge=6):
 def apercu(img, zones, chemin):
     a = img.convert("RGB")
     d = ImageDraw.Draw(a)
-    for i, (b, nom) in enumerate(zones, 1):
-        d.rectangle(b, outline=(255, 0, 0), width=3)
-        d.text((b[0] + 4, b[1] + 2), f"{i}. {nom}", fill=(255, 0, 0))
+    couleurs = [(255, 0, 0), (0, 160, 0), (0, 0, 255), (220, 120, 0), (180, 0, 180)]
+    for i, (rects, nom) in enumerate(zones, 1):
+        c = couleurs[(i - 1) % len(couleurs)]
+        for b in rects:
+            d.rectangle(b, outline=c, width=3)
+        d.text((rects[0][0] + 4, rects[0][1] + 2), f"{i}. {nom}", fill=c)
     a.save(chemin)
     print(chemin)
 
@@ -185,10 +200,10 @@ def main():
     os.makedirs(a.sortie, exist_ok=True)
     if a.fond_controle:
         os.makedirs(a.fond_controle, exist_ok=True)
-    for boite, nom in a.zone:
-        sig = extraire(img, boite, a.echelle, a.garder_lignes)
+    for rects, nom in a.zone:
+        sig = extraire(img, rects, a.echelle, a.garder_lignes)
         if sig is None:
-            print(f"rien trouvé dans {boite} ({nom})", file=sys.stderr)
+            print(f"rien trouvé dans {rects} ({nom})", file=sys.stderr)
             continue
         base = nom_de_fichier(nom)
         chemin = os.path.join(a.sortie, base + ".png")
