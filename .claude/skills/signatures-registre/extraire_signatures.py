@@ -172,7 +172,7 @@ def extraire(img, rects, autres=(), echelle=2, garder_lignes=False, marge=6, deb
         grands[k] = garder[k] and tailles[k] >= 0.1 * plus_grand_garde
     voisinage = Image.fromarray(grands[lab].astype(np.uint8) * 255)
     for _ in range(6):  # environ 15 px de l'image d'origine
-        voisinage = voisinage.filter(ImageFilter.MaxFilter(5 * echelle + 1))
+        voisinage = voisinage.filter(ImageFilter.MaxFilter(2 * (5 * echelle // 2) + 1))
     voisinage = np.asarray(voisinage) > 0
     proches = np.bincount(lab[voisinage], minlength=n)
     for k in tailles:

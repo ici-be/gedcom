@@ -13,7 +13,7 @@ Dossiers (non commités, voir `.gitignore`) :
   l'acte : `<Type d'acte> <Nom> - <Nom> <année>`, par exemple
   `Mariage Louis De Maseneire - Aline De Ryck 1928`, `Baptême Jean Dupont 1754`
   (année omise si elle n'apparaît pas sur l'image ; nom de famille seul si le prénom
-  est inconnu). Si le dossier existe déjà pour un autre acte, ajouter ` (2)`.
+  est inconnu). Signature seule, sans le texte de l'acte : `Signature <Prénom Nom>`. Si le dossier existe déjà pour un autre acte, ajouter ` (2)`.
 
   Dans chaque sous-dossier, les signatures déjà présentes dans l'arbre vont dans
   `déjà dans l'arbre/` : ce qui reste à la racine du sous-dossier est à téléverser.
@@ -66,7 +66,8 @@ Scripts (Python, Pillow + numpy seulement) :
    - une tache ou un bout de texte voisin reste → resserrer la zone ;
    - une signature imbriquée dans une autre → zone en plusieurs rectangles,
      `--zone "x0,y0,x1,y1+x0,y0,x1,y1:Nom"` ;
-   - image très grande (scan haute définition) → `--echelle 1`.
+   - image très grande (scan haute définition) → `--echelle 1` ; très petite (signature
+     seule, quelques centaines de pixels) → `--echelle 3`.
 7. **Trier selon l'arbre** : déplacer dans `<sous-dossier>/déjà dans l'arbre/` les
    signatures des personnes dont le média principal est déjà un PNG (« SIGNATURE
    PRÉSENTE »). L'export Geneanet ne contient que le média principal : une personne
