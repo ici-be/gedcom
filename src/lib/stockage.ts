@@ -15,9 +15,16 @@ function base(): Promise<IDBDatabase> {
 async function operation<T>(mode: IDBTransactionMode, f: (s: IDBObjectStore) => IDBRequest): Promise<T> {
   const db = await base()
   return new Promise((ok, ko) => {
-    const r = f(db.transaction('fichiers', mode).objectStore('fichiers'))
-    r.onsuccess = () => ok(r.result as T)
-    r.onerror = () => ko(r.error)
+    try {
+      const tx = db.transaction('fichiers', mode)
+      const r = f(tx.objectStore('fichiers'))
+      // la connexion est refermée quand la transaction se termine ; une écriture n'est réussie qu'à ce moment
+      tx.oncomplete = () => { db.close(); ok(r.result as T) }
+      tx.onerror = tx.onabort = () => { db.close(); ko(tx.error ?? r.error) }
+    } catch (e) {
+      db.close()
+      ko(e)
+    }
   })
 }
 
