@@ -21,7 +21,10 @@ describe('dates', () => {
     expect(lireDate('EST 12 MAY 1700').debut).toEqual({ annee: 1700, mois: 5, jour: 12 })
   })
   test('calendriers', () => {
-    expect(lireDate('@#DJULIAN@ 1 MAR 1600').debut?.annee).toBe(1600)
+    expect(lireDate('@#DJULIAN@ 1 MAR 1600').debut).toMatchObject({ annee: 1600, mois: 3, jour: 11 })
+    expect(lireDate('@#DJULIAN@ 1 MAR 1600').texte).toBe('11 mars 1600 (1er mars 1600 julien)')
+    expect(lireDate('@#DJULIAN@ 25 DEC 1700').debut).toMatchObject({ annee: 1701, mois: 1, jour: 5 })
+    expect(lireDate('@#DJULIAN@ 1600').debut).toEqual({ annee: 1600 })
     // 1er vendémiaire an XII = 24 septembre 1803
     expect(lireDate('@#DFRENCH R@ 1 VEND 12').debut).toEqual({ annee: 1803, mois: 9, jour: 24 })
     // 18 brumaire an VIII = 9 novembre 1799

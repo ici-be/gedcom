@@ -2,7 +2,8 @@
 
 export type Qualif = '' | 'vers' | 'avant' | 'après' | 'entre' | 'de' | 'jusqu’à' | 'estimé' | 'calculé'
 
-export interface Jour { annee: number; mois?: number; jour?: number }
+/** `julien` : la date d'origine d'un jour du calendrier julien, converti en grégorien dans les autres champs */
+export interface Jour { annee: number; mois?: number; jour?: number; julien?: Jour }
 
 export interface DateGed {
   brute: string
@@ -36,6 +37,15 @@ function depuisRepublicain(an: number, mois: number, jour: number): Jour {
   return { annee: d.getUTCFullYear(), mois: d.getUTCMonth() + 1, jour: d.getUTCDate() }
 }
 
+/** Calendrier julien → grégorien : l'écart (10 jours en 1582, 13 en 1900) vaut s/100 - s/400 - 2, l'année commençant en mars */
+function depuisJulien(annee: number, mois: number, jour: number): Jour {
+  const a = mois < 3 ? annee - 1 : annee
+  const ecart = Math.floor(a / 100) - Math.floor(a / 400) - 2
+  const d = new Date(Date.UTC(2000, mois - 1, jour + ecart))
+  d.setUTCFullYear(annee, mois - 1, jour + ecart)
+  return { annee: d.getUTCFullYear(), mois: d.getUTCMonth() + 1, jour: d.getUTCDate(), julien: { annee, mois, jour } }
+}
+
 function lireJour(s: string): Jour | undefined {
   let calendrier = 'G'
   s = s.trim().replace(/^@#D(\w+)(?: (\w+))?@\s*/, (_, c: string, c2?: string) => {
@@ -56,6 +66,7 @@ function lireJour(s: string): Jour | undefined {
     if (!mois) return { annee: annee + 1791 }
     return depuisRepublicain(annee, mois, jour ?? 1)
   }
+  if (calendrier.startsWith('JULIAN') && mois && jour) return depuisJulien(annee, mois, jour)
   return { annee, mois, jour }
 }
 
@@ -64,6 +75,7 @@ function cle(j?: Jour): number {
 }
 
 export function texteJour(j: Jour): string {
+  if (j.julien) return `${texteJour({ ...j, julien: undefined })} (${texteJour(j.julien)} julien)`
   if (!j.mois) return String(j.annee)
   const m = NOMS_MOIS[j.mois - 1]
   return j.jour ? `${j.jour === 1 ? '1er' : j.jour} ${m} ${j.annee}` : `${m} ${j.annee}`
