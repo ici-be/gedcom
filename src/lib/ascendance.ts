@@ -6,6 +6,7 @@ import type { Individu } from './gedcom/arbre'
 import { annee } from './gedcom/dates'
 import type { EtatParent } from './filiation'
 import { decouper } from './geo'
+import { numeroSiecle } from './communes'
 import { comparerSosa, etatParents, parents } from './parente'
 import { generations, resumer, type Generation, type Resume } from './statistiques'
 import { anneeNaissanceEstimee } from './suivi'
@@ -228,7 +229,7 @@ export function ascendance(d: Donnees): Ascendance {
   const siecles = new Map<number, number>()
   for (const a of ancetres) {
     const y = estimee(a.id)
-    if (y !== undefined) { const s = Math.floor((y - 1) / 100) + 1; siecles.set(s, (siecles.get(s) ?? 0) + 1) }
+    if (y !== undefined) { const s = numeroSiecle(y); siecles.set(s, (siecles.get(s) ?? 0) + 1) }
   }
   const ecarts = { pere: [] as number[], mere: [] as number[] }
   for (const a of ancetres) {
