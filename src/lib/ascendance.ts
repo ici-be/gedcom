@@ -107,15 +107,27 @@ export function ascendance(d: Donnees): Ascendance {
   const etats = new Map(ancetres.map((a) => [a.id, etatParents(arbre, ind(a.id))]))
 
   // ——— Branches ———
+  // une seule passe : chaque place est rangée sous ses ancêtres de rang 4 à 15 (Sosa 4..7 et 8..15)
+  const parBranche = new Map<number, typeof occurrences>()
+  for (const o of occurrences) {
+    for (let k = 2; k <= 3 && k < o.g; k++) {
+      const sosa = Number(o.sosa >> BigInt(o.g - 1 - k))
+      const l = parBranche.get(sosa)
+      if (l) l.push(o)
+      else parBranche.set(sosa, [o])
+    }
+  }
   const branche = (sosa: number): Branche => {
     const k = Math.floor(Math.log2(sosa))
     const s = BigInt(sosa)
-    const dedans = occurrences.filter((o) => o.g > k && o.sosa >> BigInt(o.g - 1 - k) === s)
+    const dedans = parBranche.get(sosa) ?? []
+    const parG = new Array<number>(15).fill(0)
+    for (const o of dedans) if (o.g <= 14) parG[o.g]++
     const completude: number[] = []
-    for (let g = k + 1; g <= 14; g++) completude.push(dedans.filter((o) => o.g === g).length / 2 ** (g - 1 - k))
+    for (let g = k + 1; g <= 14; g++) completude.push(parG[g] / 2 ** (g - 1 - k))
     return {
       sosa, id: parSosa.get(s), distincts: new Set(dedans.map((o) => o.id)).size,
-      profondeur: dedans.length ? Math.max(...dedans.map((o) => o.g)) : 0, completude,
+      profondeur: dedans.reduce((m, o) => Math.max(m, o.g), 0), completude,
     }
   }
   const quartiers = [4, 5, 6, 7].map((q) => ({ ...branche(q), sous: [branche(2 * q), branche(2 * q + 1)] }))
