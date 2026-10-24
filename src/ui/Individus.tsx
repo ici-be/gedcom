@@ -13,7 +13,7 @@ import { libelle, NOMS_ETATS, nombre } from '../lib/format'
 import { telecharger, versCsv } from '../lib/csv'
 import { ecrire, lire } from '../lib/stockage'
 import { LiensMetiers } from './Metiers'
-import { Annees, CelluleFait, ChoixPerimetre, DateLieu, EffacerFiltres, EnTeteTri, MentionIntrouvable, Pagination, Pastille, Personne, Sources, normaliser, useImpression, lignesAffichees, AvisImpression } from './commun'
+import { Annees, CelluleFait, ChoixPerimetre, DateLieu, EffacerFiltres, EnTeteTri, MentionIntrouvable, Pagination, Pastille, Personne, Photo, Sources, normaliser, useImpression, lignesAffichees, AvisImpression } from './commun'
 
 type QuelFait = 'tous' | 'naissance' | 'mariage' | 'deces'
 type QuelEtat = 'tout' | 'a-faire' | 'sans-source' | 'manquant' | 'introuvable' | 'complet'
@@ -374,9 +374,7 @@ function Details({ d, ind }: { d: Donnees; ind: Individu }) {
         ) : 'Parents non renseignés'}
         {ind.metiers.length > 0 && <> · <LiensMetiers d={d} valeurs={ind.metiers} /></>}
       </p>
-      {ind.photo?.signature && (
-        <figure class="photo signature fiche-signature"><img src={ind.photo.url} alt={`Signature de ${nomComplet(ind)}`} loading="lazy" /></figure>
-      )}
+      <Photo ind={ind} classe={ind.photo?.signature ? 'fiche-signature' : undefined} />
       {ind.illettre && (
         <p class="fiche-illettre"><Croix />{ind.sexe === 'F' ? 'Illettrée' : 'Illettré'} : ne savait pas signer{ind.illettre.precision && <> ({ind.illettre.precision})</>} · <a href="#/illettres">d'après la note</a></p>
       )}
