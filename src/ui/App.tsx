@@ -23,6 +23,7 @@ import { Filiation } from './Filiation'
 import { Introuvables } from './Introuvables'
 import { Illettres } from './Illettres'
 import { Annotations } from './Annotations'
+import { Doublons } from './Doublons'
 import { ProposerInstallation } from './Installer'
 import { ChoixRacine } from './ChoixRacine'
 import { BoutonDons, CarteDons } from './Dons'
@@ -80,6 +81,7 @@ const ICONES: Record<string, string> = {
   recit: 'M3 2h7l3 3v9H3zM5.5 8h5M5.5 11h5',
   graphe: 'M4 2.5a1.5 1.5 0 1 1 0 3a1.5 1.5 0 1 1 0-3M12 4a1.5 1.5 0 1 1 0 3a1.5 1.5 0 1 1 0-3M7 11a1.5 1.5 0 1 1 0 3a1.5 1.5 0 1 1 0-3M5.4 4.4l5.2 1M4.6 5.4l1.9 5.7M11.2 6.8l-3.4 4.6',
   statistiques: 'M2.5 14V9M6.5 14V5M10.5 14V7M14 14V2',
+  doublons: 'M2 2.5h8v8H2zM6 5.5h8v8H6z',
   annotations: 'M2 2.5h5.5l6 6-5 5-6-6zM5 4.5a1 1 0 1 1 0 2a1 1 0 1 1 0-2',
   imprimer: 'M4 6V2h8v4M4 11H2.5V6h11v5H12M4 9h8v5H4z',
 }
@@ -325,6 +327,7 @@ export function App() {
   else if (page === 'imprimer') contenu = Impression
     ? <Impression d={donnees} id={route[1]} />
     : <div class="attente" role="status"><span class="rouet" />{t('Préparation de l’arbre…')}</div>
+  else if (page === 'doublons') contenu = <Doublons d={donnees} />
   else if (page === 'annotations') contenu = <Annotations d={donnees} />
   else if (page === 'filiation') contenu = <Filiation d={donnees} />
   else if (page === 'introuvables') contenu = <Introuvables d={donnees} />
@@ -358,6 +361,7 @@ export function App() {
               <a href="#/graphe" class={page === 'graphe' ? 'actif' : ''}><Icone nom="graphe" />Graphe</a>
               <a href="#/statistiques" class={page === 'statistiques' ? 'actif' : ''}><Icone nom="statistiques" />Statistiques</a>
               <a href="#/annotations" class={['annotations', 'filiation', 'introuvables', 'illettres'].includes(page) ? 'actif' : ''}><Icone nom="annotations" />Annotations</a>
+              <a href="#/doublons" class={page === 'doublons' ? 'actif' : ''}><Icone nom="doublons" />Doublons</a>
               <a href="#/imprimer" class={page === 'imprimer' ? 'actif' : ''}><Icone nom="imprimer" />Imprimer</a>
             </nav>
           )}

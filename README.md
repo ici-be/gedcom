@@ -126,6 +126,9 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   (1820) », « sa marraine (1823) », « parrain au baptême de son enfant Jean (1800) »…) ; « Son entourage »
   recentre le graphe sur elle. Dessin sur canvas, simulation dans un worker : quelques milliers de personnes
   restent fluides (au-delà de 6 000, il faut préciser la recherche).
+- **Doublons** (`#/doublons`, dans le menu) : les paires de personnes de même nom et prénoms (accents, tirets et
+  majuscules ignorés, comme GeneWeb) dont les dates ne s'écartent pas de plus de deux ans et qui ont une date, un lieu, un
+  parent ou un conjoint en commun ; « Comparer » ouvre la recherche de l'arbre en ligne, d'où l'on fusionne les deux fiches.
 - **Annotations** (`#/annotations`, dans le menu) : ce que le GEDCOM ne sait pas dire s'écrit dans les notes
   de l'arbre ; la page présente les trois mentions ci-dessous (à copier), leur nombre dans l'arbre, et
   renvoie vers la page de chacune, qui ramène aux annotations.

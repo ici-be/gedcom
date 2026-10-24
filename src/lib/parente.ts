@@ -106,11 +106,13 @@ export function nomComplet(ind: Individu): string {
   return [ind.nom ? ind.nom.toUpperCase() : '?', ind.prenom || '?'].join(' ')
 }
 
-/** Clé comme celle de GeneWeb : sans accents ni casse, tirets, apostrophes et espaces confondus */
+/** Un nom ou prénom comme le lit GeneWeb : sans accents ni casse, tirets, apostrophes et espaces confondus */
+export function cleGeneWeb(s: string): string {
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+}
+
 function cleNom(ind: Individu): string {
-  const plat = (s: string) =>
-    s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
-  return plat(ind.prenom) + '|' + plat(ind.nom)
+  return cleGeneWeb(ind.prenom) + '|' + cleGeneWeb(ind.nom)
 }
 
 /** Individus qui partagent exactement leurs prénom et nom avec quelqu'un d'autre */
