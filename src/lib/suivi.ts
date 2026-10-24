@@ -88,7 +88,10 @@ export function pire(etats: Etat[]): Etat {
   return 'sans-objet'
 }
 
-/** Année de naissance, ou à défaut estimée d'après le mariage (−25 ans) ou le premier enfant (−30 ans) */
+/**
+ * Année de naissance, ou à défaut estimée d'après le mariage (−25 ans) ou le premier enfant (−30 ans) ;
+ * sans ni l'un ni l'autre, d'après le mariage des parents (+2 ans) ou, faute de mieux, le décès (−40 ans)
+ */
 export function anneeNaissanceEstimee(arbre: Arbre, ind: Individu, naissance: Fait): number | undefined {
   const n = annee(naissance.evenement?.date)
   if (n !== undefined) return n
@@ -107,7 +110,17 @@ export function anneeNaissanceEstimee(arbre: Arbre, ind: Individu, naissance: Fa
       }
     }
   }
-  return annees.length ? Math.min(...annees) : undefined
+  if (annees.length) return Math.min(...annees)
+  for (const f of ind.famc) {
+    for (const e of arbre.familles.get(f)?.evenements ?? []) {
+      const a = annee(e.date)
+      if (a !== undefined) annees.push(a + 2)
+    }
+  }
+  if (annees.length) return Math.min(...annees)
+  const deces = ind.evenements.map((e) => (['DEAT', 'BURI', 'CREM'].includes(e.tag) ? annee(e.date) : undefined))
+  const d = deces.find((a) => a !== undefined)
+  return d === undefined ? undefined : d - 40
 }
 
 export function suivi(arbre: Arbre, ind: Individu, anneeCourante = new Date().getFullYear()): Suivi {
