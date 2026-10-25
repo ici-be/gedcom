@@ -11,7 +11,7 @@ export default defineConfig({
   base: './',
   worker: { format: 'es' },
   // pages d'entrée : le site, /print/ (l'impression seule, dans la langue du navigateur) et une page par langue (scripts/pages-print.mjs)
-  build: { rollupOptions: { input: Object.fromEntries(PAGES_IMPRESSION.map((d) => [d, resolve(__dirname, d, 'index.html')]).concat([['main', resolve(__dirname, 'index.html')]])) } },
+  build: { rollupOptions: { input: Object.fromEntries(PAGES_IMPRESSION.map((d) => [d, resolve(import.meta.dirname, d, 'index.html')]).concat([['main', resolve(import.meta.dirname, 'index.html')]])) } },
   plugins: [
     preact(),
     // les pages d'impression sont un cran plus bas : le manifeste ajouté par le plugin PWA doit remonter d'un dossier
@@ -21,7 +21,7 @@ export default defineConfig({
       enforce: 'post',
       closeBundle: { order: 'post', sequential: true, handler() {
         for (const d of PAGES_IMPRESSION) {
-          const f = resolve(__dirname, 'dist', d, 'index.html')
+          const f = resolve(import.meta.dirname, 'dist', d, 'index.html')
           if (existsSync(f)) writeFileSync(f, readFileSync(f, 'utf8').replace('"./manifest.webmanifest"', '"../manifest.webmanifest"'))
         }
       } },
