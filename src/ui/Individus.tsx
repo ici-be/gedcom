@@ -292,8 +292,17 @@ export function Individus({ d, perimetre, setPerimetre }: { d: Donnees; perimetr
                         {l.anc ? (
                           <>
                             {l.fratrie && <span class="fratrie" title={`${l.ind.sexe === 'M' ? 'Frère' : l.ind.sexe === 'F' ? 'Sœur' : 'Frère ou sœur'} du Sosa ${l.anc.sosa}`}>≈</span>}
-                            <span title={l.anc.sosa}>{l.anc.sosa.length > 9 ? l.anc.sosa.slice(0, 7) + '…' : l.anc.sosa}</span>
-                            <span class={'gen' + (l.fratrie ? '' : ' direct')} style={l.fratrie ? undefined : { '--gc': `var(--g${(Math.max(l.anc.generation, 1) - 1) % 8 + 1})` }}>G{l.anc.generation}{l.anc.occurrences > 1 ? ' ×' + l.anc.occurrences : ''}</span>
+                            {l.fratrie ? (
+                              <>
+                                <span title={l.anc.sosa}>{l.anc.sosa.length > 9 ? l.anc.sosa.slice(0, 7) + '…' : l.anc.sosa}</span>
+                                <span class="gen">G{l.anc.generation}{l.anc.occurrences > 1 ? ' ×' + l.anc.occurrences : ''}</span>
+                              </>
+                            ) : (
+                              <>
+                                <span class="pastille-sosa" title={`${l.anc.sosa} · génération ${l.anc.generation}`} style={{ '--gc': `var(--g${(Math.max(l.anc.generation, 1) - 1) % 8 + 1})` }}>{l.anc.sosa.length > 9 ? l.anc.sosa.slice(0, 7) + '…' : l.anc.sosa}</span>
+                                {l.anc.occurrences > 1 && <span class="gen">×{l.anc.occurrences}</span>}
+                              </>
+                            )}
                           </>
                         ) : null}
                       </td>
