@@ -35,13 +35,3 @@ jobs:
         uses: actions/deploy-pages@v4
         with:
           artifact_name: github-pages-${{ github.run_attempt }}
-      # La page d'impression seule, sur https://ici.be/gedcom-print/ (dépôt gedcom-print, clé de déploiement en secret)
-      - run: node scripts/site-print.mjs
-      - uses: peaceiris/actions-gh-pages@v4
-        with:
-          deploy_key: ${{ secrets.GEDCOM_PRINT_DEPLOY_KEY }}
-          external_repository: ici-be/gedcom-print
-          publish_branch: gh-pages
-          publish_dir: ./dist-print
-          force_orphan: true
-          commit_message: Publication depuis gedcom
