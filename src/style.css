@@ -284,6 +284,7 @@ input[type="search"], input[type="url"], input[type="number"], select {
 .filiation { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 6px; font-size: 0.78rem; color: var(--muted); background: var(--panel-2); white-space: nowrap; }
 .marque-signature { display: inline-block; margin-left: 5px; vertical-align: -0.1em; color: var(--muted); opacity: 0.7; cursor: help; }
 .marque-signature:hover { opacity: 1; }
+a.marque-signature { cursor: pointer; }
 .marque-signature svg, .marque-croix { width: 0.85em; height: 0.85em; fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
 .fiche .fiche-signature { align-items: flex-start; }
 .fiche .fiche-signature img { max-height: 44px; max-width: min(180px, 50vw); }

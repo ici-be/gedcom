@@ -314,6 +314,9 @@ export function Individus({ d, perimetre, setPerimetre }: { d: Donnees; perimetr
                       <span class="nom-bloc">
                         <Personne d={d} id={l.ind.id} prenoms={2} />
                         <Signature ind={l.ind} />
+                        <a class="marque-signature" href={'#/recherches/' + encodeURIComponent(l.ind.id)} title="Chercher dans les livres, journaux et archives" aria-label="Recherches externes">
+                          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M7 2.5a4.5 4.5 0 1 1 0 9a4.5 4.5 0 1 1 0-9M10.3 10.3L14 14" /></svg>
+                        </a>
                         {texteParents(l.parents) && <span class="filiation" title="D'après la note de la personne">{texteParents(l.parents)}</span>}
                         <Annees ind={l.ind} />
                       </span>
