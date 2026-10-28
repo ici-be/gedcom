@@ -129,6 +129,11 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
 - **Doublons** (`#/doublons`, dans le menu) : les paires de personnes de même nom et prénoms (accents, tirets et
   majuscules ignorés, comme GeneWeb) dont les dates ne s'écartent pas de plus de deux ans et qui ont une date, un lieu, un
   parent ou un conjoint en commun ; « Comparer » ouvre la recherche de l'arbre en ligne, d'où l'on fusionne les deux fiches.
+- **Recherches** (`#/recherches[/id]`, dans le menu) : pour une personne choisie (la personne de départ par défaut), des liens qui
+  ouvrent, recherche préremplie (« Prénom Nom »), Google Livres, Gallica, BelgicaPress, RetroNews, Delpher, Internet Archive,
+  Wikisource, Europeana, FamilySearch, Geneanet et Google. Pour Google Livres, Internet Archive et Wikisource (qui acceptent
+  les requêtes depuis un navigateur), « Compter » affiche le nombre de résultats ; le nom n'est envoyé qu'au clic. Les autres
+  bases n'ont pas d'API ouverte : on ne peut que les ouvrir. Les sources sont dans `src/lib/recherches.ts`.
 - **Annotations** (`#/annotations`, dans le menu) : ce que le GEDCOM ne sait pas dire s'écrit dans les notes
   de l'arbre ; la page présente les trois mentions ci-dessous (à copier), leur nombre dans l'arbre, et
   renvoie vers la page de chacune, qui ramène aux annotations.
