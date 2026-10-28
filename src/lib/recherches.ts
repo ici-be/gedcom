@@ -59,8 +59,9 @@ export const SOURCES: Source[] = [
   {
     id: 'belgicapress',
     nom: 'BelgicaPress (KBR)',
+    // sans guillemets : avec, les mots ne sont pas surlignés sur les scans
     detail: 'Presse belge numérisée',
-    url: (n) => `https://www.belgicapress.be/pressshow.php?adv=0&all_q=${e(n.phrase)}&any_q=&exact_q=&none_q=&from_d=&to_d=&per_lang=&per=&lang=fr&per_type=0&per_sel=0`,
+    url: (n) => `https://www.belgicapress.be/pressshow.php?adv=0&all_q=${e(`${n.prenom} ${n.nom}`)}&any_q=&exact_q=&none_q=&from_d=&to_d=&per_lang=&per=&lang=fr&per_type=0&per_sel=0`,
   },
   {
     id: 'retronews',
