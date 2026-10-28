@@ -25,6 +25,14 @@ export function Recherches({ d, id }: { d: Donnees; id?: string }) {
   }
   const toutCompter = () => SOURCES.forEach((s) => { if (s.compter) void compter(s) })
 
+  const [bloque, setBloque] = useState(false)
+  // Tous les onglets d'un coup : le navigateur peut en bloquer, il propose alors d'autoriser les fenêtres surgissantes
+  const toutOuvrir = () => {
+    if (!nom) return
+    const ouverts = SOURCES.map((s) => window.open(s.url(nom), '_blank', 'noopener'))
+    setBloque(ouverts.some((o) => !o))
+  }
+
   return (
     <section class="ecran">
       <header class="titre-ecran">
@@ -44,6 +52,10 @@ export function Recherches({ d, id }: { d: Donnees; id?: string }) {
             Les nombres ne sont demandés qu’à votre clic : le nom est alors envoyé à la base interrogée.
             Les homonymes et les graphies anciennes (Veyckemans, Veyckmans…) ne sont pas distingués ; un nombre dit où regarder, pas qui est qui.{' '}
             <button type="button" class="lien" onClick={toutCompter}>Compter partout</button>
+          </p>
+          <p>
+            <button type="button" onClick={toutOuvrir}>Tout ouvrir ({SOURCES.length} onglets)</button>
+            {bloque && <span class="aide"> Le navigateur a bloqué des onglets : autorisez les fenêtres surgissantes pour ce site, puis recommencez.</span>}
           </p>
           <div class="tableau-conteneur">
             <table class="tableau">
