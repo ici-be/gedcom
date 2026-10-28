@@ -15,10 +15,13 @@ export interface Source {
 
 export interface Nom { prenom: string; nom: string; /** « Prénom Nom », entre guillemets */ phrase: string }
 
+/** Sans accents ni tréma : les bases numérisées (texte océrisé) n'ont pas « Lamourÿ » mais « Lamoury » */
+const sansAccents = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').trim()
+
 /** Premier prénom seul : « Jean Baptiste » est rarement écrit ainsi dans les journaux */
 export function nomRecherche(ind: Individu, tousPrenoms = false): Nom | undefined {
-  const nom = ind.nom.trim()
-  const prenom = (tousPrenoms ? ind.prenom : ind.prenom.split(/\s+/)[0] ?? '').trim()
+  const nom = sansAccents(ind.nom)
+  const prenom = sansAccents(tousPrenoms ? ind.prenom : ind.prenom.split(/\s+/)[0] ?? '')
   if (!nom || !prenom) return undefined
   return { prenom, nom, phrase: `"${prenom} ${nom}"` }
 }
@@ -29,6 +32,13 @@ async function json(url: string): Promise<any> {
   const r = await fetch(url)
   if (!r.ok) throw new Error(String(r.status))
   return r.json()
+}
+
+const liste = { data: [], size: 5 }
+const filtres = { data: { filters: [], selected: [] }, size: 5 }
+const FACETTES_RETRONEWS = {
+  date: {}, location: liste, organization: liste, person: liste, publicationId: filtres, workId: filtres,
+  publicationLocation: { data: {}, size: 5 }, thematic: filtres,
 }
 
 export const SOURCES: Source[] = [
@@ -43,7 +53,8 @@ export const SOURCES: Source[] = [
     id: 'gallica',
     nom: 'Gallica (BnF)',
     detail: 'Livres, presse et manuscrits français',
-    url: (n) => `https://gallica.bnf.fr/services/engine/search/sru?operation=searchRetrieve&version=1.2&query=${e(`(gallica all ${n.phrase})`)}`,
+    // le prénom à un mot au plus du nom donne de meilleurs résultats que la phrase exacte
+    url: (n) => `https://gallica.bnf.fr/services/engine/search/sru?operation=searchRetrieve&exactSearch=false&collapsing=true&version=1.2&query=${e(`(( text all "${n.prenom}" prox/unit=word/distance=1 "${n.nom}"))`)}&suggest=10&keywords=`,
   },
   {
     id: 'belgicapress',
@@ -55,7 +66,11 @@ export const SOURCES: Source[] = [
     id: 'retronews',
     nom: 'RetroNews (BnF)',
     detail: 'Presse française (accès partiel gratuit)',
-    url: (n) => `https://www.retronews.fr/search#allTerms=${e(n.phrase)}&sort=score&publishedBounds=from&indexedBounds=from&page=1&searchIn=all&total=0`,
+    // la recherche simple de RetroNews lit une requête JSON en base64 dans « q »
+    url: (n) => {
+      const requete = { search: { type: 'simple', criteria: { searchText: `${n.prenom} ${n.nom}`.toLowerCase(), selectedFacets: FACETTES_RETRONEWS }, page: 0, sort: 'relevance' }, sort: 'relevance' }
+      return `https://www.retronews.fr/search?page=1&q=${e(btoa(e(JSON.stringify(requete))))}`
+    },
   },
   {
     id: 'delpher',
