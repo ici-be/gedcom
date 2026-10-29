@@ -6,6 +6,12 @@ import { chercher, indexerRecherche, type Resultat } from '../lib/recherche-glob
 import { t } from '../lib/i18n'
 
 const GENRES: Record<Resultat['genre'], string> = { personne: 'Personne', lieu: 'Lieu', metier: 'Métier' }
+// pictos au trait (16 × 16)
+const PICTOS: Record<Resultat['genre'], string> = {
+  personne: 'M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2.5 14c0-3 2.5-4.5 5.5-4.5s5.5 1.5 5.5 4.5',
+  lieu: 'M8 14.5S3 10 3 6.5a5 5 0 0 1 10 0C13 10 8 14.5 8 14.5zM8 8a1.6 1.6 0 1 0 0-3.2A1.6 1.6 0 0 0 8 8z',
+  metier: 'M2 5.5h12v8H2zM5.5 5.5v-2h5v2M2 9h12',
+}
 
 export function RechercheGlobale({ d }: { d: Donnees }) {
   const [texte, setTexte] = useState('')
@@ -55,7 +61,7 @@ export function RechercheGlobale({ d }: { d: Donnees }) {
           {resultats.map((r, i) => (
             <li key={r.lien} role="option" aria-selected={i === actif}>
               <a href={r.lien} class={i === actif ? 'actif' : ''} onClick={(e) => { e.preventDefault(); aller(r) }} onMouseEnter={() => setActif(i)}>
-                <span class="genre">{t(GENRES[r.genre])}</span>
+                <svg class="genre" viewBox="0 0 16 16" role="img" aria-label={t(GENRES[r.genre])}><title>{t(GENRES[r.genre])}</title><path d={PICTOS[r.genre]} /></svg>
                 <span class="libelle">{r.libelle}</span>
                 {r.detail && <span class="detail">{r.genre === 'metier' ? r.detail + ' ' + t('pers.') : r.detail}</span>}
               </a>

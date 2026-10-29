@@ -1332,7 +1332,8 @@ svg[class^="trait-"] line { stroke-width: 2; stroke-linecap: round; }
   background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow), 0 8px 28px rgb(0 0 0 / 18%); max-height: 70dvh; overflow-y: auto; }
 .resultats-recherche a { display: flex; align-items: baseline; gap: 8px; padding: 7px 10px; border-radius: 8px; color: var(--fg); text-decoration: none; font-size: 0.93rem; }
 .resultats-recherche a.actif { background: var(--accent-bg); color: var(--accent); }
-.resultats-recherche .genre { flex: none; width: 4.2em; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.resultats-recherche .genre { flex: none; align-self: center; width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; color: var(--muted); }
+.resultats-recherche a.actif .genre { color: inherit; }
 .resultats-recherche .libelle { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .resultats-recherche .detail { margin-left: auto; font-size: 0.82rem; color: var(--muted); white-space: nowrap; }
 .resultats-recherche .aucun { padding: 8px 10px; color: var(--muted); }
