@@ -25,6 +25,7 @@ import { Illettres } from './Illettres'
 import { Annotations } from './Annotations'
 import { Doublons } from './Doublons'
 import { Recherches } from './Recherches'
+import { Priorites } from './Priorites'
 import { ProposerInstallation } from './Installer'
 import { ChoixRacine } from './ChoixRacine'
 import { BoutonDons, CarteDons } from './Dons'
@@ -84,6 +85,7 @@ const ICONES: Record<string, string> = {
   statistiques: 'M2.5 14V9M6.5 14V5M10.5 14V7M14 14V2',
   doublons: 'M2 2.5h8v8H2zM6 5.5h8v8H6z',
   recherches: 'M7 2.5a4.5 4.5 0 1 1 0 9a4.5 4.5 0 1 1 0-9M10.3 10.3L14 14',
+  priorites: 'M3.5 14.5V2M3.5 2.5h9l-2 3 2 3h-9',
   annotations: 'M2 2.5h5.5l6 6-5 5-6-6zM5 4.5a1 1 0 1 1 0 2a1 1 0 1 1 0-2',
   imprimer: 'M4 6V2h8v4M4 11H2.5V6h11v5H12M4 9h8v5H4z',
 }
@@ -330,6 +332,7 @@ export function App() {
     ? <Impression d={donnees} id={route[1]} />
     : <div class="attente" role="status"><span class="rouet" />{t('Préparation de l’arbre…')}</div>
   else if (page === 'doublons') contenu = <Doublons d={donnees} />
+  else if (page === 'priorites') contenu = <Priorites d={donnees} />
   else if (page === 'recherches') contenu = <Recherches d={donnees} id={route[1] || donnees.racine} />
   else if (page === 'annotations') contenu = <Annotations d={donnees} />
   else if (page === 'filiation') contenu = <Filiation d={donnees} />
@@ -355,6 +358,7 @@ export function App() {
             <nav class="onglets">
               <a href="#/" class={page === '' ? 'actif' : ''}><Icone nom="accueil" />Accueil</a>
               <a href="#/personnes" class={page === 'personnes' ? 'actif' : ''}><Icone nom="personnes" />Personnes</a>
+              <a href="#/priorites" class={page === 'priorites' ? 'actif' : ''}><Icone nom="priorites" />Priorités</a>
               <a href="#/lieux" class={page === 'lieux' ? 'actif' : ''}><Icone nom="lieux" />Lieux</a>
               <a href="#/metiers" class={page === 'metiers' ? 'actif' : ''}><Icone nom="metiers" />Métiers</a>
               <a href="#/carte" class={page === 'carte' ? 'actif' : ''}><Icone nom="carte" />Carte</a>

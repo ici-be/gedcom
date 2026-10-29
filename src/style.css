@@ -1286,3 +1286,30 @@ svg[class^="trait-"] line { stroke-width: 2; stroke-linecap: round; }
   padding: 12px 14px 12px 18px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow), 0 8px 24px rgb(16 24 40 / 10%); }
 .rch-barre .bouton.principal { padding: 9px 22px; }
 .rch-bloque { margin: 6px 0 0; padding: 6px 10px; border-radius: 8px; background: var(--mid-bg); color: var(--mid); font-size: 0.85rem; }
+
+/* ---------- priorités ---------- */
+.pr-reglages { gap: 10px; }
+.pr-options { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; }
+.pr-generation { display: flex; align-items: baseline; gap: 4px; font-size: 1.15rem; margin: 10px 0 -6px; }
+.pr-carte { background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--ko); border-radius: var(--radius); padding: 12px 16px 14px; display: flex; flex-direction: column; gap: 8px; break-inside: avoid; }
+.pr-carte.sans-source { border-left-color: var(--mid); }
+.pr-carte header { display: flex; align-items: flex-start; gap: 10px; }
+.pr-titre { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
+.pr-fait { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+.pr-qui-principal { font-size: 1rem; }
+.pr-sosa { flex: none; padding: 1px 8px; border-radius: 999px; background: var(--accent-bg); color: var(--accent); font-size: 0.78rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.pr-loupe { flex: none; display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; color: var(--muted); }
+.pr-loupe:hover { background: var(--panel-2); color: var(--accent); }
+.pr-loupe svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+.pr-indice { margin: 0 0 0 30px; color: var(--muted); font-size: 0.9rem; }
+.pr-pistes { margin-left: 30px; display: flex; flex-direction: column; gap: 4px; }
+.pr-etiquette { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+.pr-pistes ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.pr-pistes li { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 14px; padding: 5px 10px; border-radius: 8px; background: var(--panel-2); font-size: 0.9rem; }
+.pr-pistes li.voisine { background: transparent; border: 1px dashed var(--line); }
+.pr-qui .personne a { font-weight: 600; }
+.pr-quand { margin-left: 8px; color: var(--muted); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+.pr-source { font-size: 0.85rem; text-decoration: none; overflow-wrap: anywhere; }
+.pr-source.texte { color: var(--muted); font-style: italic; }
+.pr-sans-piste { margin: 0 0 0 30px; color: var(--muted); font-size: 0.85rem; font-style: italic; }
+@media (max-width: 560px) { .pr-indice, .pr-pistes, .pr-sans-piste { margin-left: 0; } }
