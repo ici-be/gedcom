@@ -948,6 +948,14 @@ a.rc-ar-case:hover { border-color: var(--accent); }
 .rc-texte .rc-debut { clear: both; }
 @media print {
   .recit > .titre-ecran, .rc-reglages { display: none !important; }
+  /* à l'impression, que des blocs ordinaires : les navigateurs paginent mal les grilles et les boîtes « flex »
+     (ligne coupée en deux entre deux pages, élément repoussé à la page suivante alors qu'il restait de la place) */
+  .recit, .rc-texte, .rc-partie { display: block; }
+  .rc-item { display: block; padding-left: 2.2em; }
+  .rc-marque { float: left; width: 2.2em; margin-left: -2.2em; line-height: 1.5; }
+  .rc-texte .rc-notes p { display: block; padding-left: 2.4em; }
+  .rc-notes .rc-num-note { float: left; width: 2.4em; margin-left: -2.4em; padding-top: 0; line-height: inherit; }
+  .rc-notes p > span { display: block; }
   .rc-texte { border: 0; padding: 0; }
   .rc-texte > section { max-width: none; }
   .rc-texte p, .rc-marque { font-size: 10pt; line-height: 1.5; }
@@ -976,8 +984,8 @@ a.rc-ar-case:hover { border-color: var(--accent); }
   /* la dernière page : les QR codes en planche, chacun avec son numéro, son site et ses notes */
   .rc-qr { display: block; break-before: page; }
   .rc-qr-aide { text-align: center !important; font-style: italic; color: #555; margin: 0 0 8mm !important; text-indent: 0 !important; }
-  .rc-qr-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(34mm, 1fr)); gap: 7mm 5mm; }
-  .rc-qr-grille figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 2mm; padding: 3mm 2mm 2.5mm; border: 0.3mm solid #d4d4d0; border-radius: 2mm; break-inside: avoid; }
+  .rc-qr-grille { display: block; text-align: center; }
+  .rc-qr-grille figure { margin: 0 2mm 6mm; width: 33mm; vertical-align: top; display: inline-flex; flex-direction: column; align-items: center; gap: 2mm; padding: 3mm 2mm 2.5mm; border: 0.3mm solid #d4d4d0; border-radius: 2mm; break-inside: avoid; }
   .rc-qr-grille svg { width: 24mm; height: 24mm; color: #000; }
   .rc-qr-grille figcaption { display: flex; flex-direction: column; align-items: center; gap: 0.4mm; text-align: center; line-height: 1.25; }
   .rc-qr-num { font: 600 11pt var(--rc-serif); }
