@@ -250,8 +250,14 @@ export function Recit({ d, id }: { d: Donnees; id?: string }) {
                     {sousTitre.length > 0 && <p class="rc-soustitre">avec {sousTitre.join(' et ')}</p>}
                   </header>
                 )
-                : <h3><span class="rc-num">{pt.numero}</span>{pt.titre}</h3>}
-              <Blocs blocs={pt.blocs} qui={photos.afficher ? (x) => d.arbre.individus.get(x) : undefined} />
+                : (
+                  // le titre et le petit arbre qui le suit restent ensemble, avec au moins deux lignes de texte (à l'impression)
+                  <div class="rc-debut">
+                    <h3><span class="rc-num">{pt.numero}</span>{pt.titre}</h3>
+                    {pt.blocs[0]?.type === 'arbre' && <MiniArbre a={pt.blocs[0].arbre} />}
+                  </div>
+                )}
+              <Blocs blocs={i > 0 && pt.blocs[0]?.type === 'arbre' ? pt.blocs.slice(1) : pt.blocs} qui={photos.afficher ? (x) => d.arbre.individus.get(x) : undefined} />
               {pt.notes.length > 0 && (
                 <div class="rc-notes">
                   {pt.notes.map((n) => (
