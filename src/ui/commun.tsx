@@ -1,7 +1,7 @@
 // Petits éléments partagés par les écrans.
 
 import { options } from 'preact'
-import { useEffect, useMemo, useState } from 'preact/hooks'
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import type { Evenement, Individu } from '../lib/gedcom/arbre'
 import type { Donnees, Perimetre } from '../lib/donnees'
 import type { Etat, Fait } from '../lib/suivi'
@@ -131,6 +131,14 @@ export function Personne({ d, id, annees, prenoms }: { d: Donnees; id: string; a
 /** Choisir une personne par son nom */
 export function ChoixPersonne({ d, valeur, choisir, prenoms }: { d: Donnees; valeur: string; choisir: (id: string) => void; prenoms?: number }) {
   const [texte, setTexte] = useState('')
+  const [ouvert, setOuvert] = useState(true)
+  const racine = useRef<HTMLDivElement>(null)
+  // La liste se replie d'un clic en dehors, et se rouvre dès qu'on tape ou revient dans le champ
+  useEffect(() => {
+    const dehors = (e: Event) => { if (!racine.current?.contains(e.target as Node)) setOuvert(false) }
+    document.addEventListener('pointerdown', dehors)
+    return () => document.removeEventListener('pointerdown', dehors)
+  }, [])
   const resultats = useMemo(() => {
     const mots = normaliser(texte).split(/\s+/).filter(Boolean)
     if (!mots.length) return []
@@ -144,10 +152,10 @@ export function ChoixPersonne({ d, valeur, choisir, prenoms }: { d: Donnees; val
   }, [texte, d])
   const actuel = d.arbre.individus.get(valeur)
   return (
-    <div class="choix-personne">
+    <div class="choix-personne" ref={racine}>
       <div class="actuel">{actuel ? <Personne d={d} id={actuel.id} annees prenoms={prenoms} /> : <span class="vide">{t('aucune')}</span>}</div>
-      <input type="search" placeholder={t('Chercher un nom…')} value={texte} onInput={(e) => setTexte(e.currentTarget.value)} aria-label={t('Chercher une personne')} />
-      {resultats.length > 0 && (
+      <input type="search" placeholder={t('Chercher un nom…')} value={texte} onInput={(e) => { setTexte(e.currentTarget.value); setOuvert(true) }} onFocus={() => setOuvert(true)} aria-label={t('Chercher une personne')} />
+      {ouvert && resultats.length > 0 && (
         <ul class="resultats">
           {resultats.map((ind) => (
             <li key={ind.id}>

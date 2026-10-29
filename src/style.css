@@ -1050,6 +1050,7 @@ a.asc-piste-g:hover { color: var(--accent); }
 .graphe-reglages { flex-direction: column; align-items: stretch; gap: 12px; }
 .graphe-ligne { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: flex-end; }
 .graphe-personne { flex: 1 1 320px; max-width: 560px; }
+.ecran > .graphe-personne { flex: none; }
 .graphe-etiquette { font-size: 0.85rem; color: var(--muted); font-weight: 700; align-self: center; }
 .filtres label.graphe-type { gap: 6px; font-size: 0.9rem; align-self: center; }
 .graphe-couleur { margin-left: auto; }
