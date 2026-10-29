@@ -224,6 +224,9 @@ export function App() {
     return () => removeEventListener('afterprint', fin)
   }, [])
   const [demo, setDemo] = useState(false)
+  const [menuOuvert, setMenuOuvert] = useState(false)
+  // le menu replié (téléphone) se referme à chaque changement de page
+  useEffect(() => setMenuOuvert(false), [route])
   const [glisse, setGlisse] = useState(false)
   const ouvrirRef = useRef(ouvrir)
   ouvrirRef.current = ouvrir
@@ -355,7 +358,12 @@ export function App() {
           {(MODE_IMPRESSION || page === 'imprimer') && <ChoixLangue langue={langue} choisir={setLangue} />}
           {MODE_IMPRESSION && <button type="button" class="bouton-demo" onClick={() => setDemo(true)}><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z" /></svg>{t('Voir la démo')}</button>}
           {donnees && !MODE_IMPRESSION && (
-            <nav class="onglets">
+            <button type="button" class="hamburger" aria-label="Menu" aria-expanded={menuOuvert} aria-controls="menu-principal" onClick={() => setMenuOuvert(!menuOuvert)}>
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d={menuOuvert ? 'M3 3l10 10M13 3L3 13' : 'M2 4h12M2 8h12M2 12h12'} /></svg>
+            </button>
+          )}
+          {donnees && !MODE_IMPRESSION && (
+            <nav class={menuOuvert ? 'onglets ouvert' : 'onglets'} id="menu-principal">
               <a href="#/" class={page === '' ? 'actif' : ''}><Icone nom="accueil" />Accueil</a>
               <a href="#/personnes" class={page === 'personnes' ? 'actif' : ''}><Icone nom="personnes" />Personnes</a>
               <a href="#/priorites" class={page === 'priorites' ? 'actif' : ''}><Icone nom="priorites" />Priorités</a>
