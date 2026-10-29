@@ -138,3 +138,10 @@ test('les petits arbres : le couple, les parents de chacun, les enfants, l’enf
   // le texte copié ne change pas
   expect(texteBrut(r)).toBe(texteBrut(recit(d, '@I1@', 1, 1)!))
 })
+
+test('deux notes identiques dans une même partie ne font qu’une', () => {
+  const ged = NOTICE.replace('1 OCCU musicien', '1 OCCU musicien\n1 NOTE Source : Famille.').replace('1 OCCU ménagère', '1 OCCU ménagère\n1 NOTE Source : Famille.')
+  const r = recit(calculer(lireArbre(ged), '@I1@', ''), '@I1@', 1, 0)!
+  const notes = r.parties[0].notes.map((n) => n.texte.join(''))
+  expect(notes.filter((t) => t.includes('Famille')).length).toBe(1)
+})

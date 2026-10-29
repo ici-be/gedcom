@@ -21,7 +21,7 @@ export type Morceau =
   | string
   | { id: string; t: string; gras?: boolean }
   | { sosa: number; ancre: boolean }
-  | { appel: number }
+  | { appel: number; renvoi?: boolean }
   | { url: string; t: string }
   | { evt: string; t: string; type: string }
 export type Phrase = Morceau[]
@@ -80,12 +80,19 @@ class Plume {
     return options[i]
   }
 
-  /** Un appel de note réunissant ces phrases (rien si elles sont toutes vides) */
+  /**
+   * Un appel de note réunissant ces phrases (rien si elles sont toutes vides). Une note identique à une autre de
+   * la même partie (« Source : Famille. ») n'est pas répétée : l'appel renvoie à la première.
+   */
   appel(segments: (Phrase | null | undefined)[]): Morceau[] {
     const l = segments.filter((s): s is Phrase => !!s && s.length > 0)
     if (!l.length) return []
+    const texte = joindre(l)
+    const brut = texteMorceaux(texte)
+    const deja = this.notes.find((n) => texteMorceaux(n.texte) === brut)
+    if (deja) return [{ appel: deja.n, renvoi: true }]
     this.n++
-    this.notes.push({ n: this.n, texte: joindre(l) })
+    this.notes.push({ n: this.n, texte })
     return [{ appel: this.n }]
   }
 

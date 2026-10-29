@@ -37,7 +37,8 @@ function aller(e: Event, id: string) {
 
 function M({ m }: { m: Morceau }) {
   if (typeof m === 'string') return <>{m}</>
-  if ('appel' in m) return <sup class="rc-appel"><a id={`rc-a${m.appel}`} href={`#rc-n${m.appel}`} onClick={(e) => aller(e, `rc-n${m.appel}`)}>{m.appel}</a></sup>
+  // un renvoi à une note déjà appelée n'a pas d'ancre : le retour depuis la note mène au premier appel
+  if ('appel' in m) return <sup class="rc-appel"><a id={m.renvoi ? undefined : `rc-a${m.appel}`} href={`#rc-n${m.appel}`} onClick={(e) => aller(e, `rc-n${m.appel}`)}>{m.appel}</a></sup>
   if ('sosa' in m) {
     return m.ancre
       ? <a class="rc-sosa" href={`#rc-s${m.sosa}`} onClick={(e) => aller(e, `rc-s${m.sosa}`)} title="Aller à sa notice">[{m.sosa}]</a>
