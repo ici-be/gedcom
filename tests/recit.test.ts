@@ -132,7 +132,8 @@ test('les petits arbres : le couple, les parents de chacun, les enfants, l’enf
   if (tete.type !== 'arbre') return
   expect(tete.arbre.couple.map((c) => c?.t)).toEqual(['Jean Martin', 'Marie Dubois'])
   expect(tete.arbre.haut[0].map((c) => c?.t)).toEqual(['Pierre Martin', undefined])
-  expect(tete.arbre.enfants.map((c) => c.t)).toEqual(['Louis Martin'])
+  // un enfant qui porte le nom du père n'est désigné que par son prénom
+  expect(tete.arbre.enfants.map((c) => c.t)).toEqual(['Louis'])
   const parents = r.parties[1].blocs[0]
   expect(parents.type === 'arbre' && parents.arbre.enfants.find((c) => c.ligne)?.id).toBe('@I1@')
   // le texte copié ne change pas

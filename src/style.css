@@ -881,7 +881,11 @@ a.rc-ar-case:hover { border-color: var(--accent); }
 .rc-ar-case.rc-ar-ligne { background: var(--accent-bg); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
 .rc-ar-case.inconnu, .rc-ar-case.reste { border-style: dashed; border-top-width: 1px; color: var(--muted) !important; background: var(--panel-2); font-size: 0.8rem; }
 .rc-ar-case.inconnu { min-height: 2.6rem; }
-.rc-ar-nom { font-size: 0.76rem; font-weight: 600; overflow-wrap: anywhere; }
+/* le prénom, puis le nom de famille sur sa ligne : jamais coupé au milieu, abrégé « … » s'il ne tient vraiment pas */
+.rc-ar-nom { max-width: 100%; font-size: 0.76rem; font-weight: 600; }
+.rc-ar-famille { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rc-ar-enfants.serres .rc-ar-nom { font-size: 0.68rem; }
+.rc-ar-enfants.serres .rc-ar-annees { font-size: 0.62rem; }
 /* les années et le numéro Sosa passent à la ligne plutôt que d'élargir la case */
 .rc-ar-annees { display: flex; flex-wrap: wrap; justify-content: center; column-gap: 5px; font-size: 0.68rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .rc-ar-sosa { padding: 0 4px; border-radius: 3px; background: var(--panel-2); font-weight: 600; }
@@ -955,10 +959,16 @@ a.rc-ar-case:hover { border-color: var(--accent); }
   .rc-texte a { text-decoration: none; }
   .rc-texte .rc-appel a, .rc-notes .rc-num-note { color: inherit; }
   .rc-entete::after { background: #fff; }
-  .rc-figures, .rc-arbre, .rc-item { break-inside: avoid; }
+  /* un enfant sans descendance détaillée tient sur une page ; celui qui en a peut commencer en bas de page */
+  .rc-figures, .rc-arbre, .rc-item:not(:has(.rc-liste)) { break-inside: avoid; }
+  .rc-texte p { orphans: 2; widows: 2; }
+  /* « Du premier lit » ne reste pas seul en bas de page : il garde la place de deux lignes après lui */
+  .rc-texte .rc-lit { break-inside: avoid; padding-bottom: 3em; margin-bottom: -3em; }
   .rc-arbre { --trait: #888; margin: 4pt auto 12pt; max-width: 15cm; overflow: visible; column-gap: 7mm; }
   .rc-ar-couple { column-gap: 7mm; }
   .rc-ar-nom { font-size: 7pt; }
+  .rc-ar-enfants.serres .rc-ar-nom { font-size: 6.3pt; }
+  .rc-ar-enfants.serres .rc-ar-annees { font-size: 5.8pt; }
   .rc-ar-annees { font-size: 6.5pt; }
   .rc-ar-case { padding: 2pt 4pt 3pt; }
   .rc-ar-case.rc-ar-ligne { background: #eef0f8; }

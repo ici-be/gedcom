@@ -81,7 +81,7 @@ function CaseArbre({ c }: { c: Case | null }) {
   if (!c) return <span class="rc-ar-case inconnu" aria-hidden="true">?</span>
   return (
     <a href={lien(c.id)} class={`rc-ar-case ${c.sexe === 'F' ? 'f' : c.sexe === 'M' ? 'h' : ''}${c.ligne ? ' rc-ar-ligne' : ''}`} title="Faire le récit de cette personne">
-      <span class="rc-ar-nom">{c.t}</span>
+      <span class="rc-ar-nom" title={c.t}>{c.prenom}{c.nom && <span class="rc-ar-famille">{c.nom}</span>}</span>
       {(c.annees || c.sosa) && <span class="rc-ar-annees">{c.annees}{c.sosa && <span class="rc-ar-sosa">{c.sosa}</span>}</span>}
     </a>
   )
@@ -107,7 +107,7 @@ function MiniArbre({ a }: { a: PetitArbre }) {
         {a.couple.map((c, i) => <CaseArbre key={i} c={c} />)}
       </div>
       {enfants > 0 && (
-        <div class={'rc-ar-enfants' + (enfants === 1 ? ' seul' : '')}>
+        <div class={'rc-ar-enfants' + (enfants === 1 ? ' seul' : '') + (enfants > 6 ? ' serres' : '')}>
           {a.enfants.map((c) => <div key={c.id} class="rc-ar-enfant"><CaseArbre c={c} /></div>)}
           {a.reste > 0 && <div class="rc-ar-enfant"><span class="rc-ar-case reste">+ {a.reste}</span></div>}
         </div>

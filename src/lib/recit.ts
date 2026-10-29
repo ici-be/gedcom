@@ -27,7 +27,7 @@ export type Morceau =
 export type Phrase = Morceau[]
 export interface Item { marque: string; blocs: Bloc[] }
 /** Une personne dans un petit arbre : nom court, années, numéro Sosa, sexe ; `ligne` : l'enfant par qui passe la lignée */
-export interface Case { id: string; t: string; annees: string; sosa?: number; sexe: Individu['sexe']; ligne?: boolean }
+export interface Case { id: string; t: string; prenom: string; nom?: string; annees: string; sosa?: number; sexe: Individu['sexe']; ligne?: boolean }
 /** Un petit arbre : les parents de chacun des deux conjoints, le couple, leurs enfants (les premiers, `reste` en plus) */
 export interface PetitArbre { haut: [(Case | null)[], (Case | null)[]]; couple: (Case | null)[]; enfants: Case[]; reste: number }
 export type Bloc =
@@ -913,11 +913,14 @@ function notice(p: Plume, ind: Individu, ctx: Contexte): Bloc[] {
 
 const ENFANTS_MAX = 8
 
-function caseDe(p: Plume, x: Individu | undefined, ligne?: string): Case | null {
+/** `nomDuPere` : un enfant qui porte ce nom n'est désigné que par son prénom (la rangée des enfants reste lisible) */
+function caseDe(p: Plume, x: Individu | undefined, ligne?: string, nomDuPere?: string): Case | null {
   if (!x) return null
-  const t = [prenomUsuel(x), x.nom].filter(Boolean).join(' ') || '?'
+  const nom = x.nom && x.nom !== nomDuPere ? x.nom : undefined
+  const prenom = prenomUsuel(x)
+  const t = [prenom, nom].filter(Boolean).join(' ') || '?'
   const s = p.sosas.get(x.id)
-  return { id: x.id, t, annees: annees(p, x).replace(/^ \(|\)$/g, ''), sexe: x.sexe, ...(s ? { sosa: s } : {}), ...(x.id === ligne ? { ligne: true } : {}) }
+  return { id: x.id, t, prenom, ...(nom ? { nom } : {}), annees: annees(p, x).replace(/^ \(|\)$/g, ''), sexe: x.sexe, ...(s ? { sosa: s } : {}), ...(x.id === ligne ? { ligne: true } : {}) }
 }
 
 /** Le couple (l'homme à gauche), les parents de chacun au-dessus, les enfants de cette union en dessous */
@@ -934,7 +937,7 @@ function arbreCouple(p: Plume, a: Individu | undefined, b: Individu | undefined,
     arbre: {
       haut,
       couple: b ? [caseDe(p, h), caseDe(p, f)] : [caseDe(p, a)],
-      enfants: enf.slice(0, ENFANTS_MAX).map((c) => caseDe(p, c, ligne)!),
+      enfants: enf.slice(0, ENFANTS_MAX).map((c) => caseDe(p, c, ligne, h?.nom)!),
       reste: Math.max(0, enf.length - ENFANTS_MAX),
     },
   }
