@@ -8,6 +8,7 @@ import { adresseDevinee } from '../lib/geneanet'
 import { ecrire, garderFichier, lire, lireFichier, oublierFichier, oublierTout } from '../lib/stockage'
 import { AideGedcom, Bienvenue, Depot, TableauDeBord } from './Accueil'
 import { Individus } from './Individus'
+import { RechercheGlobale } from './RechercheGlobale'
 import { Communes, Lieu } from './Communes'
 import { Metiers, PageMetier } from './Metiers'
 import type { Carte as TypeCarte } from './Carte'
@@ -362,6 +363,7 @@ export function App() {
               <svg viewBox="0 0 16 16" aria-hidden="true"><path d={menuOuvert ? 'M3 3l10 10M13 3L3 13' : 'M2 4h12M2 8h12M2 12h12'} /></svg>
             </button>
           )}
+          {donnees && !MODE_IMPRESSION && <RechercheGlobale d={donnees} />}
           {donnees && !MODE_IMPRESSION && (
             <nav class={menuOuvert ? 'onglets ouvert' : 'onglets'} id="menu-principal">
               <a href="#/" class={page === '' ? 'actif' : ''}><Icone nom="accueil" />Accueil</a>

@@ -112,7 +112,8 @@ h1, h2, h3 { font-family: var(--display); font-weight: 650; letter-spacing: -0.0
   .hamburger:hover { background: var(--panel-2); }
   .onglets { display: none; flex-basis: 100%; flex-direction: column; overflow: visible; }
   .onglets.ouvert { display: flex; }
-  .repliable:not(.ouvert) .depot.compact { display: none; }
+  .repliable:not(.ouvert) .depot.compact, .repliable:not(.ouvert) .recherche-globale { display: none; }
+  .recherche-globale { flex-basis: 100%; }
   .repliable .depot.compact { flex-basis: 100%; }
   .onglets a { padding: 10px 12px; font-size: 1rem; }
 }
@@ -1322,3 +1323,16 @@ svg[class^="trait-"] line { stroke-width: 2; stroke-linecap: round; }
 .pr-source.texte { color: var(--muted); font-style: italic; }
 .pr-sans-piste { margin: 0 0 0 30px; color: var(--muted); font-size: 0.85rem; font-style: italic; }
 @media (max-width: 560px) { .pr-indice, .pr-pistes, .pr-sans-piste { margin-left: 0; } }
+
+/* ---------- recherche globale (bandeau) ---------- */
+.recherche-globale { position: relative; }
+.recherche-globale input { width: 100%; box-sizing: border-box; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel-2); color: var(--fg); font: inherit; font-size: 0.93rem; }
+.recherche-globale input:focus { outline: none; border-color: var(--accent); background: var(--panel); }
+.resultats-recherche { position: absolute; left: 0; top: calc(100% + 6px); z-index: 40; min-width: 100%; width: max(100%, min(380px, calc(100vw - 32px))); margin: 0; padding: 4px; list-style: none;
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow), 0 8px 28px rgb(0 0 0 / 18%); max-height: 70dvh; overflow-y: auto; }
+.resultats-recherche a { display: flex; align-items: baseline; gap: 8px; padding: 7px 10px; border-radius: 8px; color: var(--fg); text-decoration: none; font-size: 0.93rem; }
+.resultats-recherche a.actif { background: var(--accent-bg); color: var(--accent); }
+.resultats-recherche .genre { flex: none; width: 4.2em; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.resultats-recherche .libelle { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.resultats-recherche .detail { margin-left: auto; font-size: 0.82rem; color: var(--muted); white-space: nowrap; }
+.resultats-recherche .aucun { padding: 8px 10px; color: var(--muted); }
