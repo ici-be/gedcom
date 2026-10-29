@@ -1,14 +1,30 @@
 // Recherches externes : pour une personne choisie, des liens qui préremplissent la recherche dans des bases (livres, presse,
 // archives) et, pour celles qui le permettent, le nombre de résultats. Le nom n'est envoyé à une base que si on le demande.
 
-import { useState } from 'preact/hooks'
+import type { ComponentChildren } from 'preact'
+import { useEffect, useRef, useState } from 'preact/hooks'
 import type { Donnees } from '../lib/donnees'
-import { nombre } from '../lib/format'
 import { ecrire, lire } from '../lib/stockage'
-import { nomRecherche, SOURCES, type Source } from '../lib/recherches'
+import { nomRecherche, SOURCES } from '../lib/recherches'
 import { ChoixPersonne, Personne } from './commun'
 
-type Resultat = number | 'erreur' | 'attente'
+/** Menu qui s'ouvre par-dessus la page et se referme d'un clic en dehors */
+function Deroulant({ titre, children }: { titre: string; children: ComponentChildren }) {
+  const [ouvert, setOuvert] = useState(false)
+  const ref = useRef<HTMLSpanElement>(null)
+  useEffect(() => {
+    if (!ouvert) return
+    const dehors = (e: Event) => { if (!ref.current?.contains(e.target as Node)) setOuvert(false) }
+    document.addEventListener('pointerdown', dehors)
+    return () => document.removeEventListener('pointerdown', dehors)
+  }, [ouvert])
+  return (
+    <span ref={ref} style="position:relative;display:inline-block">
+      <button type="button" class="lien" aria-expanded={ouvert} onClick={() => setOuvert(!ouvert)}>{titre} {ouvert ? '▴' : '▾'}</button>
+      {ouvert && <div class="resultats" style="right:auto;top:auto;margin-top:2px">{children}</div>}
+    </span>
+  )
+}
 
 const CLE_SOURCES = 'recherches.sources'
 
@@ -36,7 +52,6 @@ function proches(d: Donnees, id: string): { id: string; lien: string }[] {
 
 export function Recherches({ d, id }: { d: Donnees; id?: string }) {
   const [tous, setTous] = useState(false)
-  const [resultats, setResultats] = useState<Record<string, Resultat>>({})
   const [actives, setActives] = useState<string[]>(() => lire<string[]>(CLE_SOURCES, SOURCES.map((s) => s.id)))
   // Personnes ajoutées (avec leurs proches suggérés) et personnes cochées pour la recherche
   const [ajoutees, setAjoutees] = useState<string[]>([])
@@ -59,18 +74,7 @@ export function Recherches({ d, id }: { d: Donnees; id?: string }) {
   }
   const retirer = (x: string) => { setAjoutees((a) => a.filter((y) => y !== x)); setCochees((c) => c.filter((y) => y !== x)) }
 
-  const aller = (cible: string) => { location.hash = '#/recherches/' + encodeURIComponent(cible); setResultats({}) }
-  const compter = async (s: Source, p: (typeof choisies)[number]) => {
-    if (!s.compter) return
-    const cle = s.id + '|' + p.id
-    setResultats((r) => ({ ...r, [cle]: 'attente' }))
-    let v: Resultat
-    try { v = await s.compter(p.nom) } catch { v = 'erreur' }
-    setResultats((r) => ({ ...r, [cle]: v }))
-  }
-  const compterSource = (s: Source) => choisies.forEach((p) => void compter(s, p))
-  const toutCompter = () => sourcesActives.forEach(compterSource)
-
+  const aller = (cible: string) => { location.hash = '#/recherches/' + encodeURIComponent(cible) }
   const nbOnglets = sourcesActives.length * choisies.length
   // Tous les onglets cochés d'un coup : le navigateur peut en bloquer, il propose alors d'autoriser les fenêtres surgissantes
   const toutOuvrir = () => {
@@ -98,18 +102,19 @@ export function Recherches({ d, id }: { d: Donnees; id?: string }) {
             const ind = d.arbre.individus.get(b)!
             const nom = nomRecherche(ind, tous)
             return (
-              <div key={b} class="aide" style="margin-bottom:.75rem">
+              <div key={b} class="aide" style="margin-bottom:.4rem">
                 <label>
                   <input type="checkbox" checked={b === principale || cochees.includes(b)} disabled={b === principale || !nom} onChange={() => basculerPersonne(b)} />{' '}
                   <strong><Personne d={d} id={b} annees /></strong>
                 </label>{' '}{etiquetteSosa(b)}
                 {!nom && <> — pas de prénom et de nom : recherche impossible</>}
                 {b !== principale && <> <button type="button" class="lien" onClick={() => retirer(b)}>Retirer</button></>}
-                <ul style="list-style:none;margin:.25rem 0 0 1.5rem;padding:0">
+                <Deroulant titre="Proches">
+                  <ul style="list-style:none;margin:0;padding:6px 10px;white-space:nowrap">
                   {proches(d, b).map((p) => {
                     const pn = nomRecherche(d.arbre.individus.get(p.id)!, tous)
                     return (
-                      <li key={p.id}>
+                      <li key={p.id} style="padding:3px 0">
                         <label>
                           <input type="checkbox" checked={choisies.some((c) => c.id === p.id)} disabled={!pn || p.id === principale} onChange={() => basculerPersonne(p.id)} />{' '}
                           {p.lien} : <Personne d={d} id={p.id} annees />
@@ -119,18 +124,14 @@ export function Recherches({ d, id }: { d: Donnees; id?: string }) {
                     )
                   })}
                 </ul>
+                </Deroulant>
               </div>
             )
           })}
           <div class="graphe-personne"><ChoixPersonne d={d} valeur="" choisir={ajouter} prenoms={2} /></div>
           <p class="aide">Ajouter une autre personne ci-dessus ; ses proches sont alors proposés à cocher.</p>
           <p class="aide">
-            <label><input type="checkbox" checked={tous} onChange={(e) => { setTous(e.currentTarget.checked); setResultats({}) }} /> avec tous les prénoms</label>
-          </p>
-          <p class="aide">
-            Les nombres ne sont demandés qu’à votre clic : les noms sont alors envoyés à la base interrogée.
-            Les homonymes et les graphies anciennes (Veyckemans, Veyckmans…) ne sont pas distingués ; un nombre dit où regarder, pas qui est qui.{' '}
-            <button type="button" class="lien" onClick={toutCompter}>Compter partout</button>
+            <label><input type="checkbox" checked={tous} onChange={(e) => setTous(e.currentTarget.checked)} /> avec tous les prénoms</label>
           </p>
           <p>
             <button type="button" onClick={toutOuvrir} disabled={!nbOnglets}>Tout ouvrir ({nbOnglets} onglet{nbOnglets > 1 ? 's' : ''})</button>{' '}
@@ -140,27 +141,13 @@ export function Recherches({ d, id }: { d: Donnees; id?: string }) {
           </p>
           <div class="tableau-conteneur">
             <table class="tableau">
-              <thead><tr><th>Chercher</th><th>Base</th><th>Contenu</th><th>Résultats</th></tr></thead>
+              <thead><tr><th>Chercher</th><th>Base</th><th>Contenu</th></tr></thead>
               <tbody>
                 {SOURCES.map((s) => (
                   <tr key={s.id}>
                     <td><input type="checkbox" checked={actives.includes(s.id)} onChange={() => basculerSource(s.id)} aria-label={'Chercher dans ' + s.nom} /></td>
                     <td><strong>{s.nom}</strong></td>
                     <td class="aide">{s.detail}</td>
-                    <td>
-                      {!s.compter ? <span class="aide">à voir sur place</span> : (
-                        <>
-                          {choisies.map((p) => {
-                            const r = resultats[s.id + '|' + p.id]
-                            const v = r === 'attente' ? '…'
-                              : r === 'erreur' ? <span class="aide">indisponible</span>
-                              : typeof r === 'number' ? nombre(r)
-                              : <button type="button" class="lien" onClick={() => compter(s, p)}>Compter</button>
-                            return <div key={p.id}>{choisies.length > 1 && <span class="aide">{p.nom.prenom} : </span>}{v}</div>
-                          })}
-                        </>
-                      )}
-                    </td>
                   </tr>
                 ))}
               </tbody>
