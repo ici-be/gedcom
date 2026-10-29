@@ -516,10 +516,10 @@ export function Pyramide({ d, options }: { d: Donnees; options: OptionsFeuille }
   const avecUrl = options.url && !!d.adresse
   const avecBasDroite = avecQr || avecUrl
   const legende = [
-    options.fratrie && t('en italique sous les cases : frères et sœurs'),
-    options.italiques && t('date en italique : sans source'),
+    options.fratrie && t('en italique sous les cases : frères et sœurs'),
+    options.italiques && t('date en italique : sans source'),
     implexes && t('◆ implexe'),
-    options.numeros && t('chiffre dans la case : numéro Sosa, fiche au verso'),
+    options.numeros && t('chiffre dans la case : numéro Sosa, fiche au verso'),
   ].filter(Boolean).join(' · ')
 
   return (

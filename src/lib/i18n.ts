@@ -43,8 +43,8 @@ export function T(fr: string): string { return fr }
 /** Les espaces insécables d'un texte ne comptent pas dans la clé : « a : b » et « a\u202f: b » sont la même phrase */
 const cle = (fr: string) => fr.replace(/[\u00a0\u202f]/g, ' ')
 
-/** Espace fine insécable avant les deux-points, comme dans tous les textes français du site */
-const typographieFr = (s: string) => s.replace(/ :/g, '\u202f:')
+/** Espace fine insécable avant les deux-points et le point-virgule, comme dans tous les textes français du site */
+const typographieFr = (s: string) => s.replace(/[ \u00a0]([:;])/g, '\u202f$1')
 
 export function t(fr: string, params?: Record<string, string | number>): string {
   let s = courante === 'fr' ? typographieFr(fr) : DICTIONNAIRES[courante][cle(fr)] ?? typographieFr(fr)

@@ -108,7 +108,7 @@ export function ListeEvenements({ d }: { d: Donnees }) {
       <p class="retour"><a href="#/recit">‹ Récit</a></p>
       <header class="titre-ecran">
         <h1>Événements historiques</h1>
-        <p class="sous-titre">Les batailles, sièges, incendies, épidémies, guerres et changements de régime survenus près de chez les personnes de l'arbre, de leur vivant, d'après les lieux et les dates de leurs actes. Les événements viennent de Wikidata ; le lieu de vie à une date est déduit des actes les plus proches.</p>
+        <p class="sous-titre">Les batailles, sièges, incendies, épidémies, guerres et changements de régime survenus près de chez les personnes de l'arbre, de leur vivant, d'après les lieux et les dates de leurs actes. Les événements viennent de Wikidata ; le lieu de vie à une date est déduit des actes les plus proches.</p>
       </header>
       {e?.etat !== 'pret' ? <Attente e={e} /> : (
         <>

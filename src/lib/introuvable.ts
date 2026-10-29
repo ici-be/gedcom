@@ -38,7 +38,7 @@ export function lireIntrouvable(note: string): Introuvable | undefined {
     if (c && !causes.includes(c)) causes.push(c)
   }
   if (!trouve) return undefined
-  return causes.length ? { cause: causes.join(' ; ') } : {}
+  return causes.length ? { cause: causes.join(' ; ') } : {}
 }
 
 /** La note sans la mention ni sa cause, pour le récit */

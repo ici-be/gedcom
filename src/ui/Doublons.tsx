@@ -32,7 +32,7 @@ export function Doublons({ d }: { d: Donnees }) {
         Sont rapprochées les personnes de même nom et de mêmes prénoms (accents, tirets et majuscules ne comptent pas) dont les dates ne s'écartent pas
         de plus de deux ans, et qui ont en commun une date, un lieu, un parent ou un conjoint. Deux homonymes sans rien d'autre en commun ne sont pas signalés.
         {d.adresse
-          ? ' « Comparer » ouvre la recherche de l’arbre en ligne, qui liste les deux fiches : ouvrez-les, puis « Modifier » > « Fusionner » sur Geneanet.'
+          ? ' « Comparer » ouvre la recherche de l’arbre en ligne, qui liste les deux fiches : ouvrez-les, puis « Modifier » > « Fusionner » sur Geneanet.'
           : ' Indiquez l’adresse de l’arbre en ligne (Accueil) pour ouvrir les deux fiches sur Geneanet et les fusionner.'}
       </p>
       <div class="tableau-conteneur">

@@ -19,7 +19,7 @@ test('quartier d’une place Sosa', () => {
   expect(quartierDe(255)).toBe(3)
 })
 
-test('passages : du parent à l’enfant, un implexe une seule fois', () => {
+test('passages : du parent à l’enfant, un implexe une seule fois', () => {
   const ind = {} as Place['ind']
   const pl: Place[] = []
   for (const s of [1, 2, 3, 4, 6]) pl[s] = { sosa: s, generation: Math.floor(Math.log2(s)), etat: 'connu', ind }
@@ -36,7 +36,7 @@ test('passages : du parent à l’enfant, un implexe une seule fois', () => {
   expect(passages(pl, n, [0, 1980, 1950, 1952, 1920, 0, 1925]).map((p) => p.sosa)).toEqual([2, 3, 6])
 })
 
-test('lieu de vie à une date : le dernier connu', () => {
+test('lieu de vie à une date : le dernier connu', () => {
   const v: Vie = { sosa: 2, quartier: -1, debut: 1800, fin: 1860, etapes: [etape('naissance', MONS, 1800), etape('mariage', BRUXELLES, 1825)] }
   expect(lieuEn(v, 1810).pos).toBe(MONS)
   expect(lieuEn(v, 1825).pos).toBe(BRUXELLES)

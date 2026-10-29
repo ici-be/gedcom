@@ -50,7 +50,7 @@ function trouverDernierExport() {
       }
     }
   }
-  throw new Error('Aucun fichier .zip ou .ged trouvé. Indiquez le chemin : npm run chiffrer /chemin/fichier.zip')
+  throw new Error('Aucun fichier .zip ou .ged trouvé. Indiquez le chemin : npm run chiffrer /chemin/fichier.zip')
 }
 
 const args = process.argv.slice(2)
@@ -86,8 +86,8 @@ const moSource = (brut.byteLength / (1024 * 1024)).toFixed(1)
 const moGed = (octetsGed.byteLength / (1024 * 1024)).toFixed(1)
 const moSortie = (resultat.byteLength / (1024 * 1024)).toFixed(2)
 
-console.log(`Source     : ${source} (${moSource} Mo)`)
-console.log(`GEDCOM     : ${nomGed} (${moGed} Mo)`)
-console.log(`Chiffré    : public/arbre.enc (${moSortie} Mo, AES-256-GCM)`)
-console.log(`Clé locale : .cle-partage (ignorée par Git)`)
-console.log(`\nLien de partage :\nhttps://ici.be/gedcom/#cle=${cleTexte}`)
+console.log(`Source : ${source} (${moSource} Mo)`)
+console.log(`GEDCOM : ${nomGed} (${moGed} Mo)`)
+console.log(`Chiffré : public/arbre.enc (${moSortie} Mo, AES-256-GCM)`)
+console.log(`Clé locale : .cle-partage (ignorée par Git)`)
+console.log(`\nLien de partage :\nhttps://ici.be/gedcom/#cle=${cleTexte}`)

@@ -18,7 +18,7 @@ interface Annotation {
 const ANNOTATIONS: Annotation[] = [
   {
     page: 'filiation', titre: 'Parents inconnus ou introuvables', mot: 'Filiation: père inconnu', ou: 'Note de la personne (l’enfant)',
-    sens: 'Un parent qu’il ne sert à rien de chercher : enfant naturel, enfant trouvé, registres perdus.',
+    sens: 'Un parent qu’il ne sert à rien de chercher : enfant naturel, enfant trouvé, registres perdus.',
     compte: (n) => `${nombre(n)} personne${n > 1 ? 's' : ''}`,
   },
   {
@@ -58,7 +58,7 @@ export function Annotations({ d }: { d: Donnees }) {
       </header>
       <p class="aide">
         Le format GEDCOM n'a pas de champ pour ces informations, et Geneanet non plus. On les écrit donc dans une <strong>note</strong>, sous la forme
-        d'une ligne qui commence par un mot suivi de deux-points. La note fait partie de l'arbre : elle revient dans chaque export, sur tous vos appareils.
+        d'une ligne qui commence par un mot suivi de deux-points. La note fait partie de l'arbre : elle revient dans chaque export, sur tous vos appareils.
       </p>
       <div class="annotations">
         {ANNOTATIONS.map((a) => (
@@ -68,7 +68,7 @@ export function Annotations({ d }: { d: Donnees }) {
             <p class="annotation-mot"><code>{a.mot}</code><Copier texte={a.mot} /></p>
             <p class="aide">{a.ou}</p>
             <p class="annotation-pied">
-              <span>{comptes[a.page] ? <>Dans votre arbre : <strong>{a.compte(comptes[a.page])}</strong></> : <span class="vide">Pas encore dans votre arbre</span>}</span>
+              <span>{comptes[a.page] ? <>Dans votre arbre : <strong>{a.compte(comptes[a.page])}</strong></> : <span class="vide">Pas encore dans votre arbre</span>}</span>
               <a href={`#/${a.page}`}>Explications et liste ›</a>
             </p>
           </section>

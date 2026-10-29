@@ -194,7 +194,7 @@ export function BoutsDeBranche({ d, options }: { d: Donnees; options: OptionsFeu
       {quartiers}
 
       {/* Pied de page */}
-      {implexes && <text x="40" y={options.date ? 950 : 966} font-size="8.5" class="mut"><tspan class="so">◆</tspan> {t('implexe : la même personne plus près au recto')}</text>}
+      {implexes && <text x="40" y={options.date ? 950 : 966} font-size="8.5" class="mut"><tspan class="so">◆</tspan> {t('implexe : la même personne plus près au recto')}</text>}
       {options.date && <text x="40" y="966" font-size="8.5" class="mut">{t('Établi le {date}', { date: options.date })}</text>}
       <text x="1360" y="966" font-size="8.5" class="mut" text-anchor="end">{t('Au recto, l’éventail des générations I à VIII')}</text>
     </svg>

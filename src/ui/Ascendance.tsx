@@ -160,7 +160,7 @@ function TexteEtape({ d, e }: { d: Donnees; e: Etape }) {
     case 'sans-issue':
       return e.total > 3
         ? <>{nombre(e.total)} ancêtres de la génération précédente ont un parent inconnu ou introuvable : leurs places restent vides.</>
-        : <>Sans issue : {e.pistes.map((p, i) => <span key={p.id}>{i ? ' ; ' : ''}{qui(p.id)}, {fermeture(p)}</span>)}.</>
+        : <>Sans issue : {e.pistes.map((p, i) => <span key={p.id}>{i ? ' ; ' : ''}{qui(p.id)}, {fermeture(p)}</span>)}.</>
     case 'implexe':
       return <>Premier implexe : {e.implexe.ids.map((id, i) => <span key={id}>{i ? ' et ' : ''}<Nom d={d} id={id} /></span>)} {e.implexe.ids.length > 1 ? 'occupent' : 'occupe'} plusieurs places (Sosa {e.implexe.sosas[0].join(' et ')}).</>
     case 'plus-fournie': return <><em>Génération la plus fournie</em> : {nombre(e.distincts)} ancêtres différents retrouvés.</>
@@ -277,7 +277,7 @@ export function Ascendance({ d, setPerimetre }: { d: Donnees; setPerimetre: (p: 
       </div>
 
       <Panneau titre="Génération après génération"
-        aide={<>Chaque génération double le nombre de places à remplir. Jusqu’à la {CASES}<sup>e</sup>, une case par place, dans l’ordre des numéros Sosa ; au-delà, le côté paternel face au côté maternel. Les places au-dessus d’un parent <a href="#/filiation">inconnu ou introuvable</a> sont sans issue.</>}>
+        aide={<>Chaque génération double le nombre de places à remplir. Jusqu’à la {CASES}<sup>e</sup>, une case par place, dans l’ordre des numéros Sosa ; au-delà, le côté paternel face au côté maternel. Les places au-dessus d’un parent <a href="#/filiation">inconnu ou introuvable</a> sont sans issue.</>}>
         <div class="cotes"><span>← côté paternel</span><span>côté maternel →</span></div>
         <div class="frise">
           {G.slice(0, FRISE).map((x) => (

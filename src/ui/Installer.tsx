@@ -71,7 +71,7 @@ export function ProposerInstallation() {
         <strong>{t('Installer Lignées')}</strong>{' '}
         {ios
           ? <>{t(': touchez')} <IconePartager /> <b>{t('Partager')}</b>, {t('puis')} <b>{t('Sur l’écran d’accueil')}</b>. {t('L’arbre s’ouvrira comme une application, même sans réseau.')}</>
-          : <>{t('sur l’écran d’accueil : l’arbre s’ouvrira comme une application, même sans réseau.')}</>}
+          : <>{t('sur l’écran d’accueil : l’arbre s’ouvrira comme une application, même sans réseau.')}</>}
       </p>
       <div class="installation-actions">
         {!ios && <button type="button" class="bouton principal" onClick={installer}>{t('Installer')}</button>}

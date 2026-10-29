@@ -4,7 +4,7 @@ import { calculer } from '../src/lib/donnees'
 import { ascendance } from '../src/lib/ascendance'
 import { GED } from './exemple'
 
-test('ascendance : générations, quartiers, lignées, pistes', () => {
+test('ascendance : générations, quartiers, lignées, pistes', () => {
   const a = ascendance(calculer(lireArbre(GED), '@I1@', ''))
   expect(a.distincts).toBe(5)
   expect(a.generations.map((g) => g.connus)).toEqual([1, 2, 2])

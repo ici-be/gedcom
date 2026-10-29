@@ -219,7 +219,7 @@ export function Statistiques({ d, perimetre, setPerimetre }: Props) {
         <h1>Statistiques</h1>
         <p class="sous-titre">
           Ce que racontent les dates, les lieux et les métiers de l'arbre. Les âges ne tiennent compte que des dates
-          exactes ou approximatives (« vers ») ; les siècles sont ceux de la naissance, estimée au besoin.
+          exactes ou approximatives (« vers ») ; les siècles sont ceux de la naissance, estimée au besoin.
         </p>
       </header>
 
@@ -279,7 +279,7 @@ export function Statistiques({ d, perimetre, setPerimetre }: Props) {
           <Legende series={SEXES} />
           {ecart && (
             <p class="constat">
-              Le mari a en {mesure === 'moyenne' ? 'moyenne' : 'médiane'} <strong>{ansTexte(Math.abs(valeur(ecart, mesure)!))}</strong> de {valeur(ecart, mesure)! >= 0 ? 'plus' : 'moins'} que sa femme ;
+              Le mari a en {mesure === 'moyenne' ? 'moyenne' : 'médiane'} <strong>{ansTexte(Math.abs(valeur(ecart, mesure)!))}</strong> de {valeur(ecart, mesure)! >= 0 ? 'plus' : 'moins'} que sa femme ;
               la femme est l'aînée dans <strong>{pourcent(femmesPlusAgees, s.ecarts.length)}</strong> des {nombre(s.ecarts.length)} couples dont on connaît les deux naissances.
             </p>
           )}
@@ -332,7 +332,7 @@ export function Statistiques({ d, perimetre, setPerimetre }: Props) {
           <Colonnes ariaLabel="Part des personnes nées dans la commune de leur père" categories={cats} series={sedentaires} format={pc} max={100} actif={actif} hauteur={180} rogner />
         </Section>
 
-        <Section titre="Prénoms et patronymes" sous="Premier prénom de chacun ; noms de famille." large
+        <Section titre="Prénoms et patronymes" sous="Premier prénom de chacun ; noms de famille." large
           outils={<Choix label="Variantes des prénoms" options={[['oui', 'Variantes regroupées'], ['non', 'Formes exactes']]} valeur={regrouper ? 'oui' : 'non'} changer={(v) => setRegrouper(v === 'oui')} />}>
           <div class="trois">
             <div>

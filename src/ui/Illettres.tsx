@@ -50,12 +50,12 @@ export function Illettres({ d, importe }: { d: Donnees; importe: string }) {
         <h2>Où l'écrire</h2>
         <p>
           Le format GEDCOM n'a pas de champ pour cela, et Geneanet non plus. On l'écrit donc dans la <strong>note de la personne</strong>{' '}
-          (sur Geneanet : modifier la personne, rubrique « Notes »), sous la forme d'une ligne qui commence par « Signature: ».
-          La note fait partie de l'arbre : elle revient dans chaque export, sur tous vos appareils, et les visiteurs de votre arbre la voient aussi.
+          (sur Geneanet : modifier la personne, rubrique « Notes »), sous la forme d'une ligne qui commence par « Signature: ».
+          La note fait partie de l'arbre : elle revient dans chaque export, sur tous vos appareils, et les visiteurs de votre arbre la voient aussi.
         </p>
         <p class="aide">
           La mention peut être suivie, sur la même ligne, de l'acte qui l'établit (« Signature: illettré, a déclaré ne savoir signer, mariage Ath 1820 »).
-          Accents, majuscules et accords sont libres : « signature : illettrée », « Signature: ne savait pas écrire », « Signature: analphabète »
+          Accents, majuscules et accords sont libres : « signature : illettrée », « Signature: ne savait pas écrire », « Signature: analphabète »
           ou « Signature: une marque » sont reconnus aussi. Si une signature figure malgré tout dans l'arbre (photo PNG), elle est signalée ci-dessous.
         </p>
         <div class="tableau-conteneur">
@@ -84,7 +84,7 @@ export function Illettres({ d, importe }: { d: Donnees; importe: string }) {
         {liste.length > 0 && (
           <>
             <p class="astuce">
-              Cochez une personne quand vous l'avez modifiée sur Geneanet : la case est retenue dans ce navigateur jusqu'au prochain fichier chargé
+              Cochez une personne quand vous l'avez modifiée sur Geneanet : la case est retenue dans ce navigateur jusqu'au prochain fichier chargé
               {coches.size > 0 && <> ({nombre(coches.size)} cochée{coches.size > 1 ? 's' : ''} · <button type="button" class="lien" onClick={() => { setCoches(new Set()); ecrire('illettres', { importe, ids: [] }) }}>tout décocher</button>)</>}.
             </p>
             <div class="tableau-conteneur">

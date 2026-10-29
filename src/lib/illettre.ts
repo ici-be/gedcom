@@ -44,5 +44,5 @@ export function lireIllettre(note: string): Illettre | undefined {
     if (p && !precisions.includes(p)) precisions.push(p)
   }
   if (!trouve) return undefined
-  return precisions.length ? { precision: precisions.join(' ; ') } : {}
+  return precisions.length ? { precision: precisions.join(' ; ') } : {}
 }

@@ -25,9 +25,9 @@ const MODES: { id: Mode; texte: string }[] = [
 ]
 
 const NOMS_LIENS: Record<TypeLien, { texte: string; aide: string }> = {
-  famille: { texte: 'Famille', aide: 'Conjoints, parents et enfants ; frères et sœurs quand leurs parents ne sont pas affichés' },
-  parrain: { texte: 'Parrains, marraines', aide: 'Au baptême ou à la naissance : avec l’enfant et avec ses parents, qui les ont choisis' },
-  temoin: { texte: 'Témoins', aide: 'Témoin d’une naissance, d’un mariage ou d’un décès (déclarant) : avec la personne de l’acte, et avec les parents pour une naissance' },
+  famille: { texte: 'Famille', aide: 'Conjoints, parents et enfants ; frères et sœurs quand leurs parents ne sont pas affichés' },
+  parrain: { texte: 'Parrains, marraines', aide: 'Au baptême ou à la naissance : avec l’enfant et avec ses parents, qui les ont choisis' },
+  temoin: { texte: 'Témoins', aide: 'Témoin d’une naissance, d’un mariage ou d’un décès (déclarant) : avec la personne de l’acte, et avec les parents pour une naissance' },
   cotemoin: { texte: 'Co-témoins', aide: 'Témoins ou parrains du même acte' },
 }
 
@@ -151,7 +151,7 @@ export function Graphe({ d }: { d: Donnees }) {
     <section class="ecran graphe-ecran">
       <header class="titre-ecran">
         <h1>Graphe des relations</h1>
-        <p class="sous-titre">Qui côtoyait qui : la famille, et les actes où l'on se retrouve témoin, parrain ou marraine. Choisissez des personnes, puis cliquez sur l'une d'elles pour voir ses liens.</p>
+        <p class="sous-titre">Qui côtoyait qui : la famille, et les actes où l'on se retrouve témoin, parrain ou marraine. Choisissez des personnes, puis cliquez sur l'une d'elles pour voir ses liens.</p>
       </header>
 
       <div class="filtres graphe-reglages">
@@ -211,7 +211,7 @@ export function Graphe({ d }: { d: Donnees }) {
 
       <div class="graphe-cadre">
         <div class="graphe-toile">
-          <canvas ref={toile} aria-label={`Graphe : ${graphe.noeuds.length} personnes, ${graphe.aretes.length} liens`} role="img" />
+          <canvas ref={toile} aria-label={`Graphe : ${graphe.noeuds.length} personnes, ${graphe.aretes.length} liens`} role="img" />
           <div class="graphe-haut">
             <input type="search" value={cherche} onInput={(e) => setCherche(e.currentTarget.value)} placeholder="Chercher dans le graphe…" aria-label="Chercher dans le graphe" />
             {trouves && <span class="graphe-compte">{nombre(trouves.size)} trouvée{trouves.size > 1 ? 's' : ''}</span>}
@@ -240,10 +240,10 @@ export function Graphe({ d }: { d: Donnees }) {
           </div>
           {(trop || !graphe.noeuds.length) && (
             <p class="graphe-vide">
-              {trop ? `${nombre(graphe.noeuds.length)} personnes : c'est trop pour un graphe lisible. Précisez la recherche.`
+              {trop ? `${nombre(graphe.noeuds.length)} personnes : c'est trop pour un graphe lisible. Précisez la recherche.`
                 : c.mode === 'metiers' && !c.metiers.length ? 'Choisissez un ou plusieurs métiers.'
                 : (c.mode === 'nom' || c.mode === 'lieu') && !c.texte.trim() ? `Tapez un ${c.mode === 'nom' ? 'nom' : 'lieu'}.`
-                : graphe.isoles ? 'Personne n’est relié à un autre : affichez les personnes sans lien, ou ajoutez la famille proche.' : 'Personne ne correspond.'}
+                : graphe.isoles ? 'Personne n’est relié à un autre : affichez les personnes sans lien, ou ajoutez la famille proche.' : 'Personne ne correspond.'}
             </p>
           )}
         </div>
@@ -321,7 +321,7 @@ function Classement({ d, relies, aller }: { d: Donnees; relies: Noeud[]; aller: 
           ))}
         </ol>
       ) : <p class="aide">Aucun lien dans ce graphe.</p>}
-      <p class="aide">Cliquez sur une personne pour voir ses liens ; glissez pour déplacer, molette ou pincement pour zoomer.</p>
+      <p class="aide">Cliquez sur une personne pour voir ses liens ; glissez pour déplacer, molette ou pincement pour zoomer.</p>
     </>
   )
 }

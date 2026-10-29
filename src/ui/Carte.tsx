@@ -222,7 +222,7 @@ export function Carte({ d, perimetre, setPerimetre, focus }: Props) {
       <header class="titre-ecran">
         <h1>Carte</h1>
         <p class="sous-titre">
-          Un cercle par lieu : plus il est grand, plus il y a de faits ; sa couleur dit la part déjà sourcée.
+          Un cercle par lieu : plus il est grand, plus il y a de faits ; sa couleur dit la part déjà sourcée.
           Cliquez sur un cercle pour aller aux actes.
         </p>
       </header>

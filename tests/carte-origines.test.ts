@@ -11,7 +11,7 @@ test('cadrage sur les régions des ancêtres, avec marge', () => {
   expect(proportions([2, 46, 4, 51])).toBeCloseTo((2 * Math.cos((48.5 * Math.PI) / 180)) / 5)
 })
 
-test('projection : seules les régions visibles, dans le rectangle', () => {
+test('projection : seules les régions visibles, dans le rectangle', () => {
   const r = projeter(contours, [2.9, 49.9, 4.1, 51.1], { x: 0, y: 0, w: 100, h: 100 })
   expect(r.map((x) => x.code)).toEqual(['BE.WHT'])
   expect(r[0].d).toMatch(/^M[\d.]+,[\d.]+L.*Z$/)
@@ -35,13 +35,13 @@ test('légende groupée par pays', () => {
   expect(droite.map((x) => x.titre)).toEqual(['France', 'Autres pays'])
 })
 
-test('zones : le continent, les îles Britanniques, chaque DOM ; la plus fournie d’abord', () => {
+test('zones : le continent, les îles Britanniques, chaque DOM ; la plus fournie d’abord', () => {
   const z = zones(new Map([['BE.WHT', 40], ['FR.59', 10], ['GB.G5', 5], ['IE.04', 2], ['FR.971', 3]]))
   expect(z.map((x) => [x.zone, x.n, x.titre])).toEqual([['C', 50, 'Europe'], ['IB', 7, 'Îles Britanniques'], ['FR.971', 3, 'Guadeloupe']])
   expect(zones(new Map([['GB.G5', 1]]))[0].titre).toBe('Royaume-Uni')
 })
 
-test('cartes secondaires : le territoire entier', () => {
+test('cartes secondaires : le territoire entier', () => {
   const contours: Contours = { r: { 'GB.G5': [[0, 0]], 'GB.GLA': [[0, 0]], 'GB.N09000003': [[0, 0]], 'IE.04': [[0, 0]], 'FR.971': [[0, 0]] } }
   const [, ib, gp] = zones(new Map([['BE.WHT', 9], ['GB.G5', 2], ['FR.971', 1]]))
   expect(aCadrer(contours, ib, false).sort()).toEqual(['GB.G5', 'GB.GLA'])

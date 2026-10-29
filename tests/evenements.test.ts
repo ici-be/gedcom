@@ -14,7 +14,7 @@ const CHOLERA: EvenementHistorique = { id: 'cholera-1832', t: 'l’épidémie de
 const BELGE: EvenementHistorique = { id: 'revolution-belge', t: 'la révolution belge', type: 'regime', d: '1830-08-25', p: 11, f: '1831-07-21', z: ['BE'], n: 60 }
 const COMMUNE: EvenementHistorique = { id: 'commune-paris', t: 'la Commune de Paris', type: 'regime', d: '1871-03-18', p: 11, f: '1871-05-28', z: ['FR.75'], n: 70 }
 
-test('dates : clés de tri et texte', () => {
+test('dates : clés de tri et texte', () => {
   expect(triDe('1815-06-18')).toBe(18150618)
   expect(triDe('1832')).toBe(18320101)
   expect(triDe('1832', true)).toBe(18321231)
@@ -26,7 +26,7 @@ test('dates : clés de tri et texte', () => {
   expect(datesEvenement({ ...CHOLERA, d: '1914', p: 9, f: '1918' })).toBe('1914-1918')
 })
 
-test('lieu de vie : le dernier connu, « sans doute » loin de tout acte', () => {
+test('lieu de vie : le dernier connu, « sans doute » loin de tout acte', () => {
   const j = (tri: number, pos: Position): Jalon => ({ tri, lieu: '', pos })
   const l = [j(17910303, MONS), j(18140514, WATERLOO), j(18200101, WATERLOO), j(18500101, PARIS)]
   expect(lieuA(l, 18150618)).toEqual({ jalon: l[1], probable: false })
@@ -89,7 +89,7 @@ test('qui a connu quoi, et la phrase du récit', () => {
   expect(texteBrut(recit(d, '@I1@', 0, 0)!)).not.toContain('Waterloo, où')
 })
 
-test('traces : les actes de décès en ligne, les communes proches d’abord', () => {
+test('traces : les actes de décès en ligne, les communes proches d’abord', () => {
   const ged = `0 HEAD
 1 CHAR UTF-8
 0 @I1@ INDI

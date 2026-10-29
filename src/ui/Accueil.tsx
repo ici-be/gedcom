@@ -39,7 +39,7 @@ export function Depot({ ouvrir, compact }: { ouvrir: (f: File) => void; compact?
 export function AideGedcom() {
   return (
     <div class="menu-aide">
-      <p><strong>{t('Pour commencer')}</strong>{t(' : mettez d’abord votre fichier Gedcom avec le bouton ci-dessous (ou déposez-le sur la page).')}</p>
+      <p><strong>{t('Pour commencer')}</strong>{t(' : mettez d’abord votre fichier Gedcom avec le bouton ci-dessous (ou déposez-le sur la page).')}</p>
       <p>
         {t('Sur Geneanet, il s’exporte depuis')} <a href="https://gw.geneanet.org/my-tree/operations/export" target="_blank" rel="noopener noreferrer">{t('Mon arbre → Exporter')}</a>.{' '}
         {t('Le mieux est de déposer le dossier .zip complet tel qu’il est téléchargé, sans le décompresser.')}{' '}
@@ -56,7 +56,7 @@ export function Bienvenue({ ouvrir, erreur, impression }: { ouvrir: (f: File) =>
       <header class="titre-ecran">
         <h1>{t('Arbres à imprimer')}</h1>
         <p class="sous-titre">{t('Une feuille prête pour l’imprimeur ou pour un PDF, faite à partir de l’ascendance du Sosa 1.')}</p>
-        <p class="sous-titre">{t('Déposez l’export Gedcom de votre arbre pour en préparer un tirage : arbre d’ascendance, descendants, éventail… Le fichier est lu par votre navigateur et n’est envoyé nulle part.')}</p>
+        <p class="sous-titre">{t('Déposez l’export Gedcom de votre arbre pour en préparer un tirage : arbre d’ascendance, descendants, éventail… Le fichier est lu par votre navigateur et n’est envoyé nulle part.')}</p>
       </header>
       {erreur && <p class="erreur" role="alert">{erreur}</p>}
       <ChoixModeles />
@@ -205,7 +205,7 @@ export function TableauDeBord({ d, bilan, precedent, fichier, setAdresse, setPer
       </div>
 
       <p class="astuce">Un « fait », c'est une naissance (ou un baptême), un mariage ou un décès (ou une inhumation). Il est sourcé quand au moins une source y est attachée.</p>
-      <p class="astuce">Un parent inconnu, un acte introuvable, une personne qui ne savait pas signer : ce que le GEDCOM ne sait pas dire s'écrit dans les notes, voir les <a href="#/annotations">annotations</a>.</p>
+      <p class="astuce">Un parent inconnu, un acte introuvable, une personne qui ne savait pas signer : ce que le GEDCOM ne sait pas dire s'écrit dans les notes, voir les <a href="#/annotations">annotations</a>.</p>
 
       <section class="panneau reglages">
         <h2>Réglages</h2>

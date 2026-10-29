@@ -241,7 +241,7 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
       {MODELES.length > 1 && <ChoixModeles actif={modele.id} />}
 
       <div class="ligne apercu-outils">
-        <span class="aide">{zoom ? t('Aperçu agrandi : tirer la feuille pour la déplacer') : t('Aperçu réduit')}</span>
+        <span class="aide">{zoom ? t('Aperçu agrandi : tirer la feuille pour la déplacer') : t('Aperçu réduit')}</span>
         <button type="button" class="bouton discret" onClick={() => setZoom(!zoom)}>{zoom ? t('Réduire') : t('Agrandir')}</button>
       </div>
 
@@ -256,7 +256,7 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
           <div class="modele-choisi">
             <h2>{t(modele.titre)}</h2>
             <p class="aide">{t('Prévu pour du {format} {orientation} · {detail}', { format: modele.papier.format, orientation, detail: modele.reglages.sablierGenerations ? t('{a} gén. d’ancêtres, {d} gén. de descendants', { a: ascendance, d: descendance }) : t('{n} générations', { n: generations }) })}</p>
-            {modele.verso && <p class="aide">{t('Au verso, si on le souhaite : {titre}, {description}.', { titre: t(modele.verso.titre).toLocaleLowerCase(locale()), description: t(modele.verso.description) })}</p>}
+            {modele.verso && <p class="aide">{t('Au verso, si on le souhaite : {titre}, {description}.', { titre: t(modele.verso.titre).toLocaleLowerCase(locale()), description: t(modele.verso.description) })}</p>}
           </div>
           <div class="options-impression groupes-options">
             <div class="groupe-options">
@@ -348,7 +348,7 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
                   </label>
                 )}
                 {modele.reglages.equitable && (
-                  <label class="case" title={t('Les descendants sans enfant gardent une case aussi large que les autres ; à la dernière génération, les enfants d’un même parent sont empilés')}>
+                  <label class="case" title={t('Les descendants sans enfant gardent une case aussi large que les autres ; à la dernière génération, les enfants d’un même parent sont empilés')}>
                     <input type="checkbox" id="impression-equitable" checked={!!reglages.equitable} onChange={(e) => setReglages({ equitable: e.currentTarget.checked })} />
                     {t('Cases égales pour les descendants')}
                   </label>
@@ -362,7 +362,7 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
                 {modele.verso && (
                   <label class="case" title={t(modele.verso.description)}>
                     <input type="checkbox" id="impression-verso" checked={!!reglages.verso} onChange={(e) => setReglages({ verso: e.currentTarget.checked })} />
-                    {t('Verso : {titre}', { titre: t(modele.verso.titre).toLocaleLowerCase(locale()) })}
+                    {t('Verso : {titre}', { titre: t(modele.verso.titre).toLocaleLowerCase(locale()) })}
                   </label>
                 )}
               </div>
@@ -389,7 +389,7 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
                           <td><input type="checkbox" id="impression-fratrie" aria-label={t('Frères et sœurs des ancêtres')} title={t('Sous ou à côté de la case')} checked={fratrie} onChange={(e) => setReglages({ fratrie: e.currentTarget.checked })} /></td>
                           <td>
                             {modele.reglages.conjoint ? (
-                              <select id="impression-fratrie-base" aria-label={t('Frères et sœurs du couple')} title={t('En petites cases : empilées à côté de chaque membre du couple, reliées à leurs parents ; en texte s’il y en a trop')}
+                              <select id="impression-fratrie-base" aria-label={t('Frères et sœurs du couple')} title={t('En petites cases : empilées à côté de chaque membre du couple, reliées à leurs parents ; en texte s’il y en a trop')}
                                 value={!fratrieBase ? 'non' : reglages.fratrieCases ? 'cases' : 'texte'}
                                 onChange={(e) => { const v = e.currentTarget.value; setReglages({ fratrieBase: v !== 'non', ...(v !== 'non' && { fratrieCases: v === 'cases' }) }) }}>
                                 <option value="non">{t('non')}</option>
@@ -537,7 +537,7 @@ export function Impression({ d, id }: { d: Donnees; id?: string }) {
           </div>
           <div class="ligne">
             <button type="button" class="bouton principal" onClick={() => window.print()}>{t('Imprimer')}</button>
-            <span class="aide">{t('Dans la fenêtre d’impression : papier {format} {orientation}, marges « aucune », échelle « par défaut » (100 %), graphiques d’arrière-plan activés.', { format, orientation })}{verso && ' ' + t('Avec le verso, recto verso retourné sur le bord court.')} {t('Pour un PDF, choisir « Enregistrer au format PDF » : il s’appellera {nom}.pdf.', { nom: nomFichier })}</span>
+            <span class="aide">{t('Dans la fenêtre d’impression : papier {format} {orientation}, marges « aucune », échelle « par défaut » (100 %), graphiques d’arrière-plan activés.', { format, orientation })}{verso && ' ' + t('Avec le verso, recto verso retourné sur le bord court.')} {t('Pour un PDF, choisir « Enregistrer au format PDF » : il s’appellera {nom}.pdf.', { nom: nomFichier })}</span>
           </div>
         </section>
       </div>

@@ -46,7 +46,7 @@ function Declaration({ onDeclare }: { onDeclare: () => void }) {
             </select>
             <button type="submit" class="bouton" disabled={envoi === 'en-cours'}>{t('Ajouter au total')}</button>
             {envoi === 'echec' && <p class="erreur" role="alert">{t('L’envoi n’a pas abouti, réessayez plus tard.')}</p>}
-            <p class="aide">{t('Seuls le montant et l’association sont envoyés, jamais votre arbre ni votre nom. Le total est déclaratif : rien n’est vérifié.')}</p>
+            <p class="aide">{t('Seuls le montant et l’association sont envoyés, jamais votre arbre ni votre nom. Le total est déclaratif : rien n’est vérifié.')}</p>
           </form>
         )}
     </div>

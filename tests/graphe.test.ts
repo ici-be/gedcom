@@ -80,7 +80,7 @@ describe('liens de l’arbre', () => {
   test('chaque lien de famille une fois', () => {
     expect(faits.filter((f) => f.type === 'famille').length).toBe(4)
   })
-  test('parrains et témoins par acte ; les parents seulement pour le baptême', () => {
+  test('parrains et témoins par acte ; les parents seulement pour le baptême', () => {
     const louis = faits.filter((f) => f.a === '@I5@' && f.type !== 'cotemoin')
     expect(louis.map((f) => [f.type, f.b, f.acte?.tag, f.parEnfant]).sort()).toEqual([
       ['parrain', '@I1@', 'BAPM', undefined], ['parrain', '@I2@', 'BAPM', '@I1@'], ['parrain', '@I3@', 'BAPM', '@I1@'],

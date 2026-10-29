@@ -214,7 +214,7 @@ function Siecles({ m, contours }: { m: Calcul; contours: Contours }) {
       <section class="panneau">
         <header class="mg-entete">
           <h2>Cinq siècles, cinq cartes</h2>
-          <p class="aide">Une carte par siècle de naissance de l’enfant ; chaque flèche va du lieu de naissance du parent à celui de l’enfant. Les régions teintées sont celles où naissent des ancêtres pendant le siècle, avec les couleurs de l’éventail. Un clic sur une carte l’ouvre en grand.</p>
+          <p class="aide">Une carte par siècle de naissance de l’enfant ; chaque flèche va du lieu de naissance du parent à celui de l’enfant. Les régions teintées sont celles où naissent des ancêtres pendant le siècle, avec les couleurs de l’éventail. Un clic sur une carte l’ouvre en grand.</p>
         </header>
         <div class="mg-siecles">
           {siecles.map((x) => {
@@ -436,7 +436,7 @@ function Gravite({ d, m, contours }: { d: Donnees; m: Calcul; contours: Contours
     <section class="panneau">
       <header class="mg-entete">
         <h2>Le centre de gravité des quartiers</h2>
-        <p class="aide">Pour chaque quartier et chaque génération, le point moyen des naissances connues ; la taille du rond suit le nombre de naissances. Les quatre chemins vont de la génération la plus ancienne aux grands-parents, puis le pointillé rejoint la naissance de {racine?.prenom.split(' ')[0] || 'la personne de départ'}. Un point moyen peut tomber là où personne n’a vécu.</p>
+        <p class="aide">Pour chaque quartier et chaque génération, le point moyen des naissances connues ; la taille du rond suit le nombre de naissances. Les quatre chemins vont de la génération la plus ancienne aux grands-parents, puis le pointillé rejoint la naissance de {racine?.prenom.split(' ')[0] || 'la personne de départ'}. Un point moyen peut tomber là où personne n’a vécu.</p>
       </header>
       <div class="mg-duo">
         <div class="mg-papier">
@@ -540,7 +540,7 @@ function Vivante({ m, contours }: { m: Calcul; contours: Contours }) {
     <section class="panneau">
       <header class="mg-entete">
         <h2>La carte vivante</h2>
-        <p class="aide">Pour chaque année, un point par ancêtre en vie, à son dernier lieu connu (naissance, puis mariage), dans l’encre de son quartier ; les régions où vivent des ancêtres se colorent. Sans date de décès, une vie est comptée soixante ans.</p>
+        <p class="aide">Pour chaque année, un point par ancêtre en vie, à son dernier lieu connu (naissance, puis mariage), dans l’encre de son quartier ; les régions où vivent des ancêtres se colorent. Sans date de décès, une vie est comptée soixante ans.</p>
       </header>
       <div class="mg-lecture">
         <button type="button" class="bouton principal" id="migrations-lire" onClick={() => { if (!lecture && annee >= fin) setAnnee(debut); setLecture(!lecture) }}>{lecture ? 'Pause' : 'Lire'}</button>
@@ -605,7 +605,7 @@ function Kilometres({ m }: { m: Calcul }) {
     <section class="panneau">
       <header class="mg-entete">
         <h2>Combien de kilomètres entre parent et enfant&nbsp;?</h2>
-        <p class="aide">Chaque point est une naissance, placée à son année et à sa distance du lieu de naissance du parent (échelle resserrée vers le haut). La ligne pleine suit la distance médiane par quart de siècle ; trois naissances sur quatre sont sous le pointillé.</p>
+        <p class="aide">Chaque point est une naissance, placée à son année et à sa distance du lieu de naissance du parent (échelle resserrée vers le haut). La ligne pleine suit la distance médiane par quart de siècle ; trois naissances sur quatre sont sous le pointillé.</p>
       </header>
       <div class="mg-papier">
         <svg class="mg-graphe" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Distance entre la naissance du parent et celle de l'enfant, par année">
@@ -688,7 +688,7 @@ export function Migrations({ d, onglet, cle }: { d: Donnees; onglet?: string; cl
         <h1>Migrations</h1>
         <p class="sous-titre">
           Où vivaient les ancêtres directs, jusqu’à la {GENERATIONS_MIGRATIONS}<sup>e</sup> génération, d’après les lieux de naissance (ou de baptême), de mariage et de décès (ou d’inhumation).
-          {m && <> {nombre(situes)} lieux situés pour {nombre(m.parSosa.size)} ancêtres ; {nombre(m.passages.length)} passages du lieu de naissance d’un parent à celui de son enfant.</>}
+          {m && <> {nombre(situes)} lieux situés pour {nombre(m.parSosa.size)} ancêtres ; {nombre(m.passages.length)} passages du lieu de naissance d’un parent à celui de son enfant.</>}
         </p>
       </header>
       <nav class="mg-onglets" aria-label="Vues">

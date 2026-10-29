@@ -20,7 +20,7 @@ describe('lectures', () => {
     expect(t).toContain('Wikipédia (nl)')
     expect(t.some((x) => x.startsWith('Tarlier'))).toBe(false)
   })
-  it('France : SUDOC, pas de catalogue belge', () => {
+  it('France : SUDOC, pas de catalogue belge', () => {
     const t = titres(lectures('Lille', 'FR', 'FR.59'))
     expect(t).toContain('SUDOC')
     expect(t).not.toContain('Unicat')

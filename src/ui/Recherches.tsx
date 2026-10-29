@@ -60,7 +60,7 @@ function proches(d: Donnees, id: string): { id: string; lien: string }[] {
 function Sosa({ d, id }: { d: Donnees; id: string }) {
   const a = d.ancetres.get(id)
   return a
-    ? <span class="rch-sosa" title="Ancêtre direct : numéro Sosa">Sosa {a.sosa}</span>
+    ? <span class="rch-sosa" title="Ancêtre direct : numéro Sosa">Sosa {a.sosa}</span>
     : <span class="rch-sosa hors" title="Pas un ancêtre direct">non Sosa</span>
 }
 
@@ -104,7 +104,7 @@ export function Recherches({ d, id }: { d: Donnees; id?: string }) {
     <section class="ecran rch">
       <header class="titre-ecran">
         <h1>Recherches externes</h1>
-        <p class="sous-titre">Chercher une ou plusieurs personnes dans des livres, journaux et archives numérisés : chaque base cochée s’ouvre dans un nouvel onglet, la recherche déjà remplie.</p>
+        <p class="sous-titre">Chercher une ou plusieurs personnes dans des livres, journaux et archives numérisés : chaque base cochée s’ouvre dans un nouvel onglet, la recherche déjà remplie.</p>
       </header>
 
       <div class="panneau">
@@ -124,7 +124,7 @@ export function Recherches({ d, id }: { d: Donnees; id?: string }) {
                   <div class="rch-qui">
                     <Personne d={d} id={p.id} annees /> <Sosa d={d} id={p.id} />
                     <div class="rch-requete">
-                      {p.nom ? <>cherché comme <q>{p.nom.prenom} {p.nom.nom}</q></> : 'pas de prénom et de nom : recherche impossible'}
+                      {p.nom ? <>cherché comme <q>{p.nom.prenom} {p.nom.nom}</q></> : 'pas de prénom et de nom : recherche impossible'}
                     </div>
                   </div>
                   <div class="rch-actions">
@@ -216,7 +216,7 @@ export function Recherches({ d, id }: { d: Donnees; id?: string }) {
           <span class="aide"> · {noms.length} personne{noms.length > 1 ? 's' : ''} × {sourcesActives.length} base{sourcesActives.length > 1 ? 's' : ''}</span>
           {bloque && (
             <p class="rch-bloque">
-              Le navigateur a bloqué des onglets. Dans Firefox : icône à gauche de l’adresse › Permissions › « Ouvrir des fenêtres
+              Le navigateur a bloqué des onglets. Dans Firefox : icône à gauche de l’adresse › Permissions › « Ouvrir des fenêtres
               surgissantes » › Autoriser, puis recommencez.
             </p>
           )}

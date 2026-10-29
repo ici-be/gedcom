@@ -8,7 +8,7 @@ describe('mention « Source: introuvable »', () => {
   test('avec ou sans raison', () => {
     expect(lireIntrouvable('Source: introuvable')).toEqual({})
     expect(lireIntrouvable('Source: introuvable (les archives de 1789 à 1820 ont brûlé en 1914)')).toEqual({ cause: 'les archives de 1789 à 1820 ont brûlé en 1914' })
-    expect(lireIntrouvable('Curé absent.\nsources : Introuvables (lacune (1740-1752) dans les registres).')).toEqual({ cause: 'lacune (1740-1752) dans les registres' })
+    expect(lireIntrouvable('Curé absent.\nsources : Introuvables (lacune (1740-1752) dans les registres).')).toEqual({ cause: 'lacune (1740-1752) dans les registres' })
     expect(lireIntrouvable('<p>Acte: introuvable, d’après la mairie</p><p>Autre chose</p>')).toEqual({ cause: 'd’après la mairie' })
   })
   test('ce qui n’en est pas', () => {

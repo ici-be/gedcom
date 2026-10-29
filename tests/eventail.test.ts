@@ -5,7 +5,7 @@ import { abregerCommune, angles, anglesDepuis, couperLignes, enumerer, fratrie, 
 import type { Place } from '../src/lib/eventail'
 import { GED } from './exemple'
 
-test('places Sosa : personnes, parents à chercher, cases vides au-dessus', () => {
+test('places Sosa : personnes, parents à chercher, cases vides au-dessus', () => {
   const arbre = lireArbre(GED)
   const p = places(arbre, '@I1@', 4)
   expect(p.length).toBe(16)
@@ -18,7 +18,7 @@ test('places Sosa : personnes, parents à chercher, cases vides au-dessus', () =
   expect(p[3].generation).toBe(1)
 })
 
-test('implexe : la seconde place renvoie à la première', () => {
+test('implexe : la seconde place renvoie à la première', () => {
   // Cas d'école : Jean (Sosa 2) est aussi le père de Marie (Sosa 6)
   const ged = GED.replace('0 @I3@ INDI\n', '0 @I3@ INDI\n1 FAMC @F9@\n').replace('0 TRLR', '0 @F9@ FAM\n1 HUSB @I2@\n1 CHIL @I3@\n0 TRLR')
   const p = places(lireArbre(ged), '@I1@', 3)
@@ -36,7 +36,7 @@ test('au-dessus d’un parent inconnu, les places vides sont marquées', () => {
   expect(p[14].sousInconnu).toBeUndefined()
 })
 
-test('résumé : années, sources, commune', () => {
+test('résumé : années, sources, commune', () => {
   const arbre = lireArbre(GED)
   const jean = arbre.individus.get('@I2@')!
   const r = resumer(jean, suivi(arbre, jean))
@@ -53,7 +53,7 @@ test('région de naissance', () => {
   expect(regionDuLieu('Maubeuge, France', { region: 'Nord', pays: 'FR' }, 'BE')).toBe('Nord (France)')
 })
 
-test('angles : pères à gauche, mères à droite', () => {
+test('angles : pères à gauche, mères à droite', () => {
   expect(angles(2, 220)).toEqual({ a1: -110, a2: 0, generation: 1 })
   expect(angles(7, 220)).toEqual({ a1: 55, a2: 110, generation: 2 })
 })
@@ -67,7 +67,7 @@ test('prénoms limités et communes abrégées', () => {
   expect(abregerCommune('Saintes')).toBe('Saintes')
 })
 
-test('fratrie : mêmes père et mère, dans l’ordre des naissances, sans les demi-frères', () => {
+test('fratrie : mêmes père et mère, dans l’ordre des naissances, sans les demi-frères', () => {
   // Luc avant Jean dans la famille, et un demi-frère de Jean par son père
   const ged = GED.replace('1 CHIL @I2@\n1 CHIL @I6@\n', '1 CHIL @I6@\n1 CHIL @I2@\n')
     .replace('0 TRLR', '0 @I7@ INDI\n1 NAME Marc /Dupont/\n1 FAMC @F3@\n0 @F3@ FAM\n1 HUSB @I4@\n1 CHIL @I7@\n0 TRLR')
@@ -77,7 +77,7 @@ test('fratrie : mêmes père et mère, dans l’ordre des naissances, sans les d
   expect(fratrie(arbre, '@I1@', naissance).map((i) => i.prenom)).toEqual(['Paul'])
 })
 
-test('titre : prénoms puis nom, fratrie, grande fratrie', () => {
+test('titre : prénoms puis nom, fratrie, grande fratrie', () => {
   expect(enumerer(['Pierre', 'Paul', 'Jacques'])).toBe('Pierre, Paul et Jacques')
   const e = (prenom: string, nom = 'Dupont') => ({ prenom, nom })
   expect(morceauxTitre([e('Bruno Marie')], [])).toEqual(['Bruno Marie', 'Dupont'])
@@ -87,7 +87,7 @@ test('titre : prénoms puis nom, fratrie, grande fratrie', () => {
     .toEqual(['Les quatre enfants de', 'Jean Dupont', 'et Marie Lambert'])
 })
 
-test('lignes : sur une ligne si possible, puis entre les morceaux, puis entre les mots', () => {
+test('lignes : sur une ligne si possible, puis entre les morceaux, puis entre les mots', () => {
   const mesurer = (t: string, fs: number) => t.length * fs
   const place = (largeur: number) => () => largeur
   expect(couperLignes(['Bruno', 'Dupont'], [1], 3, mesurer, place(20)).lignes).toEqual(['Bruno Dupont'])
@@ -98,7 +98,7 @@ test('lignes : sur une ligne si possible, puis entre les morceaux, puis entre le
   expect(c).toMatchObject({ fs: 1, tient: false })
 })
 
-test('verso : l’éventail d’une branche part de son ancêtre', () => {
+test('verso : l’éventail d’une branche part de son ancêtre', () => {
   expect(anglesDepuis(128, 256, 220)).toEqual({ a1: -110, a2: 0, profondeur: 1 })
   expect(anglesDepuis(128, 257, 220)).toEqual({ a1: 0, a2: 110, profondeur: 1 })
   // Sosa 131 · 4 + 3 : dernière place des grands-parents de 131
@@ -106,7 +106,7 @@ test('verso : l’éventail d’une branche part de son ancêtre', () => {
   expect([a.a1, a.a2, a.profondeur]).toEqual([55, 110, 2])
 })
 
-test('régions : celles du recto d’abord, celles du verso ensuite, chacune par fréquence', () => {
+test('régions : celles du recto d’abord, celles du verso ensuite, chacune par fréquence', () => {
   const pl: Place[] = []
   const regions = new Map<number, string>()
   const mettre = (s: number, r: string, dejaVu?: number) => {
@@ -280,7 +280,7 @@ describe('arbre du couple', async () => {
     expect(couple?.reglages.alignementTitre).toBe(true)
   })
 
-  test('rangees du couple : une génération de plus par moitié, sans chevauchement', () => {
+  test('rangees du couple : une génération de plus par moitié, sans chevauchement', () => {
     for (let a = 1; a <= 6; a++) {
       for (let d = 1; d <= 3; d++) {
         const r = rangeesSablier(a, Array(d).fill(false), true, true)

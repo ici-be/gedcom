@@ -624,8 +624,8 @@ export function EventailOrigines({ d, options }: { d: Donnees; options: OptionsF
       {(options.italiques || implexes || boules.length > 0) && (
         <text x="40" y={options.date ? 950 : 966} font-size="8.5" class="mut">
           {[
-            boules.length > 0 && <>{t('● mariage : teinte de la province où il a eu lieu, année jusqu’à la génération VI')}</>,
-            options.italiques && <><tspan class="ns">{t('italique')}</tspan>{t(' : date sans source')}</>,
+            boules.length > 0 && <>{t('● mariage : teinte de la province où il a eu lieu, année jusqu’à la génération VI')}</>,
+            options.italiques && <><tspan class="ns">{t('italique')}</tspan>{t(' : date sans source')}</>,
             implexes && t('◆ implexe'),
           ].filter(Boolean).map((x, i) => <Fragment key={i}>{i > 0 && ' · '}{x}</Fragment>)}
         </text>

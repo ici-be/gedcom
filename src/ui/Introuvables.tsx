@@ -62,7 +62,7 @@ export function Introuvables({ d }: { d: Donnees }) {
         </p>
         <p class="aide">
           Un mariage se note sur l'événement du mariage (il est commun aux deux époux). Majuscules et pluriel sont libres :
-          « source : introuvable », « Sources: introuvables » ou « Acte: introuvable » sont reconnus aussi.
+          « source : introuvable », « Sources: introuvables » ou « Acte: introuvable » sont reconnus aussi.
           Si une source est malgré tout attachée à l'événement, c'est la source qui l'emporte.
         </p>
         <div class="tableau-conteneur">
@@ -81,12 +81,12 @@ export function Introuvables({ d }: { d: Donnees }) {
         </div>
         <p class="aide">
           <strong>Sans source</strong> : l'acte n'a pas encore été cherché ou trouvé — c'est une piste ouverte.{' '}
-          <strong>Introuvable</strong> : on l'a cherché, il n'existe plus ou n'est pas accessible ; on pourra rouvrir la piste (en retirant la mention) si des registres sont retrouvés ou mis en ligne.
+          <strong>Introuvable</strong> : on l'a cherché, il n'existe plus ou n'est pas accessible ; on pourra rouvrir la piste (en retirant la mention) si des registres sont retrouvés ou mis en ligne.
         </p>
         <p class="aide">
-          Effets : une pastille ∅ à la place du point d'exclamation, avec la raison au survol (écran <a href="#/personnes">Personnes</a>) ;
-          le fait sort de la liste « À compléter », des ancêtres à sourcer de l'accueil et des actes à chercher par <a href="#/lieux">lieu</a> et sur la <a href="#/carte">carte</a> ;
-          un filtre « Source introuvable » les retrouve ; le <a href="#/recit">récit</a> mentionne l'acte introuvable et sa raison en note.
+          Effets : une pastille ∅ à la place du point d'exclamation, avec la raison au survol (écran <a href="#/personnes">Personnes</a>) ;
+          le fait sort de la liste « À compléter », des ancêtres à sourcer de l'accueil et des actes à chercher par <a href="#/lieux">lieu</a> et sur la <a href="#/carte">carte</a> ;
+          un filtre « Source introuvable » les retrouve ; le <a href="#/recit">récit</a> mentionne l'acte introuvable et sa raison en note.
           Il ne compte pas pour autant comme sourcé dans les pourcentages.
         </p>
       </section>

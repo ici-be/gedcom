@@ -18,7 +18,7 @@ describe('mentions « Filiation: »', () => {
   test('accents, majuscules, accords, explication et HTML', () => {
     expect(lireFiliation('Baptisé à Malines.\nfiliation: PERE INCONNU, d’après l’acte, folio 12')).toEqual({ pere: 'inconnu' })
     expect(lireFiliation('Filiation: père inconnu, mère introuvable')).toEqual({ pere: 'inconnu', mere: 'introuvable' })
-    expect(lireFiliation('Filiation : père et mère introuvables')).toEqual({ pere: 'introuvable', mere: 'introuvable' })
+    expect(lireFiliation('Filiation : père et mère introuvables')).toEqual({ pere: 'introuvable', mere: 'introuvable' })
     expect(lireFiliation('<p>Filiation: parent introuvable</p><p>Sa mère inconnue des voisins</p>')).toEqual({ pere: 'introuvable', mere: 'introuvable' })
   })
   test('« inconnu » l’emporte sur « introuvable »', () => {
@@ -26,7 +26,7 @@ describe('mentions « Filiation: »', () => {
   })
   test('rien à reconnaître', () => {
     expect(lireFiliation('père inconnu')).toBeUndefined()
-    expect(lireFiliation('Filiation :\nmère inconnue')).toBeUndefined()
+    expect(lireFiliation('Filiation :\nmère inconnue')).toBeUndefined()
     expect(lireFiliation('Filiation: père incertain')).toBeUndefined()
     expect(lireFiliation('Filiation: père inconnusse')).toBeUndefined()
   })
@@ -69,7 +69,7 @@ describe('filiation dans l’arbre', () => {
     expect(ind('@I1@').filiation).toEqual({ pere: 'inconnu' })
     expect(ind('@I2@').filiation).toEqual({ pere: 'introuvable', mere: 'introuvable' })
   })
-  test('état des parents : l’arbre l’emporte sur la note', () => {
+  test('état des parents : l’arbre l’emporte sur la note', () => {
     expect(etatParents(a, ind('@I1@'))).toEqual({ pere: 'inconnu', mere: 'connu' })
     expect(etatParents(a, ind('@I3@'))).toEqual({ pere: 'a-chercher', mere: 'connu' })
     expect(filiationContredite(a, ind('@I3@'))).toEqual(['mere'])
@@ -81,7 +81,7 @@ describe('filiation dans l’arbre', () => {
   })
 })
 
-test('enfant qui porte le nom de sa mère, sans père : père inconnu', () => {
+test('enfant qui porte le nom de sa mère, sans père : père inconnu', () => {
   // Luc, fils d'Anne : sans Pierre comme père, et Anne nommée Dupont comme lui
   const sansPere = EXEMPLE.replace('1 HUSB @I4@\n1 WIFE @I5@', '1 WIFE @I5@')
   const luc = (ged: string) => { const a = lireArbre(ged); return etatParents(a, a.individus.get('@I6@')!) }

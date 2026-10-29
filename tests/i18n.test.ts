@@ -17,9 +17,9 @@ describe('i18n', () => {
   })
 
   it('met une espace fine insécable avant les deux-points en français seulement', () => {
-    expect(t('Personne de départ :')).toBe('Personne de départ :')
+    expect(t('Personne de départ :')).toBe('Personne de départ :')
     definirLangue('en')
-    expect(t('Personne de départ :')).toBe('Starting person:')
+    expect(t('Personne de départ :')).toBe('Starting person:')
   })
 
   it('traduit en anglais et en néerlandais, avec les pluriels de chaque langue', () => {
@@ -40,7 +40,7 @@ describe('i18n', () => {
   it('n’emploie dans chaque traduction que des jetons {…} de la clé', () => {
     for (const [nom, dico] of [['EN', EN], ['NL', NL]] as const) {
       for (const [cle, valeur] of Object.entries(dico)) {
-        for (const j of jetons(valeur)) expect(jetons(cle), `${nom} : ${cle}`).toContain(j)
+        for (const j of jetons(valeur)) expect(jetons(cle), `${nom} : ${cle}`).toContain(j)
       }
     }
   })

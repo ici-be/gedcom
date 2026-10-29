@@ -8,7 +8,7 @@ const SITE = 'https://ici.be/gedcom-print/'
 const PAGES = [
   { dossier: 'print+fr-be', lang: 'fr-BE', hreflang: 'fr-BE', titre: 'Imprimer son arbre généalogique · Lignées',
     alt: 'Un éventail de huit générations d’ancêtres, teinté selon les provinces de naissance.',
-    description: 'Imprimer son arbre généalogique à partir d’un fichier GEDCOM : éventail, pyramide, sablier, arbre du couple. Rien n’est envoyé sur Internet.' },
+    description: 'Imprimer son arbre généalogique à partir d’un fichier GEDCOM : éventail, pyramide, sablier, arbre du couple. Rien n’est envoyé sur Internet.' },
   { dossier: 'print+en-gb', lang: 'en-GB', hreflang: 'en-GB', titre: 'Print your family tree · Lignées',
     alt: 'A fan of eight generations of ancestors, tinted by province of birth.',
     description: 'Print your family tree from a GEDCOM file: fan, pyramid, hourglass, couple’s tree. Nothing is sent over the Internet.' },

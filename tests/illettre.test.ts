@@ -5,7 +5,7 @@ import { lireIllettre } from '../src/lib/illettre'
 describe('mention « Signature: illettré »', () => {
   test('les formes reconnues', () => {
     expect(lireIllettre('Signature: illettré')).toEqual({})
-    expect(lireIllettre('signature : ILLETTREE')).toEqual({})
+    expect(lireIllettre('signature : ILLETTREE')).toEqual({})
     expect(lireIllettre('Signature: ne savait pas écrire')).toEqual({})
     expect(lireIllettre('Signature: analphabète')).toEqual({})
     expect(lireIllettre('Signature: une croix (acte de baptême de son fils, 1832)')).toEqual({ precision: 'acte de baptême de son fils, 1832' })

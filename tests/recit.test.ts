@@ -16,7 +16,7 @@ test('dates dites en toutes lettres', () => {
   expect(quand(undefined)).toBe('')
 })
 
-test('âges : exacts avec les mois, approchés sinon, rien sur une date bornée', () => {
+test('âges : exacts avec les mois, approchés sinon, rien sur une date bornée', () => {
   expect(age(lireDate('10 MAY 1800'), lireDate('9 MAY 1850'))).toEqual({ n: 49, approx: false })
   expect(age(lireDate('10 MAY 1800'), lireDate('10 MAY 1850'))).toEqual({ n: 50, approx: false })
   expect(age(lireDate('1800'), lireDate('1850'))).toEqual({ n: 50, approx: true })
@@ -28,7 +28,7 @@ function paragraphes(blocs: Bloc[]): Phrase[] {
   return blocs.flatMap((b) => (b.type === 'p' ? [b.texte] : b.items.flatMap((it) => paragraphes(it.blocs))))
 }
 
-test('le récit : la personne, ses parents, toujours le même texte, des noms en liens', () => {
+test('le récit : la personne, ses parents, toujours le même texte, des noms en liens', () => {
   const d = calculer(lireArbre(GED), '@I1@', '')
   const r = recit(d, '@I1@', 2, 1)!
   expect(r.parties.map((p) => p.titre)).toEqual(['Paul Dupont', 'Ses parents', 'Ses grands-parents'])
@@ -110,21 +110,21 @@ const NOTICE = `0 HEAD
 0 TRLR
 `
 
-test('la notice : naissance et décès en une phrase, mariage avec l’âge des époux, enfants, notes', () => {
+test('la notice : naissance et décès en une phrase, mariage avec l’âge des époux, enfants, notes', () => {
   const d = calculer(lireArbre(NOTICE), '@I1@', '')
   const r = recit(d, '@I1@', 1, 1)!
   const t = texteBrut(r)
   expect(t).toMatch(/Jean Martin \[1\], musicien, fils de Pierre \[2\]\./)
   expect(t).toContain('Né le 10 mars 1820 à Bruxelles (Bruxelles-Capitale)¹, il y mourut le 5 juillet 1865, à l’âge de 45 ans, et fut inhumé à Forest')
-  expect(t).toContain('Il avait épousé Marie Dubois, femme au foyer, le 6 mai 1846 à Bruxelles² ; il avait 26 ans, elle 27. Marie était née le 22 février 1819 à Bruxelles et y mourut le 4 septembre 1894, à l’âge de 75 ans.')
-  expect(t).toContain('De cette union naquit un garçon :\n\n1. Louis Martin, né le 1er septembre 1846 à Bruxelles, y mourut le 3 octobre 1846, à l’âge de 32 jours.')
-  expect(t).toContain('1. Baptisé deux jours plus tard. Témoin : Paul Martin, 25 ans, son frère.')
+  expect(t).toContain('Il avait épousé Marie Dubois, femme au foyer, le 6 mai 1846 à Bruxelles² ; il avait 26 ans, elle 27. Marie était née le 22 février 1819 à Bruxelles et y mourut le 4 septembre 1894, à l’âge de 75 ans.')
+  expect(t).toContain('De cette union naquit un garçon :\n\n1. Louis Martin, né le 1er septembre 1846 à Bruxelles, y mourut le 3 octobre 1846, à l’âge de 32 jours.')
+  expect(t).toContain('1. Baptisé deux jours plus tard. Témoin : Paul Martin, 25 ans, son frère.')
   expect(t).toContain('2. Un premier enfant naîtra trois mois plus tard.')
   // sans génération de descendants, les enfants tiennent en une ligne
   expect(texteBrut(recit(d, '@I1@', 0, 0)!)).toContain('De cette union naquit un garçon, Louis Martin (1846–1846).')
 })
 
-test('les petits arbres : le couple, les parents de chacun, les enfants, l’enfant de la lignée marqué', () => {
+test('les petits arbres : le couple, les parents de chacun, les enfants, l’enfant de la lignée marqué', () => {
   const d = calculer(lireArbre(NOTICE), '@I1@', '')
   const r = recit(d, '@I1@', 1, 1, { arbres: true })!
   const [tete] = r.parties[0].blocs
@@ -141,7 +141,7 @@ test('les petits arbres : le couple, les parents de chacun, les enfants, l’enf
 })
 
 test('deux notes identiques dans une même partie ne font qu’une', () => {
-  const ged = NOTICE.replace('1 OCCU musicien', '1 OCCU musicien\n1 NOTE Source : Famille.').replace('1 OCCU ménagère', '1 OCCU ménagère\n1 NOTE Source : Famille.')
+  const ged = NOTICE.replace('1 OCCU musicien', '1 OCCU musicien\n1 NOTE Source : Famille.').replace('1 OCCU ménagère', '1 OCCU ménagère\n1 NOTE Source : Famille.')
   const r = recit(calculer(lireArbre(ged), '@I1@', ''), '@I1@', 1, 0)!
   const notes = r.parties[0].notes.map((n) => n.texte.join(''))
   expect(notes.filter((t) => t.includes('Famille')).length).toBe(1)

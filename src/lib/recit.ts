@@ -148,7 +148,9 @@ function phrase(s: TemplateStringsArray, ...v: (Morceau | Morceau[] | undefined 
   for (let i = 0; i < res.length; i++) {
     const m = res[i]
     if (!estTexte(m)) continue
-    let t = m.replace(/\s+/g, ' ').replace(/\s+([,.)])/g, '$1').replace(/\(\s+/g, '(').replace(/,\s*([,.;:])/g, '$1')
+    // espaces regroupées, sauf l'espace fine insécable ; toujours elle, jamais une espace normale, devant « : » et « ; »
+    let t = m.replace(/[^\S\u202f]+/g, ' ').replace(/\s+([,.)])/g, '$1').replace(/\(\s+/g, '(').replace(/,\s*([,.;:])/g, '$1')
+      .replace(/[ \u00a0]+([:;])/g, '\u202f$1')
     if (i === 0) t = t.trimStart()
     if (i === res.length - 1) t = t.trimEnd()
     // Un appel de note se colle au mot qui le précède
@@ -366,11 +368,11 @@ function temoins(p: Plume, e: Evenement, sujet: Individu, epoux?: [Individu | un
   const res: Phrase[] = []
   const parrains = ['parrain', 'marraine'].filter((r) => parRole.has(r))
   if (parrains.length) {
-    res.push(phrase`${enumerer(parrains.map((r) => [`${r} : `, ...enumerer(parRole.get(r)!, ' ; ', ' ; ')]), ' ; ', ' ; ')}`)
+    res.push(phrase`${enumerer(parrains.map((r) => [`${r} : `, ...enumerer(parRole.get(r)!, ' ; ', ' ; ')]), ' ; ', ' ; ')}`)
   }
   for (const [role, l] of parRole) {
     if (role === 'parrain' || role === 'marraine') continue
-    res.push(phrase`${role}${l.length > 1 && role === 'témoin' ? 's' : ''} : ${enumerer(l, ' ; ', ' ; ')}`)
+    res.push(phrase`${role}${l.length > 1 && role === 'témoin' ? 's' : ''} : ${enumerer(l, ' ; ', ' ; ')}`)
   }
   return res
 }
@@ -382,7 +384,7 @@ function sources(p: Plume, l: string[]): Phrase | null {
     const u = /https?:\/\/(?:www\.)?([^/\s]+)\S*/.exec(s)
     return u ? [{ url: u[0], t: u[1] }] : [s]
   })
-  return phrase`Source${m.length > 1 ? 's' : ''} : ${enumerer(m, ' ; ', ' ; ')}`
+  return phrase`Source${m.length > 1 ? 's' : ''} : ${enumerer(m, ' ; ', ' ; ')}`
 }
 
 /** Ce qu'un acte apporte en note : sa note, ses témoins, ses sources */
@@ -443,7 +445,7 @@ function faits(p: Plume, evenements: Evenement[], prefixeDomicile: string): Phra
   const res: Phrase[] = []
   const avecAnnees = (c: string, l: string[]) => (l.length ? `${c}${c ? ' ' : ''}(${l.join(', ')})` : c)
   if (domiciles.size) res.push(phrase`${prefixeDomicile} : ${[...domiciles].map(([c, l]) => avecAnnees(c, l)).join(' — ')}`)
-  if (militaire.length) res.push(phrase`Militaire : ${militaire.join(' ; ')}`)
+  if (militaire.length) res.push(phrase`Militaire : ${militaire.join(' ; ')}`)
   for (const [etiquette, m] of registres) res.push(phrase`${etiquette} : ${[...m].map(([c, l]) => avecAnnees(c, l)).join(' — ')}`)
   return [...res, ...autres]
 }
@@ -664,11 +666,11 @@ function conjointNomme(p: Plume, u: Union): Morceau[] {
 function agesEpoux(sujet: Individu, a?: Age, c?: Individu, b?: Age): string {
   if (a && b && c && a.n === b.n && a.approx === b.approx) {
     const toutes = fem(sujet) && fem(c)
-    return ` ; ${toutes ? 'elles' : 'ils'} avaient ${toutes ? 'toutes' : 'tous'} deux ${ans(a)}`
+    return ` ; ${toutes ? 'elles' : 'ils'} avaient ${toutes ? 'toutes' : 'tous'} deux ${ans(a)}`
   }
-  if (a && b && c) return ` ; ${il(sujet)} avait ${ans(a)}, ${il(c)} ${b.approx ? 'environ ' : ''}${b.n}`
-  if (a) return ` ; ${il(sujet)} avait alors ${ans(a)}`
-  if (b && c) return ` ; ${il(c)} avait ${ans(b)}`
+  if (a && b && c) return ` ; ${il(sujet)} avait ${ans(a)}, ${il(c)} ${b.approx ? 'environ ' : ''}${b.n}`
+  if (a) return ` ; ${il(sujet)} avait alors ${ans(a)}`
+  if (b && c) return ` ; ${il(c)} avait ${ans(b)}`
   return ''
 }
 

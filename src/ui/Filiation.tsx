@@ -47,7 +47,7 @@ export function Filiation({ d }: { d: Donnees }) {
           La mention se met dans la note de l'<strong>enfant</strong>, pas du parent, n'importe où dans la note. Elle peut être suivie d'une explication
           sur la même ligne (« Filiation: père inconnu, d'après l'acte de baptême, Malines 1754, folio 12 »), et réunir les deux côtés
           (« Filiation: père inconnu, mère introuvable »). Accents, majuscules et accords sont libres :
-          « filiation:pere inconnu » ou « Filiation : père et mère introuvables » (avec une espace avant les deux-points) sont reconnus aussi. Si le parent figure malgré tout dans l'arbre, c'est l'arbre qui l'emporte.
+          « filiation:pere inconnu » ou « Filiation : père et mère introuvables » (avec une espace avant les deux-points) sont reconnus aussi. Si le parent figure malgré tout dans l'arbre, c'est l'arbre qui l'emporte.
         </p>
         <p class="aide">
           Sans mention, un enfant sans père dans l'arbre qui porte le nom de sa mère est tenu pour un enfant naturel : son père compte comme inconnu, pas à chercher.
@@ -68,7 +68,7 @@ export function Filiation({ d }: { d: Donnees }) {
         </div>
         <p class="aide">
           <strong>Inconnu</strong> : l'acte existe et ne nomme pas le parent — c'est un résultat, il n'y a rien de plus à trouver.{' '}
-          <strong>Introuvable</strong> : le parent a un nom quelque part, mais les sources disponibles ne permettent pas d'aller plus loin ; on pourra rouvrir la piste si des registres sont mis en ligne.
+          <strong>Introuvable</strong> : le parent a un nom quelque part, mais les sources disponibles ne permettent pas d'aller plus loin ; on pourra rouvrir la piste si des registres sont mis en ligne.
         </p>
         <p class="aide">
           Effets : un repère à côté du nom et dans la fiche (écran <a href="#/personnes">Personnes</a>), un filtre « Parents » pour ne garder que les pistes ouvertes, et

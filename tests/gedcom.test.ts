@@ -76,7 +76,7 @@ describe('arbre', () => {
     const b = lireArbre('0 @I1@ INDI\n1 NAME A /B/\n1 BIRT\n2 DATE 1900\n2 SOUR\n3 PAGE geneweb wiki notes: x\n')
     expect(b.individus.get('@I1@')!.evenements[0].sources).toEqual([])
   })
-  test('photo principale : visage, signature en PNG, renvoi et fichier local ignoré', () => {
+  test('photo principale : visage, signature en PNG, renvoi et fichier local ignoré', () => {
     const b = lireArbre([
       '0 @I1@ INDI', '1 NAME A /B/', '1 OBJE', '2 FILE http://gw.geneanet.org/public/img/media/deposits/a8/medium.jpg?t=1',
       '0 @I2@ INDI', '1 NAME C /B/', '1 OBJE', '2 FILE http://gw.geneanet.org/public/img/media/deposits/b9/medium.png?t=2',

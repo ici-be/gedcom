@@ -388,7 +388,7 @@ function Details({ d, ind }: { d: Donnees; ind: Individu }) {
       </p>
       <Photo ind={ind} classe={ind.photo?.signature ? 'fiche-signature' : undefined} />
       {ind.illettre && (
-        <p class="fiche-illettre"><Croix />{ind.sexe === 'F' ? 'Illettrée' : 'Illettré'} : ne savait pas signer{ind.illettre.precision && <> ({ind.illettre.precision})</>} · <a href="#/illettres">d'après la note</a></p>
+        <p class="fiche-illettre"><Croix />{ind.sexe === 'F' ? 'Illettrée' : 'Illettré'} : ne savait pas signer{ind.illettre.precision && <> ({ind.illettre.precision})</>} · <a href="#/illettres">d'après la note</a></p>
       )}
       <ul class="evenements">
         {ind.evenements.filter((e) => e.tag !== 'OCCU').map((e, i) => (

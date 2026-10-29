@@ -8,7 +8,7 @@ import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 const TEXTES = {
-  fr: { titre: 'Imprimez votre arbre généalogique', sous: 'Éventail, pyramide, sablier, arbre du couple : une feuille prête pour l’imprimeur ou pour un PDF.', pied: 'Gratuit · vos données restent dans votre navigateur' },
+  fr: { titre: 'Imprimez votre arbre généalogique', sous: 'Éventail, pyramide, sablier, arbre du couple : une feuille prête pour l’imprimeur ou pour un PDF.', pied: 'Gratuit · vos données restent dans votre navigateur' },
   en: { titre: 'Print your family tree', sous: 'Fan, pyramid, hourglass, couple’s tree: a sheet ready for the printer or for a PDF.', pied: 'Free · your data stays in your browser' },
   nl: { titre: 'Druk uw stamboom af', sous: 'Waaier, piramide, zandloper, stamboom van het stel: een blad klaar voor de drukker of voor een pdf.', pied: 'Gratis · uw gegevens blijven in uw browser' },
 }

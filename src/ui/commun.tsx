@@ -117,7 +117,7 @@ export function Personne({ d, id, annees, prenoms }: { d: Donnees; id: string; a
   return (
     <span class="personne">
       {url ? (
-        <a href={url} target="_blank" rel="noopener noreferrer" title={(coupe ? complet + ' · ' : '') + (d.homonymes.has(id) ? t('Homonymes : ouvre la recherche en ligne') : t('Ouvrir la fiche en ligne'))}>
+        <a href={url} target="_blank" rel="noopener noreferrer" title={(coupe ? complet + ' · ' : '') + (d.homonymes.has(id) ? t('Homonymes : ouvre la recherche en ligne') : t('Ouvrir la fiche en ligne'))}>
           {nom}
         </a>
       ) : (

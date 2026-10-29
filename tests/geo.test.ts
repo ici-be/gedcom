@@ -60,7 +60,7 @@ describe('situer', () => {
   })
 })
 
-test('outre-mer : en France, mais pas en métropole', async () => {
+test('outre-mer : en France, mais pas en métropole', async () => {
   const p = await situer(['Saint-Claude, 97124, Guadeloupe, France', 'Saint-Claude, Jura, France'], charger)
   expect(p.get('Saint-Claude, 97124, Guadeloupe, France')).toMatchObject({ lat: 16.017, pays: 'FR', region: 'Guadeloupe', codeRegion: 'FR.971' })
   expect(p.get('Saint-Claude, Jura, France')).toMatchObject({ lat: 46.387, pays: 'FR' })

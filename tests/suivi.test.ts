@@ -23,7 +23,7 @@ describe('parenté', () => {
     expect([...fr.keys()]).toEqual(['@I6@'])
     expect(fr.get('@I6@')!.sosa).toBe('2')
   })
-  test('implexe : un même ancêtre par deux chemins', () => {
+  test('implexe : un même ancêtre par deux chemins', () => {
     const b = lireArbre(`0 @I1@ INDI\n1 FAMC @F1@\n0 @I2@ INDI\n1 FAMC @F2@\n0 @I3@ INDI\n1 FAMC @F3@\n0 @I4@ INDI
 0 @F1@ FAM\n1 HUSB @I2@\n1 WIFE @I3@\n0 @F2@ FAM\n1 HUSB @I4@\n0 @F3@ FAM\n1 HUSB @I4@\n`)
     const anc = ancetres(b, '@I1@')
@@ -60,7 +60,7 @@ describe('suivi', () => {
     expect(s.naissance).toMatchObject({ etat: 'source' })
     expect(s.naissance.evenement?.tag).toBe('BAPM')
   })
-  test('mariage « Y » sans détail = manquant ; décès présumé d’après les enfants', () => {
+  test('mariage « Y » sans détail = manquant ; décès présumé d’après les enfants', () => {
     const s = suivi(a, ind('@I5@'), 2026)
     expect(s.mariage).toBe('manquant')
     expect(s.naissance.etat).toBe('manquant')
@@ -112,7 +112,7 @@ test('CSV', () => {
 
 describe('relevés', () => {
   const b = { individus: 1, familles: 0, ancetres: 0, generations: 0, faits: { attendus: 0, sources: 0 }, faitsAncetres: { attendus: 0, sources: 0 } }
-  test('base : la base Geneanet, sinon le nom du fichier sans sa date', () => {
+  test('base : la base Geneanet, sinon le nom du fichier sans sa date', () => {
     const a = (base?: string) => ({ individus: new Map(), familles: new Map(), origine: { base } })
     expect(baseDuFichier(a('dupont.gwb'), 'x.ged')).toBe('dupont.gwb')
     expect(baseDuFichier(a(), 'Dupont_2026-10-13.ged')).toBe('dupont')
@@ -125,7 +125,7 @@ describe('relevés', () => {
   })
 })
 
-test('mariage : un acte noté, ni union libre ni fiançailles', async () => {
+test('mariage : un acte noté, ni union libre ni fiançailles', async () => {
   const { marie } = await import('../src/lib/suivi')
   const ev = (tag: string, type?: string): any => ({ tag, type, sources: [] })
   expect(marie({ etat: 'sans-source', evenement: ev('MARR') })).toBe(true)

@@ -8,7 +8,7 @@ function arbre(metiers: [string, string][]): string {
 
 describe('métiers', () => {
   test('découpage et nettoyage', () => {
-    expect(decouperMetiers('musicien ambulant, chocolatier ; mécanicien.')).toEqual(['musicien ambulant', 'chocolatier', 'mécanicien'])
+    expect(decouperMetiers('musicien ambulant, chocolatier ; mécanicien.')).toEqual(['musicien ambulant', 'chocolatier', 'mécanicien'])
     expect(sansAccents('Manœuvre  Ménagère')).toBe('manoeuvre menagere')
   })
 
