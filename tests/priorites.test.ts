@@ -64,7 +64,7 @@ const GED = `0 HEAD
 0 TRLR
 `
 
-test('priorités : les données manquantes des ancêtres, les plus proches d’abord, avec les pistes de la famille et de la commune', () => {
+test('priorités : les données manquantes des ancêtres, les plus proches d’abord, avec les pistes de la famille et de la commune', () => {
   const d = calculer(lireArbre(GED), '@I1@', '')
   const l = priorites(d)
   // par défaut, seulement les données manquantes, génération par génération : pas le décès du père, noté sans source
