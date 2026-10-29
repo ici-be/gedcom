@@ -115,11 +115,26 @@ test('la notice : naissance et décès en une phrase, mariage avec l’âge des 
   const r = recit(d, '@I1@', 1, 1)!
   const t = texteBrut(r)
   expect(t).toMatch(/Jean Martin \[1\], musicien, fils de Pierre \[2\]\./)
-  expect(t).toMatch(/Né le 10 mars 1820 à Bruxelles \(Bruxelles-Capitale\)¹, il y (mourut|est décédé) le 5 juillet 1865 à l’âge de 45 ans et a été inhumé à Forest/)
-  expect(t).toMatch(/Il s’était marié le 6 mai 1846 à Bruxelles², alors qu’il avait 26 ans, avec Marie Dubois, femme au foyer, âgée de 27 ans, née le 22 février 1819 à Bruxelles où elle (mourut|est décédée) le 4 septembre 1894 à l’âge de 75 ans\./)
-  expect(t).toMatch(/Le couple a eu un garçon :\n\n1\. Louis Martin\. Né le 1er septembre 1846 à Bruxelles, il y (mourut|est décédé) le 3 octobre 1846 à l’âge de 32 jours\./)
+  expect(t).toContain('Né le 10 mars 1820 à Bruxelles (Bruxelles-Capitale)¹, il y mourut le 5 juillet 1865, à l’âge de 45 ans, et fut inhumé à Forest')
+  expect(t).toContain('Il avait épousé Marie Dubois, femme au foyer, le 6 mai 1846 à Bruxelles² ; il avait 26 ans, elle 27. Marie était née le 22 février 1819 à Bruxelles et y mourut le 4 septembre 1894, à l’âge de 75 ans.')
+  expect(t).toContain('De cette union naquit un garçon :\n\n1. Louis Martin, né le 1er septembre 1846 à Bruxelles, y mourut le 3 octobre 1846, à l’âge de 32 jours.')
   expect(t).toContain('1. Baptisé deux jours plus tard. Témoin : Paul Martin, 25 ans, son frère.')
   expect(t).toContain('2. Un premier enfant naîtra trois mois plus tard.')
   // sans génération de descendants, les enfants tiennent en une ligne
-  expect(texteBrut(recit(d, '@I1@', 0, 0)!)).toContain('Le couple a eu un garçon : Louis Martin (1846–1846).')
+  expect(texteBrut(recit(d, '@I1@', 0, 0)!)).toContain('De cette union naquit un garçon, Louis Martin (1846–1846).')
+})
+
+test('les petits arbres : le couple, les parents de chacun, les enfants, l’enfant de la lignée marqué', () => {
+  const d = calculer(lireArbre(NOTICE), '@I1@', '')
+  const r = recit(d, '@I1@', 1, 1, { arbres: true })!
+  const [tete] = r.parties[0].blocs
+  expect(tete.type).toBe('arbre')
+  if (tete.type !== 'arbre') return
+  expect(tete.arbre.couple.map((c) => c?.t)).toEqual(['Jean Martin', 'Marie Dubois'])
+  expect(tete.arbre.haut[0].map((c) => c?.t)).toEqual(['Pierre Martin', undefined])
+  expect(tete.arbre.enfants.map((c) => c.t)).toEqual(['Louis Martin'])
+  const parents = r.parties[1].blocs[0]
+  expect(parents.type === 'arbre' && parents.arbre.enfants.find((c) => c.ligne)?.id).toBe('@I1@')
+  // le texte copié ne change pas
+  expect(texteBrut(r)).toBe(texteBrut(recit(d, '@I1@', 1, 1)!))
 })

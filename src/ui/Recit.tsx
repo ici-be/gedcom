@@ -1,9 +1,12 @@
 // Récit : une notice généalogique sur une personne choisie, ses descendants et ses ancêtres, sur autant de
-// générations qu'on veut dans chaque sens, avec notes de bas de partie. Chaque nom cité mène au récit de cette personne.
+// générations qu'on veut dans chaque sens, avec notes de bas de partie et, au choix, un petit arbre par couple.
+// Chaque nom cité mène au récit de cette personne.
 
+import '@fontsource/fraunces/latin-400.css'
+import '@fontsource/fraunces/latin-400-italic.css'
 import { useMemo, useState } from 'preact/hooks'
 import type { Donnees } from '../lib/donnees'
-import { MAX_ASCENDANTS, MAX_DESCENDANTS, recit, texteBrut, type Bloc, type Morceau, type Phrase } from '../lib/recit'
+import { MAX_ASCENDANTS, MAX_DESCENDANTS, recit, texteBrut, type Bloc, type Case, type Morceau, type PetitArbre, type Phrase } from '../lib/recit'
 import { nombre } from '../lib/format'
 import { ecrire, lire } from '../lib/stockage'
 import type { Individu } from '../lib/gedcom/arbre'
@@ -11,7 +14,7 @@ import { nomComplet } from '../lib/parente'
 import { CasePhotos, ChoixPersonne, Photo, usePhotos } from './commun'
 import { IconeEvenement, lienEvenement, useEvenements } from './Evenements'
 
-interface Reglages { asc: number; desc: number; sources: boolean; evenements: boolean }
+interface Reglages { asc: number; desc: number; sources: boolean; evenements: boolean; arbres: boolean }
 /** Pour les photos à côté des notices (absent : pas de photos) */
 type Qui = ((id: string) => Individu | undefined) | undefined
 
@@ -19,6 +22,7 @@ const lien = (id: string) => '#/recit/' + encodeURIComponent(id)
 const GENERATIONS_ASC = ['aucune', 'les parents', 'jusqu’aux grands-parents', 'jusqu’aux arrière-grands-parents']
 const GENERATIONS_DESC = ['aucune', 'les enfants', 'jusqu’aux petits-enfants', 'jusqu’aux arrière-petits-enfants']
 const libelle = (l: string[], n: number) => l[n] ?? `${n} générations`
+const NOMBRES = ['zéro', 'une', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit']
 
 /** Aller à un endroit du récit sans toucher à l'adresse (elle sert à la navigation) */
 function aller(e: Event, id: string) {
@@ -46,6 +50,46 @@ function M({ m }: { m: Morceau }) {
 
 const Texte = ({ morceaux }: { morceaux: Phrase }) => <>{morceaux.map((m, i) => <M key={i} m={m} />)}</>
 
+/** Une personne du petit arbre ; vide, une place grisée pour garder la forme de l'arbre */
+function CaseArbre({ c }: { c: Case | null }) {
+  if (!c) return <span class="rc-ar-case inconnu" aria-hidden="true">?</span>
+  return (
+    <a href={lien(c.id)} class={`rc-ar-case ${c.sexe === 'F' ? 'f' : c.sexe === 'M' ? 'h' : ''}${c.ligne ? ' rc-ar-ligne' : ''}`} title="Faire le récit de cette personne">
+      <span class="rc-ar-nom">{c.t}</span>
+      {(c.annees || c.sosa) && <span class="rc-ar-annees">{c.annees}{c.sosa && <span class="rc-ar-sosa">{c.sosa}</span>}</span>}
+    </a>
+  )
+}
+
+/** Les parents de chacun, le couple, les enfants : des traits comme dans les arbres imprimés */
+function MiniArbre({ a }: { a: PetitArbre }) {
+  const solo = a.couple.length < 2
+  const paire = (l: (Case | null)[]) => {
+    const n = l.filter(Boolean).length
+    return (
+      <div class={'rc-ar-paire' + (n === 0 ? ' vide' : '')}>
+        {n > 0 && l.map((c, i) => <CaseArbre key={i} c={c} />)}
+      </div>
+    )
+  }
+  const enfants = a.enfants.length + (a.reste ? 1 : 0)
+  return (
+    <figure class={'rc-arbre' + (solo ? ' solo' : '')} aria-label="Petit arbre de la famille">
+      {paire(a.haut[0])}
+      {!solo && paire(a.haut[1])}
+      <div class={'rc-ar-couple' + (enfants ? ' avec-enfants' : '')}>
+        {a.couple.map((c, i) => <CaseArbre key={i} c={c} />)}
+      </div>
+      {enfants > 0 && (
+        <div class={'rc-ar-enfants' + (enfants === 1 ? ' seul' : '')}>
+          {a.enfants.map((c) => <div key={c.id} class="rc-ar-enfant"><CaseArbre c={c} /></div>)}
+          {a.reste > 0 && <div class="rc-ar-enfant"><span class="rc-ar-case reste">+ {a.reste}</span></div>}
+        </div>
+      )}
+    </figure>
+  )
+}
+
 function Blocs({ blocs, qui }: { blocs: Bloc[]; qui: Qui }) {
   return (
     <>
@@ -57,6 +101,7 @@ function Blocs({ blocs, qui }: { blocs: Bloc[]; qui: Qui }) {
             <Texte morceaux={b.texte} />
           </p>
         )
+        : b.type === 'arbre' ? <MiniArbre key={i} a={b.arbre} />
         : (
           <div key={i} class="rc-liste">
             {b.items.map((it, j) => (
@@ -72,7 +117,7 @@ function Blocs({ blocs, qui }: { blocs: Bloc[]; qui: Qui }) {
 }
 
 export function Recit({ d, id }: { d: Donnees; id?: string }) {
-  const [reglages, setReglagesBrut] = useState<Reglages>(() => ({ asc: 3, desc: 2, sources: false, evenements: false, ...lire<Partial<Reglages>>('recit', {}) }))
+  const [reglages, setReglagesBrut] = useState<Reglages>(() => ({ asc: 3, desc: 2, sources: false, evenements: false, arbres: false, ...lire<Partial<Reglages>>('recit', {}) }))
   const setReglages = (r: Partial<Reglages>) => { const n = { ...reglages, ...r }; setReglagesBrut(n); ecrire('recit', n) }
   const [copie, setCopie] = useState(false)
   const photos = usePhotos(d)
@@ -80,8 +125,8 @@ export function Recit({ d, id }: { d: Donnees; id?: string }) {
   const ev = useEvenements(d, reglages.evenements)
   const parPersonne = ev?.etat === 'pret' ? ev.index.parPersonne : undefined
   const r = useMemo(
-    () => recit(d, cible, reglages.asc, reglages.desc, { sources: reglages.sources, evenements: parPersonne }),
-    [d, cible, reglages.asc, reglages.desc, reglages.sources, parPersonne],
+    () => recit(d, cible, reglages.asc, reglages.desc, { sources: reglages.sources, evenements: parPersonne, arbres: reglages.arbres }),
+    [d, cible, reglages.asc, reglages.desc, reglages.sources, parPersonne, reglages.arbres],
   )
   const mots = useMemo(() => (r ? texteBrut(r).split(/\s+/).length : 0), [r])
 
@@ -89,47 +134,79 @@ export function Recit({ d, id }: { d: Donnees; id?: string }) {
     if (!r) return
     navigator.clipboard?.writeText(texteBrut(r)).then(() => { setCopie(true); setTimeout(() => setCopie(false), 1500) }).catch(() => {})
   }
+  const option = (cle: 'arbres' | 'sources' | 'evenements', texte: string) => (
+    <label class={'rc-option' + (reglages[cle] ? ' coche' : '')}>
+      <input type="checkbox" checked={reglages[cle]} onChange={(e) => setReglages({ [cle]: e.currentTarget.checked })} /> {texte}
+    </label>
+  )
+  // « avec deux générations de descendants et trois générations d’ancêtres »
+  const sousTitre = [
+    reglages.desc === 1 ? 'ses enfants' : reglages.desc ? `${NOMBRES[reglages.desc]} générations de descendants` : '',
+    reglages.asc === 1 ? 'ses parents' : reglages.asc ? `${NOMBRES[reglages.asc]} générations d’ancêtres` : '',
+  ].filter(Boolean)
 
   return (
     <section class="ecran recit">
       <header class="titre-ecran">
         <h1 data-titre={`Récit de ${nomComplet(d.arbre.individus.get(cible)!)}`}>Récit</h1>
-        <p class="sous-titre">Une notice à la manière des livres de famille : la personne et ses descendants, puis ses ancêtres génération par génération, avec témoins, domiciles et registres en notes. Chaque nom mène au récit de cette personne ; chaque numéro entre crochets, à sa notice.</p>
+        <p class="sous-titre">Une notice à la manière des livres de famille : la personne et ses descendants, puis ses ancêtres génération par génération. Chaque nom mène au récit de cette personne ; chaque numéro entre crochets, à sa notice.</p>
       </header>
 
       <section class="panneau rc-reglages">
-        <div class="rc-ligne">
-          <span class="rc-etiquette">Personne</span>
-          <ChoixPersonne d={d} valeur={cible} choisir={(n) => { location.hash = lien(n) }} />
+        <div class="rc-grille">
+          <div class="rc-champ rc-personne">
+            <span class="rc-etiquette">Personne</span>
+            <ChoixPersonne d={d} valeur={cible} choisir={(n) => { location.hash = lien(n) }} />
+          </div>
+          <div class="rc-champ">
+            <label class="rc-etiquette" for="recit-asc">Ancêtres</label>
+            <select id="recit-asc" value={reglages.asc} onChange={(e) => setReglages({ asc: Number(e.currentTarget.value) })}>
+              {Array.from({ length: MAX_ASCENDANTS + 1 }, (_, n) => <option key={n} value={n}>{libelle(GENERATIONS_ASC, n)}</option>)}
+            </select>
+          </div>
+          <div class="rc-champ">
+            <label class="rc-etiquette" for="recit-desc">Descendants</label>
+            <select id="recit-desc" value={reglages.desc} onChange={(e) => setReglages({ desc: Number(e.currentTarget.value) })}>
+              {Array.from({ length: MAX_DESCENDANTS + 1 }, (_, n) => <option key={n} value={n}>{libelle(GENERATIONS_DESC, n)}</option>)}
+            </select>
+          </div>
         </div>
-        <div class="rc-ligne">
-          <label class="rc-etiquette" for="recit-asc">Ancêtres</label>
-          <select id="recit-asc" value={reglages.asc} onChange={(e) => setReglages({ asc: Number(e.currentTarget.value) })}>
-            {Array.from({ length: MAX_ASCENDANTS + 1 }, (_, n) => <option key={n} value={n}>{libelle(GENERATIONS_ASC, n)}</option>)}
-          </select>
-          <label class="rc-etiquette" for="recit-desc">Descendants</label>
-          <select id="recit-desc" value={reglages.desc} onChange={(e) => setReglages({ desc: Number(e.currentTarget.value) })}>
-            {Array.from({ length: MAX_DESCENDANTS + 1 }, (_, n) => <option key={n} value={n}>{libelle(GENERATIONS_DESC, n)}</option>)}
-          </select>
-          <label class="rc-case"><input type="checkbox" checked={reglages.sources} onChange={(e) => setReglages({ sources: e.currentTarget.checked })} /> Sources dans les notes</label>
-          <label class="rc-case"><input type="checkbox" checked={reglages.evenements} onChange={(e) => setReglages({ evenements: e.currentTarget.checked })} /> Événements historiques</label>
-          <CasePhotos p={photos} classe="rc-case" />
+        <div class="rc-champ">
+          <span class="rc-etiquette">Ajouter au récit</span>
+          <div class="rc-options">
+            {option('arbres', 'Petits arbres')}
+            {option('sources', 'Sources dans les notes')}
+            {option('evenements', 'Événements historiques')}
+            <CasePhotos p={photos} classe={'rc-option' + (photos.afficher ? ' coche' : '')} />
+          </div>
         </div>
-        <div class="rc-ligne">
-          <button type="button" class="bouton" onClick={copier}>{copie ? 'Copié' : 'Copier le texte'}</button>
-          <button type="button" class="bouton" onClick={() => window.print()}>Imprimer</button>
-          {ev?.etat === 'attente' && <span class="aide">Recherche des événements…</span>}
-          {ev?.etat === 'erreur' && <span class="aide">La liste des événements n'a pas pu être chargée.</span>}
-          {ev?.etat === 'pret' && <a class="aide" href="#/evenements">Tous les événements de l’arbre</a>}
-          {r && <span class="aide">{nombre(mots)} mots · {nombre(r.ancetres)} ancêtres et {nombre(r.descendants)} descendants évoqués</span>}
+        <div class="rc-pied">
+          <span class="aide">
+            {r && <>{nombre(mots)} mots · {nombre(r.ancetres)} ancêtres et {nombre(r.descendants)} descendants évoqués</>}
+            {ev?.etat === 'attente' && <> · recherche des événements…</>}
+            {ev?.etat === 'erreur' && <> · la liste des événements n’a pas pu être chargée</>}
+            {ev?.etat === 'pret' && <> · <a href="#/evenements">tous les événements de l’arbre</a></>}
+          </span>
+          <span class="rc-actions">
+            <button type="button" class="bouton discret" onClick={copier}>{copie ? 'Copié ✓' : 'Copier le texte'}</button>
+            <button type="button" class="bouton discret" onClick={() => window.print()}>Imprimer</button>
+          </span>
         </div>
       </section>
 
       {r ? (
         <article class="panneau rc-texte">
           {r.parties.map((pt, i) => (
-            <section key={i}>
-              {i === 0 ? <h2 class="rc-titre">{pt.titre}</h2> : <h3><span class="rc-num">{pt.numero}.</span> {pt.titre}</h3>}
+            <section key={i} class="rc-partie">
+              {i === 0
+                ? (
+                  <header class="rc-entete">
+                    <p class="rc-surtitre">Récit familial</p>
+                    <h2 class="rc-titre">{pt.titre}</h2>
+                    {sousTitre.length > 0 && <p class="rc-soustitre">avec {sousTitre.join(' et ')}</p>}
+                  </header>
+                )
+                : <h3><span class="rc-num">{pt.numero}</span>{pt.titre}</h3>}
               <Blocs blocs={pt.blocs} qui={photos.afficher ? (x) => d.arbre.individus.get(x) : undefined} />
               {pt.notes.length > 0 && (
                 <div class="rc-notes">

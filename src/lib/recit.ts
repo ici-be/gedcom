@@ -26,14 +26,21 @@ export type Morceau =
   | { evt: string; t: string; type: string }
 export type Phrase = Morceau[]
 export interface Item { marque: string; blocs: Bloc[] }
+/** Une personne dans un petit arbre : nom court, années, numéro Sosa, sexe ; `ligne` : l'enfant par qui passe la lignée */
+export interface Case { id: string; t: string; annees: string; sosa?: number; sexe: Individu['sexe']; ligne?: boolean }
+/** Un petit arbre : les parents de chacun des deux conjoints, le couple, leurs enfants (les premiers, `reste` en plus) */
+export interface PetitArbre { haut: [(Case | null)[], (Case | null)[]]; couple: (Case | null)[]; enfants: Case[]; reste: number }
 export type Bloc =
   | { type: 'p'; texte: Phrase; ancres?: number[]; italique?: boolean; figures?: string[] }
   | { type: 'liste'; items: Item[] }
+  | { type: 'arbre'; arbre: PetitArbre }
 export interface Note { n: number; texte: Phrase }
 export interface Partie { numero: string; titre: string; blocs: Bloc[]; notes: Note[] }
 export interface Recit { titre: string; parties: Partie[]; ancetres: number; descendants: number }
 export interface Options {
   sources?: boolean
+  /** Un petit arbre en tête de chaque notice de couple */
+  arbres?: boolean
   /** Événements historiques connus par chaque personne (absent : le récit n'en parle pas) */
   evenements?: Map<string, Vecu[]>
 }
@@ -237,7 +244,8 @@ function aLAge(naissance?: DateGed, deces?: DateGed): string {
   const env = e.approx ? 'environ ' : ''
   if (e.mois < 24 && e.jours !== undefined) return `à l’âge de ${env}${e.mois} mois`
   const a = age(naissance, deces)
-  return a && (a.n >= 2 || !a.approx) ? `à l’âge de ${ans(a)}` : ''
+  if (!a || (a.n < 2 && a.approx)) return ''
+  return a.approx ? `vers l’âge de ${a.n} ans` : `à l’âge de ${ans(a)}`
 }
 
 /** « cinq jours », « trois semaines », « deux mois », « un an » */
@@ -497,27 +505,40 @@ function fin(p: Plume, ind: Individu, simple = false): Fin | null {
   const tombe = e.tag === 'DEAT' ? premier(ind, ['BURI', 'CREM']) : undefined
   const notes = simple ? [] : p.appel([...noteActe(p, e, ind), ...(tombe ? noteActe(p, tombe, ind) : [])])
   const meme = e.tag === 'DEAT' && !!commune(e) && commune(e) === commune(n)
-  const quoi: Morceau[] = [`${quand(e.date)} ${meme ? '' : lieu(p, e, simple)} ${aLAge(n?.date, e.date)}`.replace(/\s+/g, ' ').trim(), ...notes]
+  const a = aLAge(n?.date, e.date)
+  const quoi: Morceau[] = [`${quand(e.date)} ${meme ? '' : lieu(p, e, simple)}${a && !a.startsWith(',') ? ', ' : ''}${a}`.replace(/\s+/g, ' ').trim(), ...notes]
   const t = tombe && commune(tombe)
     ? { v: tombe.tag === 'CREM' ? g(ind, 'incinéré', 'incinérée') : g(ind, 'inhumé', 'inhumée'), L: lieu(p, tombe, simple), meme: commune(tombe) === commune(e) }
     : undefined
   return { e, meme, quoi, tombe: t }
 }
 
-/** Après le sujet : « y mourut le 5 juillet 1865 à l’âge de 44 ans² », « est décédé le… à Uccle… » */
-function mort(p: Plume, ind: Individu, f: Fin): Morceau[] {
-  if (f.e.tag !== 'DEAT') return [`a été ${f.e.tag === 'CREM' ? g(ind, 'incinéré', 'incinérée') : g(ind, 'inhumé', 'inhumée')} `, ...f.quoi]
-  const decede = `est ${g(ind, 'décédé', 'décédée')}`
-  const verbe = f.meme ? p.choisir('y-mourut', ['y mourut', `y ${decede}`]) : p.choisir('mourut', [decede, 'mourut'])
-  const t = f.tombe ? (f.tombe.meme ? ` et y a été ${f.tombe.v}` : ` et a été ${f.tombe.v} ${f.tombe.L}`) : ''
-  return [verbe + ' ', ...f.quoi, t]
+/**
+ * Le temps du récit d'une vie : le passé simple des livres de famille pour qui a vécu avant 1900, le passé composé
+ * ensuite (« il mourut » sonnerait faux pour un grand-père mort en 2013). Sans date, une vie d'autrefois.
+ */
+function ancien(p: Plume, ind: Individu): boolean {
+  const s = p.suivi(ind)
+  const an = s?.deces.evenement?.date?.debut?.annee ?? s?.naissance.evenement?.date?.debut?.annee
+  return an === undefined || an < 1900
+}
+
+/** Après le sujet : « y mourut le 5 juillet 1865, à l’âge de 44 ans² », « est décédé le… à Uccle… » */
+function mort(p: Plume, ind: Individu, f: Fin, vieux = ancien(p, ind)): Morceau[] {
+  const fut = vieux ? 'fut' : 'a été'
+  if (f.e.tag !== 'DEAT') return [`${fut} ${f.e.tag === 'CREM' ? g(ind, 'incinéré', 'incinérée') : g(ind, 'inhumé', 'inhumée')} `, ...f.quoi]
+  const verbe = vieux ? 'mourut' : `est ${g(ind, 'décédé', 'décédée')}`
+  // « …, à l’âge de 45 ans, et fut inhumé à Forest »
+  const virgule = estTexte(f.quoi[0]) && /âge|jour même/.test(f.quoi[0]) ? ',' : ''
+  const t = f.tombe ? (f.tombe.meme ? `${virgule} et y ${fut} ${f.tombe.v}` : `${virgule} et ${fut} ${f.tombe.v} ${f.tombe.L}`) : ''
+  return [(f.meme ? 'y ' : '') + verbe + ' ', ...f.quoi, t]
 }
 
 /** Après la naissance d'un conjoint : « où elle mourut le… », « , décédée le… à… » */
 function mortApposee(p: Plume, ind: Individu, f: Fin): Morceau[] {
   if (f.e.tag !== 'DEAT') return [`, ${f.e.tag === 'CREM' ? g(ind, 'incinéré', 'incinérée') : g(ind, 'inhumé', 'inhumée')} `, ...f.quoi]
   const t = f.tombe ? `, ${f.tombe.v} ${f.tombe.meme ? 'dans la même commune' : f.tombe.L}` : ''
-  if (f.meme) return [` où ${il(ind)} ${p.choisir('ou-mourut', ['mourut', `est ${g(ind, 'décédé', 'décédée')}`])} `, ...f.quoi, t]
+  if (f.meme) return [` où ${il(ind)} ${ancien(p, ind) ? 'mourut' : `est ${g(ind, 'décédé', 'décédée')}`} `, ...f.quoi, t]
   return [`, ${g(ind, 'décédé', 'décédée')} `, ...f.quoi, t]
 }
 
@@ -621,6 +642,63 @@ function conjoint(p: Plume, u: Union, ageSujet: Age | undefined, simple: boolean
   const fn = fin(p, c, simple)
   if (fn) res.push(...(n ? mortApposee(p, c, fn) : mortApposee(p, c, { ...fn, meme: false })))
   return res
+}
+
+/** Le conjoint nommé dans la phrase du mariage : nom, numéro Sosa, note, métiers */
+function conjointNomme(p: Plume, u: Union): Morceau[] {
+  const c = u.conj!
+  const res: Morceau[] = [personne(c, true), ...sosa(p, c), ...p.appel([...autresUnions(p, c, u.fam), ...notePersonne(p, c)])]
+  const m = metiersDe(c)
+  if (m.length) res.push(', ', m.join(', '), ',')
+  return res
+}
+
+/** « ; il avait 26 ans, elle 27 », « ; ils avaient tous deux 28 ans » */
+function agesEpoux(sujet: Individu, a?: Age, c?: Individu, b?: Age): string {
+  if (a && b && c && a.n === b.n && a.approx === b.approx) {
+    const toutes = fem(sujet) && fem(c)
+    return ` ; ${toutes ? 'elles' : 'ils'} avaient ${toutes ? 'toutes' : 'tous'} deux ${ans(a)}`
+  }
+  if (a && b && c) return ` ; ${il(sujet)} avait ${ans(a)}, ${il(c)} ${b.approx ? 'environ ' : ''}${b.n}`
+  if (a) return ` ; ${il(sujet)} avait alors ${ans(a)}`
+  if (b && c) return ` ; ${il(c)} avait ${ans(b)}`
+  return ''
+}
+
+/**
+ * La vie du conjoint, en une phrase après celle du mariage : « Fille de Louis [10] (1903–1979) et d’Aline De Ryck [11]
+ * (1909–1970), Elisabeth était née le 2 avril 1930 à Anderlecht et est décédée le 17 juin 2007 à Bruxelles, à l’âge de 77 ans. »
+ */
+function vieConjoint(p: Plume, c: Individu, vieux: boolean): Phrase | null {
+  const f = filiation(p, c)
+  const n = naissanceDe(p, c)
+  // la naissance avant la fin : les appels de note restent dans l'ordre du texte
+  const neM = n ? ne(p, c, n) : null
+  const fn = fin(p, c)
+  const qui = prenomUsuel(c)
+  const avant = f.length ? [...f, ', '] : []
+  if (n && neM) {
+    const etait = n.tag === 'BIRT' ? 'était' : 'avait été'
+    const suite = fn ? [' et ', ...mort(p, c, fn, vieux)] : []
+    return phrase`${avant}${qui} ${etait} ${neM}${suite}`
+  }
+  if (fn) return phrase`${avant}${qui} ${mort(p, c, { ...fn, meme: false }, vieux)}`
+  if (f.length) return phrase`${qui} était ${g(c, 'le', 'la')} ${f}`
+  return null
+}
+
+/** « Ils eurent six filles : », « De cette union naquit un fils, Jean [4] (1930–2013). » */
+function annonceEnfants(p: Plume, ind: Individu, conj: Individu | undefined, enf: Individu[], liste: Morceau[] | null, suite = true): Phrase {
+  const vieux = ancien(p, enf[0]) || ancien(p, ind)
+  const n = compte(enf)
+  // Sans liste : les enfants suivent (« : »), sauf quand plusieurs lits les regroupent plus bas
+  const fin: Morceau[] = liste ? [enf.length === 1 ? ', ' : ' : ', ...liste] : [suite ? ' :' : '.']
+  if (!conj) return phrase`${capitale(il(ind))} ${vieux ? 'eut' : 'a eu'} ${n}${fin}`
+  const toutesF = enf.every(fem)
+  const tournures = vieux
+    ? [`Ils eurent ${n}`, `De cette union ${enf.length > 1 ? 'naquirent' : 'naquit'} ${n}`]
+    : [`Ils ont eu ${n}`, `De cette union ${enf.length > 1 ? 'sont' : 'est'} ${toutesF ? 'née' : 'né'}${enf.length > 1 ? 's' : ''} ${n}`]
+  return phrase`${p.choisir('enfants', tournures)}${fin}`
 }
 
 /** En note : les autres unions d'un conjoint (« Thérèse s’était mariée une seconde fois… ») */
@@ -728,19 +806,24 @@ function notice(p: Plume, ind: Individu, ctx: Contexte): Bloc[] {
   const appel = p.appel(notePersonne(p, ind))
   if (m.length) tete.push(', ', m.join(', '), ...appel)
   else tete.push(...appel)
-  if (ctx.filiation) {
-    const f = filiation(p, ind)
-    if (f.length) tete.push(', ', ...f)
-  }
-  const phrases: Phrase[] = [phrase`${tete}`]
-  // Vie : « Né le… à…, il y mourut le… à l’âge de… »
+  const f = ctx.filiation ? filiation(p, ind) : []
+  if (f.length) tete.push(', ', ...f)
+  // Vie : « Né le… à…, il y mourut le… à l’âge de… » ; sans filiation, rattachée au nom : « Louis Martin, né le…, y mourut… »
   const n = naissanceDe(p, ind)
   const neM = n ? ne(p, ind, n) : null
   const fn = fin(p, ind)
   let participe: Morceau[] | null = null
-  if (neM && fn) phrases.push(phrase`${neM}, ${il(ind)} ${mort(p, ind, fn)}`)
-  else if (neM) participe = neM
-  else if (fn) phrases.push(phrase`${il(ind)} ${mort(p, ind, { ...fn, meme: false })}`)
+  const phrases: Phrase[] = []
+  if (!f.length && (neM || fn)) {
+    if (neM && fn) phrases.push(phrase`${tete}, ${neM}, ${mort(p, ind, fn)}`)
+    else if (neM) phrases.push(phrase`${tete}, ${neM}`)
+    else phrases.push(phrase`${tete}${m.length ? ', ' : ' '}${mort(p, ind, { ...fn!, meme: false })}`)
+  } else {
+    phrases.push(phrase`${tete}`)
+    if (neM && fn) phrases.push(phrase`${neM}, ${il(ind)} ${mort(p, ind, fn)}`)
+    else if (neM) participe = neM
+    else if (fn) phrases.push(phrase`${il(ind)} ${mort(p, ind, { ...fn, meme: false })}`)
+  }
   const decede = !!fn
   // Unions
   const us = unions(p, ind)
@@ -754,25 +837,25 @@ function notice(p: Plume, ind: Individu, ctx: Contexte): Bloc[] {
     if (u.conj) {
       const aS = age(n?.date, u.e?.date)
       const k = maries.indexOf(u)
-      let rang = ''
-      if (u.marie && maries.length > 1) {
-        if (k === 0) rang = ' une première fois'
-        else if (k === maries.length - 1) rang = ` en ${k === 1 ? 'secondes' : ORDINAUX[k + 1] + 's'} et dernières noces`
-        else rang = ` une ${ORDINAUX[k + 1]} fois`
-      }
+      const rang = u.marie && maries.length > 1 ? ` en ${k === 0 ? 'premières' : k === 1 ? 'secondes' : ORDINAUX[k + 1] + 's'} noces` : ''
       // Remarié après un veuvage
       const morte = precedent?.conj ? decesDe(p, precedent.conj)?.date : undefined
       const veuvage = morte && u.e?.date && morte.tri && u.e.date.tri > morte.tri ? duree(morte, u.e.date) : ''
-      const temps = decede ? 's’était' : 's’est'
-      const verbe = u.marie ? `${temps} ${g(ind, 'marié', 'mariée')}` : `${temps} ${g(ind, 'allié', 'alliée')}`
+      // « Il avait épousé Marie Dubois, femme au foyer, le 6 mai 1846 à Bruxelles² ; il avait 26 ans, elle 27. »
+      const aux = decede ? 'avait' : 'a'
+      const verbe = u.marie ? `${aux} épousé${rang}` : `${aux} partagé la vie de`
+      const nomme = conjointNomme(p, u)
       const acte = u.marie ? p.appel(noteMariage(p, u, fem(ind) ? u.conj : ind, fem(ind) ? ind : u.conj)) : []
+      const aC = u.marie ? age(naissanceDe(p, u.conj)?.date, u.e?.date) : undefined
       const corps: Morceau[] = [
-        `${verbe}${rang} ${quand(u.e?.date)} ${u.marie ? lieu(p, u.e) : ''}`, ...acte,
-        aS && u.marie ? `, alors qu’${il(ind)} avait ${ans(aS)},` : '', ' avec ', ...conjoint(p, u, u.marie ? aS : undefined, false),
+        `${verbe} `, ...nomme, ` ${quand(u.e?.date)} ${u.marie ? lieu(p, u.e) : ''}`, ...acte,
+        u.marie ? agesEpoux(ind, aS, u.conj, aC) : '',
       ]
       const debut = veuvage ? `après ${veuvage} de veuvage, ` : ''
       if (i === 0 && participe) { courant.push(phrase`${participe}, ${debut}${il(ind)} ${corps}`); participe = null }
       else courant.push(phrase`${debut}${il(ind)} ${corps}`)
+      const vie = vieConjoint(p, u.conj, ancien(p, ind))
+      if (vie) courant.push(vie)
       const div = u.fam.evenements.find((e) => ['DIV', 'DIVF', 'ANUL', 'SEP'].includes(e.tag))
       if (div) {
         const quoi = div.tag === 'ANUL' ? 'Leur mariage a été annulé' : div.tag === 'SEP' ? 'Ils se sont séparés' : 'Ils ont divorcé'
@@ -782,11 +865,7 @@ function notice(p: Plume, ind: Individu, ctx: Contexte): Bloc[] {
       courant.push(phrase`${il(ind)} est ${participe}`)
       participe = null
     }
-    if (enf.length) {
-      const qui = u.conj ? 'Le couple a eu' : `${capitale(il(ind))} a eu`
-      if (ctx.profondeur > 0) courant.push(phrase`${qui} ${compte(enf)} :`)
-      else courant.push(phrase`${qui} ${compte(enf)} : ${listeEnfants(p, enf, ctx.ligne)}`)
-    }
+    if (enf.length) courant.push(annonceEnfants(p, ind, u.conj, enf, ctx.profondeur > 0 ? null : listeEnfants(p, enf, ctx.ligne), us.length < 2))
     precedent = u
   })
   if (participe) phrases.push(phrase`${il(ind)} est ${participe}`)
@@ -811,7 +890,7 @@ function notice(p: Plume, ind: Individu, ctx: Contexte): Bloc[] {
     const lits = us.length > 1 && avecEnfants.length > 0
     us.forEach((u, i) => {
       const enf = enfantsDe(p, u.fam)
-      if (lits) blocs.push({ type: 'p', italique: true, texte: [`Du ${LITS[i] ?? `${i + 1}e`} lit : ${enf.length ? '' : 'sans postérité'}`.trimEnd()] })
+      if (lits) blocs.push({ type: 'p', italique: true, texte: [`Du ${us.length === 2 && i === 1 ? 'second' : LITS[i] ?? `${i + 1}e`} lit : ${enf.length ? '' : 'sans postérité'}`.trimEnd()] })
       if (!enf.length) return
       p.descendants += enf.length
       blocs.push({
@@ -821,6 +900,37 @@ function notice(p: Plume, ind: Individu, ctx: Contexte): Bloc[] {
     })
   }
   return blocs
+}
+
+// ——— Les petits arbres ———
+
+const ENFANTS_MAX = 8
+
+function caseDe(p: Plume, x: Individu | undefined, ligne?: string): Case | null {
+  if (!x) return null
+  const t = [prenomUsuel(x), x.nom].filter(Boolean).join(' ') || '?'
+  const s = p.sosas.get(x.id)
+  return { id: x.id, t, annees: annees(p, x).replace(/^ \(|\)$/g, ''), sexe: x.sexe, ...(s ? { sosa: s } : {}), ...(x.id === ligne ? { ligne: true } : {}) }
+}
+
+/** Le couple (l'homme à gauche), les parents de chacun au-dessus, les enfants de cette union en dessous */
+function arbreCouple(p: Plume, a: Individu | undefined, b: Individu | undefined, fam: Famille | undefined, ligne?: string): Bloc {
+  const [h, f] = fem(a) && b ? [b, a] : [a, b]
+  const haut = [h, f].map((x) => {
+    if (!x) return []
+    const { pere, mere } = parents(p.d.arbre, x)
+    return [caseDe(p, pere), caseDe(p, mere)]
+  }) as PetitArbre['haut']
+  const enf = enfantsDe(p, fam)
+  return {
+    type: 'arbre',
+    arbre: {
+      haut,
+      couple: b ? [caseDe(p, h), caseDe(p, f)] : [caseDe(p, a)],
+      enfants: enf.slice(0, ENFANTS_MAX).map((c) => caseDe(p, c, ligne)!),
+      reste: Math.max(0, enf.length - ENFANTS_MAX),
+    },
+  }
 }
 
 /** Le couple d'ancêtres des places 2k et 2k+1, en une notice menée par le père (ou la mère s'il est inconnu) */
@@ -836,7 +946,8 @@ function noticeCouple(p: Plume, pl: Place[], k: number): Bloc[] {
     return [{ type: 'p', ancres: [2 * k, 2 * k + 1], texte: phrase`${enumerer(qui)}, ${qui.length > 1 ? 'déjà présentés' : g(h ?? f, 'déjà présenté', 'déjà présentée')} plus haut : voir ${renvois}` }]
   }
   const tete = h ?? f!
-  return notice(p, tete, { profondeur: 0, niveau: 0, filiation: true, ligne: enfant.id, ancres: [2 * k, 2 * k + 1] })
+  const blocs = notice(p, tete, { profondeur: 0, niveau: 0, filiation: true, ligne: enfant.id, ancres: [2 * k, 2 * k + 1] })
+  return p.options.arbres ? [arbreCouple(p, h, f, p.famille(enfant.famc[0]), enfant.id), ...blocs] : blocs
 }
 
 const TITRES_ASC = ['Ses parents', 'Ses grands-parents', 'Ses arrière-grands-parents', 'Ses trisaïeuls']
@@ -861,6 +972,10 @@ export function recit(d: Donnees, id: string, ascendants: number, descendants: n
   const titre = nomComplet(ind)
   const parties: Partie[] = []
   const blocs = notice(p, ind, { profondeur: desc, niveau: 0, filiation: true, ancres: [1] })
+  if (options.arbres) {
+    const u = unions(p, ind).find((x) => x.conj) ?? unions(p, ind)[0]
+    blocs.unshift(arbreCouple(p, ind, u?.conj, u?.fam))
+  }
   parties.push({ numero: 'I', titre, blocs, notes: p.notes })
 
   let nbAnc = 0
@@ -888,6 +1003,7 @@ export function texteMorceaux(l: Phrase): string {
 
 function texteBlocs(blocs: Bloc[], retrait: string): string[] {
   return blocs.flatMap((b) => {
+    if (b.type === 'arbre') return []
     if (b.type === 'p') return [retrait + texteMorceaux(b.texte)]
     return b.items.flatMap((it) => {
       const [premier, ...reste] = texteBlocs(it.blocs, retrait + '    ')
