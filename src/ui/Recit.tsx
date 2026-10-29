@@ -36,8 +36,8 @@ function aller(e: Event, id: string) {
   el.classList.add('rc-vise')
 }
 
-/** Les liens des notes d'une partie, numérotés pour leurs QR codes imprimés (une adresse répétée garde son numéro) */
-type Codes = Map<string, number>
+/** Les liens des notes, numérotés pour leurs QR codes imprimés (une adresse répétée garde son numéro) */
+type Codes = Map<string, { n: number; site: string; notes: number[] }>
 
 /** Un QR code en SVG, net à toute taille */
 function QR({ url }: { url: string }) {
@@ -67,8 +67,8 @@ function M({ m, codes }: { m: Morceau; codes?: Codes }) {
       : <span class="rc-sosa">[{m.sosa}]</span>
   }
   if ('url' in m) {
-    const n = codes?.get(m.url)
-    return <><a href={m.url} target="_blank" rel="noopener noreferrer">{m.t}</a>{n && <span class="rc-qr-repere"> (QR {n})</span>}</>
+    const c = codes?.get(m.url)
+    return <><a href={m.url} target="_blank" rel="noopener noreferrer">{m.t}</a>{c && <span class="rc-qr-repere"> (QR {c.n})</span>}</>
   }
   if ('evt' in m) return <a href={lienEvenement(m.evt)} class="rc-evt" title="Toutes les personnes de l’arbre qui l’ont connu"><IconeEvenement type={m.type} />{m.t}</a>
   return <a href={lien(m.id)} class={m.gras ? 'rc-gras' : undefined} title="Faire le récit de cette personne">{m.t}</a>
@@ -154,21 +154,20 @@ export function Recit({ d, id }: { d: Donnees; id?: string }) {
     () => recit(d, cible, reglages.asc, reglages.desc, { sources: reglages.sources, evenements: parPersonne, arbres: reglages.arbres }),
     [d, cible, reglages.asc, reglages.desc, reglages.sources, parPersonne, reglages.arbres],
   )
-  // Les QR codes imprimés, numérotés dans l'ordre du récit, regroupés à la fin des notes de chaque partie
-  // (une même adresse garde son numéro d'une partie à l'autre)
-  const codesParPartie = useMemo(() => {
-    const numeros: Codes = new Map()
-    return (r?.parties ?? []).map((pt) => {
-      const codes: Codes = new Map()
+  // Les QR codes imprimés, numérotés dans l'ordre du récit, réunis sur une dernière page
+  const codes = useMemo(() => {
+    const l: Codes = new Map()
+    for (const pt of r?.parties ?? []) {
       for (const n of pt.notes) {
         for (const m of n.texte) {
-          if (typeof m !== 'object' || !('url' in m) || codes.has(m.url)) continue
-          if (!numeros.has(m.url)) numeros.set(m.url, numeros.size + 1)
-          codes.set(m.url, numeros.get(m.url)!)
+          if (typeof m !== 'object' || !('url' in m)) continue
+          const c = l.get(m.url) ?? { n: l.size + 1, site: m.t, notes: [] }
+          if (!c.notes.includes(n.n)) c.notes.push(n.n)
+          l.set(m.url, c)
         }
       }
-      return codes
-    })
+    }
+    return l
   }, [r])
   const mots = useMemo(() => (r ? texteBrut(r).split(/\s+/).length : 0), [r])
 
@@ -238,9 +237,7 @@ export function Recit({ d, id }: { d: Donnees; id?: string }) {
 
       {r ? (
         <article class="panneau rc-texte">
-          {r.parties.map((pt, i) => {
-            const codes = codesParPartie[i]
-            return (
+          {r.parties.map((pt, i) => (
             <section key={i} class="rc-partie">
               {i === 0
                 ? (
@@ -266,21 +263,30 @@ export function Recit({ d, id }: { d: Donnees; id?: string }) {
                       <span><Texte morceaux={n.texte} codes={codes} /></span>
                     </p>
                   ))}
-                  {codes.size > 0 && (
-                    <div class="rc-qr">
-                      {[...codes].map(([url, n]) => (
-                        <figure key={url}>
-                          <QR url={url} />
-                          <figcaption>QR {n}</figcaption>
-                        </figure>
-                      ))}
-                    </div>
-                  )}
                 </div>
               )}
             </section>
-            )
-          })}
+          ))}
+          {codes.size > 0 && (
+            <section class="rc-qr">
+              <header class="rc-debut">
+                <h3><span class="rc-num">Annexe</span>Sources en ligne</h3>
+                <p class="rc-qr-aide">Visez un code avec l’appareil photo d’un téléphone pour ouvrir la source.</p>
+              </header>
+              <div class="rc-qr-grille">
+                {[...codes].map(([url, c]) => (
+                  <figure key={url}>
+                    <QR url={url} />
+                    <figcaption>
+                      <span class="rc-qr-num">{c.n}</span>
+                      <span class="rc-qr-site">{c.site}</span>
+                      <span class="rc-qr-notes">note{c.notes.length > 1 ? 's' : ''} {c.notes.join(', ')}</span>
+                    </figcaption>
+                  </figure>
+                ))}
+              </div>
+            </section>
+          )}
         </article>
       ) : <p class="aucun">Personne à raconter.</p>}
     </section>

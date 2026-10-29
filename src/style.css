@@ -840,7 +840,7 @@ a.asc-piste-g:hover { color: var(--accent); }
 .rc-texte .rc-titre { font: 600 clamp(1.7rem, 4vw, 2.4rem)/1.1 var(--rc-serif); letter-spacing: -0.01em; }
 .rc-soustitre { margin: 8px 0 0 !important; font-style: italic; color: var(--muted); text-align: center !important; }
 .rc-texte h3 { display: flex; flex-direction: column; align-items: center; gap: 2px; font: 600 1.3rem/1.2 var(--rc-serif); margin: 30px 0 12px; text-align: center; }
-.rc-texte h3 .rc-num { font: 600 0.72rem var(--body); letter-spacing: 0.18em; color: var(--muted); }
+.rc-texte h3 .rc-num { font: 600 0.72rem var(--body); letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
 .rc-texte p { font-family: var(--rc-serif); font-weight: 400; font-size: 1.02rem; line-height: 1.72; margin: 0 0 0.9em; text-align: justify; hyphens: auto; font-variant-numeric: oldstyle-nums proportional-nums; }
 .rc-texte p + p { text-indent: 1.4em; }
 .rc-texte a { color: inherit; text-decoration: underline; text-decoration-color: var(--souligne); text-decoration-thickness: 1px; text-underline-offset: 3px; }
@@ -963,10 +963,16 @@ a.rc-ar-case:hover { border-color: var(--accent); }
   .rc-ar-case { padding: 2pt 4pt 3pt; }
   .rc-ar-case.rc-ar-ligne { background: #eef0f8; }
   .rc-qr-repere { display: inline; font: 500 6.5pt var(--body); color: #555; }
-  .rc-qr { display: flex; flex-wrap: wrap; gap: 4mm 5mm; margin-top: 3mm; break-inside: avoid; }
-  .rc-qr figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 0.6mm; break-inside: avoid; }
-  .rc-qr svg { width: 15mm; height: 15mm; color: #000; }
-  .rc-qr figcaption { font: 500 6.5pt var(--body); color: #555; }
+  /* la dernière page : les QR codes en planche, chacun avec son numéro, son site et ses notes */
+  .rc-qr { display: block; break-before: page; }
+  .rc-qr-aide { text-align: center !important; font-style: italic; color: #555; margin: 0 0 8mm !important; text-indent: 0 !important; }
+  .rc-qr-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(34mm, 1fr)); gap: 7mm 5mm; }
+  .rc-qr-grille figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 2mm; padding: 3mm 2mm 2.5mm; border: 0.3mm solid #d4d4d0; border-radius: 2mm; break-inside: avoid; }
+  .rc-qr-grille svg { width: 24mm; height: 24mm; color: #000; }
+  .rc-qr-grille figcaption { display: flex; flex-direction: column; align-items: center; gap: 0.4mm; text-align: center; line-height: 1.25; }
+  .rc-qr-num { font: 600 11pt var(--rc-serif); }
+  .rc-qr-site { font: 500 7pt var(--body); overflow-wrap: anywhere; }
+  .rc-qr-notes { font: 400 6.5pt var(--body); color: #666; }
 }
 
 /* ---------- impression (Ctrl+P) : le titre, le rappel des filtres et le tableau, sur fond blanc ---------- */

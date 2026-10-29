@@ -88,8 +88,8 @@ class Plume {
     const l = segments.filter((s): s is Phrase => !!s && s.length > 0)
     if (!l.length) return []
     const texte = joindre(l)
-    const brut = texteMorceaux(texte)
-    const deja = this.notes.find((n) => texteMorceaux(n.texte) === brut)
+    const brut = cleNote(texte)
+    const deja = this.notes.find((n) => cleNote(n.texte) === brut)
     if (deja) return [{ appel: deja.n, renvoi: true }]
     this.n++
     this.notes.push({ n: this.n, texte })
@@ -1003,6 +1003,9 @@ export function recit(d: Donnees, id: string, ascendants: number, descendants: n
 
 const EXPOSANTS = '⁰¹²³⁴⁵⁶⁷⁸⁹'
 const exposant = (n: number) => String(n).split('').map((c) => EXPOSANTS[Number(c)]).join('')
+
+/** Ce qui rend deux notes identiques : leur texte, et l'adresse complète des liens (deux pages d'un même site diffèrent) */
+const cleNote = (l: Phrase) => l.map((m) => (typeof m === 'object' && 'url' in m ? m.url : texteMorceaux([m]))).join('')
 
 export function texteMorceaux(l: Phrase): string {
   return l.map((m) => (typeof m === 'string' ? m : 'appel' in m ? exposant(m.appel) : 'sosa' in m ? `[${m.sosa}]` : m.t)).join('')

@@ -145,3 +145,10 @@ test('deux notes identiques dans une même partie ne font qu’une', () => {
   const notes = r.parties[0].notes.map((n) => n.texte.join(''))
   expect(notes.filter((t) => t.includes('Famille')).length).toBe(1)
 })
+
+test('deux sources d’un même site mais de pages différentes restent deux notes', () => {
+  const ged = NOTICE.replace('1 OCCU musicien', '1 OCCU musicien\n1 SOUR https://www.geneanet.org/a').replace('1 OCCU ménagère', '1 OCCU ménagère\n1 SOUR https://www.geneanet.org/b')
+  const r = recit(calculer(lireArbre(ged), '@I1@', ''), '@I1@', 1, 0, { sources: true })!
+  const urls = r.parties[0].notes.flatMap((n) => n.texte.flatMap((m) => (typeof m === 'object' && 'url' in m ? [m.url] : [])))
+  expect(urls).toEqual(expect.arrayContaining(['https://www.geneanet.org/a', 'https://www.geneanet.org/b']))
+})
