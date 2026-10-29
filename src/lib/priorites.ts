@@ -94,7 +94,7 @@ function pistesFamille(d: Donnees, quoi: Quoi, ind: Individu, conjoint?: Individ
   if (quoi === 'mariage') {
     return [
       ...enfants(famille).flatMap((x) => actes(x, 'naissance', enfant(x))),
-      ...[ind, conjoint].filter((x): x is Individu => !!x).flatMap((x) => freres(x).flatMap((y) => y.fams.flatMap((f) => actesFamille(d, f, 'mariage', `${frere(y)} (${fem(x) ? 'de l’épouse' : 'de l’époux'})`, y.id)))),
+      ...[ind, conjoint].filter((x): x is Individu => !!x).flatMap((x) => freres(x).flatMap((y) => y.fams.flatMap((f) => actesFamille(d, f, 'mariage', `${fem(y) ? 'de la sœur' : 'du frère'} ${fem(x) ? 'de l’épouse' : 'de l’époux'}`, y.id)))),
     ]
   }
   const conjoints = ind.fams.map((f) => d.arbre.familles.get(f)).map((f) => ind_(f?.mari === ind.id ? f?.femme : f?.mari)).filter((x): x is Individu => !!x)
@@ -161,7 +161,7 @@ export function priorites(d: Donnees, sansSource = false): Priorite[] {
     }
     const lieu = commune(f.evenement) ?? communeProbable(proches)
     const deja = new Set<string>()
-    const loin = (a: Acte) => an !== undefined && /^(sa sœur|son frère)/.test(a.lien) && Math.abs((annee(a.e.date) ?? an) - an) > ECART_FRATRIE
+    const loin = (a: Acte) => an !== undefined && /^(sa sœur|son frère|de la sœur|du frère)/.test(a.lien) && Math.abs((annee(a.e.date) ?? an) - an) > ECART_FRATRIE
     const pistes = enPistes(proches.filter((a) => !loin(a)), an, PISTES_FAMILLE, deja)
     if (lieu && an !== undefined) {
       const autour = (voisins.get(quoi + '|' + lieu) ?? [])

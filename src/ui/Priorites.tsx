@@ -36,7 +36,9 @@ function LignePiste({ d, p }: { d: Donnees; p: Piste }) {
     ? <>{quoi} de ses parents</>
     : p.lien.startsWith('mariage de ')
       ? <>Mariage de {p.lien.slice(11)} <Personne d={d} id={p.id} prenoms={1} /></>
-      : <>{quoi} de {p.lien && <>{p.lien} </>}<Personne d={d} id={p.id} prenoms={1} /></>
+      : /^(du|de la) /.test(p.lien)
+        ? <>{quoi} {p.lien} <Personne d={d} id={p.id} prenoms={1} /></>
+        : <>{quoi} de {p.lien && <>{p.lien} </>}<Personne d={d} id={p.id} prenoms={1} /></>
   return (
     <li class={p.voisine ? 'voisine' : undefined}>
       <span class="pr-qui">{qui}{(an || ou) && <span class="pr-quand">{[an, ou && `à ${ou}`].filter(Boolean).join(' ')}</span>}</span>
