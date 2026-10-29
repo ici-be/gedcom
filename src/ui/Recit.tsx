@@ -4,6 +4,7 @@
 
 import '@fontsource/fraunces/latin-400.css'
 import '@fontsource/fraunces/latin-400-italic.css'
+import qrcode from 'qrcode-generator'
 import { useMemo, useState } from 'preact/hooks'
 import type { Donnees } from '../lib/donnees'
 import { MAX_ASCENDANTS, MAX_DESCENDANTS, recit, texteBrut, type Bloc, type Case, type Morceau, type PetitArbre, type Phrase } from '../lib/recit'
@@ -35,7 +36,28 @@ function aller(e: Event, id: string) {
   el.classList.add('rc-vise')
 }
 
-function M({ m }: { m: Morceau }) {
+/** Les liens des notes d'une partie, numérotés pour leurs QR codes imprimés (une adresse répétée garde son numéro) */
+type Codes = Map<string, number>
+
+/** Un QR code en SVG, net à toute taille */
+function QR({ url }: { url: string }) {
+  const d = useMemo(() => {
+    const qr = qrcode(0, 'M')
+    qr.addData(url)
+    qr.make()
+    const n = qr.getModuleCount()
+    let chemin = ''
+    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) if (qr.isDark(i, j)) chemin += `M${j},${i}h1v1h-1z`
+    return { chemin, n }
+  }, [url])
+  return (
+    <svg viewBox={`-1 -1 ${d.n + 2} ${d.n + 2}`} shape-rendering="crispEdges" aria-hidden="true">
+      <path d={d.chemin} fill="currentColor" />
+    </svg>
+  )
+}
+
+function M({ m, codes }: { m: Morceau; codes?: Codes }) {
   if (typeof m === 'string') return <>{m}</>
   // un renvoi à une note déjà appelée n'a pas d'ancre : le retour depuis la note mène au premier appel
   if ('appel' in m) return <sup class="rc-appel"><a id={m.renvoi ? undefined : `rc-a${m.appel}`} href={`#rc-n${m.appel}`} onClick={(e) => aller(e, `rc-n${m.appel}`)}>{m.appel}</a></sup>
@@ -44,12 +66,15 @@ function M({ m }: { m: Morceau }) {
       ? <a class="rc-sosa" href={`#rc-s${m.sosa}`} onClick={(e) => aller(e, `rc-s${m.sosa}`)} title="Aller à sa notice">[{m.sosa}]</a>
       : <span class="rc-sosa">[{m.sosa}]</span>
   }
-  if ('url' in m) return <a href={m.url} target="_blank" rel="noopener noreferrer">{m.t}</a>
+  if ('url' in m) {
+    const n = codes?.get(m.url)
+    return <><a href={m.url} target="_blank" rel="noopener noreferrer">{m.t}</a>{n && <span class="rc-qr-repere"> (QR {n})</span>}</>
+  }
   if ('evt' in m) return <a href={lienEvenement(m.evt)} class="rc-evt" title="Toutes les personnes de l’arbre qui l’ont connu"><IconeEvenement type={m.type} />{m.t}</a>
   return <a href={lien(m.id)} class={m.gras ? 'rc-gras' : undefined} title="Faire le récit de cette personne">{m.t}</a>
 }
 
-const Texte = ({ morceaux }: { morceaux: Phrase }) => <>{morceaux.map((m, i) => <M key={i} m={m} />)}</>
+const Texte = ({ morceaux, codes }: { morceaux: Phrase; codes?: Codes }) => <>{morceaux.map((m, i) => <M key={i} m={m} codes={codes} />)}</>
 
 /** Une personne du petit arbre ; vide, une place grisée pour garder la forme de l'arbre */
 function CaseArbre({ c }: { c: Case | null }) {
@@ -129,6 +154,22 @@ export function Recit({ d, id }: { d: Donnees; id?: string }) {
     () => recit(d, cible, reglages.asc, reglages.desc, { sources: reglages.sources, evenements: parPersonne, arbres: reglages.arbres }),
     [d, cible, reglages.asc, reglages.desc, reglages.sources, parPersonne, reglages.arbres],
   )
+  // Les QR codes imprimés, numérotés dans l'ordre du récit, regroupés à la fin des notes de chaque partie
+  // (une même adresse garde son numéro d'une partie à l'autre)
+  const codesParPartie = useMemo(() => {
+    const numeros: Codes = new Map()
+    return (r?.parties ?? []).map((pt) => {
+      const codes: Codes = new Map()
+      for (const n of pt.notes) {
+        for (const m of n.texte) {
+          if (typeof m !== 'object' || !('url' in m) || codes.has(m.url)) continue
+          if (!numeros.has(m.url)) numeros.set(m.url, numeros.size + 1)
+          codes.set(m.url, numeros.get(m.url)!)
+        }
+      }
+      return codes
+    })
+  }, [r])
   const mots = useMemo(() => (r ? texteBrut(r).split(/\s+/).length : 0), [r])
 
   const copier = () => {
@@ -197,7 +238,9 @@ export function Recit({ d, id }: { d: Donnees; id?: string }) {
 
       {r ? (
         <article class="panneau rc-texte">
-          {r.parties.map((pt, i) => (
+          {r.parties.map((pt, i) => {
+            const codes = codesParPartie[i]
+            return (
             <section key={i} class="rc-partie">
               {i === 0
                 ? (
@@ -214,13 +257,24 @@ export function Recit({ d, id }: { d: Donnees; id?: string }) {
                   {pt.notes.map((n) => (
                     <p key={n.n} id={`rc-n${n.n}`}>
                       <a class="rc-num-note" href={`#rc-a${n.n}`} onClick={(e) => aller(e, `rc-a${n.n}`)}>{n.n}</a>
-                      <span><Texte morceaux={n.texte} /></span>
+                      <span><Texte morceaux={n.texte} codes={codes} /></span>
                     </p>
                   ))}
+                  {codes.size > 0 && (
+                    <div class="rc-qr">
+                      {[...codes].map(([url, n]) => (
+                        <figure key={url}>
+                          <QR url={url} />
+                          <figcaption>QR {n}</figcaption>
+                        </figure>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </section>
-          ))}
+            )
+          })}
         </article>
       ) : <p class="aucun">Personne à raconter.</p>}
     </section>

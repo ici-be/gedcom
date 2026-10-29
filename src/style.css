@@ -865,6 +865,8 @@ a.asc-piste-g:hover { color: var(--accent); }
 .rc-vise { animation: rc-vise 1.6s ease-out; }
 @keyframes rc-vise { from { background: color-mix(in srgb, var(--accent) 22%, transparent); } to { background: transparent; } }
 .rc-texte a.rc-evt { white-space: nowrap; text-decoration-style: dotted; }
+/* QR codes des liens de sources : seulement à l'impression, côte à côte sous les notes */
+.rc-qr, .rc-qr-repere { display: none; }
 .rc-texte a.rc-evt .icone-evt { width: 0.95em; height: 0.95em; vertical-align: -0.1em; margin-right: 0.18em; color: var(--accent); }
 
 /* petits arbres : parents de chacun, le couple, les enfants, reliés par des traits */
@@ -955,6 +957,11 @@ a.rc-ar-case:hover { border-color: var(--accent); }
   .rc-ar-annees { font-size: 6.5pt; }
   .rc-ar-case { padding: 2pt 4pt 3pt; }
   .rc-ar-case.rc-ar-ligne { background: #eef0f8; }
+  .rc-qr-repere { display: inline; font: 500 6.5pt var(--body); color: #555; }
+  .rc-qr { display: flex; flex-wrap: wrap; gap: 4mm 5mm; margin-top: 3mm; break-inside: avoid; }
+  .rc-qr figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 0.6mm; break-inside: avoid; }
+  .rc-qr svg { width: 15mm; height: 15mm; color: #000; }
+  .rc-qr figcaption { font: 500 6.5pt var(--body); color: #555; }
 }
 
 /* ---------- impression (Ctrl+P) : le titre, le rappel des filtres et le tableau, sur fond blanc ---------- */
