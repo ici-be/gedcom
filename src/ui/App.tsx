@@ -352,7 +352,7 @@ export function App() {
   return (
     <>
       <div class={donnees || MODE_IMPRESSION ? 'coque avec-menu' : 'coque'}>
-        <header class="bandeau">
+        <header class={donnees && !MODE_IMPRESSION ? (menuOuvert ? 'bandeau repliable ouvert' : 'bandeau repliable') : 'bandeau'}>
           <a href={MODE_IMPRESSION ? '#/imprimer' : '#/'} class="marque"><Logo /><span>Lignées</span></a>
           {donnees && <ChoixRacine d={donnees} setRacine={setRacine} />}
           {(MODE_IMPRESSION || page === 'imprimer') && <ChoixLangue langue={langue} choisir={setLangue} />}
