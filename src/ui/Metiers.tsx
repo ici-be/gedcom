@@ -286,7 +286,7 @@ export function PageMetier({ d, cle, perimetre, setPerimetre }: { d: Donnees; cl
     <section class="ecran">
       <p class="retour"><a href="#/metiers">‹ Tous les métiers</a></p>
       <header class="titre-ecran">
-        <h1>{metier.principal}{metier.feminin && <span class="mt-feminin titre">{metier.feminin}</span>}</h1>
+        <h1 data-titre={metier.titre}>{metier.principal}{metier.feminin && <span class="mt-feminin titre">{metier.feminin}</span>}</h1>
         <p class="sous-titre">
           {nombre(r.personnes.length)} personne{r.personnes.length > 1 ? 's' : ''}
           {(r.hommes > 0 || r.femmes > 0) && <> · {r.hommes} homme{r.hommes > 1 ? 's' : ''}, {r.femmes} femme{r.femmes > 1 ? 's' : ''}</>}
