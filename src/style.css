@@ -1681,3 +1681,16 @@ a.ch-relation:hover { background: var(--accent-bg); color: var(--accent); }
 .sr-seulement { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 @media (max-width: 640px) { .lx-col-faits { display: none; } .lx-tableau th:nth-child(2) { display: none; } }
 @media print { .lx-carte, .lx-tableau th.lx-actions { display: none; } .lx-pile { height: 6px; } }
+
+.lx-col-periodes { min-width: 11rem; width: 20%; }
+th.lx-col-periodes { white-space: nowrap; }
+.lx-axe { color: var(--muted); font-weight: 400; margin-left: 4px; font-variant-numeric: tabular-nums; }
+.lx-periodes { display: flex; align-items: flex-end; gap: 3px; height: 34px; border-bottom: 1px solid var(--line); }
+.lx-tranche { flex: 1; height: 100%; display: flex; align-items: flex-end; min-width: 3px; }
+.lx-tranche:hover { background: var(--panel-2); border-radius: 3px 3px 0 0; }
+.lx-colonne { width: 100%; display: flex; flex-direction: column; border-radius: 3px 3px 0 0; overflow: hidden; }
+.lx-colonne span { display: block; min-height: 2px; }
+.lx-colonne .ok { background: var(--ok); }
+.lx-colonne .a-chercher { background: var(--orange); }
+@media (max-width: 900px) { .lx-col-periodes { display: none; } }
+@media print { .lx-periodes { height: 22px; } }

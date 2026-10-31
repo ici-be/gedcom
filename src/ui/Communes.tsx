@@ -31,6 +31,44 @@ function Faits({ c, max }: { c: Commune; max: number }) {
   )
 }
 
+/** Les années des faits d'un lieu, regroupées par tranches sur l'axe commun à tous les lieux */
+const TRANCHES = 20
+
+function Periodes({ c, axe }: { c: Commune; axe: [number, number] }) {
+  const [min, max] = axe
+  const largeur = Math.max(1, Math.ceil((max - min + 1) / TRANCHES))
+  const n = Math.ceil((max - min + 1) / largeur)
+  const tranches = Array.from({ length: n }, () => ({ total: 0, sans: 0 }))
+  let sansDate = 0
+  for (const a of c.actes) {
+    const an = a.evenement.date?.debut?.annee
+    if (an === undefined) { sansDate++; continue }
+    const t = tranches[Math.min(n - 1, Math.floor((an - min) / largeur))]
+    t.total++
+    if (!a.evenement.sources.length && !a.evenement.introuvable) t.sans++
+  }
+  const haut = Math.max(1, ...tranches.map((t) => t.total))
+  if (tranches.every((t) => t.total === 0)) return <span class="vide">—</span>
+  return (
+    <div class="lx-periodes" title={sansDate ? `${sansDate} fait${sansDate > 1 ? 's' : ''} sans date` : undefined}>
+      {tranches.map((t, i) => {
+        const debut = min + i * largeur
+        const titre = t.total ? `${debut}–${debut + largeur - 1} : ${t.total} fait${t.total > 1 ? 's' : ''}${t.sans ? `, dont ${t.sans} sans source` : ''}` : undefined
+        return (
+          <span key={i} class={'lx-tranche' + (t.total ? '' : ' vide')} title={titre}>
+            {t.total > 0 && (
+              <span class="lx-colonne" style={{ height: `${Math.max(12, (t.total / haut) * 100)}%` }}>
+                {t.sans > 0 && <span class="a-chercher" style={{ flexGrow: t.sans }} />}
+                {t.total - t.sans > 0 && <span class="ok" style={{ flexGrow: t.total - t.sans }} />}
+              </span>
+            )}
+          </span>
+        )
+      })}
+    </div>
+  )
+}
+
 /** Ce qui est sourcé, introuvable et à chercher, en une seule barre */
 function Repartition({ c }: { c: Commune }) {
   const n = c.actes.length
@@ -78,6 +116,12 @@ export function Communes({ d, perimetre, setPerimetre }: { d: Donnees; perimetre
   const total = liste.reduce((n, c) => n + c.actes.length, 0)
   const sansSource = liste.reduce((n, c) => n + c.sansSource, 0)
   const visibles = lignesAffichees(liste, page, PAR_PAGE, impression)
+  const axe = useMemo<[number, number]>(() => {
+    const annees = toutes.flatMap((c) => c.actes.map((a) => a.evenement.date?.debut?.annee).filter((x): x is number => x !== undefined))
+    if (!annees.length) return [0, 1]
+    // à la dizaine, pour des repères lisibles
+    return [Math.floor(Math.min(...annees) / 10) * 10, Math.ceil((Math.max(...annees) + 1) / 10) * 10 - 1]
+  }, [toutes])
   const maxFaits = useMemo(() => Math.max(1, ...toutes.map((c) => c.actes.length)), [toutes])
 
   const exporter = () => {
@@ -121,6 +165,7 @@ export function Communes({ d, perimetre, setPerimetre }: { d: Donnees; perimetre
               <EnTeteTri cle="nom" texte="Commune" tri={tri} trier={setTri} />
               <EnTeteTri cle="total" texte="Faits" tri={tri} trier={setTri} sensInitial={-1} classe="nombre" />
               <EnTeteTri cle="sans-source" texte="Sans source" tri={tri} trier={setTri} sensInitial={-1} classe="nombre" />
+               <th class="lx-col-periodes" title="Années des faits, sur le même axe pour tous les lieux ; orange : sans source">Périodes <span class="lx-axe">{axe[0]}–{axe[1]}</span></th>
               <EnTeteTri cle="part" texte="Sourcés" tri={tri} trier={setTri} />
               <th class="lx-actions"><span class="sr-seulement">Carte</span></th>
             </tr>
@@ -137,6 +182,7 @@ export function Communes({ d, perimetre, setPerimetre }: { d: Donnees; perimetre
                   {c.sansSource ? <span class={'lx-puce' + (c.sansSource >= 10 ? ' forte' : '')}>{nombre(c.sansSource)}</span> : <span class="vide">0</span>}
                   {c.introuvables > 0 && <span class="contexte" title="Sources notées introuvables : plus à chercher">+ {nombre(c.introuvables)} introuvable{c.introuvables > 1 ? 's' : ''}</span>}
                 </td>
+                <td class="lx-col-periodes"><Periodes c={c} axe={axe} /></td>
                 <td class="lx-col-reparti"><Repartition c={c} /></td>
                 <td class="lx-actions">
                   <a href={'#/carte/' + encodeURIComponent(c.lieu)} class="lx-carte" title="Voir sur la carte" aria-label={`Voir ${c.nom} sur la carte`}>
