@@ -38,10 +38,15 @@ interface Fiche {
   lieuNaissance?: string
   lieuDeces?: string
   prenoms: string[]
-  pere: string
-  mere: string
+  pere?: Parent
+  mere?: Parent
   conjoints: Set<string>
 }
+
+/** Un parent : nom et prénoms (« Jean Baptiste » et « Jean François » sont deux hommes différents) */
+interface Parent { nom: string; prenoms: string[] }
+const parent = (p?: Individu): Parent | undefined => (p ? { nom: cleGeneWeb(p.nom), prenoms: cleGeneWeb(p.prenom).split(' ').filter(Boolean) } : undefined)
+const memeParent = (p?: Parent, q?: Parent) => !!p && !!q && p.nom === q.nom && prenomsCompatibles(p.prenoms, q.prenoms)
 
 const cleLieu = (l?: string) => (l ? cleGeneWeb(decouper(l).commune) : undefined) || undefined
 
@@ -59,8 +64,8 @@ function fiche(arbre: Arbre, ind: Individu): Fiche {
     ind,
     naissance: annee(n?.date), deces: annee(d?.date), qNaissance: n?.date?.qualif, qDeces: d?.date?.qualif, lieuNaissance: cleLieu(n?.lieu), lieuDeces: cleLieu(d?.lieu),
     prenoms: cleGeneWeb(ind.prenom).split(' ').filter(Boolean),
-    pere: pere ? cleGeneWeb(pere.prenom.split(/\s+/)[0] ?? '') + '|' + cleGeneWeb(pere.nom) : '',
-    mere: mere ? cleGeneWeb(mere.prenom.split(/\s+/)[0] ?? '') + '|' + cleGeneWeb(mere.nom) : '',
+    pere: parent(pere),
+    mere: parent(mere),
     conjoints,
   }
 }
@@ -92,6 +97,9 @@ function comparer(arbre: Arbre, x: Fiche, y: Fiche): Doublon | undefined {
   const b = y.ind
   if (a.sexe !== '?' && b.sexe !== '?' && a.sexe !== b.sexe) return undefined
   if (apparentes(arbre, a, b)) return undefined
+  // mort bien avant la naissance de l'autre : impossible, même si aucune date n'est commune
+  if (x.deces !== undefined && y.naissance !== undefined && y.naissance - x.deces > ECART) return undefined
+  if (y.deces !== undefined && x.naissance !== undefined && x.naissance - y.deces > ECART) return undefined
   const indices: string[] = []
   let score = 0
   for (const [u, v, quoi, qu, qv] of [[x.naissance, y.naissance, 'né', x.qNaissance, y.qNaissance], [x.deces, y.deces, 'mort', x.qDeces, y.qDeces]] as const) {
@@ -112,12 +120,12 @@ function comparer(arbre: Arbre, x: Fiche, y: Fiche): Doublon | undefined {
   }
   if (x.lieuNaissance && x.lieuNaissance === y.lieuNaissance) { score++; indices.push('même lieu de naissance') }
   if (x.lieuDeces && x.lieuDeces === y.lieuDeces) { score++; indices.push('même lieu de décès') }
-  if (x.pere && x.pere === y.pere) { score += 2; indices.push('même père') }
-  if (x.mere && x.mere === y.mere) { score += 2; indices.push('même mère') }
+  if (memeParent(x.pere, y.pere)) { score += 2; indices.push('même père') }
+  if (memeParent(x.mere, y.mere)) { score += 2; indices.push('même mère') }
   if ([...x.conjoints].some((c) => y.conjoints.has(c))) { score += 2; indices.push('même conjoint') }
   // des parents ou des lieux qui se contredisent, sans date pour trancher : c'est probablement un homonyme
   if (x.lieuNaissance && y.lieuNaissance && x.lieuNaissance !== y.lieuNaissance && score < 4) return undefined
-  if (x.pere && y.pere && x.pere !== y.pere && x.mere && y.mere && x.mere !== y.mere) return undefined
+  if (x.pere && y.pere && !memeParent(x.pere, y.pere) && x.mere && y.mere && !memeParent(x.mere, y.mere)) return undefined
   return score >= SCORE_MINI ? { a: a.id, b: b.id, indices, score } : undefined
 }
 
