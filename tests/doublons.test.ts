@@ -41,3 +41,37 @@ test('doublons potentiels', () => {
   expect(d).not.toContain('@I1@+@I3@')
   expect(d).not.toContain('@I6@+@I7@')
 })
+
+const parentsDifferents = lireArbre(`0 @P1@ INDI
+1 NAME Jean Baptiste /Lanciers/
+1 SEX M
+1 BIRT
+2 DATE 1700
+0 @P2@ INDI
+1 NAME Jean François /Lanciers/
+1 SEX M
+1 BIRT
+2 DATE 1760
+0 @E1@ INDI
+1 NAME Elisabeth /Lanciers/
+1 SEX F
+1 DEAT
+2 DATE 1767
+1 FAMC @F1@
+0 @E2@ INDI
+1 NAME Elisabeth /Lanciers/
+1 SEX F
+1 BIRT
+2 DATE 1792
+1 FAMC @F2@
+0 @F1@ FAM
+1 HUSB @P1@
+1 CHIL @E1@
+0 @F2@ FAM
+1 HUSB @P2@
+1 CHIL @E2@
+`)
+
+test('mort bien avant la naissance de l’autre, pères différents : pas un doublon', () => {
+  expect(doublons(parentsDifferents)).toEqual([])
+})

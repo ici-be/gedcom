@@ -44,9 +44,12 @@ interface Fiche {
 }
 
 /** Un parent : nom et prénoms (« Jean Baptiste » et « Jean François » sont deux hommes différents) */
-interface Parent { nom: string; prenoms: string[] }
-const parent = (p?: Individu): Parent | undefined => (p ? { nom: cleGeneWeb(p.nom), prenoms: cleGeneWeb(p.prenom).split(' ').filter(Boolean) } : undefined)
-const memeParent = (p?: Parent, q?: Parent) => !!p && !!q && p.nom === q.nom && prenomsCompatibles(p.prenoms, q.prenoms)
+interface Parent { nom: string; prenoms: string[]; naissance?: number }
+const parent = (p?: Individu): Parent | undefined => (p ? { nom: cleGeneWeb(p.nom), prenoms: cleGeneWeb(p.prenom).split(' ').filter(Boolean), naissance: annee(premier(p, ['BIRT', 'BAPM', 'CHR'])?.date) } : undefined)
+/** Même nom et prénoms compatibles, et des naissances qui ne s'écartent pas de plus de cinq ans : sinon deux homonymes */
+const memeParent = (p?: Parent, q?: Parent) =>
+  !!p && !!q && p.nom === q.nom && prenomsCompatibles(p.prenoms, q.prenoms)
+  && (p.naissance === undefined || q.naissance === undefined || Math.abs(p.naissance - q.naissance) <= 5)
 
 const cleLieu = (l?: string) => (l ? cleGeneWeb(decouper(l).commune) : undefined) || undefined
 

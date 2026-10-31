@@ -5,13 +5,24 @@ import type { Donnees } from '../lib/donnees'
 import { doublons } from '../lib/doublons'
 import { nombre } from '../lib/format'
 import { lienGeneWeb } from '../lib/geneanet'
+import { ecrire, lire } from '../lib/stockage'
 import { Personne, Pagination } from './commun'
 
 const PAR_PAGE = 50
+/** À partir de ce score, une paire est « très probable » */
+const SCORE_PROBABLE = 5
+const cle = (a: string, b: string) => [a, b].sort().join('+')
 
 export function Doublons({ d }: { d: Donnees }) {
-  const liste = useMemo(() => doublons(d.arbre), [d])
+  const toutes = useMemo(() => doublons(d.arbre), [d])
+  const [ecartes, setEcartes] = useState<string[]>(() => lire('doublonsEcartes', []))
+  const [probables, setProbables] = useState(false)
   const [page, setPage] = useState(0)
+  const liste = useMemo(
+    () => toutes.filter((p) => !ecartes.includes(cle(p.a, p.b)) && (!probables || p.score >= SCORE_PROBABLE)),
+    [toutes, ecartes, probables],
+  )
+  const changerEcartes = (l: string[]) => { setEcartes(l); ecrire('doublonsEcartes', l) }
   const pages = Math.ceil(liste.length / PAR_PAGE)
   const lieu = (id: string) => {
     const e = d.arbre.individus.get(id)?.evenements.find((x) => x.tag === 'BIRT' && x.lieu) ?? d.arbre.individus.get(id)?.evenements.find((x) => x.lieu)
@@ -35,6 +46,10 @@ export function Doublons({ d }: { d: Donnees }) {
           ? ' « Comparer » ouvre la recherche de l’arbre en ligne, qui liste les deux fiches : ouvrez-les, puis « Modifier » > « Fusionner » sur Geneanet.'
           : ' Indiquez l’adresse de l’arbre en ligne (Accueil) pour ouvrir les deux fiches sur Geneanet et les fusionner.'}
       </p>
+      <p class="aide">
+        <label><input type="checkbox" checked={probables} onChange={(e) => { setProbables(e.currentTarget.checked); setPage(0) }} /> Seulement les paires très probables</label>
+        {ecartes.length > 0 && <> · {nombre(ecartes.length)} paire{ecartes.length > 1 ? 's' : ''} écartée{ecartes.length > 1 ? 's' : ''} <button type="button" class="lien" onClick={() => changerEcartes([])}>Tout réafficher</button></>}
+      </p>
       <div class="tableau-conteneur">
         <table class="tableau">
           <thead><tr><th>Première fiche</th><th>Seconde fiche</th><th>Ce qui les rapproche</th><th /></tr></thead>
@@ -47,7 +62,10 @@ export function Doublons({ d }: { d: Donnees }) {
                   <td><Personne d={d} id={p.a} annees /><br /><span class="aide">{lieu(p.a)}</span></td>
                   <td><Personne d={d} id={p.b} annees /><br /><span class="aide">{lieu(p.b)}</span></td>
                   <td>{p.indices.join(' · ')}</td>
-                  <td>{lien && <a class="bouton discret" href={lien} target="_blank" rel="noopener noreferrer"><svg class="icone-bouton" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 2.5h8v8H2zM6 5.5h8v8H6z" /></svg>Comparer</a>}</td>
+                  <td class="actions-doublon">{lien && <a class="bouton discret" href={lien} target="_blank" rel="noopener noreferrer"><svg class="icone-bouton" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 2.5h8v8H2zM6 5.5h8v8H6z" /></svg>Comparer</a>}
+                    <button type="button" class="bouton discret" title="Ces deux personnes ne sont pas les mêmes : ne plus les proposer" onClick={() => changerEcartes([...ecartes, cle(p.a, p.b)])}>
+                      <svg class="icone-bouton" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" /></svg>Pas les mêmes
+                    </button></td>
                 </tr>
               )
             })}
