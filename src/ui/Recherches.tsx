@@ -68,7 +68,12 @@ function Sosa({ d, id }: { d: Donnees; id: string }) {
 function ouvrir(noms: Nom[], sources: Source[]): boolean {
   const n = noms.length * sources.length
   if (n > BEAUCOUP && !confirm(`Ouvrir ${n} onglets ?`)) return true
-  const ouverts = noms.flatMap((nom) => sources.map((s) => window.open(s.url(nom), '_blank', 'noopener')))
+  // pas de 'noopener' dans les options : window.open renverrait alors toujours null, même onglet ouvert, et on croirait au blocage
+  const ouverts = noms.flatMap((nom) => sources.map((s) => {
+    const w = window.open(s.url(nom), '_blank')
+    if (w) w.opener = null
+    return w
+  }))
   return ouverts.every(Boolean)
 }
 
