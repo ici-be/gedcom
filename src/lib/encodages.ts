@@ -35,7 +35,7 @@ const COUPLE = new Set(['MARR', 'MARB', 'MARC', 'MARL', 'MARS', 'ENGA', 'DIV', '
 const INDIVIDUEL = new Set(['BIRT', 'CHR', 'BAPM', 'BARM', 'BASM', 'BLES', 'CHRA', 'CONF', 'FCOM', 'ORDN', 'ADOP', 'DEAT', 'BURI', 'CREM', 'PROB', 'WILL', 'OCCU', 'RETI'])
 
 /** Un fait libre (« 1 EVEN », « 2 TYPE Marriage ») dont le type est un fait de couple ou un fait individuel */
-const TYPE_COUPLE = /\b(marriage|married|wedding|mariage|marie|mariee|huwelijk|gehuwd|trouwen|divorce|divorced|echtscheiding|scheiding|engagement|fiancailles|verloving|separation|annulment)\b/
+const TYPE_COUPLE = /\b(marriage|married|wedding|mariage|marie|mariee|huwelijk|gehuwd|trouwen|divorce|divorced|echtscheiding|scheiding|fiancailles|verloving|separation|annulment)\b/
 const TYPE_INDIVIDUEL = /\b(birth|born|naissance|geboorte|death|died|deces|overlijden|baptism|baptized|bapteme|doop|burial|inhumation|begrafenis|occupation|profession|beroep)\b/
 const plat = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 const typeLibre = (e: { tag: string; type?: string }) => (e.tag === 'EVEN' || e.tag === 'FACT') && e.type ? plat(e.type) : ''
