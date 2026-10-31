@@ -6,7 +6,8 @@ import { communes } from '../lib/communes'
 import { adresseDevinee, normaliserAdresse } from '../lib/geneanet'
 import { nombre, pourcent } from '../lib/format'
 import { aChercher } from '../lib/suivi'
-import { Barre, Personne } from './commun'
+import '@fontsource/fraunces/latin-400.css'
+import { Annees, Personne, Photo } from './commun'
 import { ChoixModeles } from './arbres/Vignettes'
 import { CarteAccueil } from './CarteAccueil'
 import { preparerAFaire } from './Individus'
@@ -94,14 +95,41 @@ export function Bienvenue({ ouvrir, erreur, impression }: { ouvrir: (f: File) =>
   )
 }
 
-function Carte({ titre, valeur, detail, barre }: { titre: string; valeur: string; detail?: string; barre?: [number, number] }) {
+/** Une jauge circulaire : la part de faits sourcés */
+function Jauge({ titre, n, total, detail }: { titre: string; n: number; total: number; detail: string }) {
+  const R = 44, C = 2 * Math.PI * R
+  const part = total ? n / total : 0
   return (
-    <div class="carte">
-      <span class="carte-titre">{titre}</span>
-      <span class="carte-valeur">{valeur}</span>
-      {barre && <Barre n={barre[0]} total={barre[1]} />}
-      {detail && <span class="carte-detail">{detail}</span>}
+    <div class="ac-jauge">
+      <svg viewBox="0 0 108 108" role="img" aria-label={`${titre} : ${pourcent(n, total)}`}>
+        <circle class="piste" cx="54" cy="54" r={R} />
+        <circle class="valeur" cx="54" cy="54" r={R} stroke-dasharray={`${part * C} ${C}`} transform="rotate(-90 54 54)" />
+      </svg>
+      <span class="ac-pct">{pourcent(n, total)}</span>
+      <strong>{titre}</strong>
+      <span class="ac-detail">{detail}</span>
     </div>
+  )
+}
+
+const ICONES_ACTIONS: Record<string, string> = {
+  sources: 'M3 2.5h7l3 3v8H3zM5.5 8h5M5.5 10.5h5',
+  lieux: 'M8 14.5s5-4.5 5-8.5a5 5 0 0 0-10 0c0 4 5 8.5 5 8.5zM8 4.6a1.4 1.4 0 1 1 0 2.8a1.4 1.4 0 1 1 0-2.8',
+  anomalies: 'M8 2l6.5 11.5h-13zM8 6.5v3.2M8 11.6v.4',
+  doublons: 'M2 2.5h8v8H2zM6 5.5h8v8H6z',
+  parente: 'M8 2.5a1.8 1.8 0 1 1 0 3.6a1.8 1.8 0 1 1 0-3.6M3.5 11a1.8 1.8 0 1 1 0 3.6a1.8 1.8 0 1 1 0-3.6M12.5 11a1.8 1.8 0 1 1 0 3.6a1.8 1.8 0 1 1 0-3.6M8 6.1v2M8 8.1H3.5V11M8 8.1h4.5V11',
+  archives: 'M2.5 3h11v3h-11zM3.5 6v7.5h9V6M6.5 9h3',
+  chronologie: 'M4 2.5v11M4 4h8M4 8h5M4 12h7',
+}
+
+function Tuile({ icone, valeur, texte, lien, principale, onClick }: { icone: string; valeur?: number; texte: string; lien: string; principale?: boolean; onClick?: () => void }) {
+  return (
+    <a class={'ac-tuile' + (principale ? ' principale' : '') + (valeur === 0 ? ' fait' : '')} href={lien} onClick={onClick}>
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d={ICONES_ACTIONS[icone]} /></svg>
+      {valeur !== undefined && <strong>{valeur === 0 ? '✓' : nombre(valeur)}</strong>}
+      <span>{texte}</span>
+      <i aria-hidden="true">→</i>
+    </a>
   )
 }
 
@@ -180,45 +208,65 @@ export function TableauDeBord({ d, bilan, precedent, fichier, setAdresse, setPer
     return { aSourcer, lieux, visages, signatures, chezAncetres }
   }, [d])
   const photos = chiffres.visages + chiffres.signatures
+  const verifs = (bilan.anomalies ?? 0) + (bilan.encodages ?? 0)
+  const initiales = racine ? ((racine.prenom[0] ?? '') + (racine.nom[0] ?? '')).toUpperCase() || '?' : '?'
   return (
     <section class="ecran accueil">
-      <header class="titre-ecran accueil-tete">
-        <div>
-          <h1>{racine ? <>Arbre de {racine.prenom} {racine.nom}</> : 'Votre arbre'}</h1>
-          <p class="sous-titre">{fichier.nom} · chargé le {new Date(fichier.importe).toLocaleString('fr-BE', { dateStyle: 'long', timeStyle: 'short' })}</p>
+      <header class="ac-hero">
+        <div class="ac-identite">
+          {racine?.photo && !racine.photo.signature
+            ? <Photo ind={racine} classe="ac-portrait" />
+            : <span class={`ac-avatar ${racine?.sexe === 'F' ? 'f' : racine?.sexe === 'M' ? 'h' : ''}`} aria-hidden="true">{initiales}</span>}
+          <div>
+            <p class="ac-etiquette">Personne de départ · Sosa 1</p>
+            <h1>{racine ? <>{racine.prenom} <span>{racine.nom}</span></> : 'Votre arbre'}</h1>
+            {racine && <p class="ac-vie"><Annees ind={racine} /></p>}
+            <p class="ac-fichier">
+              <span>{fichier.nom}</span>
+              <span>chargé le {new Date(fichier.importe).toLocaleString('fr-BE', { dateStyle: 'long', timeStyle: 'short' })}</span>
+            </p>
+          </div>
+        </div>
+        <div class="ac-jauges">
+          <Jauge titre="Ancêtres sourcés" n={bilan.faitsAncetres.sources} total={bilan.faitsAncetres.attendus} detail={`${nombre(bilan.faitsAncetres.sources)} faits sur ${nombre(bilan.faitsAncetres.attendus)}`} />
+          <Jauge titre="Tout l’arbre" n={bilan.faits.sources} total={bilan.faits.attendus} detail={`${nombre(bilan.faits.sources)} faits sur ${nombre(bilan.faits.attendus)}`} />
         </div>
       </header>
 
-      <div class="cartes">
-        <Carte titre="Ancêtres sourcés" valeur={pourcent(bilan.faitsAncetres.sources, bilan.faitsAncetres.attendus)} barre={[bilan.faitsAncetres.sources, bilan.faitsAncetres.attendus]}
-          detail={`${nombre(bilan.faitsAncetres.sources)} faits sur ${nombre(bilan.faitsAncetres.attendus)}`} />
-        <Carte titre="Tout l'arbre sourcé" valeur={pourcent(bilan.faits.sources, bilan.faits.attendus)} barre={[bilan.faits.sources, bilan.faits.attendus]}
-          detail={`${nombre(bilan.faits.sources)} faits sur ${nombre(bilan.faits.attendus)}`} />
-        <Carte titre="Ancêtres" valeur={nombre(bilan.ancetres)} detail={`sur ${bilan.generations} générations`} />
-        <Carte titre="Personnes" valeur={nombre(bilan.individus)} detail={`${nombre(bilan.familles)} familles`} />
-        {photos > 0 && <Carte titre="Photos et signatures" valeur={nombre(photos)}
-          detail={`${nombre(chiffres.visages)} visage${chiffres.visages > 1 ? 's' : ''} · ${nombre(chiffres.signatures)} signature${chiffres.signatures > 1 ? 's' : ''} · ${nombre(chiffres.chezAncetres)} chez les ancêtres`} />}
-      </div>
+      <ul class="ac-chiffres">
+        <li><strong>{nombre(bilan.ancetres)}</strong><span>ancêtres</span><small>sur {bilan.generations} générations</small></li>
+        <li><strong>{nombre(bilan.individus)}</strong><span>personnes</span><small>{nombre(bilan.familles)} familles</small></li>
+        {photos > 0 && <li><strong>{nombre(photos)}</strong><span>photos et signatures</span><small>{nombre(chiffres.visages)} visage{chiffres.visages > 1 ? 's' : ''} · {nombre(chiffres.signatures)} signature{chiffres.signatures > 1 ? 's' : ''}</small></li>}
+      </ul>
 
-      <nav class="raccourcis">
-        <a class="bouton principal" href="#/personnes" onClick={() => { setPerimetre('ancetres'); preparerAFaire() }}>
-          <strong>{nombre(chiffres.aSourcer)}</strong> ancêtres à sourcer
-        </a>
-        <a class="bouton" href="#/lieux" onClick={() => setPerimetre('ancetres')}>
-          <strong>{nombre(chiffres.lieux)}</strong> lieux à dépouiller
-        </a>
+      <h2 class="ac-titre">À faire</h2>
+      <nav class="ac-actions" aria-label="À faire">
+        <Tuile icone="sources" valeur={chiffres.aSourcer} texte="ancêtres à sourcer" lien="#/personnes" principale onClick={() => { setPerimetre('ancetres'); preparerAFaire() }} />
+        <Tuile icone="lieux" valeur={chiffres.lieux} texte="lieux à dépouiller" lien="#/lieux" onClick={() => setPerimetre('ancetres')} />
+        {bilan.anomalies !== undefined && <Tuile icone="anomalies" valeur={verifs} texte="anomalies à vérifier" lien="#/anomalies" />}
+        {bilan.doublons !== undefined && <Tuile icone="doublons" valeur={bilan.doublons} texte="doublons possibles" lien="#/doublons" />}
       </nav>
+
+      <div class="ac-explorer">
+        <span>Explorer</span>
+        <a href="#/parente"><svg viewBox="0 0 16 16" aria-hidden="true"><path d={ICONES_ACTIONS.parente} /></svg>Calculateur de parenté</a>
+        <a href="#/archives"><svg viewBox="0 0 16 16" aria-hidden="true"><path d={ICONES_ACTIONS.archives} /></svg>Plan de visite d’archives</a>
+        {racine && <a href={'#/chronologie/' + encodeURIComponent(racine.id)}><svg viewBox="0 0 16 16" aria-hidden="true"><path d={ICONES_ACTIONS.chronologie} /></svg>Chronologie de {racine.prenom.split(' ')[0] || racine.nom}</a>}
+      </div>
 
       <div class="accueil-duo">
         <CarteAccueil d={d} />
         <Progres d={d} bilan={bilan} precedent={precedent} />
       </div>
 
-      <p class="astuce">Un « fait », c'est une naissance (ou un baptême), un mariage ou un décès (ou une inhumation). Il est sourcé quand au moins une source y est attachée.</p>
-      <p class="astuce">Un parent inconnu, un acte introuvable, une personne qui ne savait pas signer : ce que le GEDCOM ne sait pas dire s'écrit dans les notes, voir les <a href="#/annotations">annotations</a>.</p>
+      <details class="ac-aide">
+        <summary>Comment sont comptés les faits ?</summary>
+        <p>Un « fait », c'est une naissance (ou un baptême), un mariage ou un décès (ou une inhumation). Il est sourcé quand au moins une source y est attachée.</p>
+        <p>Un parent inconnu, un acte introuvable, une personne qui ne savait pas signer : ce que le GEDCOM ne sait pas dire s'écrit dans les notes, voir les <a href="#/annotations">annotations</a>.</p>
+      </details>
 
-      <section class="panneau reglages">
-        <h2>Réglages</h2>
+      <details class="panneau reglages ac-reglages" open={!d.adresse}>
+        <summary><h2>Réglages</h2></summary>
         <p class="aide">La personne de départ (Sosa 1) se change en haut de chaque page.</p>
         <div class="reglage">
           <h3>Adresse de l'arbre en ligne</h3>
@@ -230,7 +278,7 @@ export function TableauDeBord({ d, bilan, precedent, fichier, setAdresse, setPer
           {devinee && d.adresse === devinee && (
             <p class="aide">Adresse trouvée dans le fichier. Pour ouvrir les fiches en mode modification, indiquez la vôtre (par exemple {devinee}_w).</p>
           )}
-          {d.adresse && racine && <p class="aide">Essai : <Personne d={d} id={racine.id} /></p>}
+          {d.adresse && racine && <p class="aide">Essai : <Personne d={d} id={racine.id} /></p>}
         </div>
         <div class="reglage">
           <h3>Fichier</h3>
@@ -240,7 +288,7 @@ export function TableauDeBord({ d, bilan, precedent, fichier, setAdresse, setPer
             </button>
           </p>
         </div>
-      </section>
+      </details>
     </section>
   )
 }

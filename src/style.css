@@ -1694,3 +1694,63 @@ th.lx-col-periodes { white-space: nowrap; }
 .lx-colonne .a-chercher { background: var(--orange); }
 @media (max-width: 900px) { .lx-col-periodes { display: none; } }
 @media print { .lx-periodes { height: 22px; } }
+
+/* ---------- accueil ---------- */
+.accueil { gap: 22px; }
+.ac-hero { display: flex; flex-wrap: wrap; gap: 24px 40px; align-items: center; justify-content: space-between; padding: 26px 30px; border-radius: 18px; border: 1px solid var(--line); background: radial-gradient(120% 140% at 0% 0%, var(--accent-bg), var(--panel) 62%); box-shadow: var(--shadow); position: relative; overflow: hidden; }
+.ac-identite { display: flex; align-items: center; gap: 20px; min-width: 0; flex: 1 1 340px; }
+.ac-avatar { flex: none; width: 84px; height: 84px; border-radius: 50%; display: grid; place-items: center; font: 400 1.9rem var(--serif); color: #fff; background: var(--g-vide); box-shadow: 0 0 0 4px var(--panel), 0 0 0 5px var(--line); }
+.ac-avatar.h { background: var(--homme); }
+.ac-avatar.f { background: var(--femme); }
+.ac-portrait img { width: 84px; height: 104px; object-fit: cover; border-radius: 14px; box-shadow: var(--shadow); }
+.ac-etiquette { margin: 0 0 4px; font: 700 0.7rem var(--body); letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); }
+.ac-hero h1 { font: 400 clamp(1.9rem, 4.4vw, 2.7rem)/1.08 var(--serif); letter-spacing: -0.015em; }
+.ac-hero h1 span { font-variant: small-caps; letter-spacing: 0.02em; }
+.ac-vie { margin: 6px 0 0; color: var(--muted); }
+.ac-vie .annees { margin: 0; font-size: 1rem; }
+.ac-fichier { margin: 10px 0 0; display: flex; flex-wrap: wrap; gap: 4px 8px; font-size: 0.8rem; color: var(--muted); }
+.ac-fichier span { background: color-mix(in srgb, var(--panel) 75%, transparent); border: 1px solid var(--line); border-radius: 999px; padding: 1px 10px; }
+.ac-jauges { display: flex; gap: 12px 28px; flex-wrap: wrap; }
+.ac-jauge { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; width: 150px; text-align: center; }
+.ac-jauge svg { width: 108px; height: 108px; }
+.ac-jauge circle { fill: none; stroke-width: 9; }
+.ac-jauge .piste { stroke: var(--line); }
+.ac-jauge .valeur { stroke: var(--ok); stroke-linecap: round; }
+.ac-pct { position: absolute; top: 33px; left: 0; right: 0; font: 400 1.65rem/1.1 var(--serif); font-variant-numeric: tabular-nums; }
+.ac-jauge strong { margin-top: 6px; font-size: 0.92rem; }
+.ac-detail { font-size: 0.78rem; color: var(--muted); }
+
+.ac-chiffres { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; }
+.ac-chiffres li { display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 18px; position: relative; }
+.ac-chiffres strong { font: 400 2rem/1.1 var(--serif); font-variant-numeric: tabular-nums; }
+.ac-chiffres span { font-weight: 600; font-size: 0.9rem; }
+.ac-chiffres small { color: var(--muted); font-size: 0.8rem; }
+
+.ac-titre { font: 700 0.75rem var(--body); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin: 4px 0 -8px; }
+.ac-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.ac-tuile { display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "icone nombre fleche" "icone texte fleche"; column-gap: 14px; align-items: center; padding: 14px 18px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--panel); color: var(--fg); text-decoration: none; box-shadow: var(--shadow); transition: transform 0.15s, border-color 0.15s; }
+.ac-tuile:hover { border-color: var(--accent); transform: translateY(-2px); }
+.ac-tuile svg { grid-area: icone; width: 38px; height: 38px; padding: 9px; border-radius: 12px; background: var(--accent-bg); fill: none; stroke: var(--accent); stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; box-sizing: border-box; }
+.ac-tuile strong { grid-area: nombre; font: 400 1.7rem/1.1 var(--serif); font-variant-numeric: tabular-nums; }
+.ac-tuile span { grid-area: texte; color: var(--muted); font-size: 0.88rem; }
+.ac-tuile i { grid-area: fleche; font-style: normal; color: var(--muted); transition: transform 0.15s; }
+.ac-tuile:hover i { transform: translateX(3px); color: var(--accent); }
+.ac-tuile.principale { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+.ac-tuile.principale span, .ac-tuile.principale i { color: color-mix(in srgb, var(--accent-fg) 80%, transparent); }
+.ac-tuile.principale svg { background: color-mix(in srgb, var(--accent-fg) 18%, transparent); stroke: var(--accent-fg); }
+.ac-tuile.fait strong { color: var(--ok); }
+.ac-explorer { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; }
+.ac-explorer > span { font: 700 0.75rem var(--body); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
+.ac-explorer a { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px 6px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); text-decoration: none; font-size: 0.9rem; font-weight: 600; }
+.ac-explorer a:hover { border-color: var(--accent); color: var(--accent); }
+.ac-explorer svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+
+.ac-aide { color: var(--muted); font-size: 0.9rem; }
+.ac-aide summary { cursor: pointer; width: fit-content; font-weight: 600; }
+.ac-aide p { margin: 8px 0 0; max-width: 80ch; line-height: 1.5; }
+.ac-reglages > summary { cursor: pointer; list-style: none; }
+.ac-reglages > summary::-webkit-details-marker { display: none; }
+.ac-reglages > summary h2::after { content: '▾'; margin-left: 8px; color: var(--muted); font-size: 0.8em; }
+.ac-reglages:not([open]) > summary h2::after { content: '▸'; }
+.ac-reglages[open] > summary { margin-bottom: 4px; }
+@media (max-width: 640px) { .ac-hero { padding: 20px; } .ac-jauges { width: 100%; justify-content: space-around; } .ac-avatar { width: 64px; height: 64px; font-size: 1.4rem; } }
