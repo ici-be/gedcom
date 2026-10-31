@@ -98,7 +98,10 @@ describe('liens GeneWeb', () => {
     expect(lienGeneWeb('https://gw.geneanet.org/x', p, false)).toBe('https://gw.geneanet.org/x?lang=fr&p=jean+c%C3%A9lestin&n=ve%C3%BFckemans&type=fiche')
     expect(lienGeneWeb('https://gw.geneanet.org/x', p, true)).toContain('?lang=fr&m=S&p=')
     expect(lienGeneWeb('http://h/?b=base', p, false)).toContain('?b=base&lang=fr')
-    expect(lienGeneWeb('', p, false)).toBeUndefined()
+    const alemanie = { ...p, prenom: 'Gottfried', nom: "d'Alémanie" }
+  expect(lienGeneWeb('https://gw.geneanet.org/x', alemanie, false)).toBe('https://gw.geneanet.org/x?lang=fr&p=gottfried&n=d+al%C3%A9manie&type=fiche')
+  expect(lienGeneWeb('https://gw.geneanet.org/x', { ...alemanie, nom: 'd’Alémanie' }, false)).toContain('&n=d+al%C3%A9manie')
+  expect(lienGeneWeb('', p, false)).toBeUndefined()
   })
   test('adresse devinée depuis l’en-tête', () => {
     expect(adresseDevinee(a.origine)).toBe('https://gw.geneanet.org/dupont')

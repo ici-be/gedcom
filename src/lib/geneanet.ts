@@ -19,8 +19,9 @@ export function normaliserAdresse(adresse: string): string {
   }
 }
 
+/** Comme GeneWeb : en minuscules, l'apostrophe vaut une espace (« d'Alémanie » → « d+alémanie »), les espaces deviennent « + » */
 function cle(s: string): string {
-  return s.toLowerCase().replace(/\s+/g, '+')
+  return s.toLowerCase().replace(/['’ʼ]/g, ' ').trim().replace(/\s+/g, '+')
 }
 
 /**
