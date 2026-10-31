@@ -3,11 +3,13 @@
 import { useMemo, useState } from 'preact/hooks'
 import type { Donnees } from '../lib/donnees'
 import { anomalies, TYPES_ANOMALIES, type TypeAnomalie } from '../lib/anomalies'
+import { encodages, TYPES_ENCODAGES, type Encodage, type TypeEncodage } from '../lib/encodages'
 import { nombre } from '../lib/format'
 import { ecrire, lire } from '../lib/stockage'
 import { Personne, Pagination } from './commun'
 
 const PAR_PAGE = 50
+const cleE = (e: Encodage) => `E|${e.type}|${e.id ?? ''}|${e.famille ?? ''}|${e.texte}`
 const cle = (a: { id: string; autre?: string; type: string; texte: string }) => `${a.id}|${a.autre ?? ''}|${a.type}|${a.texte}`
 
 export function Anomalies({ d }: { d: Donnees }) {
@@ -18,6 +20,16 @@ export function Anomalies({ d }: { d: Donnees }) {
   const changer = (l: string[]) => { setIgnorees(l); ecrire('anomaliesIgnorees', l) }
   const liste = useMemo(() => toutes.filter((a) => (!type || a.type === type) && !ignorees.includes(cle(a))), [toutes, type, ignorees])
   const pages = Math.ceil(liste.length / PAR_PAGE)
+
+  const tousE = useMemo(() => encodages(d.arbre), [d])
+  const [typeE, setTypeE] = useState<TypeEncodage | ''>('')
+  const [pageE, setPageE] = useState(0)
+  const listeE = useMemo(() => tousE.filter((e) => (!typeE || e.type === typeE) && !ignorees.includes(cleE(e))), [tousE, typeE, ignorees])
+  const concernes = (e: Encodage) => {
+    const f = e.famille ? d.arbre.familles.get(e.famille) : undefined
+    const ids = e.id && !f ? [e.id] : [f?.mari, f?.femme].filter((x): x is string => !!x)
+    return ids.map((id) => <div key={id}><Personne d={d} id={id} annees /></div>)
+  }
 
   return (
     <section class="ecran">
@@ -61,6 +73,49 @@ export function Anomalies({ d }: { d: Donnees }) {
         </table>
       </div>
       <Pagination page={page} pages={pages} aller={setPage} />
+
+      <header class="titre-ecran">
+        <h2>Mauvais encodages</h2>
+        <p class="sous-titre">
+          {listeE.length
+            ? `${nombre(listeE.length)} fait${listeE.length > 1 ? 's' : ''} ou lien${listeE.length > 1 ? 's' : ''} mal rangé${listeE.length > 1 ? 's' : ''}.`
+            : 'Aucun fait ni lien mal rangé.'}
+        </p>
+      </header>
+      <p class="aide">
+        Sont signalés : un mariage, un divorce ou un autre fait de couple noté sur une seule personne plutôt que sur la famille ; une naissance, un décès ou un
+        métier noté sur une famille ; plusieurs naissances ou décès différents pour la même personne ; un mari de sexe féminin ou une épouse de sexe masculin ;
+        une personne mari et épouse à la fois, ou parent et enfant de la même famille.
+      </p>
+      <p class="aide">
+        <select value={typeE} onChange={(e) => { setTypeE(e.currentTarget.value as TypeEncodage | ''); setPageE(0) }} aria-label="Type de mauvais encodage">
+          <option value="">Tous les types</option>
+          {(Object.keys(TYPES_ENCODAGES) as TypeEncodage[]).map((k) => <option key={k} value={k}>{TYPES_ENCODAGES[k]}</option>)}
+        </select>
+      </p>
+      {listeE.length > 0 && (
+        <>
+          <div class="tableau-conteneur">
+            <table class="tableau">
+              <thead><tr><th>Personne ou famille</th><th>Problème</th><th /></tr></thead>
+              <tbody>
+                {listeE.slice(pageE * PAR_PAGE, (pageE + 1) * PAR_PAGE).map((e) => (
+                  <tr key={cleE(e)}>
+                    <td>{concernes(e)}</td>
+                    <td>{e.texte}<br /><span class="aide">{TYPES_ENCODAGES[e.type]}</span></td>
+                    <td>
+                      <button type="button" class="bouton discret" title="C’est voulu : ne plus le signaler" onClick={() => changer([...ignorees, cleE(e)])}>
+                        <svg class="icone-bouton" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8" /></svg>C’est voulu
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <Pagination page={pageE} pages={Math.ceil(listeE.length / PAR_PAGE)} aller={setPageE} />
+        </>
+      )}
     </section>
   )
 }
