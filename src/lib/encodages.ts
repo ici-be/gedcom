@@ -72,9 +72,8 @@ export function encodages(arbre: Arbre): Encodage[] {
   const res: Encodage[] = []
 
   for (const ind of arbre.individus.values()) {
-    for (const [quoi, v] of [['Le nom', ind.nom], ['Le prénom', ind.prenom]] as const) {
-      if (toutCapitales(v)) res.push({ type: 'majuscules', id: ind.id, texte: `${quoi} « ${v} » est tout en majuscules` })
-    }
+    const caps = ([['le nom', ind.nom], ['le prénom', ind.prenom]] as const).filter(([, v]) => toutCapitales(v))
+    if (caps.length) res.push({ type: 'majuscules', id: ind.id, texte: `${caps.length > 1 ? 'Le nom et le prénom sont' : `${caps[0][0] === 'le nom' ? 'Le nom' : 'Le prénom'} est`} tout en majuscules : ${caps.map(([, v]) => `« ${v} »`).join(' ')}` })
     const defauts = ind.note ? defautsNote(ind.note) : []
     if (ind.note && defauts.length) res.push({ type: 'note', id: ind.id, texte: `Note de la personne : ${defauts.join(', ')} — « ${extrait(ind.note)} »` })
     for (const e of ind.evenements) {

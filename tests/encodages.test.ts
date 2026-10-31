@@ -77,3 +77,12 @@ test('nom tout en majuscules', () => {
   const e = encodages(a).filter((x) => x.type === 'majuscules').map((x) => x.id)
   expect(e.sort()).toEqual(['@I1@', '@I3@'])
 })
+
+test('nom et prénom en majuscules : un seul problème', () => {
+  const a = lireArbre(`0 @I1@ INDI
+1 NAME JEAN /DUPONT/
+`)
+  const e = encodages(a).filter((x) => x.type === 'majuscules')
+  expect(e).toHaveLength(1)
+  expect(e[0].texte).toContain('Le nom et le prénom')
+})
