@@ -201,7 +201,8 @@ export function Metiers({ d, perimetre, setPerimetre }: { d: Donnees; perimetre:
             {visibles.map((r) => (
               <tr key={r.metier.cle}>
                 <td class="mt-nom">
-                  <a href={lienMetier(r.metier.cle)} class="commune">{r.metier.titre}</a>
+                  <a href={lienMetier(r.metier.cle)} class="commune">{r.metier.principal}</a>
+                  {r.metier.feminin && <span class="mt-feminin bloc">{r.metier.feminin}</span>}
                   {r.metier.variantes.length > 2 && <span class="contexte" title={r.metier.variantes.map((v) => v.libelle).join(' · ')}>{r.metier.variantes.length} formes</span>}
                 </td>
                 <td class="mt-col-effectif"><Effectif r={r} max={maxPersonnes} /></td>
@@ -285,7 +286,7 @@ export function PageMetier({ d, cle, perimetre, setPerimetre }: { d: Donnees; cl
     <section class="ecran">
       <p class="retour"><a href="#/metiers">‹ Tous les métiers</a></p>
       <header class="titre-ecran">
-        <h1>{metier.titre}</h1>
+        <h1>{metier.principal}{metier.feminin && <span class="mt-feminin titre">{metier.feminin}</span>}</h1>
         <p class="sous-titre">
           {nombre(r.personnes.length)} personne{r.personnes.length > 1 ? 's' : ''}
           {(r.hommes > 0 || r.femmes > 0) && <> · {r.hommes} homme{r.hommes > 1 ? 's' : ''}, {r.femmes} femme{r.femmes > 1 ? 's' : ''}</>}

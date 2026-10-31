@@ -11,8 +11,12 @@ export interface Mention {
 export interface Metier {
   /** Identifiant (forme principale sans accents), utilisé dans l'adresse de la page */
   cle: string
-  /** « Cultivateur / cultivatrice » */
+  /** « Cultivateur · cultivatrice » : pour les exports et les tris */
   titre: string
+  /** « Cultivateur » */
+  principal: string
+  /** « cultivatrice », quand la forme féminine existe dans le fichier */
+  feminin?: string
   /** Formes rencontrées et nombre de personnes pour chacune */
   variantes: { libelle: string; personnes: number }[]
   /** Personne → ses mentions de ce métier */
@@ -129,7 +133,7 @@ export function indexerMetiers(arbre: Arbre): IndexMetiers {
     const cle = racine(forme)
     let met = metiers.get(cle)
     if (!met) {
-      met = { cle, titre: '', variantes: [], personnes: new Map() }
+      met = { cle, titre: '', principal: '', variantes: [], personnes: new Map() }
       metiers.set(cle, met)
     }
     const liste = met.personnes.get(m.personne) ?? []
@@ -145,7 +149,9 @@ export function indexerMetiers(arbre: Arbre): IndexMetiers {
     // titre : la forme principale (masculine si elle existe), puis la forme féminine la plus courante
     const principale = graphie(met.cle)
     const autre = formes.find(([f]) => f !== met.cle && vers.get(f) === met.cle)
-    met.titre = majuscule(principale) + (autre ? ' / ' + graphie(autre[0]) : '')
+    met.principal = majuscule(principale)
+    met.feminin = autre ? graphie(autre[0]) : undefined
+    met.titre = met.principal + (met.feminin ? ' · ' + met.feminin : '')
   }
 
   return {

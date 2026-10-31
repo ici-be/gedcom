@@ -1642,3 +1642,7 @@ a.ch-relation:hover { background: var(--accent-bg); color: var(--accent); }
 .mt-commune:hover { background: var(--accent-bg); color: var(--accent); }
 .mt-commune span { min-width: 1.5em; text-align: center; font-size: 0.72rem; font-weight: 700; color: var(--muted); background: var(--panel); border-radius: 999px; padding: 0 6px; }
 @media (max-width: 640px) { .mt-col-periode, .mt-tableau th:nth-child(5) { display: none; } }
+
+.mt-feminin { color: var(--muted); font-style: italic; font-weight: 400; }
+.mt-feminin.bloc { display: block; font-size: 0.85rem; margin-top: 1px; }
+.mt-feminin.titre { display: block; margin-top: 4px; font: italic 400 1.2rem var(--serif); letter-spacing: 0; }

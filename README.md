@@ -28,8 +28,8 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
 - **Métiers** : les professions, avec le nombre de personnes (hommes, femmes), l'époque et les
   communes principales ; puis une page par métier avec chaque personne, la mention exacte (date, lieu,
   source) et ses autres métiers. « Cultivateur, échevin » compte pour deux métiers. Les formes
-  féminine et masculine sont réunies (« Cultivateur / cultivatrice », « Ouvrier de fabrique /
-  ouvrière de fabrique », « Roi / reine ») quand la forme masculine existe dans le fichier, ainsi que
+  féminine et masculine sont réunies (« Cultivateur » avec « cultivatrice » en retrait, « Ouvrier de fabrique »
+  avec « ouvrière de fabrique », « Roi » avec « reine ») quand la forme masculine existe dans le fichier, ainsi que
   les variantes d'écriture (« ménagère » et « menagere »).
 - **Statistiques** : durée de vie, âge au premier mariage, écart d'âge entre époux, enfants par couple,
   âge des parents, mois des naissances, mariages et décès, prénoms (variantes latines, flamandes… regroupées : Joannes, Jan → Jean) et patronymes les plus portés,

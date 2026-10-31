@@ -357,7 +357,7 @@ export function Statistiques({ d, perimetre, setPerimetre }: Props) {
               const l = metiersFiltres.filter((m) => m.cle === cle)
               return {
                 cle,
-                libelle: <a href={lienMetier(cle)}>{d.metiers.metiers.get(cle)?.titre ?? cle}</a>,
+                libelle: <a href={lienMetier(cle)}>{d.metiers.metiers.get(cle)?.principal ?? cle}</a>,
                 parts: [l.filter((m) => m.sexe === 'M').length, l.filter((m) => m.sexe === 'F').length, l.filter((m) => m.sexe === '?').length],
               }
             })} />

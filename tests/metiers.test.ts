@@ -20,8 +20,8 @@ describe('métiers', () => {
     ])))
     const titres = [...ix.metiers.values()].map((m) => m.titre).sort()
     expect(titres).toEqual([
-      'Cultivateur / cultivatrice', 'Employé / employée', 'Musicien ambulant / musicienne ambulante',
-      'Ouvrier de fabrique / ouvrière de fabrique', 'Religieux / religieuse', 'Roi / reine',
+      'Cultivateur · cultivatrice', 'Employé · employée', 'Musicien ambulant · musicienne ambulante',
+      'Ouvrier de fabrique · ouvrière de fabrique', 'Religieux · religieuse', 'Roi · reine',
     ])
     expect(ix.cleDe('Cultivatrice')).toBe('cultivateur')
   })
