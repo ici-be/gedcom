@@ -75,3 +75,52 @@ const parentsDifferents = lireArbre(`0 @P1@ INDI
 test('mort bien avant la naissance de l’autre, pères différents : pas un doublon', () => {
   expect(doublons(parentsDifferents)).toEqual([])
 })
+
+import { famillesEnDouble } from '../src/lib/doublons'
+
+const couples = lireArbre(`0 @H1@ INDI
+1 NAME Pierre /Leroy/
+1 SEX M
+1 BIRT
+2 DATE 1700
+1 FAMS @F1@
+0 @W1@ INDI
+1 NAME Marie /Petit/
+1 SEX F
+1 FAMS @F1@
+1 FAMS @F3@
+0 @H2@ INDI
+1 NAME Pierre /Leroy/
+1 SEX M
+1 BIRT
+2 DATE 1701
+1 FAMS @F2@
+0 @W2@ INDI
+1 NAME Marie /Petit/
+1 SEX F
+1 FAMS @F2@
+0 @H3@ INDI
+1 NAME Paul /Autre/
+1 SEX M
+1 FAMS @F3@
+0 @F1@ FAM
+1 HUSB @H1@
+1 WIFE @W1@
+1 MARR
+2 DATE 1725
+0 @F2@ FAM
+1 HUSB @H2@
+1 WIFE @W2@
+1 MARR
+2 DATE 1726
+0 @F3@ FAM
+1 HUSB @H3@
+1 WIFE @W1@
+1 MARR
+2 DATE 1760
+`)
+
+test('familles en double', () => {
+  const f = famillesEnDouble(couples).map((x) => [x.a, x.b].sort().join('+'))
+  expect(f).toEqual(['@F1@+@F2@'])
+})

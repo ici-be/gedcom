@@ -157,3 +157,82 @@ export function doublons(arbre: Arbre): Doublon[] {
   }
   return resultat.sort((p, q) => q.score - p.score || p.a.localeCompare(q.a))
 }
+
+export interface FamilleDoublon {
+  a: string
+  b: string
+  indices: string[]
+  score: number
+}
+
+/** Les familles qui pourraient n'en faire qu'une : mêmes conjoints (ou conjoints en double), mariage et enfants compatibles */
+export function famillesEnDouble(arbre: Arbre, paires: Doublon[] = doublons(arbre)): FamilleDoublon[] {
+  // Les personnes en double forment des classes : « même conjoint » vaut pour la même fiche comme pour sa jumelle
+  const parent = new Map<string, string>()
+  const racine = (x: string): string => {
+    let r = x
+    while (parent.get(r) !== undefined && parent.get(r) !== r) r = parent.get(r)!
+    return r
+  }
+  for (const p of paires) parent.set(racine(p.a), racine(p.b))
+  const classe = (id?: string) => (id ? racine(id) : undefined)
+
+  const parFamille = [...arbre.familles.values()].filter((f) => f.mari || f.femme)
+  const groupes = new Map<string, typeof parFamille>()
+  for (const f of parFamille) {
+    for (const c of [classe(f.mari), classe(f.femme)]) {
+      if (!c) continue
+      const l = groupes.get(c)
+      if (l) l.push(f)
+      else groupes.set(c, [f])
+    }
+  }
+
+  const anneeMariage = (f: (typeof parFamille)[number]) => annee(f.evenements.find((e) => e.tag === 'MARR' && e.date)?.date)
+  const lieuMariage = (f: (typeof parFamille)[number]) => cleLieu(f.evenements.find((e) => e.tag === 'MARR' && e.lieu)?.lieu)
+  const prenomEnfant = (id: string) => {
+    const i = arbre.individus.get(id)
+    return i ? cleGeneWeb(i.prenom).split(' ')[0] : ''
+  }
+
+  const vues = new Set<string>()
+  const res: FamilleDoublon[] = []
+  for (const l of groupes.values()) {
+    if (l.length < 2 || l.length > 50) continue
+    for (let i = 0; i < l.length; i++) {
+      for (let j = i + 1; j < l.length; j++) {
+        const f = l[i]
+        const g = l[j]
+        const k = [f.id, g.id].sort().join('+')
+        if (vues.has(k)) continue
+        vues.add(k)
+        // chaque conjoint connu des deux côtés doit être le même, à la fiche près
+        const cm = [classe(f.mari), classe(g.mari)]
+        const cf = [classe(f.femme), classe(g.femme)]
+        if (cm[0] && cm[1] && cm[0] !== cm[1]) continue
+        if (cf[0] && cf[1] && cf[0] !== cf[1]) continue
+        const indices: string[] = []
+        let score = 0
+        if (cm[0] && cm[0] === cm[1]) { score++; indices.push(f.mari === g.mari ? 'même mari' : 'mari en double') }
+        if (cf[0] && cf[0] === cf[1]) { score++; indices.push(f.femme === g.femme ? 'même épouse' : 'épouse en double') }
+        if (score === 0) continue
+        const mf = anneeMariage(f)
+        const mg = anneeMariage(g)
+        if (mf !== undefined && mg !== undefined) {
+          const ecart = Math.abs(mf - mg)
+          if (ecart > ECART) continue
+          score += ecart === 0 ? 2 : 1
+          indices.push(ecart === 0 ? `mariage la même année (${mf})` : `mariage à ${ecart} an${ecart > 1 ? 's' : ''} d’écart (${mf}, ${mg})`)
+        }
+        if (lieuMariage(f) && lieuMariage(f) === lieuMariage(g)) { score++; indices.push('même lieu de mariage') }
+        // enfants : la même fiche, ou le même premier prénom
+        const prenoms = new Set(g.enfants.map(prenomEnfant).filter(Boolean))
+        const communs = f.enfants.filter((e) => g.enfants.includes(e) || (prenomEnfant(e) && prenoms.has(prenomEnfant(e)))).length
+        if (communs) { score += 2; indices.push(`${communs} enfant${communs > 1 ? 's' : ''} en commun`) }
+        // un seul conjoint connu : il faut un autre indice, des homonymes ne suffisent pas
+        if (score >= SCORE_MINI) res.push({ a: f.id, b: g.id, indices, score })
+      }
+    }
+  }
+  return res.sort((p, q) => q.score - p.score || p.a.localeCompare(q.a))
+}

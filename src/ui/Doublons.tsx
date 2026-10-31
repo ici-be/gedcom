@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'preact/hooks'
 import type { Donnees } from '../lib/donnees'
-import { doublons } from '../lib/doublons'
+import { doublons, famillesEnDouble } from '../lib/doublons'
 import { nombre } from '../lib/format'
 import { lienGeneWeb } from '../lib/geneanet'
 import { ecrire, lire } from '../lib/stockage'
@@ -22,6 +22,20 @@ export function Doublons({ d }: { d: Donnees }) {
     () => toutes.filter((p) => !ecartes.includes(cle(p.a, p.b)) && (!probables || p.score >= SCORE_PROBABLE)),
     [toutes, ecartes, probables],
   )
+  const familles = useMemo(() => famillesEnDouble(d.arbre, toutes), [d, toutes])
+  const [pageF, setPageF] = useState(0)
+  const listeF = useMemo(() => familles.filter((p) => !ecartes.includes(cle(p.a, p.b))), [familles, ecartes])
+  const couple = (id: string) => {
+    const f = d.arbre.familles.get(id)
+    return (
+      <>
+        {f?.mari ? <Personne d={d} id={f.mari} annees /> : <span class="aide">mari inconnu</span>}
+        <br />
+        {f?.femme ? <Personne d={d} id={f.femme} annees /> : <span class="aide">épouse inconnue</span>}
+        <br /><span class="aide">{[f?.evenements.find((e) => e.tag === 'MARR')?.date?.texte, f && f.enfants.length ? `${f.enfants.length} enfant${f.enfants.length > 1 ? 's' : ''}` : ''].filter(Boolean).join(' · ')}</span>
+      </>
+    )
+  }
   const changerEcartes = (l: string[]) => { setEcartes(l); ecrire('doublonsEcartes', l) }
   const pages = Math.ceil(liste.length / PAR_PAGE)
   const lieu = (id: string) => {
@@ -73,6 +87,42 @@ export function Doublons({ d }: { d: Donnees }) {
         </table>
       </div>
       <Pagination page={page} pages={pages} aller={setPage} />
+      <header class="titre-ecran">
+        <h2>Familles en double</h2>
+        <p class="sous-titre">
+          {listeF.length
+            ? `${nombre(listeF.length)} paire${listeF.length > 1 ? 's' : ''} de familles qui pourraient n'en faire qu'une.`
+            : 'Aucune famille ne semble faire double emploi.'}
+        </p>
+      </header>
+      {listeF.length > 0 && (
+        <>
+          <p class="aide">
+            Deux familles dont les conjoints sont les mêmes (ou en double dans la liste ci-dessus), avec un mariage à moins de deux ans d’écart quand il est daté.
+            Fusionnez d’abord les personnes en double : les deux familles n’en feront plus qu’une.
+          </p>
+          <div class="tableau-conteneur">
+            <table class="tableau">
+              <thead><tr><th>Première famille</th><th>Seconde famille</th><th>Ce qui les rapproche</th><th /></tr></thead>
+              <tbody>
+                {listeF.slice(pageF * PAR_PAGE, (pageF + 1) * PAR_PAGE).map((p) => (
+                  <tr key={p.a + p.b}>
+                    <td>{couple(p.a)}</td>
+                    <td>{couple(p.b)}</td>
+                    <td>{p.indices.join(' · ')}</td>
+                    <td class="actions-doublon">
+                      <button type="button" class="bouton discret" title="Ces deux familles sont distinctes : ne plus les proposer" onClick={() => changerEcartes([...ecartes, cle(p.a, p.b)])}>
+                        <svg class="icone-bouton" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" /></svg>Pas les mêmes
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <Pagination page={pageF} pages={Math.ceil(listeF.length / PAR_PAGE)} aller={setPageF} />
+        </>
+      )}
     </section>
   )
 }
