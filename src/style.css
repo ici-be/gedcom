@@ -134,6 +134,7 @@ h1, h2, h3 { font-family: var(--display); font-weight: 650; letter-spacing: -0.0
 /* ---------- boutons ---------- */
 .bouton { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; border: 1px solid var(--line);
   background: var(--panel); color: var(--fg); font-weight: 600; text-decoration: none; }
+.bouton .icone-bouton { width: 14px; height: 14px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linejoin: round; }
 .bouton:hover { border-color: var(--accent); }
 .bouton.principal { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
 .bouton.discret { padding: 5px 12px; font-size: 0.9rem; }

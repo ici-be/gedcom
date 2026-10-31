@@ -47,7 +47,7 @@ export function Doublons({ d }: { d: Donnees }) {
                   <td><Personne d={d} id={p.a} annees /><br /><span class="aide">{lieu(p.a)}</span></td>
                   <td><Personne d={d} id={p.b} annees /><br /><span class="aide">{lieu(p.b)}</span></td>
                   <td>{p.indices.join(' · ')}</td>
-                  <td>{lien && <a href={lien} target="_blank" rel="noopener noreferrer">Comparer ›</a>}</td>
+                  <td>{lien && <a class="bouton discret" href={lien} target="_blank" rel="noopener noreferrer"><svg class="icone-bouton" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 2.5h8v8H2zM6 5.5h8v8H6z" /></svg>Comparer</a>}</td>
                 </tr>
               )
             })}
