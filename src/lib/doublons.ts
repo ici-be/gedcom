@@ -2,7 +2,7 @@
 // Sans date ni lieu en commun, deux homonymes ne sont pas signalés : rien ne dit que c'est la même personne.
 
 import type { Arbre, Individu } from './gedcom/arbre'
-import { annee } from './gedcom/dates'
+import { annee, type Qualif } from './gedcom/dates'
 import { decouper } from './geo'
 import { cleGeneWeb, parents } from './parente'
 
@@ -32,6 +32,9 @@ interface Fiche {
   ind: Individu
   naissance?: number
   deces?: number
+  /** Qualificatif des dates (« avant », « après »…), pour ne pas les prendre pour des dates exactes */
+  qNaissance?: Qualif
+  qDeces?: Qualif
   lieuNaissance?: string
   lieuDeces?: string
   prenoms: string[]
@@ -54,7 +57,7 @@ function fiche(arbre: Arbre, ind: Individu): Fiche {
   }
   return {
     ind,
-    naissance: annee(n?.date), deces: annee(d?.date), lieuNaissance: cleLieu(n?.lieu), lieuDeces: cleLieu(d?.lieu),
+    naissance: annee(n?.date), deces: annee(d?.date), qNaissance: n?.date?.qualif, qDeces: d?.date?.qualif, lieuNaissance: cleLieu(n?.lieu), lieuDeces: cleLieu(d?.lieu),
     prenoms: cleGeneWeb(ind.prenom).split(' ').filter(Boolean),
     pere: pere ? cleGeneWeb(pere.prenom.split(/\s+/)[0] ?? '') + '|' + cleGeneWeb(pere.nom) : '',
     mere: mere ? cleGeneWeb(mere.prenom.split(/\s+/)[0] ?? '') + '|' + cleGeneWeb(mere.nom) : '',
@@ -91,10 +94,19 @@ function comparer(arbre: Arbre, x: Fiche, y: Fiche): Doublon | undefined {
   if (apparentes(arbre, a, b)) return undefined
   const indices: string[] = []
   let score = 0
-  for (const [u, v, quoi] of [[x.naissance, y.naissance, 'né'], [x.deces, y.deces, 'mort']] as const) {
+  for (const [u, v, quoi, qu, qv] of [[x.naissance, y.naissance, 'né', x.qNaissance, y.qNaissance], [x.deces, y.deces, 'mort', x.qDeces, y.qDeces]] as const) {
     if (u === undefined || v === undefined) continue
     const ecart = Math.abs(u - v)
     if (ecart > ECART) return undefined
+    // « avant 1948 » et le 16 avril 1948 : compatibles, mais ce n'est pas la même année
+    const borne = (q?: Qualif) => q === 'avant' || q === 'après'
+    if (borne(qu) || borne(qv)) {
+      const [bq, bu, eu] = borne(qu) ? [qu, u, v] : [qv, v, u]
+      if ((bq === 'avant' && eu > bu) || (bq === 'après' && eu < bu)) return undefined
+      score += 1
+      indices.push(`${quoi} dans des dates compatibles (${u}, ${v})`)
+      continue
+    }
     score += ecart <= 1 ? 2 : 1
     indices.push(ecart === 0 ? `${quoi} la même année (${u})` : `${quoi} à ${ecart} an${ecart > 1 ? 's' : ''} d’écart (${u}, ${v})`)
   }
