@@ -31,3 +31,22 @@ test('mauvais encodages', () => {
   // Geneanet range en « mari » le premier conjoint, quel que soit son sexe : ce n'est pas une erreur
   expect(t).not.toContain('conjoints')
 })
+
+test('fait libre « Marriage » sur une personne seule', () => {
+  const a = lireArbre(`0 @I1@ INDI
+1 NAME Marie Josèphe /Peutte/
+1 SEX F
+1 BIRT
+2 DATE 22 AUG 1781
+1 EVEN
+2 TYPE Marriage
+2 DATE 27 FEB 1801
+2 PLAC Gand, Flandre-Orientale, Belgique
+1 EVEN
+2 TYPE Émigration
+2 DATE 1830
+`)
+  const e = encodages(a)
+  expect(e).toHaveLength(1)
+  expect(e[0].type).toBe('couple-individu')
+})

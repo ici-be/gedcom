@@ -34,6 +34,15 @@ const nom = (tag: string) => NOMS[tag] ?? tag
 const COUPLE = new Set(['MARR', 'MARB', 'MARC', 'MARL', 'MARS', 'ENGA', 'DIV', 'DIVF', 'ANUL', 'SEP'])
 const INDIVIDUEL = new Set(['BIRT', 'CHR', 'BAPM', 'BARM', 'BASM', 'BLES', 'CHRA', 'CONF', 'FCOM', 'ORDN', 'ADOP', 'DEAT', 'BURI', 'CREM', 'PROB', 'WILL', 'OCCU', 'RETI'])
 
+/** Un fait libre (« 1 EVEN », « 2 TYPE Marriage ») dont le type est un fait de couple ou un fait individuel */
+const TYPE_COUPLE = /\b(marriage|married|wedding|mariage|marie|mariee|huwelijk|gehuwd|trouwen|divorce|divorced|echtscheiding|scheiding|engagement|fiancailles|verloving|separation|annulment)\b/
+const TYPE_INDIVIDUEL = /\b(birth|born|naissance|geboorte|death|died|deces|overlijden|baptism|baptized|bapteme|doop|burial|inhumation|begrafenis|occupation|profession|beroep)\b/
+const plat = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+const typeLibre = (e: { tag: string; type?: string }) => (e.tag === 'EVEN' || e.tag === 'FACT') && e.type ? plat(e.type) : ''
+const estCouple = (e: { tag: string; type?: string }) => COUPLE.has(e.tag) || TYPE_COUPLE.test(typeLibre(e))
+const estIndividuel = (e: { tag: string; type?: string }) => INDIVIDUEL.has(e.tag) || TYPE_INDIVIDUEL.test(typeLibre(e))
+const intitule = (e: { tag: string; type?: string }) => (typeLibre(e) ? `« ${e.type} »` : nom(e.tag))
+
 const complet = (i: Individu) => `${i.prenom} ${i.nom}`.trim() || i.id
 
 export function encodages(arbre: Arbre): Encodage[] {
@@ -41,12 +50,12 @@ export function encodages(arbre: Arbre): Encodage[] {
 
   for (const ind of arbre.individus.values()) {
     for (const e of ind.evenements) {
-      if (!COUPLE.has(e.tag)) continue
+      if (!estCouple(e)) continue
       const date = e.date?.texte ? ` (${e.date.texte})` : ''
       const fam = ind.fams.length
         ? ' ; ce fait devrait se trouver dans sa famille, avec celui de son conjoint'
         : ' ; il n’a aucune famille pour le porter'
-      res.push({ type: 'couple-individu', id: ind.id, texte: `${nom(e.tag)}${date} est noté sur la personne seule${fam}` })
+      res.push({ type: 'couple-individu', id: ind.id, texte: `${intitule(e)}${date} est noté sur la personne seule${fam}` })
     }
     for (const tag of ['BIRT', 'DEAT']) {
       const l = ind.evenements.filter((e) => e.tag === tag && (e.date || e.lieu))
@@ -59,9 +68,9 @@ export function encodages(arbre: Arbre): Encodage[] {
 
   for (const fam of arbre.familles.values()) {
     for (const e of fam.evenements) {
-      if (!INDIVIDUEL.has(e.tag)) continue
+      if (!estIndividuel(e)) continue
       const date = e.date?.texte ? ` (${e.date.texte})` : ''
-      res.push({ type: 'individuel-famille', famille: fam.id, texte: `${nom(e.tag)}${date} est noté sur la famille : il appartient à une personne` })
+      res.push({ type: 'individuel-famille', famille: fam.id, texte: `${intitule(e)}${date} est noté sur la famille : il appartient à une personne` })
     }
     const mari = fam.mari ? arbre.individus.get(fam.mari) : undefined
     const femme = fam.femme ? arbre.individus.get(fam.femme) : undefined
