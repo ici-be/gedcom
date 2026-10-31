@@ -1612,3 +1612,33 @@ a.ch-relation:hover { background: var(--accent-bg); color: var(--accent); }
   .pa-chip { display: none; }
 }
 @media print { .pa-duo, .pa-pied { display: none; } .pa-verdict, .pa-noeud { box-shadow: none; } }
+
+/* ---------- tableau des métiers ---------- */
+.mt-tableau { border-collapse: separate; border-spacing: 0; }
+.mt-tableau td { vertical-align: middle; padding-top: 10px; padding-bottom: 10px; }
+.mt-tableau tbody tr:last-child td { border-bottom: 0; }
+.mt-nom { min-width: 11rem; }
+.mt-nom .commune { font-weight: 650; font-size: 1rem; }
+.mt-nom .contexte { margin-top: 1px; }
+.mt-col-effectif { min-width: 9rem; width: 18%; }
+.mt-tableau td.communes-principales { min-width: 16rem; }
+.mt-effectif { display: flex; align-items: center; gap: 12px; }
+.mt-effectif strong { min-width: 2.2em; text-align: right; font-variant-numeric: tabular-nums; font-size: 1.05rem; }
+.mt-barre { flex: 1; display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: var(--panel-2); min-width: 60px; }
+.mt-barre span { display: block; height: 100%; }
+.mt-barre .h { background: var(--homme); }
+.mt-barre .f { background: var(--femme); }
+.mt-barre .a { background: var(--g-vide); }
+.mt-barre span + span { border-left: 1px solid var(--panel); }
+.mt-h, .mt-f { font-variant-numeric: tabular-nums; }
+.mt-h:not(:has(.vide)) { color: var(--homme); font-weight: 600; }
+.mt-f:not(:has(.vide)) { color: var(--femme); font-weight: 600; }
+.mt-col-periode { min-width: 9.5rem; }
+.mt-periode { display: flex; flex-direction: column; gap: 4px; }
+.mt-annees { font-size: 0.82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.mt-axe { position: relative; display: block; height: 6px; border-radius: 999px; background: var(--panel-2); }
+.mt-plage { position: absolute; top: 0; bottom: 0; border-radius: 999px; background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 55%, var(--or))); }
+.mt-commune { display: inline-flex; align-items: center; gap: 6px; margin: 2px 4px 2px 0; padding: 2px 4px 2px 10px; border-radius: 999px; background: var(--panel-2); color: var(--fg); text-decoration: none; font-size: 0.84rem; white-space: nowrap; }
+.mt-commune:hover { background: var(--accent-bg); color: var(--accent); }
+.mt-commune span { min-width: 1.5em; text-align: center; font-size: 0.72rem; font-weight: 700; color: var(--muted); background: var(--panel); border-radius: 999px; padding: 0 6px; }
+@media (max-width: 640px) { .mt-col-periode, .mt-tableau th:nth-child(5) { display: none; } }

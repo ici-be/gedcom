@@ -61,9 +61,36 @@ function resumer(d: Donnees, metier: Metier, perimetre: Set<string> | null): Res
   }
 }
 
-function Periode({ r }: { r: Resume }) {
-  if (r.debut === undefined) return <span class="vide">—</span>
-  return <span class="periode">{r.debut === r.fin ? r.debut : `${r.debut}–${r.fin}`}</span>
+/** Les années de naissance de ceux qui ont exercé le métier, sur l'axe de toutes les naissances de l'arbre */
+function Periode({ r, axe }: { r: Resume; axe: [number, number] }) {
+  if (r.debut === undefined || r.fin === undefined) return <span class="vide">—</span>
+  const [min, max] = axe
+  const etendue = Math.max(1, max - min)
+  const gauche = ((r.debut - min) / etendue) * 100
+  const largeur = Math.max(2.5, ((r.fin - r.debut) / etendue) * 100)
+  return (
+    <div class="mt-periode" title={`Nés entre ${r.debut} et ${r.fin}`}>
+      <span class="mt-annees">{r.debut === r.fin ? r.debut : `${r.debut}–${r.fin}`}</span>
+      <span class="mt-axe"><span class="mt-plage" style={{ left: `${Math.min(gauche, 100 - largeur)}%`, width: `${largeur}%` }} /></span>
+    </div>
+  )
+}
+
+/** Le nombre de personnes, avec sa part d'hommes et de femmes, en barre proportionnelle au métier le plus répandu */
+function Effectif({ r, max }: { r: Resume; max: number }) {
+  const n = r.personnes.length
+  const autres = n - r.hommes - r.femmes
+  const part = (x: number) => `${(x / max) * 100}%`
+  return (
+    <div class="mt-effectif">
+      <strong>{nombre(n)}</strong>
+      <span class="mt-barre" aria-hidden="true">
+        {r.hommes > 0 && <span class="h" style={{ width: part(r.hommes) }} />}
+        {r.femmes > 0 && <span class="f" style={{ width: part(r.femmes) }} />}
+        {autres > 0 && <span class="a" style={{ width: part(autres) }} />}
+      </span>
+    </div>
+  )
 }
 
 export function lienMetier(cle: string): string {
@@ -118,6 +145,11 @@ export function Metiers({ d, perimetre, setPerimetre }: { d: Donnees; perimetre:
     return r.sort((a, b) => tri.sens * comparer[tri.cle](a, b) || b.personnes.length - a.personnes.length || a.metier.titre.localeCompare(b.metier.titre, 'fr'))
   }, [resumes, recherche, tri])
 
+  const maxPersonnes = useMemo(() => Math.max(1, ...resumes.map((r) => r.personnes.length)), [resumes])
+  const axe = useMemo<[number, number]>(() => {
+    const annees = resumes.flatMap((r) => (r.debut === undefined || r.fin === undefined ? [] : [r.debut, r.fin]))
+    return annees.length ? [Math.min(...annees), Math.max(...annees)] : [0, 1]
+  }, [resumes])
   const avecMetier = useMemo(() => new Set(resumes.flatMap((r) => r.personnes.map(([id]) => id))).size, [resumes])
   const visibles = lignesAffichees(liste, page, PAR_PAGE, impression)
 
@@ -154,7 +186,7 @@ export function Metiers({ d, perimetre, setPerimetre }: { d: Donnees; perimetre:
 
       <AvisImpression impression={impression} total={liste.length} page={page} parPage={PAR_PAGE} />
       <div class="tableau-conteneur">
-        <table class="tableau metiers">
+        <table class="tableau metiers mt-tableau">
           <thead>
             <tr>
               <EnTeteTri cle="nom" texte="Métier" tri={tri} trier={setTri} />
@@ -168,17 +200,17 @@ export function Metiers({ d, perimetre, setPerimetre }: { d: Donnees; perimetre:
           <tbody>
             {visibles.map((r) => (
               <tr key={r.metier.cle}>
-                <td>
+                <td class="mt-nom">
                   <a href={lienMetier(r.metier.cle)} class="commune">{r.metier.titre}</a>
-                  {r.metier.variantes.length > 2 && <span class="contexte">{r.metier.variantes.length} formes</span>}
+                  {r.metier.variantes.length > 2 && <span class="contexte" title={r.metier.variantes.map((v) => v.libelle).join(' · ')}>{r.metier.variantes.length} formes</span>}
                 </td>
-                <td class="nombre">{nombre(r.personnes.length)}</td>
-                <td class="nombre">{r.hommes ? nombre(r.hommes) : <span class="vide">–</span>}</td>
-                <td class="nombre">{r.femmes ? nombre(r.femmes) : <span class="vide">–</span>}</td>
-                <td><Periode r={r} /></td>
+                <td class="mt-col-effectif"><Effectif r={r} max={maxPersonnes} /></td>
+                <td class="nombre mt-h">{r.hommes ? nombre(r.hommes) : <span class="vide">–</span>}</td>
+                <td class="nombre mt-f">{r.femmes ? nombre(r.femmes) : <span class="vide">–</span>}</td>
+                <td class="mt-col-periode"><Periode r={r} axe={axe} /></td>
                 <td class="communes-principales">
-                  {r.communes.slice(0, 3).map(([l, n], i) => (
-                    <Fragment key={l}>{i > 0 && ', '}<a href={'#/lieux/' + encodeURIComponent(l)} title={l}>{decouperLieu(l).nom}</a> <span class="vide">{n}</span></Fragment>
+                  {r.communes.slice(0, 3).map(([l, n]) => (
+                    <a key={l} class="mt-commune" href={'#/lieux/' + encodeURIComponent(l)} title={l}>{decouperLieu(l).nom}<span>{n}</span></a>
                   ))}
                 </td>
               </tr>
