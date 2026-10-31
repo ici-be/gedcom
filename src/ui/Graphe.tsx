@@ -276,7 +276,7 @@ export function Graphe({ d }: { d: Donnees }) {
             <button type="button" onClick={() => vue.current?.zoomer(1.4)} title="Zoom avant" aria-label="Zoom avant">+</button>
             <button type="button" onClick={() => vue.current?.zoomer(1 / 1.4)} title="Zoom arrière" aria-label="Zoom arrière">−</button>
             <button type="button" onClick={() => vue.current?.cadrer()} title="Tout montrer" aria-label="Tout montrer">
-              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4" /></svg>
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 5.2a2.8 2.8 0 1 0 0 5.6a2.8 2.8 0 0 0 0-5.6M8 1.5v2.4M8 12.1v2.4M1.5 8h2.4M12.1 8h2.4" /></svg>
             </button>
           </div>
           {(trop || !graphe.noeuds.length) && (
