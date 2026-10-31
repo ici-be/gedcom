@@ -113,18 +113,28 @@ function Progres({ d, bilan, precedent }: { d: Donnees; bilan: Bilan; precedent?
     return (n > 0 ? '+' : n < 0 ? '−' : '') + nombre(Math.abs(n))
   }
   const memeRacine = precedent.racine === d.racine
-  const lignes: [string, (b: Bilan) => number][] = [
-    ...(memeRacine ? [['faits sourcés chez les ancêtres', (b: Bilan) => b.faitsAncetres.sources], ['ancêtres', (b: Bilan) => b.ancetres]] as [string, (b: Bilan) => number][] : []),
+  type Ligne = [string, (b: Bilan) => number, string?]
+  const lignes: Ligne[] = [
+    ...(memeRacine ? [['faits sourcés chez les ancêtres', (b: Bilan) => b.faitsAncetres.sources], ['ancêtres', (b: Bilan) => b.ancetres]] as Ligne[] : []),
     ['faits sourcés dans tout l’arbre', (b) => b.faits.sources],
     ['personnes', (b) => b.individus],
   ]
+  // les contrôles de qualité : seulement si l'ancien relevé les avait déjà
+  const controles: [keyof Bilan, string, string][] = [
+    ['anomalies', 'anomalies de dates', '#/anomalies'],
+    ['encodages', 'mauvais encodages', '#/anomalies'],
+    ['doublons', 'doublons potentiels', '#/doublons'],
+  ]
+  for (const [k, titre, lien] of controles) {
+    if (precedent.bilan[k] !== undefined && bilan[k] !== undefined) lignes.push([titre, (b) => (b[k] as number | undefined) ?? 0, lien])
+  }
   const rien = lignes.every(([, f]) => f(bilan) === f(precedent.bilan))
   return (
     <section class="panneau">
       <h2>Depuis l'export du {new Date(precedent.date).toLocaleDateString('fr-BE')}</h2>
       {rien ? <p class="aide">Aucun changement dans les chiffres.</p> : (
         <ul class="progres">
-          {lignes.map(([t, f]) => <li key={t}><strong>{diff(f)}</strong> {t}</li>)}
+          {lignes.map(([t, f, lien]) => f(bilan) === f(precedent.bilan) && lien ? null : <li key={t}><strong>{diff(f)}</strong> {lien ? <a href={lien}>{t}</a> : t}</li>)}
         </ul>
       )}
       {!memeRacine && <p class="aide">La personne de départ a changé depuis : seuls les chiffres de tout l’arbre sont comparés.</p>}

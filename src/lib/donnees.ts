@@ -6,6 +6,9 @@ import { score, suivi, type Suivi } from './suivi'
 import { lienGeneWeb } from './geneanet'
 import { indexerMetiers, type IndexMetiers } from './metiers'
 
+import { anomalies } from './anomalies'
+import { doublons } from './doublons'
+import { encodages } from './encodages'
 export type Perimetre = 'ancetres' | 'ancetres-fratries' | 'tous'
 
 export interface Donnees {
@@ -53,6 +56,10 @@ export interface Bilan {
   generations: number
   faits: { attendus: number; sources: number }
   faitsAncetres: { attendus: number; sources: number }
+  /** Absents des relevés plus anciens : ils n'entrent dans la comparaison que si les deux relevés les ont */
+  anomalies?: number
+  encodages?: number
+  doublons?: number
 }
 
 export function bilan(d: Donnees): Bilan {
@@ -76,6 +83,9 @@ export function bilan(d: Donnees): Bilan {
     generations,
     faits,
     faitsAncetres,
+    anomalies: anomalies(d.arbre).length,
+    encodages: encodages(d.arbre).length,
+    doublons: doublons(d.arbre).length,
   }
 }
 
