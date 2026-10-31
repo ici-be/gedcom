@@ -25,10 +25,21 @@ export function Anomalies({ d }: { d: Donnees }) {
   const [typeE, setTypeE] = useState<TypeEncodage | ''>('')
   const [pageE, setPageE] = useState(0)
   const listeE = useMemo(() => tousE.filter((e) => (!typeE || e.type === typeE) && !ignorees.includes(cleE(e))), [tousE, typeE, ignorees])
+  // un groupe par personne (ou par famille, quand le problème ne concerne personne en particulier)
+  const groupesE = useMemo(() => {
+    const m = new Map<string, Encodage[]>()
+    for (const e of listeE) {
+      const k = e.id ?? `F|${e.famille}`
+      const l = m.get(k)
+      if (l) l.push(e)
+      else m.set(k, [e])
+    }
+    return [...m.values()]
+  }, [listeE])
   const concernes = (e: Encodage) => {
+    if (e.id) return <Personne d={d} id={e.id} annees />
     const f = e.famille ? d.arbre.familles.get(e.famille) : undefined
-    const ids = e.id && !f ? [e.id] : [f?.mari, f?.femme].filter((x): x is string => !!x)
-    return ids.map((id) => <div key={id}><Personne d={d} id={id} annees /></div>)
+    return <>{[f?.mari, f?.femme].filter((x): x is string => !!x).map((id) => <div key={id}><Personne d={d} id={id} annees /></div>)}</>
   }
 
   return (
@@ -78,7 +89,7 @@ export function Anomalies({ d }: { d: Donnees }) {
         <h2>Mauvais encodages</h2>
         <p class="sous-titre">
           {listeE.length
-            ? `${nombre(listeE.length)} fait${listeE.length > 1 ? 's' : ''} ou lien${listeE.length > 1 ? 's' : ''} mal rangé${listeE.length > 1 ? 's' : ''}.`
+            ? `${nombre(listeE.length)} fait${listeE.length > 1 ? 's' : ''} ou lien${listeE.length > 1 ? 's' : ''} mal rangé${listeE.length > 1 ? 's' : ''}, pour ${nombre(groupesE.length)} fiche${groupesE.length > 1 ? 's' : ''}.`
             : 'Aucun fait ni lien mal rangé.'}
         </p>
       </header>
@@ -97,23 +108,32 @@ export function Anomalies({ d }: { d: Donnees }) {
         <>
           <div class="tableau-conteneur">
             <table class="tableau">
-              <thead><tr><th>Personne ou famille</th><th>Problème</th><th /></tr></thead>
+              <thead><tr><th>Personne ou famille</th><th>Problèmes</th></tr></thead>
               <tbody>
-                {listeE.slice(pageE * PAR_PAGE, (pageE + 1) * PAR_PAGE).map((e) => (
-                  <tr key={cleE(e)}>
-                    <td>{concernes(e)}</td>
-                    <td>{e.texte}<br /><span class="aide">{TYPES_ENCODAGES[e.type]}</span></td>
+                {groupesE.slice(pageE * PAR_PAGE, (pageE + 1) * PAR_PAGE).map((g) => (
+                  <tr key={cleE(g[0])}>
+                    <td class="groupe-personne">
+                      {concernes(g[0])}
+                      {g.length > 1 && <span class="compteur" title={`${g.length} problèmes`}>{g.length}</span>}
+                    </td>
                     <td>
-                      <button type="button" class="bouton discret" title="C’est voulu : ne plus le signaler" onClick={() => changer([...ignorees, cleE(e)])}>
-                        <svg class="icone-bouton" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8" /></svg>C’est voulu
-                      </button>
+                      <ul class="problemes">
+                        {g.map((e) => (
+                          <li key={cleE(e)}>
+                            <span>{e.texte}<br /><span class="aide">{TYPES_ENCODAGES[e.type]}</span></span>
+                            <button type="button" class="bouton discret" title="C’est voulu : ne plus le signaler" aria-label="C’est voulu : ne plus le signaler" onClick={() => changer([...ignorees, cleE(e)])}>
+                              <svg class="icone-bouton" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8" /></svg>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <Pagination page={pageE} pages={Math.ceil(listeE.length / PAR_PAGE)} aller={setPageE} />
+          <Pagination page={pageE} pages={Math.ceil(groupesE.length / PAR_PAGE)} aller={setPageE} />
         </>
       )}
     </section>

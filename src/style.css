@@ -1338,3 +1338,13 @@ svg[class^="trait-"] line { stroke-width: 2; stroke-linecap: round; }
 .resultats-recherche .libelle { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .resultats-recherche .detail { margin-left: auto; font-size: 0.82rem; color: var(--muted); white-space: nowrap; }
 .resultats-recherche .aucun { padding: 8px 10px; color: var(--muted); }
+
+/* Anomalies : un groupe par personne, avec le nombre de problèmes */
+.groupe-personne { position: relative; }
+.compteur { display: inline-flex; align-items: center; justify-content: center; min-width: 1.4em; height: 1.4em; padding: 0 0.4em; margin-left: 8px; border-radius: 999px;
+  background: var(--accent-bg); color: var(--accent); font-size: 0.78rem; font-weight: 700; font-variant-numeric: tabular-nums; vertical-align: middle; }
+.problemes { list-style: none; margin: 0; padding: 0; display: grid; }
+.problemes li { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 6px 0; }
+.problemes li + li { border-top: 1px solid var(--line); }
+.problemes li:first-child { padding-top: 0; }
+.problemes li:last-child { padding-bottom: 0; }
