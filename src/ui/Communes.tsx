@@ -21,6 +21,32 @@ function useCommunes(d: Donnees, perimetre: Perimetre, autres: boolean): Commune
   return useMemo(() => communes(d.arbre, membres(d, perimetre), autres), [d, perimetre, autres])
 }
 
+/** Le nombre de faits d'un lieu, avec une barre proportionnelle au lieu le plus chargé */
+function Faits({ c, max }: { c: Commune; max: number }) {
+  return (
+    <div class="lx-faits">
+      <strong>{nombre(c.actes.length)}</strong>
+      <span class="lx-poids" aria-hidden="true"><span style={{ width: `${Math.max(3, (c.actes.length / max) * 100)}%` }} /></span>
+    </div>
+  )
+}
+
+/** Ce qui est sourcé, introuvable et à chercher, en une seule barre */
+function Repartition({ c }: { c: Commune }) {
+  const n = c.actes.length
+  const part = (x: number) => `${(x / n) * 100}%`
+  return (
+    <div class="lx-reparti" title={`${c.sourcees} sourcé${c.sourcees > 1 ? 's' : ''} · ${c.introuvables} introuvable${c.introuvables > 1 ? 's' : ''} · ${c.sansSource} sans source`}>
+      <span class="lx-pile" role="img" aria-label={`${pourcent(c.sourcees, n)} sourcés`}>
+        {c.sourcees > 0 && <span class="ok" style={{ width: part(c.sourcees) }} />}
+        {c.introuvables > 0 && <span class="intr" style={{ width: part(c.introuvables) }} />}
+        {c.sansSource > 0 && <span class="a-chercher" style={{ width: part(c.sansSource) }} />}
+      </span>
+      <span class={'lx-pct' + (c.sourcees === n ? ' complet' : '')}>{c.sourcees === n ? '✓' : pourcent(c.sourcees, n)}</span>
+    </div>
+  )
+}
+
 export function Communes({ d, perimetre, setPerimetre }: { d: Donnees; perimetre: Perimetre; setPerimetre: (p: Perimetre) => void }) {
   const [recherche, setRecherche] = useState('')
   const [autres, setAutres] = useState(() => lire('autres', false))
@@ -52,6 +78,7 @@ export function Communes({ d, perimetre, setPerimetre }: { d: Donnees; perimetre
   const total = liste.reduce((n, c) => n + c.actes.length, 0)
   const sansSource = liste.reduce((n, c) => n + c.sansSource, 0)
   const visibles = lignesAffichees(liste, page, PAR_PAGE, impression)
+  const maxFaits = useMemo(() => Math.max(1, ...toutes.map((c) => c.actes.length)), [toutes])
 
   const exporter = () => {
     telecharger('lieux.csv', versCsv([
@@ -88,30 +115,33 @@ export function Communes({ d, perimetre, setPerimetre }: { d: Donnees; perimetre
 
       <AvisImpression impression={impression} total={liste.length} page={page} parPage={PAR_PAGE} />
       <div class="tableau-conteneur">
-        <table class="tableau lieux">
+        <table class="tableau lieux lx-tableau">
           <thead>
             <tr>
               <EnTeteTri cle="nom" texte="Commune" tri={tri} trier={setTri} />
               <EnTeteTri cle="total" texte="Faits" tri={tri} trier={setTri} sensInitial={-1} classe="nombre" />
               <EnTeteTri cle="sans-source" texte="Sans source" tri={tri} trier={setTri} sensInitial={-1} classe="nombre" />
               <EnTeteTri cle="part" texte="Sourcés" tri={tri} trier={setTri} />
+              <th class="lx-actions"><span class="sr-seulement">Carte</span></th>
             </tr>
           </thead>
           <tbody>
             {visibles.map((c) => (
-              <tr key={c.lieu}>
-                <td>
+              <tr key={c.lieu} class={c.sansSource === 0 ? 'lx-complet' : ''}>
+                <td class="lx-nom">
                   <a href={'#/lieux/' + encodeURIComponent(c.lieu)} class="commune">{c.nom}</a>
                   {c.contexte && <span class="contexte">{c.contexte}</span>}
                 </td>
-                <td class="nombre">{nombre(c.actes.length)}</td>
-                <td class="nombre">
-                  {c.sansSource ? <strong>{nombre(c.sansSource)}</strong> : <span class="vide">0</span>}
-                  {c.introuvables > 0 && <span class="contexte" title="Sources notées introuvables : plus à chercher">+ {nombre(c.introuvables)} introuvable{c.introuvables > 1 ? 's' : ''}</span>}
+                <td class="lx-col-faits"><Faits c={c} max={maxFaits} /></td>
+                <td class="nombre lx-sans">
+                  {c.sansSource ? <span class={'lx-puce' + (c.sansSource >= 10 ? ' forte' : '')}>{nombre(c.sansSource)}</span> : <span class="vide">0</span>}
+                  {c.introuvables > 0 && <span class="contexte" title="Sources notées introuvables : plus à chercher">+ {nombre(c.introuvables)} introuvable{c.introuvables > 1 ? 's' : ''}</span>}
                 </td>
-                <td class="progression">
-                  <Barre n={c.sourcees} total={c.actes.length} />
-                  <span>{pourcent(c.sourcees, c.actes.length)}</span>
+                <td class="lx-col-reparti"><Repartition c={c} /></td>
+                <td class="lx-actions">
+                  <a href={'#/carte/' + encodeURIComponent(c.lieu)} class="lx-carte" title="Voir sur la carte" aria-label={`Voir ${c.nom} sur la carte`}>
+                    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 14.5s5-4.5 5-8.5a5 5 0 0 0-10 0c0 4 5 8.5 5 8.5zM8 4.6a1.4 1.4 0 1 1 0 2.8a1.4 1.4 0 1 1 0-2.8" /></svg>
+                  </a>
                 </td>
               </tr>
             ))}
