@@ -89,6 +89,26 @@ export function Graphe({ d }: { d: Donnees }) {
   const [theme, setTheme] = useState(0)
   const [calcul, setCalcul] = useState(false)
   const toile = useRef<HTMLCanvasElement>(null)
+  const cadre = useRef<HTMLDivElement>(null)
+  // plein écran : l'API du navigateur, sinon (iPhone) un cadre qui couvre la page
+  const [plein, setPlein] = useState(false)
+  const [secours, setSecours] = useState(false)
+  useEffect(() => {
+    const maj = () => setPlein(document.fullscreenElement === cadre.current)
+    document.addEventListener('fullscreenchange', maj)
+    const echap = (e: KeyboardEvent) => { if (e.key === 'Escape') setSecours(false) }
+    window.addEventListener('keydown', echap)
+    return () => { document.removeEventListener('fullscreenchange', maj); window.removeEventListener('keydown', echap) }
+  }, [])
+  const basculerPlein = () => {
+    const el = cadre.current
+    if (!el) return
+    if (document.fullscreenElement) { document.exitFullscreen().catch(() => {}); return }
+    if (secours) { setSecours(false); return }
+    if (el.requestFullscreen) el.requestFullscreen().catch(() => setSecours(true))
+    else setSecours(true)
+  }
+  const pleinEcran = plein || secours
   const vue = useRef<Vue | null>(null)
   const style = useRef<ReturnType<typeof lireStyle> | null>(null)
 
@@ -227,7 +247,7 @@ export function Graphe({ d }: { d: Donnees }) {
         </div>
       </div>
 
-      <div class="graphe-cadre">
+      <div class={'graphe-cadre' + (secours ? ' plein-secours' : '')} ref={cadre}>
         <div class="graphe-toile">
           <canvas ref={toile} aria-label={`Graphe : ${graphe.noeuds.length} personnes, ${graphe.aretes.length} liens`} role="img" />
           <div class="graphe-haut">
@@ -250,6 +270,9 @@ export function Graphe({ d }: { d: Donnees }) {
             </ul>
           )}
           <div class="graphe-zoom">
+            <button type="button" onClick={basculerPlein} title={pleinEcran ? 'Quitter le plein écran' : 'Plein écran'} aria-label={pleinEcran ? 'Quitter le plein écran' : 'Plein écran'} aria-pressed={pleinEcran}>
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d={pleinEcran ? 'M6 2v4H2M10 2v4h4M6 14v-4H2M10 14v-4h4' : 'M2 6V2h4M14 6V2h-4M2 10v4h4M14 10v4h-4'} /></svg>
+            </button>
             <button type="button" onClick={() => vue.current?.zoomer(1.4)} title="Zoom avant" aria-label="Zoom avant">+</button>
             <button type="button" onClick={() => vue.current?.zoomer(1 / 1.4)} title="Zoom arrière" aria-label="Zoom arrière">−</button>
             <button type="button" onClick={() => vue.current?.cadrer()} title="Tout montrer" aria-label="Tout montrer">

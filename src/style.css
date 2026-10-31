@@ -1793,3 +1793,16 @@ th.lx-col-periodes { white-space: nowrap; }
 .graphe-liens li { align-items: flex-start; }
 .graphe-liens svg { margin-top: 0.6em; }
 @media (max-width: 760px) { .graphe-ligne-bas { justify-content: flex-start; } .graphe-modes button { padding: 6px 10px; } }
+
+/* graphe en plein écran */
+.graphe-cadre:fullscreen { background: var(--bg); padding: 14px; gap: 14px; overflow: auto; }
+.graphe-cadre:fullscreen .graphe-toile { height: calc(100vh - 28px); }
+.graphe-cadre:fullscreen .graphe-fiche { max-height: calc(100vh - 28px); }
+.graphe-cadre.plein-secours { position: fixed; inset: 0; z-index: 90; background: var(--bg); padding: 12px; gap: 12px; }
+.graphe-cadre.plein-secours .graphe-toile { height: calc(100dvh - 24px); }
+.graphe-cadre.plein-secours .graphe-fiche { max-height: calc(100dvh - 24px); }
+@media (max-width: 900px) {
+  .graphe-cadre:fullscreen, .graphe-cadre.plein-secours { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
+  .graphe-cadre:fullscreen .graphe-toile, .graphe-cadre.plein-secours .graphe-toile { height: 100%; min-height: 0; }
+  .graphe-cadre:fullscreen .graphe-fiche, .graphe-cadre.plein-secours .graphe-fiche { max-height: 38vh; }
+}
