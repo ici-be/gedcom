@@ -67,9 +67,6 @@ export function encodages(arbre: Arbre): Encodage[] {
     const femme = fam.femme ? arbre.individus.get(fam.femme) : undefined
     if (mari && femme && mari.id === femme.id) {
       res.push({ type: 'conjoints', famille: fam.id, id: mari.id, texte: `${complet(mari)} est à la fois mari et épouse` })
-    } else {
-      if (mari?.sexe === 'F') res.push({ type: 'conjoints', famille: fam.id, id: mari.id, texte: `${complet(mari)}, de sexe féminin, est noté mari` })
-      if (femme?.sexe === 'M') res.push({ type: 'conjoints', famille: fam.id, id: femme.id, texte: `${complet(femme)}, de sexe masculin, est noté épouse` })
     }
     for (const c of fam.enfants) {
       if (c === fam.mari || c === fam.femme) {

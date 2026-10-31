@@ -28,5 +28,6 @@ test('mauvais encodages', () => {
   expect(t).toContain('couple-individu')
   expect(t).toContain('individuel-famille')
   expect(t).toContain('double-fait')
-  expect(t).toContain('conjoints')
+  // Geneanet range en « mari » le premier conjoint, quel que soit son sexe : ce n'est pas une erreur
+  expect(t).not.toContain('conjoints')
 })
