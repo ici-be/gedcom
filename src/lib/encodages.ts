@@ -3,12 +3,13 @@
 
 import type { Arbre, Individu } from './gedcom/arbre'
 
-export type TypeEncodage = 'couple-individu' | 'individuel-famille' | 'double-fait' | 'note' | 'conjoints' | 'parente'
+export type TypeEncodage = 'couple-individu' | 'individuel-famille' | 'double-fait' | 'majuscules' | 'note' | 'conjoints' | 'parente'
 
 export const TYPES_ENCODAGES: Record<TypeEncodage, string> = {
   'couple-individu': 'Fait de couple rangé sur une seule personne',
   'individuel-famille': 'Fait individuel rangé sur une famille',
   'double-fait': 'Naissance ou décès en double',
+  majuscules: 'Nom ou prénom tout en majuscules',
   note: 'Note issue d’un import (balises, liens, références)',
   conjoints: 'Conjoints incohérents',
   parente: 'Lien de parenté impossible',
@@ -59,12 +60,21 @@ const extrait = (note: string) => {
   return t.length > 90 ? t.slice(0, 90) + '…' : t
 }
 
+/** Écrit tout en capitales (au moins deux lettres, hors chiffres romains comme « XII ») */
+function toutCapitales(s: string): boolean {
+  const lettres = s.replace(/[^\p{L}]/gu, '')
+  return lettres.length >= 2 && s === s.toUpperCase() && s !== s.toLowerCase() && !/^[IVXLCDM]+$/.test(lettres)
+}
+
 const complet = (i: Individu) => `${i.prenom} ${i.nom}`.trim() || i.id
 
 export function encodages(arbre: Arbre): Encodage[] {
   const res: Encodage[] = []
 
   for (const ind of arbre.individus.values()) {
+    for (const [quoi, v] of [['Le nom', ind.nom], ['Le prénom', ind.prenom]] as const) {
+      if (toutCapitales(v)) res.push({ type: 'majuscules', id: ind.id, texte: `${quoi} « ${v} » est tout en majuscules` })
+    }
     const defauts = ind.note ? defautsNote(ind.note) : []
     if (ind.note && defauts.length) res.push({ type: 'note', id: ind.id, texte: `Note de la personne : ${defauts.join(', ')} — « ${extrait(ind.note)} »` })
     for (const e of ind.evenements) {

@@ -63,3 +63,17 @@ test('note issue d’un import', () => {
   expect(e).toHaveLength(1)
   expect(e[0].id).toBe('@I1@')
 })
+
+test('nom tout en majuscules', () => {
+  const a = lireArbre(`0 @I1@ INDI
+1 NAME Jean /DUPONT/
+0 @I2@ INDI
+1 NAME Jean /Dupont/
+0 @I3@ INDI
+1 NAME LOUIS /Van Damme/
+0 @I4@ INDI
+1 NAME J. /X/
+`)
+  const e = encodages(a).filter((x) => x.type === 'majuscules').map((x) => x.id)
+  expect(e.sort()).toEqual(['@I1@', '@I3@'])
+})
