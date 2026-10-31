@@ -31,7 +31,7 @@ export function Anomalies({ d }: { d: Donnees }) {
       </header>
       <p class="aide">
         Sont signalés : un parent de moins de 15 ans à la naissance de l’enfant, une mère de plus de 50 ans ou un père de plus de 75 ans, un enfant né
-        après la mort de sa mère (ou plus d’un an après celle de son père), un mariage avant 15 ans ou après un décès, un décès avant la naissance ou après 105 ans.
+        après la mort de sa mère (ou plus d’un an après celle de son père), un mariage avant 15 ans ou après un décès, un décès avant la naissance ou après 110 ans.
         Seules les années sont comparées ; les dates « avant » et « après » ne comptent pas. Une date juste mais rare (un veuf père à 80 ans) peut être écartée.
       </p>
       <p class="aide">

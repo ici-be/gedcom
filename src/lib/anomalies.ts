@@ -26,7 +26,7 @@ export interface Anomalie {
 const AGE_MINI = 15
 const AGE_MAXI_MERE = 50
 const AGE_MAXI_PERE = 75
-const AGE_MAXI = 105
+const AGE_MAXI = 110
 
 /** Année d'un fait, si la date n'est pas une borne (« avant 1700 ») */
 function an(evenements: Evenement[], tags: string[]): number | undefined {
