@@ -1806,3 +1806,50 @@ th.lx-col-periodes { white-space: nowrap; }
   .graphe-cadre:fullscreen .graphe-toile, .graphe-cadre.plein-secours .graphe-toile { height: 100%; min-height: 0; }
   .graphe-cadre:fullscreen .graphe-fiche, .graphe-cadre.plein-secours .graphe-fiche { max-height: 38vh; }
 }
+
+/* ---------- statistiques ---------- */
+.statistiques { gap: 20px; }
+.st-barre { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 12px 16px; display: flex; flex-direction: column; gap: 12px; }
+.st-ligne { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.st-siecles { border-top: 1px solid var(--line); padding-top: 12px; }
+.st-sep { width: 1px; align-self: stretch; background: var(--line); }
+.st-etiquette { font: 700 0.7rem var(--body); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.statistiques .filtres { padding: 0; border: 0; box-shadow: none; background: none; }
+.statistiques .segments.siecles { flex-wrap: wrap; }
+
+.chiffre { position: relative; overflow: hidden; }
+.chiffre-valeur { font: 400 1.65rem/1.15 var(--serif); letter-spacing: -0.01em; }
+.chiffre.h { border-left: 3px solid var(--homme); }
+.chiffre.f { border-left: 3px solid var(--femme); }
+.chiffre.h .chiffre-valeur { color: var(--homme); }
+.chiffre.f .chiffre-valeur { color: var(--femme); }
+.chiffres.bref .chiffre::before { content: ''; position: absolute; left: 0; top: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 35%, var(--or))); opacity: 0.8; }
+.chiffre-partage { display: flex; height: 5px; border-radius: 999px; overflow: hidden; margin: 4px 0 2px; }
+.chiffre-partage .h { background: var(--homme); }
+.chiffre-partage .f { background: var(--femme); }
+
+.stat { box-shadow: var(--shadow); border-radius: 16px; padding: 20px 22px; gap: 16px; }
+.stat-titre { display: flex; gap: 12px; align-items: flex-start; }
+.stat-icone { flex: none; width: 36px; height: 36px; padding: 8px; box-sizing: border-box; border-radius: 12px; background: var(--accent-bg); fill: none; stroke: var(--accent); stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+.stat h2 { font: 400 1.4rem/1.2 var(--serif); letter-spacing: -0.01em; }
+.stat h3 { font: 700 0.72rem var(--body); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-top: 8px; }
+.stat h3.h { color: var(--homme); }
+.stat h3.f { color: var(--femme); }
+.constat { background: var(--accent-bg); border-left: 4px solid var(--accent); border-radius: 0 10px 10px 0; line-height: 1.5; }
+
+.graphique .grille { stroke-opacity: 0.7; }
+.legende-graphique i { border-radius: 50%; }
+.graphique path:hover { opacity: 0.8; filter: brightness(1.05); }
+
+.classement { gap: 8px; }
+.classement li { gap: 3px 10px; }
+.classement .rang { width: 1.5em; height: 1.5em; line-height: 1.5em; padding: 0; margin-top: 0; text-align: center; border-radius: 50%; background: var(--panel-2); font-weight: 700; align-self: center; }
+.classement li:nth-child(-n+3) .rang { background: var(--accent-bg); color: var(--accent); }
+.classement .libelle { font-weight: 550; }
+.classement .piste { height: 9px; }
+.classement .piste > span:first-child { border-radius: 999px 0 0 999px; }
+.classement .piste > span:last-child { border-radius: 0 999px 999px 0; }
+.classement .piste > span:only-child { border-radius: 999px; }
+.classement .total { font-weight: 700; color: var(--fg); }
+.doyens { background: var(--panel-2); border-radius: 10px; padding: 10px 14px; }
+@media (max-width: 640px) { .stat { padding: 16px; } .st-sep { display: none; } }

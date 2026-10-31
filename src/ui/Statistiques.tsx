@@ -69,11 +69,17 @@ function seriesParSiecle(liste: Age[], siecles: number[], m: Mesure): Serie[] {
   })
 }
 
-function Chiffre({ valeur, legende, detail }: { valeur: string; legende: string; detail?: preact.ComponentChildren }) {
+function Chiffre({ valeur, legende, detail, ton, barre }: { valeur: string; legende: string; detail?: preact.ComponentChildren; ton?: 'h' | 'f'; barre?: [number, number] }) {
   return (
-    <div class="chiffre">
+    <div class={'chiffre' + (ton ? ' ' + ton : '')}>
       <span class="chiffre-valeur">{valeur}</span>
       <span class="chiffre-legende">{legende}</span>
+      {barre && barre[0] + barre[1] > 0 && (
+        <span class="chiffre-partage" aria-hidden="true">
+          <span class="h" style={{ width: `${(barre[0] / (barre[0] + barre[1])) * 100}%` }} />
+          <span class="f" style={{ width: `${(barre[1] / (barre[0] + barre[1])) * 100}%` }} />
+        </span>
+      )}
       {detail && <span class="chiffre-detail">{detail}</span>}
     </div>
   )
@@ -86,19 +92,35 @@ function ParSexe({ liste, m, legende }: { liste: Age[]; m: Mesure; legende: stri
   return (
     <div class="chiffres">
       <Chiffre valeur={ansTexte(valeur(tous, m))} legende={legende} detail={tous ? `${nombre(tous.n)} cas` : 'aucune donnée'} />
-      <Chiffre valeur={ansTexte(valeur(h, m))} legende="Hommes" detail={h ? `${nombre(h.n)} cas` : undefined} />
-      <Chiffre valeur={ansTexte(valeur(f, m))} legende="Femmes" detail={f ? `${nombre(f.n)} cas` : undefined} />
+      <Chiffre ton="h" valeur={ansTexte(valeur(h, m))} legende="Hommes" detail={h ? `${nombre(h.n)} cas` : undefined} />
+      <Chiffre ton="f" valeur={ansTexte(valeur(f, m))} legende="Femmes" detail={f ? `${nombre(f.n)} cas` : undefined} />
     </div>
   )
+}
+
+const ICONES_STAT: Record<string, string> = {
+  'Durée de vie': 'M8 2.5v5.5l3.5 2M8 14.5a6.5 6.5 0 1 0 0-13a6.5 6.5 0 0 0 0 13',
+  Mariage: 'M6 5a3.2 3.2 0 1 0 0 6.4a3.2 3.2 0 0 0 0-6.4M10.4 5a3.2 3.2 0 1 0 0 6.4a3.2 3.2 0 0 0 0-6.4',
+  Enfants: 'M8 7a2 2 0 1 0 0-4a2 2 0 0 0 0 4M3.5 14c.4-2.6 2.3-4 4.5-4s4.1 1.4 4.5 4',
+  'Au fil de l\'année': 'M2.5 4h11v9.5h-11zM2.5 7h11M5.5 2.5v3M10.5 2.5v3',
+  'Pays et sédentarité': 'M8 14.5a6.5 6.5 0 1 0 0-13a6.5 6.5 0 0 0 0 13M1.5 8h13M8 1.5c2 2 2.5 4 2.5 6.5S10 12.5 8 14.5M8 1.5C6 3.5 5.5 5.5 5.5 8S6 12.5 8 14.5',
+  'Prénoms et patronymes': 'M3 3.5h10M8 3.5V13M5.5 13h5',
+  Métiers: 'M2 5h12v9H2zM6 5V3h4v2',
+  'Lieux de naissance': 'M8 14.5s5-4.5 5-8.5a5 5 0 0 0-10 0c0 4 5 8.5 5 8.5zM8 4.6a1.4 1.4 0 1 1 0 2.8a1.4 1.4 0 1 1 0-2.8',
+  Sources: 'M3 2.5h7l3 3v8H3zM5.5 8h5M5.5 10.5h5',
+  Ascendance: 'M8 14V8M8 8L3.5 4M8 8l4.5-4M3.5 4V2M12.5 4V2',
 }
 
 function Section({ titre, sous, children, outils, large }: { titre: string; sous?: preact.ComponentChildren; children: preact.ComponentChildren; outils?: preact.ComponentChildren; large?: boolean }) {
   return (
     <section class={'panneau stat' + (large ? ' large' : '')}>
       <header class="stat-entete">
-        <div>
+        <div class="stat-titre">
+          <svg class="stat-icone" viewBox="0 0 16 16" aria-hidden="true"><path d={ICONES_STAT[titre] ?? ICONES_STAT.Sources} /></svg>
+          <div>
           <h2>{titre}</h2>
           {sous && <p class="aide">{sous}</p>}
+          </div>
         </div>
         {outils && <div class="stat-outils">{outils}</div>}
       </header>
@@ -223,19 +245,25 @@ export function Statistiques({ d, perimetre, setPerimetre }: Props) {
         </p>
       </header>
 
-      <div class="filtres">
-        <ChoixPerimetre valeur={perimetre} changer={setPerimetre} />
-        {outilMesure}
-      </div>
-      <div class="segments siecles" role="radiogroup" aria-label="Siècle">
-        <button type="button" role="radio" aria-checked={filtreSiecle === null} class={filtreSiecle === null ? 'actif' : ''} onClick={() => setFiltreSiecle(null)}>Tous les siècles</button>
-        {siecles.map((x) => (
-          <button key={x} type="button" role="radio" aria-checked={filtreSiecle === x} class={filtreSiecle === x ? 'actif' : ''} onClick={() => setFiltreSiecle(x)}>{court(x)}</button>
-        ))}
+      <div class="st-barre">
+        <div class="st-ligne">
+          <ChoixPerimetre valeur={perimetre} changer={setPerimetre} />
+          <span class="st-sep" aria-hidden="true" />
+          {outilMesure}
+        </div>
+        <div class="st-ligne st-siecles">
+          <span class="st-etiquette">Siècle de naissance</span>
+          <div class="segments siecles" role="radiogroup" aria-label="Siècle">
+            <button type="button" role="radio" aria-checked={filtreSiecle === null} class={filtreSiecle === null ? 'actif' : ''} onClick={() => setFiltreSiecle(null)}>Tous</button>
+            {siecles.map((x) => (
+              <button key={x} type="button" role="radio" aria-checked={filtreSiecle === x} class={filtreSiecle === x ? 'actif' : ''} onClick={() => setFiltreSiecle(x)}>{court(x)}</button>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div class="chiffres bref">
-        <Chiffre valeur={nombre(s.personnes.length)} legende="personnes" detail={<><span class="h">{nombre(hommes)} hommes</span><br /><span class="f">{nombre(femmes)} femmes</span></>} />
+        <Chiffre valeur={nombre(s.personnes.length)} legende="personnes" barre={[hommes, femmes]} detail={<><span class="h">{nombre(hommes)} hommes</span> · <span class="f">{nombre(femmes)} femmes</span></>} />
         <Chiffre valeur={ansTexte(valeur(vie, mesure))} legende={`durée de vie ${mesure === 'moyenne' ? 'moyenne' : 'médiane'}`} detail={adultes ? 'adultes (15 ans et plus)' : 'dès la naissance'} />
         <Chiffre valeur={enfants ? ans(valeur(enfants, mesure)!) : '–'} legende="enfants par couple" detail="couples avec au moins un enfant connu" />
         <Chiffre valeur={nombre(prenomsDistincts)} legende="prénoms différents" />
@@ -288,8 +316,8 @@ export function Statistiques({ d, perimetre, setPerimetre }: Props) {
         <Section titre="Enfants" sous="Couples avec au moins un enfant connu.">
           <div class="chiffres">
             <Chiffre valeur={enfants ? ans(valeur(enfants, mesure)!) : '–'} legende={`enfants par couple (${mesure === 'moyenne' ? 'moyenne' : 'médiane'})`} detail={enfants ? `${nombre(enfants.n)} couples` : undefined} />
-            <Chiffre valeur={ansTexte(valeur(resumer(s.parents.filter((x) => x.sexe === 'F').map((x) => x.age)), mesure))} legende="âge des mères à la naissance" />
-            <Chiffre valeur={ansTexte(valeur(resumer(s.parents.filter((x) => x.sexe === 'M').map((x) => x.age)), mesure))} legende="âge des pères à la naissance" />
+            <Chiffre ton="f" valeur={ansTexte(valeur(resumer(s.parents.filter((x) => x.sexe === 'F').map((x) => x.age)), mesure))} legende="âge des mères à la naissance" />
+            <Chiffre ton="h" valeur={ansTexte(valeur(resumer(s.parents.filter((x) => x.sexe === 'M').map((x) => x.age)), mesure))} legende="âge des pères à la naissance" />
           </div>
           <h3>Nombre d'enfants par couple</h3>
           <Colonnes ariaLabel="Répartition du nombre d'enfants" categories={histoEnfants}
