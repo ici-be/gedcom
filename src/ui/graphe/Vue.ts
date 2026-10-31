@@ -16,6 +16,8 @@ export interface Point {
   couleur: string
   /** Ajouté comme famille proche : disque creux */
   creux: boolean
+  /** La personne autour de laquelle on regarde l'entourage */
+  centre: boolean
   voisins: Set<string>
 }
 
@@ -82,12 +84,12 @@ export class Vue {
   setStyle(s: Style) { this.style = s; this.dessiner() }
 
   /** Nouveau graphe : les personnes déjà là gardent leur place, les nouvelles arrivent près d'un voisin */
-  charger(noeuds: Noeud[], aretes: Arete[], apparence: (n: Noeud) => { couleur: string; etiquette: string; creux: boolean }) {
+  charger(noeuds: Noeud[], aretes: Arete[], apparence: (n: Noeud) => { couleur: string; etiquette: string; creux: boolean; centre: boolean }) {
     const ancien = this.parId
     this.parId = new Map()
     this.points = noeuds.map((n, i) => {
       const a = apparence(n)
-      const p: Point = { id: n.id, i, n, r: 3.5 + Math.sqrt(n.poids) * 1.1, etiquette: a.etiquette, couleur: a.couleur, creux: a.creux, voisins: new Set() }
+      const p: Point = { id: n.id, i, n, r: 3.5 + Math.sqrt(n.poids) * 1.1, etiquette: a.etiquette, couleur: a.couleur, creux: a.creux, centre: a.centre, voisins: new Set() }
       const vieux = ancien.get(n.id)
       if (vieux) { p.x = vieux.x; p.y = vieux.y }
       this.parId.set(n.id, p)
@@ -188,6 +190,8 @@ export class Vue {
     const r = this.canvas.getBoundingClientRect()
     this.dpr = window.devicePixelRatio || 1
     const premier = !this.l
+    // la fenêtre change de taille : ce qui était au centre y reste
+    if (!premier) this.t = { ...this.t, x: this.t.x + (r.width - this.l) / 2, y: this.t.y + (r.height - this.h) / 2 }
     this.l = r.width
     this.h = r.height
     this.canvas.width = Math.round(r.width * this.dpr)
@@ -347,8 +351,12 @@ export class Vue {
       else lots.set(cle, { couleur: p.couleur, alpha, creux: p.creux, points: [p] })
     }
     // les estompés d'abord, les autres par-dessus
+    const ombre = this.points.length < 700
     for (const lot of [...lots.values()].sort((a, b) => a.alpha - b.alpha)) {
       ctx.globalAlpha = lot.alpha
+      ctx.shadowColor = ombre && lot.alpha === 1 && !lot.creux ? 'rgba(15, 23, 42, 0.28)' : 'transparent'
+      ctx.shadowBlur = ombre ? 5 : 0
+      ctx.shadowOffsetY = ombre ? 1.5 : 0
       ctx.beginPath()
       for (const p of lot.points) {
         ctx.moveTo(p.x! + p.r, p.y!)
@@ -356,6 +364,9 @@ export class Vue {
       }
       ctx.fillStyle = lot.creux ? style.fond : lot.couleur
       ctx.fill()
+      ctx.shadowColor = 'transparent'
+      ctx.shadowBlur = 0
+      ctx.shadowOffsetY = 0
       // un liseré du fond sépare les disques qui se touchent ; inutile vu de très loin
       if (lot.creux || t.k > 0.35) {
         ctx.lineWidth = lot.creux ? Math.max(1.6, 1 / t.k) : 1.5 / t.k
@@ -364,13 +375,27 @@ export class Vue {
       }
     }
     ctx.globalAlpha = 1
+    // la personne de départ : un double anneau pointillé
+    for (const p of this.points) {
+      if (!p.centre || p.x === undefined) continue
+      ctx.beginPath()
+      ctx.arc(p.x, p.y!, p.r + 7 / t.k, 0, 2 * Math.PI)
+      ctx.lineWidth = 1.5 / t.k
+      ctx.setLineDash([3 / t.k, 3 / t.k])
+      ctx.strokeStyle = style.accent
+      ctx.stroke()
+      ctx.setLineDash([])
+    }
     for (const p of [this.choisi ? this.parId.get(this.choisi) : undefined, this.survole]) {
       if (!p) continue
       ctx.beginPath()
       ctx.arc(p.x!, p.y!, p.r + 3.5 / t.k, 0, 2 * Math.PI)
-      ctx.lineWidth = 2 / t.k
+      ctx.lineWidth = 2.2 / t.k
       ctx.strokeStyle = style.accent
+      ctx.shadowColor = style.accent
+      ctx.shadowBlur = 10
       ctx.stroke()
+      ctx.shadowBlur = 0
     }
     if (this.trouves) {
       for (const id of this.trouves) {

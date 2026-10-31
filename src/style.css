@@ -1754,3 +1754,42 @@ th.lx-col-periodes { white-space: nowrap; }
 .ac-reglages:not([open]) > summary h2::after { content: '▸'; }
 .ac-reglages[open] > summary { margin-bottom: 4px; }
 @media (max-width: 640px) { .ac-hero { padding: 20px; } .ac-jauges { width: 100%; justify-content: space-around; } .ac-avatar { width: 64px; height: 64px; font-size: 1.4rem; } }
+
+/* ---------- graphe : réglages, toile et panneau ---------- */
+.graphe-reglages.panneau { gap: 14px; padding: 14px 18px; }
+.graphe-ligne { align-items: center; }
+.graphe-etiquette { font: 700 0.7rem var(--body); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.graphe-modes button { display: inline-flex; align-items: center; gap: 7px; }
+.graphe-modes svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.graphe-distance, .graphe-couleur, .graphe-types { display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.graphe-ligne-bas { justify-content: space-between; border-top: 1px solid var(--line); padding-top: 12px; }
+.graphe-texte { display: flex; flex-direction: column; gap: 4px; }
+.graphe-type { display: inline-flex; align-items: center; gap: 7px; padding: 4px 12px 4px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); font-size: 0.88rem; font-weight: 600; color: var(--muted); cursor: pointer; user-select: none; }
+.graphe-type input { position: absolute; opacity: 0; pointer-events: none; }
+.graphe-type.actif { color: var(--fg); border-color: var(--souligne); box-shadow: var(--shadow); }
+.graphe-type:not(.actif) svg { opacity: 0.35; }
+.graphe-type:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.graphe-toile { background: radial-gradient(120% 100% at 50% 35%, var(--panel), var(--panel-2)); box-shadow: var(--shadow); border-radius: 14px; }
+.graphe-haut input { border-radius: 999px; padding-left: 14px; box-shadow: var(--shadow); }
+.graphe-bilan { border-radius: 999px; padding: 4px 12px; border: 1px solid var(--line); box-shadow: var(--shadow); }
+.graphe-legende { border-radius: 12px; box-shadow: var(--shadow); padding: 10px 12px; }
+.graphe-zoom button { border-radius: 10px; }
+.graphe-fiche { border-radius: 14px; box-shadow: var(--shadow); }
+.graphe-fiche-tete { align-items: center; gap: 12px; }
+.graphe-fiche-tete h2 { flex: 1; font: 400 1.35rem/1.2 var(--serif); }
+.gr-avatar { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font: 700 0.68rem var(--body); letter-spacing: 0.02em; color: #fff; background: var(--g-vide); }
+.gr-avatar.h { background: var(--homme); }
+.gr-avatar.f { background: var(--femme); }
+.gr-avatar.grand { width: 44px; height: 44px; font-size: 0.9rem; }
+.graphe-classement { list-style: none; padding: 0; gap: 2px; }
+.graphe-classement li { padding: 0; }
+.graphe-classement button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 6px 8px; border-radius: 10px; white-space: normal; }
+.graphe-classement button:hover { background: var(--panel-2); color: var(--fg); }
+.gr-qui { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.gr-nom { font-weight: 600; font-size: 0.92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gr-barre { display: block; height: 4px; border-radius: 999px; background: var(--panel-2); overflow: hidden; }
+.graphe-classement button:hover .gr-barre { background: var(--panel); }
+.gr-barre span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 50%, var(--or))); }
+.graphe-liens li { align-items: flex-start; }
+.graphe-liens svg { margin-top: 0.6em; }
+@media (max-width: 760px) { .graphe-ligne-bas { justify-content: flex-start; } .graphe-modes button { padding: 6px 10px; } }

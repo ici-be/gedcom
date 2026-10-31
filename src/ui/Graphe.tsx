@@ -17,12 +17,21 @@ type Couleur = 'metier' | 'sources' | 'ancetres'
 
 interface Reglages { critere: Critere; couleur: Couleur; isoles: boolean }
 
-const MODES: { id: Mode; texte: string }[] = [
-  { id: 'entourage', texte: 'Entourage' },
-  { id: 'metiers', texte: 'Métiers' },
-  { id: 'nom', texte: 'Nom' },
-  { id: 'lieu', texte: 'Lieu' },
+const MODES: { id: Mode; texte: string; icone: string }[] = [
+  { id: 'entourage', texte: 'Entourage', icone: 'M8 8.2a2.2 2.2 0 1 0 0-4.4a2.2 2.2 0 0 0 0 4.4zM2.5 14c.7-2.6 2.8-4 5.5-4s4.8 1.4 5.5 4' },
+  { id: 'metiers', texte: 'Métiers', icone: 'M2 5h12v9H2zM6 5V3h4v2' },
+  { id: 'nom', texte: 'Nom', icone: 'M3 3.5h10M8 3.5V13M5.5 13h5' },
+  { id: 'lieu', texte: 'Lieu', icone: 'M8 14.5s5-4.5 5-8.5a5 5 0 0 0-10 0c0 4 5 8.5 5 8.5zM8 4.6a1.4 1.4 0 1 1 0 2.8a1.4 1.4 0 1 1 0-2.8' },
 ]
+
+const COULEURS: { id: Couleur; texte: string }[] = [
+  { id: 'sources', texte: 'Sources' },
+  { id: 'ancetres', texte: 'Ancêtres' },
+  { id: 'metier', texte: 'Métier' },
+]
+
+const initiales = (ind: Individu) => ((ind.prenom[0] ?? '') + (ind.nom[0] ?? '')).toUpperCase() || '?'
+const classeSexe = (ind: Individu) => (ind.sexe === 'F' ? 'f' : ind.sexe === 'M' ? 'h' : '')
 
 const NOMS_LIENS: Record<TypeLien, { texte: string; aide: string }> = {
   famille: { texte: 'Famille', aide: 'Conjoints, parents et enfants ; frères et sœurs quand leurs parents ne sont pas affichés' },
@@ -110,9 +119,9 @@ export function Graphe({ d }: { d: Donnees }) {
         const sc = su ? score(su) : { attendus: 0, sources: 0 }
         col = !sc.attendus ? s.vide : sc.sources === sc.attendus ? s.ok : sc.sources ? s.mid : s.ko
       }
-      return { couleur: col, etiquette: etiquette(ind), creux: !n.trouve && c.mode !== 'entourage' }
+      return { couleur: col, etiquette: etiquette(ind), creux: !n.trouve && c.mode !== 'entourage', centre: c.mode === 'entourage' && n.id === c.personne }
     }
-  }, [d, couleur, c.mode, theme])
+  }, [d, couleur, c.mode, c.personne, theme])
 
   useEffect(() => {
     if (!vue.current) return
@@ -154,30 +163,34 @@ export function Graphe({ d }: { d: Donnees }) {
         <p class="sous-titre">Qui côtoyait qui : la famille, et les actes où l'on se retrouve témoin, parrain ou marraine. Choisissez des personnes, puis cliquez sur l'une d'elles pour voir ses liens.</p>
       </header>
 
-      <div class="filtres graphe-reglages">
+      <div class="graphe-reglages panneau">
         <div class="graphe-ligne">
-          <div class="segments" role="radiogroup" aria-label="Quelles personnes">
+          <div class="segments graphe-modes" role="radiogroup" aria-label="Quelles personnes">
             {MODES.map((m) => (
               <button key={m.id} type="button" role="radio" aria-checked={c.mode === m.id} class={c.mode === m.id ? 'actif' : ''} onClick={() => changer({
                 critere: { ...c, mode: m.id },
                 // les métiers se lisent à leur couleur
                 couleur: m.id === 'metiers' ? 'metier' : r.couleur === 'metier' ? 'sources' : r.couleur,
-              })}>{m.texte}</button>
+              })}>
+                <svg viewBox="0 0 16 16" aria-hidden="true"><path d={m.icone} /></svg>{m.texte}
+              </button>
             ))}
           </div>
           {c.mode === 'entourage' && (
             <>
               <div class="graphe-personne"><ChoixPersonne d={d} valeur={c.personne} choisir={(id) => critere({ personne: id })} prenoms={2} /></div>
-              <label>
-                <span>Distance</span>
-                <select value={c.pas} onChange={(e) => critere({ pas: Number(e.currentTarget.value) })}>
-                  {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n} lien{n > 1 ? 's' : ''}</option>)}
-                </select>
-              </label>
+              <div class="graphe-distance">
+                <span class="graphe-etiquette">Distance</span>
+                <div class="segments petit" role="radiogroup" aria-label="Distance en liens">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <button key={n} type="button" role="radio" aria-checked={c.pas === n} class={c.pas === n ? 'actif' : ''} onClick={() => critere({ pas: n })} title={`${n} lien${n > 1 ? 's' : ''}`}>{n}</button>
+                  ))}
+                </div>
+              </div>
             </>
           )}
           {(c.mode === 'nom' || c.mode === 'lieu') && (
-            <label>
+            <label class="graphe-texte">
               <span>{c.mode === 'nom' ? 'Nom ou prénom' : 'Lieu d’un acte'}</span>
               <input type="search" value={texte} onInput={(e) => setTexte(e.currentTarget.value)} placeholder={c.mode === 'nom' ? 'ex. v*k*man*' : 'ex. Brux*'} />
             </label>
@@ -189,23 +202,28 @@ export function Graphe({ d }: { d: Donnees }) {
           )}
         </div>
         {c.mode === 'metiers' && <ChoixMetiers d={d} choisis={c.metiers} changer={(metiers) => critere({ metiers })} couleurs={style.current?.metiers ?? []} />}
-        <div class="graphe-ligne">
-          <span class="graphe-etiquette">Liens</span>
-          {TYPES_LIENS.map((t) => (
-            <label key={t} class="case graphe-type" title={NOMS_LIENS[t].aide}>
-              <input type="checkbox" checked={c.types.includes(t)} onChange={(e) => critere({ types: e.currentTarget.checked ? TYPES_LIENS.filter((x) => x === t || c.types.includes(x)) : c.types.filter((x) => x !== t) })} />
-              <svg class={`trait-${t}`} viewBox="0 0 28 8" aria-hidden="true"><line x1="1" y1="4" x2="27" y2="4" /></svg>
-              {NOMS_LIENS[t].texte}
-            </label>
-          ))}
-          <label class="graphe-couleur">
-            <span>Couleur</span>
-            <select value={couleur} onChange={(e) => changer({ couleur: e.currentTarget.value as Couleur })}>
-              {c.mode === 'metiers' && <option value="metier">Métier</option>}
-              <option value="sources">Sources</option>
-              <option value="ancetres">Ancêtres</option>
-            </select>
-          </label>
+        <div class="graphe-ligne graphe-ligne-bas">
+          <div class="graphe-types" role="group" aria-label="Types de liens">
+            <span class="graphe-etiquette">Liens</span>
+            {TYPES_LIENS.map((t) => {
+              const actif = c.types.includes(t)
+              return (
+                <label key={t} class={`graphe-type ${t}${actif ? ' actif' : ''}`} title={NOMS_LIENS[t].aide}>
+                  <input type="checkbox" checked={actif} onChange={(e) => critere({ types: e.currentTarget.checked ? TYPES_LIENS.filter((x) => x === t || c.types.includes(x)) : c.types.filter((x) => x !== t) })} />
+                  <svg class={`trait-${t}`} viewBox="0 0 28 8" aria-hidden="true"><line x1="1" y1="4" x2="27" y2="4" /></svg>
+                  {NOMS_LIENS[t].texte}
+                </label>
+              )
+            })}
+          </div>
+          <div class="graphe-couleur">
+            <span class="graphe-etiquette">Couleur</span>
+            <div class="segments petit" role="radiogroup" aria-label="Colorer les personnes selon">
+              {COULEURS.filter((x) => x.id !== 'metier' || c.mode === 'metiers').map((x) => (
+                <button key={x.id} type="button" role="radio" aria-checked={couleur === x.id} class={couleur === x.id ? 'actif' : ''} onClick={() => changer({ couleur: x.id })}>{x.texte}</button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -308,17 +326,27 @@ function ChoixMetiers({ d, choisis, changer, couleurs }: { d: Donnees; choisis: 
 
 /** Sans personne choisie : les plus reliés */
 function Classement({ d, relies, aller }: { d: Donnees; relies: Noeud[]; aller: (id: string) => void }) {
+  const max = Math.max(1, ...relies.map((n) => n.degre))
   return (
     <>
       <h2>Les plus reliés</h2>
       {relies.length ? (
         <ol class="graphe-classement">
-          {relies.map((n) => (
-            <li key={n.id}><div class="ligne">
-              <button type="button" onClick={() => aller(n.id)}>{etiquette(d.arbre.individus.get(n.id)!)} <Annees ind={d.arbre.individus.get(n.id)!} /></button>
-              <span class="compte" title={`Relié à ${n.degre} personne${n.degre > 1 ? 's' : ''} du graphe`}>{n.degre}</span>
-            </div></li>
-          ))}
+          {relies.map((n) => {
+            const ind = d.arbre.individus.get(n.id)!
+            return (
+              <li key={n.id}>
+                <button type="button" onClick={() => aller(n.id)}>
+                  <span class={`gr-avatar ${classeSexe(ind)}`} aria-hidden="true">{initiales(ind)}</span>
+                  <span class="gr-qui">
+                    <span class="gr-nom">{etiquette(ind)}</span>
+                    <span class="gr-barre" title={`Relié à ${n.degre} personne${n.degre > 1 ? 's' : ''} du graphe`}><span style={{ width: `${(n.degre / max) * 100}%` }} /></span>
+                  </span>
+                  <span class="compte">{n.degre}</span>
+                </button>
+              </li>
+            )
+          })}
         </ol>
       ) : <p class="aide">Aucun lien dans ce graphe.</p>}
       <p class="aide">Cliquez sur une personne pour voir ses liens ; glissez pour déplacer, molette ou pincement pour zoomer.</p>
@@ -338,6 +366,7 @@ function Fiche({ d, id, aretes, aller, entourage, fermer }: { d: Donnees; id: st
   return (
     <>
       <div class="graphe-fiche-tete">
+        <span class={`gr-avatar grand ${classeSexe(ind)}`} aria-hidden="true">{initiales(ind)}</span>
         <h2><Personne d={d} id={id} /></h2>
         <button type="button" class="fermer" onClick={fermer} aria-label="Fermer" title="Fermer">×</button>
       </div>
