@@ -198,6 +198,7 @@ export function Recit({ d, id }: { d: Donnees; id?: string }) {
           <div class="rc-champ rc-personne">
             <span class="rc-etiquette">Personne</span>
             <ChoixPersonne d={d} valeur={cible} choisir={(n) => { location.hash = lien(n) }} />
+            <a class="bouton discret" href={'#/chronologie/' + encodeURIComponent(cible)}>Chronologie</a>
           </div>
           <div class="rc-champ">
             <label class="rc-etiquette" for="recit-asc">Ancêtres</label>

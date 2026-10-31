@@ -27,6 +27,7 @@ import { Annotations } from './Annotations'
 import { Doublons } from './Doublons'
 import { Anomalies } from './Anomalies'
 import { Archives } from './Archives'
+import { Chronologie } from './Chronologie'
 import { Recherches } from './Recherches'
 import { Priorites } from './Priorites'
 import { ProposerInstallation } from './Installer'
@@ -331,6 +332,7 @@ export function App() {
     ? <Graphe d={donnees} />
     : <div class="attente" role="status"><span class="rouet" />Chargement du graphe…</div>
   else if (page === 'recit') contenu = <Recit d={donnees} id={route[1]} />
+  else if (page === 'chronologie') contenu = <Chronologie d={donnees} id={route[1]} />
   else if (page === 'evenements' && route[1]) contenu = <PageEvenement d={donnees} id={route[1]} />
   else if (page === 'evenements') contenu = <ListeEvenements d={donnees} />
   else if (page === 'ascendance') contenu = <Ascendance d={donnees} setPerimetre={setPerimetre} />
@@ -381,7 +383,7 @@ export function App() {
               <a href="#/carte" class={page === 'carte' ? 'actif' : ''}><Icone nom="carte" />Carte</a>
               <a href="#/migrations" class={page === 'migrations' ? 'actif' : ''}><Icone nom="migrations" />Migrations</a>
               <a href="#/ascendance" class={page === 'ascendance' || page === 'lignee' ? 'actif' : ''}><Icone nom="ascendance" />Ascendance</a>
-              <a href="#/recit" class={page === 'recit' || page === 'evenements' ? 'actif' : ''}><Icone nom="recit" />Récit</a>
+              <a href="#/recit" class={page === 'recit' || page === 'evenements' || page === 'chronologie' ? 'actif' : ''}><Icone nom="recit" />Récit</a>
               <a href="#/graphe" class={page === 'graphe' ? 'actif' : ''}><Icone nom="graphe" />Graphe</a>
               <a href="#/statistiques" class={page === 'statistiques' ? 'actif' : ''}><Icone nom="statistiques" />Statistiques</a>
               <a href="#/annotations" class={['annotations', 'filiation', 'introuvables', 'illettres'].includes(page) ? 'actif' : ''}><Icone nom="annotations" />Annotations</a>

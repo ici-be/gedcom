@@ -1401,3 +1401,112 @@ svg[class^="trait-"] line { stroke-width: 2; stroke-linecap: round; }
   .an-lignes > li { grid-template-columns: minmax(0, 1fr); }
   .an-lignes > li > .bouton { justify-self: start; }
 }
+
+/* ---------- chronologie d'une personne ---------- */
+.chronologie { --ch-perso: var(--accent); --ch-proche: var(--muted); --ch-histoire: var(--or); gap: 18px; }
+.ch-choix-ligne { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.ch-choix-ligne .choix-personne { flex: 1 1 320px; }
+.ch-hero { display: flex; gap: 22px; align-items: center; padding: 22px 26px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); border-top: 4px solid var(--ch-perso); position: relative; overflow: hidden; }
+.ch-hero.h { border-top-color: var(--homme); }
+.ch-hero.f { border-top-color: var(--femme); }
+.ch-hero::after { content: ''; position: absolute; inset: auto -40px -60px auto; width: 220px; height: 220px; border-radius: 50%; background: radial-gradient(circle, var(--accent-bg), transparent 70%); pointer-events: none; }
+.ch-hero.h::after { background: radial-gradient(circle, color-mix(in srgb, var(--homme) 14%, transparent), transparent 70%); }
+.ch-hero.f::after { background: radial-gradient(circle, color-mix(in srgb, var(--femme) 14%, transparent), transparent 70%); }
+.ch-hero .ch-portrait img { width: 92px; height: 112px; object-fit: cover; border-radius: 12px; box-shadow: var(--shadow); }
+.ch-hero h2 { font: 400 clamp(1.7rem, 4vw, 2.4rem)/1.1 var(--serif); letter-spacing: -0.01em; }
+.ch-nom { font-variant: small-caps; letter-spacing: 0.02em; }
+.ch-vie { margin: 6px 0 0; color: var(--muted); font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+.ch-chiffres { list-style: none; display: flex; flex-wrap: wrap; gap: 8px 10px; margin: 14px 0 0; padding: 0; }
+.ch-chiffres li { background: var(--panel-2); border-radius: 999px; padding: 4px 12px; font-size: 0.88rem; color: var(--muted); }
+.ch-chiffres strong { color: var(--fg); font-variant-numeric: tabular-nums; }
+
+/* la vie en un coup d'œil */
+.ch-frise { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px 28px 12px; }
+.ch-piste { position: relative; height: 34px; }
+.ch-vie-barre { position: absolute; left: 0; right: 0; top: 50%; height: 6px; margin-top: -3px; border-radius: 999px; background: linear-gradient(90deg, var(--accent-bg), var(--accent) 12%, var(--accent) 88%, var(--accent-bg)); opacity: 0.85; }
+.ch-point { position: absolute; top: 50%; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; border: 2px solid var(--panel); box-shadow: 0 0 0 1px var(--line); transition: transform 0.15s; }
+.ch-point:hover { transform: scale(1.5); z-index: 2; }
+.ch-point.perso { background: var(--accent-fg); box-shadow: 0 0 0 2px var(--accent); }
+.ch-point.proche { background: var(--muted); width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; top: 20%; }
+.ch-point.histoire { background: var(--ch-histoire); width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; top: 80%; border-radius: 2px; transform: rotate(45deg); }
+.ch-point.histoire:hover { transform: rotate(45deg) scale(1.5); }
+.ch-reperes { position: relative; height: 22px; margin-top: 6px; }
+.ch-reperes span { position: absolute; transform: translateX(-50%); font-size: 0.75rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ch-reperes span::before { content: ''; position: absolute; left: 50%; top: -6px; height: 5px; border-left: 1px solid var(--line); }
+
+/* les trois familles de faits */
+.ch-filtres { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; }
+.ch-filtre { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; font-weight: 600; font-size: 0.92rem; color: var(--muted); user-select: none; }
+.ch-filtre input { position: absolute; opacity: 0; pointer-events: none; }
+.ch-filtre-point { width: 10px; height: 10px; border-radius: 50%; background: var(--line); }
+.ch-filtre.perso .ch-filtre-point { background: var(--ch-perso); }
+.ch-filtre.proche .ch-filtre-point { background: var(--ch-proche); }
+.ch-filtre.histoire .ch-filtre-point { background: var(--ch-histoire); border-radius: 2px; transform: rotate(45deg); }
+.ch-filtre:not(.actif) .ch-filtre-point { background: transparent; box-shadow: inset 0 0 0 2px var(--souligne); }
+.ch-filtre.actif { color: var(--fg); border-color: var(--souligne); box-shadow: var(--shadow); }
+.ch-filtre:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ch-filtre small { color: var(--muted); font-weight: 500; font-variant-numeric: tabular-nums; }
+.rouet.petit { display: inline-block; width: 14px; height: 14px; border-width: 2px; vertical-align: -2px; }
+
+/* la ligne du temps */
+.ch-ligne { list-style: none; margin: 8px 0 0; padding: 0; position: relative; }
+.ch-annee { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 0 18px; position: relative; padding-bottom: 18px; }
+.ch-ligne::before { content: ''; position: absolute; left: 105px; top: 20px; bottom: 20px; border-left: 2px solid var(--line); }
+.ch-annee::after { content: ''; position: absolute; left: 96px; top: 11px; width: 12px; height: 12px; border-radius: 50%; background: var(--panel); border: 3px solid var(--accent); box-sizing: border-box; margin-left: 4px; }
+.ch-rail { text-align: right; padding: 2px 14px 0 0; }
+.ch-an { display: block; font: 400 1.55rem/1.1 var(--serif); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.ch-age { display: inline-block; margin-top: 4px; font-size: 0.75rem; font-weight: 700; color: var(--accent); background: var(--accent-bg); padding: 1px 9px; border-radius: 999px; white-space: nowrap; }
+.ch-cartes { display: flex; flex-direction: column; gap: 8px; padding-left: 26px; min-width: 0; }
+.ch-etape-vie { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 18px; padding: 8px 0 14px; position: relative; }
+.ch-etape-vie span { grid-column: 2; margin-left: 26px; font: 700 0.72rem var(--body); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 12px; }
+.ch-etape-vie span::after { content: ''; flex: 1; border-top: 1px dashed var(--souligne); }
+.ch-trou { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 18px; padding: 0 0 18px; position: relative; }
+.ch-trou span { grid-column: 2; margin-left: 26px; font-size: 0.8rem; font-style: italic; color: var(--muted); }
+
+.ch-carte { display: flex; align-items: flex-start; gap: 12px; padding: 11px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); position: relative; scroll-margin-top: 90px; }
+.ch-pastille { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-bg); color: var(--accent); }
+.ch-pastille svg { width: 18px; height: 18px; }
+.ch-texte { min-width: 0; flex: 1; }
+.ch-ligne-titre { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.ch-carte h3 { font: 650 1rem/1.3 var(--body); letter-spacing: -0.005em; }
+.ch-carte h3 a { color: inherit; }
+.ch-meta { margin: 3px 0 0; font-size: 0.88rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 0 6px; align-items: baseline; }
+.ch-date { font-variant-numeric: tabular-nums; color: var(--fg); opacity: 0.85; }
+.ch-relation { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 1px 8px; border-radius: 999px; background: var(--panel-2); color: var(--muted); text-decoration: none; }
+a.ch-relation:hover { background: var(--accent-bg); color: var(--accent); }
+.ch-relation.histoire { background: var(--mid-bg); color: var(--mid); }
+
+.ch-carte.perso { border-left: 4px solid var(--ch-perso); box-shadow: var(--shadow); }
+.ch-carte.perso.borne { background: linear-gradient(100deg, var(--accent-bg), var(--panel) 55%); }
+.ch-carte.perso.borne h3 { font-size: 1.12rem; }
+.ch-carte.perso.borne .ch-pastille { background: var(--accent); color: var(--accent-fg); width: 40px; height: 40px; }
+.ch-carte.proche { background: var(--panel-2); border-color: transparent; }
+.ch-carte.proche .ch-pastille { background: var(--panel); color: var(--muted); width: 28px; height: 28px; }
+.ch-carte.proche .ch-pastille svg { width: 15px; height: 15px; }
+.ch-carte.proche h3 { font-weight: 550; font-size: 0.95rem; }
+.ch-carte.histoire { background: var(--mid-bg); border-color: transparent; border-left: 4px solid var(--ch-histoire); }
+.ch-carte.histoire .ch-pastille { background: var(--panel); color: var(--ch-histoire); }
+.ch-carte.histoire .ch-meta, .ch-carte.histoire .ch-date { color: var(--mid); opacity: 1; }
+.ch-vise { animation: ch-vise 1.6s ease-out; }
+@keyframes ch-vise { 0%, 30% { box-shadow: 0 0 0 4px var(--accent); } 100% { box-shadow: 0 0 0 0 transparent; } }
+.ch-sans-date { margin-top: 12px; }
+.ch-sans-date h2 { font-size: 1.1rem; margin-bottom: 10px; }
+.ch-sans-date .ch-cartes { padding-left: 0; }
+
+@media (max-width: 640px) {
+  .ch-hero { padding: 18px; gap: 14px; }
+  .ch-hero .ch-portrait img { width: 64px; height: 80px; }
+  .ch-frise { padding: 18px 18px 10px; }
+  .ch-annee, .ch-etape-vie, .ch-trou { grid-template-columns: 60px minmax(0, 1fr); gap: 0 10px; }
+  .ch-ligne::before { left: 69px; }
+  .ch-annee::after { left: 60px; }
+  .ch-an { font-size: 1.2rem; }
+  .ch-cartes { padding-left: 20px; }
+  .ch-etape-vie span, .ch-trou span { margin-left: 20px; }
+}
+@media (prefers-reduced-motion: reduce) { .ch-vise { animation: none; } .ch-point { transition: none; } }
+@media print {
+  .ch-choix, .ch-filtres, .chronologie .titre-ecran .sous-titre { display: none !important; }
+  .ch-carte, .ch-annee { break-inside: avoid; }
+  .ch-hero, .ch-carte { box-shadow: none; }
+}
