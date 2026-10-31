@@ -4,6 +4,8 @@ import { useMemo, useState } from 'preact/hooks'
 import type { Donnees } from '../lib/donnees'
 import { anomalies, TYPES_ANOMALIES, type TypeAnomalie } from '../lib/anomalies'
 import { encodages, TYPES_ENCODAGES, type Encodage, type TypeEncodage } from '../lib/encodages'
+import { lieuxAVerifier, RAISONS_VARIANTES } from '../lib/lieux-variantes'
+import { telecharger, versCsv } from '../lib/csv'
 import { nombre } from '../lib/format'
 import { ecrire, lire } from '../lib/stockage'
 import { Personne, Pagination } from './commun'
@@ -41,6 +43,15 @@ export function Anomalies({ d }: { d: Donnees }) {
     const f = e.famille ? d.arbre.familles.get(e.famille) : undefined
     return <>{[f?.mari, f?.femme].filter((x): x is string => !!x).map((id) => <div key={id}><Personne d={d} id={id} annees /></div>)}</>
   }
+
+  const [lieuxEcartes, setLieuxEcartes] = useState<string[]>(() => lire('lieuxEcartes', []))
+  const [pageL, setPageL] = useState(0)
+  const groupesL = useMemo(() => lieuxAVerifier(d.arbre, new Set(lieuxEcartes)), [d, lieuxEcartes])
+  const changerL = (l: string[]) => { setLieuxEcartes(l); ecrire('lieuxEcartes', l) }
+  const exporterL = () => telecharger('lieux-a-normaliser.csv', versCsv([
+    ['Forme à garder', 'Forme à remplacer', 'Faits'],
+    ...groupesL.flatMap((g) => g.variantes.slice(1).map((v) => [g.suggestion, v.lieu, v.faits])),
+  ]))
 
   return (
     <section class="ecran">
@@ -134,6 +145,55 @@ export function Anomalies({ d }: { d: Donnees }) {
             </table>
           </div>
           <Pagination page={pageE} pages={Math.ceil(groupesE.length / PAR_PAGE)} aller={setPageE} />
+        </>
+      )}
+
+      <header class="titre-ecran">
+        <h2>Lieux à normaliser</h2>
+        <p class="sous-titre">
+          {groupesL.length
+            ? `${nombre(groupesL.length)} lieu${groupesL.length > 1 ? 'x' : ''} écrit${groupesL.length > 1 ? 's' : ''} de plusieurs façons.`
+            : 'Aucun lieu écrit de plusieurs façons.'}
+        </p>
+      </header>
+      <p class="aide">
+        Sont rapprochés les lieux qui ne diffèrent que par les majuscules, les accents, les tirets, « St » pour « Saint », une province ou un pays écrit autrement ou absent,
+        le nom français ou néerlandais d’une commune belge (Mons, Bergen), ou une lettre de trop ou de moins dans un nom de 6 lettres ou plus
+        (à vérifier : deux villages voisins peuvent n’avoir qu’une lettre d’écart). Un lieu avec hameau ou adresse n’est jamais rapproché d’un autre.
+        La forme proposée est la plus employée ; corrigez les autres sur l’arbre en ligne, puis chargez un nouvel export.
+      </p>
+      <p class="aide">
+        <button type="button" class="bouton discret" onClick={exporterL} disabled={!groupesL.length}>Exporter en CSV</button>
+        {lieuxEcartes.length > 0 && <> · {nombre(lieuxEcartes.length)} écarté{lieuxEcartes.length > 1 ? 's' : ''} <button type="button" class="lien" onClick={() => changerL([])}>Tout réafficher</button></>}
+      </p>
+      {groupesL.length > 0 && (
+        <>
+          <div class="tableau-conteneur">
+            <table class="tableau">
+              <thead><tr><th>Forme à garder</th><th>À remplacer</th><th>Pourquoi</th><th /></tr></thead>
+              <tbody>
+                {groupesL.slice(pageL * PAR_PAGE, (pageL + 1) * PAR_PAGE).map((g) => (
+                  <tr key={g.cle}>
+                    <td><a href={'#/lieux/' + encodeURIComponent(g.suggestion)}>{g.suggestion}</a><br /><span class="aide">{nombre(g.variantes[0].faits)} fait{g.variantes[0].faits > 1 ? 's' : ''}</span></td>
+                    <td>
+                      <ul class="problemes">
+                        {g.variantes.slice(1).map((v) => (
+                          <li key={v.lieu}><span><a href={'#/lieux/' + encodeURIComponent(v.lieu)}>{v.lieu}</a> <span class="aide">{nombre(v.faits)} fait{v.faits > 1 ? 's' : ''}</span></span></li>
+                        ))}
+                      </ul>
+                    </td>
+                    <td>{g.raisons.map((r) => <div key={r} class="aide">{RAISONS_VARIANTES[r]}</div>)}</td>
+                    <td>
+                      <button type="button" class="bouton discret" title="Ce sont bien des lieux différents : ne plus les rapprocher" onClick={() => changerL([...lieuxEcartes, g.cle])}>
+                        <svg class="icone-bouton" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8" /></svg>Lieux différents
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <Pagination page={pageL} pages={Math.ceil(groupesL.length / PAR_PAGE)} aller={setPageL} />
         </>
       )}
     </section>

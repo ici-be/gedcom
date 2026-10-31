@@ -56,6 +56,13 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   orthographe ancienne, faute de frappe) se placent d'un clic ; ces positions restent dans le
   navigateur et peuvent être exportées.
 
+- **Archives** (`#/archives`) : un plan de visite d'archives. On choisit des communes et une période (de… à…), les
+  registres voulus (naissances, mariages, décès) ; le plan liste, commune par commune puis registre par registre, les
+  années à dépouiller et chaque acte à lever, avec une case à cocher. Impression et export CSV.
+- **Anomalies** : en plus des dates incohérentes et des mauvais encodages, les **lieux à normaliser** : « St Gilles » et
+  « Saint-Gilles », « Brussel » et « Bruxelles », un lieu sans province, une lettre de trop. La forme la plus employée est
+  proposée ; export CSV pour corriger sur l'arbre en ligne.
+
 - **Récit** (`#/recit`) : une notice à la manière des livres de famille sur une personne choisie, ses
   descendants (jusqu'à cinq générations, en listes 1., a), i.…) puis ses ancêtres (jusqu'à huit générations), un
   couple par notice avec les numéros Sosa entre crochets : « Né le… à…, il y mourut le… à l'âge de… Il s'était

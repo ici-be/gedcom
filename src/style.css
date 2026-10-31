@@ -1348,3 +1348,20 @@ svg[class^="trait-"] line { stroke-width: 2; stroke-linecap: round; }
 .problemes li + li { border-top: 1px solid var(--line); }
 .problemes li:first-child { padding-top: 0; }
 .problemes li:last-child { padding-bottom: 0; }
+
+/* ---------- plan de visite d'archives ---------- */
+.plan-communes { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 16px; }
+.plan-communes summary { cursor: pointer; }
+.liste-cases { list-style: none; margin: 8px 0 0; padding: 0; columns: 16rem; column-gap: 24px; }
+.liste-cases li { break-inside: avoid; padding: 2px 0; }
+.plan-commune h2 a { color: inherit; }
+.plan-registre .aide { margin: 0 0 4px; }
+.actes .annee { font-weight: 700; font-variant-numeric: tabular-nums; }
+.barre-resultats .actions { display: flex; gap: 8px; }
+@media print {
+  .plan-archives .titre-ecran .sous-titre, .plan-reglages, .plan-communes, .plan-archives .barre-resultats { display: none !important; }
+  .plan-commune { break-inside: auto; border: 0; padding: 0; margin-bottom: 14pt; }
+  .plan-commune h2 { break-after: avoid; }
+  .plan-registre h3 { break-after: avoid; }
+  .plan-archives .actes li { break-inside: avoid; }
+}

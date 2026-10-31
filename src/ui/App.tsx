@@ -26,6 +26,7 @@ import { Illettres } from './Illettres'
 import { Annotations } from './Annotations'
 import { Doublons } from './Doublons'
 import { Anomalies } from './Anomalies'
+import { Archives } from './Archives'
 import { Recherches } from './Recherches'
 import { Priorites } from './Priorites'
 import { ProposerInstallation } from './Installer'
@@ -86,6 +87,7 @@ const ICONES: Record<string, string> = {
   graphe: 'M4 2.5a1.5 1.5 0 1 1 0 3a1.5 1.5 0 1 1 0-3M12 4a1.5 1.5 0 1 1 0 3a1.5 1.5 0 1 1 0-3M7 11a1.5 1.5 0 1 1 0 3a1.5 1.5 0 1 1 0-3M5.4 4.4l5.2 1M4.6 5.4l1.9 5.7M11.2 6.8l-3.4 4.6',
   statistiques: 'M2.5 14V9M6.5 14V5M10.5 14V7M14 14V2',
   doublons: 'M2 2.5h8v8H2zM6 5.5h8v8H6z',
+  archives: 'M2.5 3h11v3h-11zM3.5 6v7.5h9V6M6.5 9h3',
   anomalies: 'M8 2l6.5 11.5h-13zM8 6.5v3.2M8 11.6v.4',
   recherches: 'M7 2.5a4.5 4.5 0 1 1 0 9a4.5 4.5 0 1 1 0-9M10.3 10.3L14 14',
   priorites: 'M3.5 14.5V2M3.5 2.5h9l-2 3 2 3h-9',
@@ -339,6 +341,7 @@ export function App() {
     : <div class="attente" role="status"><span class="rouet" />{t('Préparation de l’arbre…')}</div>
   else if (page === 'doublons') contenu = <Doublons d={donnees} />
   else if (page === 'anomalies') contenu = <Anomalies d={donnees} />
+  else if (page === 'archives') contenu = <Archives d={donnees} perimetre={perimetre} setPerimetre={setPerimetre} />
   else if (page === 'priorites') contenu = <Priorites d={donnees} />
   else if (page === 'recherches') contenu = <Recherches d={donnees} id={route[1] || donnees.racine} />
   else if (page === 'annotations') contenu = <Annotations d={donnees} />
@@ -373,6 +376,7 @@ export function App() {
               <a href="#/personnes" class={page === 'personnes' ? 'actif' : ''}><Icone nom="personnes" />Personnes</a>
               <a href="#/priorites" class={page === 'priorites' ? 'actif' : ''}><Icone nom="priorites" />Priorités</a>
               <a href="#/lieux" class={page === 'lieux' ? 'actif' : ''}><Icone nom="lieux" />Lieux</a>
+              <a href="#/archives" class={page === 'archives' ? 'actif' : ''}><Icone nom="archives" />Archives</a>
               <a href="#/metiers" class={page === 'metiers' ? 'actif' : ''}><Icone nom="metiers" />Métiers</a>
               <a href="#/carte" class={page === 'carte' ? 'actif' : ''}><Icone nom="carte" />Carte</a>
               <a href="#/migrations" class={page === 'migrations' ? 'actif' : ''}><Icone nom="migrations" />Migrations</a>
