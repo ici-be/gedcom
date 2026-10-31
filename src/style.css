@@ -1510,3 +1510,105 @@ a.ch-relation:hover { background: var(--accent-bg); color: var(--accent); }
   .ch-carte, .ch-annee { break-inside: avoid; }
   .ch-hero, .ch-carte { box-shadow: none; }
 }
+
+/* ---------- calculateur de parenté ---------- */
+.parente-page { gap: 18px; --pa-h: var(--homme); --pa-f: var(--femme); }
+.pa-duo { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 14px; align-items: stretch; }
+.pa-selecteur { background: var(--panel); border: 1px solid var(--line); border-top: 4px solid var(--souligne); border-radius: var(--radius); padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 12px; box-shadow: var(--shadow); min-width: 0; }
+.pa-selecteur.h { border-top-color: var(--pa-h); }
+.pa-selecteur.f { border-top-color: var(--pa-f); }
+.pa-role { font: 700 0.72rem var(--body); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.pa-identite { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.pa-nom { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.pa-nom strong { font: 400 1.45rem/1.15 var(--serif); letter-spacing: -0.01em; overflow-wrap: anywhere; }
+.pa-nom strong span { font-variant: small-caps; letter-spacing: 0.02em; }
+.pa-nom .annees { margin: 0; }
+.pa-selecteur .choix-personne .actuel { display: none; }
+.pa-selecteur .choix-personne input { flex: 1 1 100%; }
+.pa-avatar { flex: none; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font: 700 0.95rem var(--body); letter-spacing: 0.02em; color: #fff; background: var(--g-vide); }
+.pa-avatar.h { background: var(--pa-h); }
+.pa-avatar.f { background: var(--pa-f); }
+.pa-avatar.vide { background: var(--panel-2); color: var(--muted); border: 2px dashed var(--souligne); font-size: 1.2rem; }
+.pa-selecteur .pa-avatar { width: 56px; height: 56px; font-size: 1.1rem; }
+.pa-inverser { align-self: center; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: var(--panel); color: var(--accent); display: grid; place-items: center; cursor: pointer; box-shadow: var(--shadow); transition: transform 0.25s, border-color 0.15s; }
+.pa-inverser:hover:not(:disabled) { border-color: var(--accent); transform: rotate(180deg); }
+.pa-inverser:disabled { opacity: 0.4; cursor: default; }
+.pa-inverser svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+.pa-accueil { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 38px 20px; text-align: center; color: var(--muted); background: var(--panel); border: 1px dashed var(--souligne); border-radius: var(--radius); }
+.pa-accueil svg { width: 140px; fill: none; stroke: var(--souligne); stroke-width: 2.5; stroke-linecap: round; }
+.pa-accueil svg circle { fill: var(--panel); stroke: var(--accent); }
+.pa-accueil p { margin: 0; max-width: 40ch; }
+
+/* le verdict */
+.pa-verdict { background: linear-gradient(135deg, var(--accent-bg), var(--panel) 70%); border: 1px solid var(--line); border-left: 5px solid var(--accent); border-radius: var(--radius); padding: 24px 28px; box-shadow: var(--shadow); }
+.pa-verdict.aucun { background: var(--panel); border-left-color: var(--souligne); }
+.pa-verdict.alliance { border-left-color: var(--or); background: linear-gradient(135deg, var(--mid-bg), var(--panel) 70%); }
+.pa-phrase { margin: 0; font: 400 clamp(1.35rem, 3.4vw, 1.95rem)/1.3 var(--serif); letter-spacing: -0.01em; }
+.pa-phrase b { font-weight: 600; color: var(--accent); }
+.pa-alias, .pa-inverse { margin: 8px 0 0; color: var(--muted); }
+.pa-alias { font-style: italic; }
+.pa-inverse b { color: var(--fg); font-weight: 600; }
+.pa-chiffres { list-style: none; display: flex; flex-wrap: wrap; gap: 10px; margin: 18px 0 0; padding: 0; }
+.pa-chiffres li { display: flex; flex-direction: column; gap: 2px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 8px 16px; min-width: 120px; }
+.pa-chiffres span { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.pa-chiffres strong { font: 400 1.5rem/1.2 var(--serif); font-variant-numeric: tabular-nums; }
+.pa-chiffres sup { font-size: 0.55em; }
+
+/* le chemin en V */
+.pa-chemin-entete { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.pa-mini { color: var(--muted); font-weight: 500; }
+.pa-v { display: flex; flex-direction: column; align-items: stretch; --trait: var(--souligne); }
+.pa-communs { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.pa-legende { font: 700 0.7rem var(--body); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.pa-couple { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.pa-anneaux { color: var(--or); font-size: 1.3rem; }
+.pa-pont { position: relative; height: 34px; }
+.pa-pont span { position: absolute; border-color: var(--trait); border-style: solid; border-width: 0; }
+.pa-pont .haut { left: 50%; top: 0; height: 50%; border-left-width: 2px; margin-left: -1px; }
+.pa-pont::before { content: ''; position: absolute; left: 25%; right: 25%; top: 50%; border-top: 2px solid var(--trait); margin-top: -1px; }
+.pa-pont .g, .pa-pont .d { top: 50%; height: 50%; border-left-width: 2px; margin-left: -1px; }
+.pa-pont .g { left: 25%; }
+.pa-pont .d { left: 75%; }
+.pa-branches { display: grid; grid-template-columns: 1fr 1fr; }
+.pa-branches.une { grid-template-columns: minmax(0, 1fr); }
+.pa-col { display: flex; flex-direction: column; align-items: center; min-width: 0; padding: 0 4px; }
+.pa-case { position: relative; display: flex; justify-content: center; width: 100%; padding-top: 22px; }
+.pa-case:first-child { padding-top: 0; }
+.pa-case::before { content: ''; position: absolute; left: 50%; top: 0; height: 22px; border-left: 2px solid var(--trait); margin-left: -1px; }
+.pa-case:first-child::before { display: none; }
+.pa-v:not(.pa-deux) .pa-communs { padding-bottom: 22px; position: relative; }
+.pa-v:not(.pa-deux) .pa-communs::after { content: ''; position: absolute; left: 50%; bottom: 0; height: 22px; border-left: 2px solid var(--trait); margin-left: -1px; }
+
+.pa-noeud { display: inline-flex; align-items: center; gap: 10px; padding: 8px 14px 8px 10px; background: var(--panel); border: 1px solid var(--line); border-radius: 999px; box-shadow: var(--shadow); color: var(--fg); text-decoration: none; max-width: 100%; position: relative; flex-wrap: wrap; }
+.pa-noeud:hover { border-color: var(--accent); }
+.pa-noeud .pa-avatar { width: 34px; height: 34px; font-size: 0.78rem; }
+.pa-noeud-texte { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
+.pa-noeud-texte strong { font-weight: 600; font-size: 0.95rem; overflow-wrap: anywhere; }
+.pa-noeud-texte strong span { font-variant: small-caps; }
+.pa-noeud-texte .annees { margin: 0; font-size: 0.78rem; }
+.pa-chip { font-style: normal; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 1px 8px; border-radius: 999px; background: var(--panel-2); color: var(--muted); }
+.pa-noeud.depart { border-color: var(--accent); background: var(--accent-bg); }
+.pa-noeud.arrivee { border-color: var(--or); background: var(--mid-bg); }
+.pa-noeud.depart .pa-chip { background: var(--accent); color: var(--accent-fg); }
+.pa-noeud.arrivee .pa-chip { background: var(--or); color: #fff; }
+
+/* le chemin par alliance */
+.pa-chaine { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; align-items: center; }
+.pa-etape { position: relative; padding: 14px 0; }
+.pa-etape::before { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; border-left: 2px dashed var(--souligne); }
+.pa-etape span { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 2px 12px; font-size: 0.82rem; font-style: italic; color: var(--muted); }
+
+.pa-pied { display: flex; gap: 10px; flex-wrap: wrap; }
+
+@media (max-width: 760px) {
+  .pa-duo { grid-template-columns: minmax(0, 1fr); }
+  .pa-inverser { justify-self: center; transform: rotate(90deg); }
+  .pa-inverser:hover:not(:disabled) { transform: rotate(270deg); }
+  .pa-verdict { padding: 18px; }
+  .pa-noeud { padding: 6px 10px 6px 8px; gap: 6px; }
+  .pa-noeud .pa-avatar { width: 28px; height: 28px; font-size: 0.7rem; }
+  .pa-noeud-texte strong { font-size: 0.85rem; }
+  .pa-chip { display: none; }
+}
+@media print { .pa-duo, .pa-pied { display: none; } .pa-verdict, .pa-noeud { box-shadow: none; } }

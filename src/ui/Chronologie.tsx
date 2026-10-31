@@ -133,6 +133,7 @@ export function Chronologie({ d, id }: { d: Donnees; id?: string }) {
         <div class="ch-choix-ligne">
           <ChoixPersonne d={d} valeur={cible} choisir={(n) => { location.hash = lien(n) }} />
           <a class="bouton discret" href={'#/recit/' + encodeURIComponent(cible)}>Récit</a>
+          {cible !== d.racine && <a class="bouton discret" href={'#/parente/' + encodeURIComponent(d.racine) + '/' + encodeURIComponent(cible)}>Parenté</a>}
         </div>
       </section>
 

@@ -28,6 +28,7 @@ import { Doublons } from './Doublons'
 import { Anomalies } from './Anomalies'
 import { Archives } from './Archives'
 import { Chronologie } from './Chronologie'
+import { Parente } from './Parente'
 import { Recherches } from './Recherches'
 import { Priorites } from './Priorites'
 import { ProposerInstallation } from './Installer'
@@ -89,6 +90,7 @@ const ICONES: Record<string, string> = {
   statistiques: 'M2.5 14V9M6.5 14V5M10.5 14V7M14 14V2',
   doublons: 'M2 2.5h8v8H2zM6 5.5h8v8H6z',
   archives: 'M2.5 3h11v3h-11zM3.5 6v7.5h9V6M6.5 9h3',
+  parente: 'M8 2.5a1.8 1.8 0 1 1 0 3.6a1.8 1.8 0 1 1 0-3.6M3.5 11a1.8 1.8 0 1 1 0 3.6a1.8 1.8 0 1 1 0-3.6M12.5 11a1.8 1.8 0 1 1 0 3.6a1.8 1.8 0 1 1 0-3.6M8 6.1v2M8 8.1H3.5V11M8 8.1h4.5V11',
   anomalies: 'M8 2l6.5 11.5h-13zM8 6.5v3.2M8 11.6v.4',
   recherches: 'M7 2.5a4.5 4.5 0 1 1 0 9a4.5 4.5 0 1 1 0-9M10.3 10.3L14 14',
   priorites: 'M3.5 14.5V2M3.5 2.5h9l-2 3 2 3h-9',
@@ -332,6 +334,7 @@ export function App() {
     ? <Graphe d={donnees} />
     : <div class="attente" role="status"><span class="rouet" />Chargement du graphe…</div>
   else if (page === 'recit') contenu = <Recit d={donnees} id={route[1]} />
+  else if (page === 'parente') contenu = <Parente d={donnees} a={route[1]} b={route[2]} />
   else if (page === 'chronologie') contenu = <Chronologie d={donnees} id={route[1]} />
   else if (page === 'evenements' && route[1]) contenu = <PageEvenement d={donnees} id={route[1]} />
   else if (page === 'evenements') contenu = <ListeEvenements d={donnees} />
@@ -383,6 +386,7 @@ export function App() {
               <a href="#/carte" class={page === 'carte' ? 'actif' : ''}><Icone nom="carte" />Carte</a>
               <a href="#/migrations" class={page === 'migrations' ? 'actif' : ''}><Icone nom="migrations" />Migrations</a>
               <a href="#/ascendance" class={page === 'ascendance' || page === 'lignee' ? 'actif' : ''}><Icone nom="ascendance" />Ascendance</a>
+              <a href="#/parente" class={page === 'parente' ? 'actif' : ''}><Icone nom="parente" />Parenté</a>
               <a href="#/recit" class={page === 'recit' || page === 'evenements' || page === 'chronologie' ? 'actif' : ''}><Icone nom="recit" />Récit</a>
               <a href="#/graphe" class={page === 'graphe' ? 'actif' : ''}><Icone nom="graphe" />Graphe</a>
               <a href="#/statistiques" class={page === 'statistiques' ? 'actif' : ''}><Icone nom="statistiques" />Statistiques</a>
