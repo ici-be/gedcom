@@ -3,12 +3,13 @@
 
 import type { Arbre, Individu } from './gedcom/arbre'
 
-export type TypeEncodage = 'couple-individu' | 'individuel-famille' | 'double-fait' | 'conjoints' | 'parente'
+export type TypeEncodage = 'couple-individu' | 'individuel-famille' | 'double-fait' | 'note' | 'conjoints' | 'parente'
 
 export const TYPES_ENCODAGES: Record<TypeEncodage, string> = {
   'couple-individu': 'Fait de couple rangé sur une seule personne',
   'individuel-famille': 'Fait individuel rangé sur une famille',
   'double-fait': 'Naissance ou décès en double',
+  note: 'Note issue d’un import (balises, liens, références)',
   conjoints: 'Conjoints incohérents',
   parente: 'Lien de parenté impossible',
 }
@@ -43,13 +44,32 @@ const estCouple = (e: { tag: string; type?: string }) => COUPLE.has(e.tag) || TY
 const estIndividuel = (e: { tag: string; type?: string }) => INDIVIDUEL.has(e.tag) || TYPE_INDIVIDUEL.test(typeLibre(e))
 const intitule = (e: { tag: string; type?: string }) => (typeLibre(e) ? `« ${e.type} »` : nom(e.tag))
 
+/** Ce qui trahit une note copiée d'un autre site (Geni, MyHeritage…) : balises HTML, liens et italiques wiki, lignes « * Reference: » */
+function defautsNote(note: string): string[] {
+  const d: string[] = []
+  if (/<\/?[a-z][^>]*>/i.test(note)) d.push('balises HTML')
+  if (/\[https?:\/\/[^\]]*\]/i.test(note)) d.push('liens wiki')
+  if (/''[^']+''/.test(note)) d.push('italiques wiki')
+  if (/^\s*\*\s*Reference\s*:/im.test(note)) d.push('références « * Reference: »')
+  if (/SmartCopy|MyHeritage Family Trees/i.test(note)) d.push('trace d’un import (SmartCopy, MyHeritage)')
+  return d
+}
+const extrait = (note: string) => {
+  const t = note.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+  return t.length > 90 ? t.slice(0, 90) + '…' : t
+}
+
 const complet = (i: Individu) => `${i.prenom} ${i.nom}`.trim() || i.id
 
 export function encodages(arbre: Arbre): Encodage[] {
   const res: Encodage[] = []
 
   for (const ind of arbre.individus.values()) {
+    const defauts = ind.note ? defautsNote(ind.note) : []
+    if (ind.note && defauts.length) res.push({ type: 'note', id: ind.id, texte: `Note de la personne : ${defauts.join(', ')} — « ${extrait(ind.note)} »` })
     for (const e of ind.evenements) {
+      const dn = e.note ? defautsNote(e.note) : []
+      if (e.note && dn.length) res.push({ type: 'note', id: ind.id, texte: `Note de ${nom(e.tag).toLowerCase()} : ${dn.join(', ')} — « ${extrait(e.note)} »` })
       if (!estCouple(e)) continue
       const date = e.date?.texte ? ` (${e.date.texte})` : ''
       const fam = ind.fams.length
@@ -68,6 +88,8 @@ export function encodages(arbre: Arbre): Encodage[] {
 
   for (const fam of arbre.familles.values()) {
     for (const e of fam.evenements) {
+      const dn = e.note ? defautsNote(e.note) : []
+      if (e.note && dn.length) res.push({ type: 'note', famille: fam.id, texte: `Note de ${nom(e.tag).toLowerCase()} : ${dn.join(', ')} — « ${extrait(e.note)} »` })
       if (!estIndividuel(e)) continue
       const date = e.date?.texte ? ` (${e.date.texte})` : ''
       res.push({ type: 'individuel-famille', famille: fam.id, texte: `${intitule(e)}${date} est noté sur la famille : il appartient à une personne` })

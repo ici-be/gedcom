@@ -50,3 +50,16 @@ test('fait libre « Marriage » sur une personne seule', () => {
   expect(e).toHaveLength(1)
   expect(e[0].type).toBe('couple-individu')
 })
+
+test('note issue d’un import', () => {
+  const a = lireArbre(`0 @I1@ INDI
+1 NAME Maria /Nuyts/
+1 NOTE <p>* Reference: [https://www.myheritage.com/research/x MyHeritage Family Trees] - [https://www.geni.com/projects/SmartCopy/18783 SmartCopy]: ''Feb 6 2019''</p>
+0 @I2@ INDI
+1 NAME Jean /Simple/
+1 NOTE Source: introuvable (registres brûlés)
+`)
+  const e = encodages(a).filter((x) => x.type === 'note')
+  expect(e).toHaveLength(1)
+  expect(e[0].id).toBe('@I1@')
+})

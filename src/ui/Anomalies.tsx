@@ -84,7 +84,8 @@ export function Anomalies({ d }: { d: Donnees }) {
       </header>
       <p class="aide">
         Sont signalés : un mariage, un divorce ou un autre fait de couple noté sur une seule personne plutôt que sur la famille ; une naissance, un décès ou un
-        métier noté sur une famille ; plusieurs naissances ou décès différents pour la même personne ; une personne mari et épouse à la fois, ou parent et enfant de la même famille.
+        métier noté sur une famille ; plusieurs naissances ou décès différents pour la même personne ; une note copiée d’un autre site (balises HTML, liens et italiques wiki, « * Reference: » de MyHeritage ou Geni) ;
+        une personne mari et épouse à la fois, ou parent et enfant de la même famille.
       </p>
       <p class="aide">
         <select value={typeE} onChange={(e) => { setTypeE(e.currentTarget.value as TypeEncodage | ''); setPageE(0) }} aria-label="Type de mauvais encodage">
