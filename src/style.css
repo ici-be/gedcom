@@ -1365,3 +1365,39 @@ svg[class^="trait-"] line { stroke-width: 2; stroke-linecap: round; }
   .plan-registre h3 { break-after: avoid; }
   .plan-archives .actes li { break-inside: avoid; }
 }
+
+/* ---------- anomalies ---------- */
+.anomalies { gap: 22px; }
+.an-tuiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.an-tuile { display: flex; flex-direction: column; gap: 2px; padding: 14px 16px; background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--mid); border-radius: var(--radius); color: var(--fg); text-decoration: none; box-shadow: var(--shadow); }
+.an-tuile:hover { border-color: var(--accent); border-left-color: var(--accent); }
+.an-tuile.ok { border-left-color: var(--ok); }
+.an-tuile strong { font: 700 1.9rem/1.1 var(--serif); font-variant-numeric: tabular-nums; color: var(--mid); }
+.an-tuile.ok strong { color: var(--ok); }
+.an-tuile-titre { font-weight: 700; }
+.an-section { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; scroll-margin-top: 16px; }
+.an-entete { display: flex; align-items: center; justify-content: space-between; gap: 10px 16px; flex-wrap: wrap; }
+.an-entete h2 { font-size: 1.2rem; display: flex; align-items: center; gap: 10px; margin: 0; }
+.an-entete select { max-width: 100%; }
+.compte.ok { background: var(--ok-bg); color: var(--ok); }
+.an-aide { margin: 10px 0 4px; color: var(--muted); font-size: 0.9rem; }
+.an-aide summary { cursor: pointer; width: fit-content; font-weight: 600; }
+.an-aide p { margin: 8px 0 0; max-width: 80ch; line-height: 1.5; }
+.an-ecartes, .an-vide { margin: 10px 0 0; color: var(--muted); }
+.an-lignes { list-style: none; margin: 10px 0 0; padding: 0; }
+.an-lignes > li { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) auto; gap: 6px 18px; align-items: start; padding: 11px 0; border-top: 1px solid var(--line); }
+.an-qui { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.an-autre { display: block; }
+.an-quoi { display: flex; flex-direction: column; gap: 3px; min-width: 0; margin: 0; padding: 0; list-style: none; }
+.an-type { display: block; width: fit-content; max-width: 100%; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--mid); }
+.an-lignes .problemes { gap: 8px; }
+.an-lignes .problemes > li { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 0; border: 0; }
+.an-lignes .problemes > li > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.an-garder { width: fit-content; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ok); background: var(--ok-bg); padding: 1px 8px; border-radius: 999px; }
+.an-variantes { list-style: none; margin: 2px 0 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+.an-variantes li { display: block; padding: 0; border: 0; }
+.an-fleche { color: var(--muted); }
+@media (max-width: 700px) {
+  .an-lignes > li { grid-template-columns: minmax(0, 1fr); }
+  .an-lignes > li > .bouton { justify-self: start; }
+}

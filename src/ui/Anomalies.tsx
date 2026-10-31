@@ -53,149 +53,143 @@ export function Anomalies({ d }: { d: Donnees }) {
     ...groupesL.flatMap((g) => g.variantes.slice(1).map((v) => [g.suggestion, v.lieu, v.faits])),
   ]))
 
+  const coche = <svg class="icone-bouton" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8" /></svg>
+  const pluriel = (n: number, un: string, plus = un + 's') => `${nombre(n)} ${n > 1 ? plus : un}`
+  const tuiles: { id: string; titre: string; n: number; detail: string }[] = [
+    { id: 'an-dates', titre: 'Dates incohérentes', n: toutes.length, detail: 'parents trop jeunes, décès avant naissance…' },
+    { id: 'an-encodages', titre: 'Mauvais encodages', n: groupesE.length, detail: `${pluriel(listeE.length, 'problème')} sur ${pluriel(groupesE.length, 'fiche')}` },
+    { id: 'an-lieux', titre: 'Lieux à normaliser', n: groupesL.length, detail: 'même lieu écrit de plusieurs façons' },
+  ]
+
   return (
-    <section class="ecran">
+    <section class="ecran anomalies">
       <header class="titre-ecran">
         <h1>Anomalies</h1>
-        <p class="sous-titre">
-          {liste.length
-            ? `${nombre(liste.length)} incohérence${liste.length > 1 ? 's' : ''} entre des dates.`
-            : 'Aucune incohérence entre les dates.'}
-        </p>
+        <p class="sous-titre">Ce qui se contredit ou semble mal rangé dans l’arbre, à corriger sur l’arbre en ligne puis à recharger ici.</p>
       </header>
-      <p class="aide">
-        Sont signalés : un parent de moins de 15 ans à la naissance de l’enfant, une mère de plus de 50 ans ou un père de plus de 75 ans, un enfant né
-        après la mort de sa mère (ou plus d’un an après celle de son père), un mariage avant 15 ans ou après un décès, un décès avant la naissance ou après 110 ans.
-        Seules les années sont comparées ; les dates « avant » et « après » ne comptent pas. Une date juste mais rare (un veuf père à 80 ans) peut être écartée.
-      </p>
-      <p class="aide">
-        <select value={type} onChange={(e) => { setType(e.currentTarget.value as TypeAnomalie | ''); setPage(0) }} aria-label="Type d’anomalie">
-          <option value="">Tous les types</option>
-          {(Object.keys(TYPES_ANOMALIES) as TypeAnomalie[]).map((k) => <option key={k} value={k}>{TYPES_ANOMALIES[k]}</option>)}
-        </select>
-        {ignorees.length > 0 && <> · {nombre(ignorees.length)} écartée{ignorees.length > 1 ? 's' : ''} <button type="button" class="lien" onClick={() => changer([])}>Tout réafficher</button></>}
-      </p>
-      <div class="tableau-conteneur">
-        <table class="tableau">
-          <thead><tr><th>Personne</th><th>Anomalie</th><th>Autre personne</th><th /></tr></thead>
-          <tbody>
-            {liste.slice(page * PAR_PAGE, (page + 1) * PAR_PAGE).map((a) => (
-              <tr key={cle(a)}>
-                <td><Personne d={d} id={a.id} annees /></td>
-                <td>{a.texte}<br /><span class="aide">{TYPES_ANOMALIES[a.type]}</span></td>
-                <td>{a.autre && <Personne d={d} id={a.autre} annees />}</td>
-                <td>
-                  <button type="button" class="bouton discret" title="Cette date est juste : ne plus la signaler" onClick={() => changer([...ignorees, cle(a)])}>
-                    <svg class="icone-bouton" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8" /></svg>Date juste
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <Pagination page={page} pages={pages} aller={setPage} />
 
-      <header class="titre-ecran">
-        <h2>Mauvais encodages</h2>
-        <p class="sous-titre">
-          {listeE.length
-            ? `${nombre(listeE.length)} fait${listeE.length > 1 ? 's' : ''} ou lien${listeE.length > 1 ? 's' : ''} mal rangé${listeE.length > 1 ? 's' : ''}, pour ${nombre(groupesE.length)} fiche${groupesE.length > 1 ? 's' : ''}.`
-            : 'Aucun fait ni lien mal rangé.'}
-        </p>
-      </header>
-      <p class="aide">
-        Sont signalés : un mariage, un divorce ou un autre fait de couple noté sur une seule personne plutôt que sur la famille ; une naissance, un décès ou un
-        métier noté sur une famille ; plusieurs naissances ou décès différents pour la même personne ; un nom ou un prénom écrit tout en majuscules ; une note copiée d’un autre site (balises HTML, liens et italiques wiki, « * Reference: » de MyHeritage ou Geni) ;
-        une personne mari et épouse à la fois, ou parent et enfant de la même famille.
-      </p>
-      <p class="aide">
-        <select value={typeE} onChange={(e) => { setTypeE(e.currentTarget.value as TypeEncodage | ''); setPageE(0) }} aria-label="Type de mauvais encodage">
-          <option value="">Tous les types</option>
-          {(Object.keys(TYPES_ENCODAGES) as TypeEncodage[]).map((k) => <option key={k} value={k}>{TYPES_ENCODAGES[k]}</option>)}
-        </select>
-      </p>
-      {listeE.length > 0 && (
-        <>
-          <div class="tableau-conteneur">
-            <table class="tableau">
-              <thead><tr><th>Personne ou famille</th><th>Problèmes</th></tr></thead>
-              <tbody>
-                {groupesE.slice(pageE * PAR_PAGE, (pageE + 1) * PAR_PAGE).map((g) => (
-                  <tr key={cleE(g[0])}>
-                    <td class="groupe-personne">
-                      {concernes(g[0])}
-                      {g.length > 1 && <span class="compteur" title={`${g.length} problèmes`}>{g.length}</span>}
-                    </td>
-                    <td>
-                      <ul class="problemes">
-                        {g.map((e) => (
-                          <li key={cleE(e)}>
-                            <span>{e.texte}<br /><span class="aide">{TYPES_ENCODAGES[e.type]}</span></span>
-                            <button type="button" class="bouton discret" title="C’est voulu : ne plus le signaler" aria-label="C’est voulu : ne plus le signaler" onClick={() => changer([...ignorees, cleE(e)])}>
-                              <svg class="icone-bouton" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8" /></svg>
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <Pagination page={pageE} pages={Math.ceil(groupesE.length / PAR_PAGE)} aller={setPageE} />
-        </>
-      )}
+      <nav class="an-tuiles" aria-label="Aller à une section">
+        {tuiles.map((t) => (
+          <a key={t.id} href={'#' + t.id} class={t.n ? 'an-tuile' : 'an-tuile ok'} onClick={(e) => { e.preventDefault(); document.getElementById(t.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }}>
+            <strong>{nombre(t.n)}</strong>
+            <span class="an-tuile-titre">{t.titre}</span>
+            <span class="aide">{t.n ? t.detail : 'Rien à signaler'}</span>
+          </a>
+        ))}
+      </nav>
 
-      <header class="titre-ecran">
-        <h2>Lieux à normaliser</h2>
-        <p class="sous-titre">
-          {groupesL.length
-            ? `${nombre(groupesL.length)} lieu${groupesL.length > 1 ? 'x' : ''} écrit${groupesL.length > 1 ? 's' : ''} de plusieurs façons.`
-            : 'Aucun lieu écrit de plusieurs façons.'}
-        </p>
-      </header>
-      <p class="aide">
-        Sont rapprochés les lieux qui ne diffèrent que par les majuscules, les accents, les tirets, « St » pour « Saint », une province ou un pays écrit autrement ou absent,
-        le nom français ou néerlandais d’une commune belge (Mons, Bergen), ou une lettre de trop ou de moins dans un nom de 6 lettres ou plus
-        (à vérifier : deux villages voisins peuvent n’avoir qu’une lettre d’écart). Un lieu avec hameau ou adresse n’est jamais rapproché d’un autre.
-        La forme proposée est la plus employée ; corrigez les autres sur l’arbre en ligne, puis chargez un nouvel export.
-      </p>
-      <p class="aide">
-        <button type="button" class="bouton discret" onClick={exporterL} disabled={!groupesL.length}>Exporter en CSV</button>
-        {lieuxEcartes.length > 0 && <> · {nombre(lieuxEcartes.length)} écarté{lieuxEcartes.length > 1 ? 's' : ''} <button type="button" class="lien" onClick={() => changerL([])}>Tout réafficher</button></>}
-      </p>
-      {groupesL.length > 0 && (
-        <>
-          <div class="tableau-conteneur">
-            <table class="tableau">
-              <thead><tr><th>Forme à garder</th><th>À remplacer</th><th>Pourquoi</th><th /></tr></thead>
-              <tbody>
-                {groupesL.slice(pageL * PAR_PAGE, (pageL + 1) * PAR_PAGE).map((g) => (
-                  <tr key={g.cle}>
-                    <td><a href={'#/lieux/' + encodeURIComponent(g.suggestion)}>{g.suggestion}</a><br /><span class="aide">{nombre(g.variantes[0].faits)} fait{g.variantes[0].faits > 1 ? 's' : ''}</span></td>
-                    <td>
-                      <ul class="problemes">
-                        {g.variantes.slice(1).map((v) => (
-                          <li key={v.lieu}><span><a href={'#/lieux/' + encodeURIComponent(v.lieu)}>{v.lieu}</a> <span class="aide">{nombre(v.faits)} fait{v.faits > 1 ? 's' : ''}</span></span></li>
-                        ))}
-                      </ul>
-                    </td>
-                    <td>{g.raisons.map((r) => <div key={r} class="aide">{RAISONS_VARIANTES[r]}</div>)}</td>
-                    <td>
-                      <button type="button" class="bouton discret" title="Ce sont bien des lieux différents : ne plus les rapprocher" onClick={() => changerL([...lieuxEcartes, g.cle])}>
-                        <svg class="icone-bouton" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8" /></svg>Lieux différents
-                      </button>
-                    </td>
-                  </tr>
+      <section class="an-section" id="an-dates">
+        <div class="an-entete">
+          <h2>Dates incohérentes <span class={liste.length ? 'compte' : 'compte ok'}>{nombre(liste.length)}</span></h2>
+          <select value={type} onChange={(e) => { setType(e.currentTarget.value as TypeAnomalie | ''); setPage(0) }} aria-label="Type d’anomalie">
+            <option value="">Tous les types</option>
+            {(Object.keys(TYPES_ANOMALIES) as TypeAnomalie[]).map((k) => <option key={k} value={k}>{TYPES_ANOMALIES[k]}</option>)}
+          </select>
+        </div>
+        <details class="an-aide">
+          <summary>Ce qui est signalé</summary>
+          <p>
+            Un parent de moins de 15 ans à la naissance de l’enfant, une mère de plus de 50 ans ou un père de plus de 75 ans, un enfant né
+            après la mort de sa mère (ou plus d’un an après celle de son père), un mariage avant 15 ans ou après un décès, un décès avant la naissance ou après 110 ans.
+            Seules les années sont comparées ; les dates « avant » et « après » ne comptent pas. Une date juste mais rare (un veuf père à 80 ans) peut être écartée.
+          </p>
+        </details>
+        {ignorees.length > 0 && <p class="an-ecartes">{pluriel(ignorees.length, 'élément écarté', 'éléments écartés')} <button type="button" class="lien" onClick={() => changer([])}>Tout réafficher</button></p>}
+        {liste.length === 0 && <p class="an-vide">Aucune incohérence entre les dates.</p>}
+        <ul class="an-lignes">
+          {liste.slice(page * PAR_PAGE, (page + 1) * PAR_PAGE).map((a) => (
+            <li key={cle(a)}>
+              <div class="an-qui">
+                <Personne d={d} id={a.id} annees />
+                {a.autre && <span class="an-autre"><span class="aide">avec</span> <Personne d={d} id={a.autre} annees /></span>}
+              </div>
+              <div class="an-quoi">
+                <span class="an-type">{TYPES_ANOMALIES[a.type]}</span>
+                <span>{a.texte}</span>
+              </div>
+              <button type="button" class="bouton discret" title="Cette date est juste : ne plus la signaler" onClick={() => changer([...ignorees, cle(a)])}>{coche}Date juste</button>
+            </li>
+          ))}
+        </ul>
+        <Pagination page={page} pages={pages} aller={setPage} />
+      </section>
+
+      <section class="an-section" id="an-encodages">
+        <div class="an-entete">
+          <h2>Mauvais encodages <span class={groupesE.length ? 'compte' : 'compte ok'}>{nombre(groupesE.length)}</span></h2>
+          <select value={typeE} onChange={(e) => { setTypeE(e.currentTarget.value as TypeEncodage | ''); setPageE(0) }} aria-label="Type de mauvais encodage">
+            <option value="">Tous les types</option>
+            {(Object.keys(TYPES_ENCODAGES) as TypeEncodage[]).map((k) => <option key={k} value={k}>{TYPES_ENCODAGES[k]}</option>)}
+          </select>
+        </div>
+        <details class="an-aide">
+          <summary>Ce qui est signalé</summary>
+          <p>
+            Un mariage, un divorce ou un autre fait de couple noté sur une seule personne plutôt que sur la famille ; une naissance, un décès ou un
+            métier noté sur une famille ; plusieurs naissances ou décès différents pour la même personne ; un nom ou un prénom écrit tout en majuscules ; une note copiée d’un autre site (balises HTML, liens et italiques wiki, « * Reference: » de MyHeritage ou Geni) ;
+            une personne mari et épouse à la fois, ou parent et enfant de la même famille.
+          </p>
+        </details>
+        {groupesE.length === 0 && <p class="an-vide">Aucun fait ni lien mal rangé.</p>}
+        <ul class="an-lignes">
+          {groupesE.slice(pageE * PAR_PAGE, (pageE + 1) * PAR_PAGE).map((g) => (
+            <li key={cleE(g[0])}>
+              <div class="an-qui">
+                {concernes(g[0])}
+                {g.length > 1 && <span class="compteur" title={`${g.length} problèmes`}>{g.length}</span>}
+              </div>
+              <ul class="an-quoi problemes">
+                {g.map((e) => (
+                  <li key={cleE(e)}>
+                    <span><span class="an-type">{TYPES_ENCODAGES[e.type]}</span><span>{e.texte}</span></span>
+                    <button type="button" class="bouton discret" title="C’est voulu : ne plus le signaler" aria-label="C’est voulu : ne plus le signaler" onClick={() => changer([...ignorees, cleE(e)])}>{coche}</button>
+                  </li>
                 ))}
-              </tbody>
-            </table>
-          </div>
-          <Pagination page={pageL} pages={Math.ceil(groupesL.length / PAR_PAGE)} aller={setPageL} />
-        </>
-      )}
+              </ul>
+            </li>
+          ))}
+        </ul>
+        <Pagination page={pageE} pages={Math.ceil(groupesE.length / PAR_PAGE)} aller={setPageE} />
+      </section>
+
+      <section class="an-section" id="an-lieux">
+        <div class="an-entete">
+          <h2>Lieux à normaliser <span class={groupesL.length ? 'compte' : 'compte ok'}>{nombre(groupesL.length)}</span></h2>
+          <button type="button" class="bouton discret" onClick={exporterL} disabled={!groupesL.length}>Exporter en CSV</button>
+        </div>
+        <details class="an-aide">
+          <summary>Ce qui est signalé</summary>
+          <p>
+            Les lieux qui ne diffèrent que par les majuscules, les accents, les tirets, « St » pour « Saint », une province ou un pays écrit autrement ou absent,
+            le nom français ou néerlandais d’une commune belge (Mons, Bergen), ou une lettre de trop ou de moins dans un nom de 6 lettres ou plus
+            (à vérifier : deux villages voisins peuvent n’avoir qu’une lettre d’écart). Un lieu avec hameau ou adresse n’est jamais rapproché d’un autre.
+            La forme proposée est la plus employée ; corrigez les autres sur l’arbre en ligne, puis chargez un nouvel export.
+          </p>
+        </details>
+        {lieuxEcartes.length > 0 && <p class="an-ecartes">{pluriel(lieuxEcartes.length, 'groupe écarté', 'groupes écartés')} <button type="button" class="lien" onClick={() => changerL([])}>Tout réafficher</button></p>}
+        {groupesL.length === 0 && <p class="an-vide">Aucun lieu écrit de plusieurs façons.</p>}
+        <ul class="an-lignes">
+          {groupesL.slice(pageL * PAR_PAGE, (pageL + 1) * PAR_PAGE).map((g) => (
+            <li key={g.cle}>
+              <div class="an-qui">
+                <span class="an-garder">À garder</span>
+                <a href={'#/lieux/' + encodeURIComponent(g.suggestion)}>{g.suggestion}</a>
+                <span class="aide">{pluriel(g.variantes[0].faits, 'fait')}</span>
+              </div>
+              <div class="an-quoi">
+                <span class="an-type">{g.raisons.map((r) => RAISONS_VARIANTES[r]).join(' · ')}</span>
+                <ul class="an-variantes">
+                  {g.variantes.slice(1).map((v) => (
+                    <li key={v.lieu}><span class="an-fleche" aria-hidden="true">→</span> <a href={'#/lieux/' + encodeURIComponent(v.lieu)}>{v.lieu}</a> <span class="aide">{pluriel(v.faits, 'fait')}</span></li>
+                  ))}
+                </ul>
+              </div>
+              <button type="button" class="bouton discret" title="Ce sont bien des lieux différents : ne plus les rapprocher" onClick={() => changerL([...lieuxEcartes, g.cle])}>{coche}Lieux différents</button>
+            </li>
+          ))}
+        </ul>
+        <Pagination page={pageL} pages={Math.ceil(groupesL.length / PAR_PAGE)} aller={setPageL} />
+      </section>
     </section>
   )
 }
