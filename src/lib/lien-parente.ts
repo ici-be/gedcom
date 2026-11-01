@@ -173,6 +173,7 @@ function retracer(m: Montee, ancetre: string, origine: string): string[] {
 /** Tous les ancêtres (et la personne) de ceux qu'on donne : sert à écarter les ancêtres communs « dominés » */
 function ascendance(arbre: Arbre, depart: Iterable<string>, vus: Set<string>) {
   const pile = [...depart]
+  for (const x of pile) vus.add(x)
   while (pile.length) {
     const ind = arbre.individus.get(pile.pop()!)
     if (!ind) continue

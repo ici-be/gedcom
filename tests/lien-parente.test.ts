@@ -61,3 +61,18 @@ test('alliance, inconnu, identique', () => {
   expect(parente(arbre, g(1), g(11)).type).toBe('aucun')
   expect(parente(arbre, g(1), g(1)).type).toBe('identique')
 })
+
+test('un grand-père : un seul chemin, pas de détour par ses propres parents', () => {
+  // Gaëlle (5) → Cécile (3) → Xavier (1) : grand-père de Gaëlle ; Xavier a lui-même des parents connus
+  const a = lireArbre([
+    ind(1, 'Gus', 'M', '1 FAMS @F1@\n'), ind(2, 'Gina', 'F', '1 FAMS @F1@\n'),
+    ind(3, 'Paul', 'M', '1 FAMC @F1@\n1 FAMS @F2@\n'), ind(4, 'Rita', 'F', '1 FAMS @F2@\n'),
+    ind(5, 'Luc', 'M', '1 FAMC @F2@\n1 FAMS @F3@\n'), ind(6, 'Eva', 'F', '1 FAMS @F3@\n'),
+    ind(7, 'Zoé', 'F', '1 FAMC @F3@\n'),
+    `0 @F1@ FAM\n1 HUSB @I1@\n1 WIFE @I2@\n1 CHIL @I3@\n`,
+    `0 @F2@ FAM\n1 HUSB @I3@\n1 WIFE @I4@\n1 CHIL @I5@\n`,
+    `0 @F3@ FAM\n1 HUSB @I5@\n1 WIFE @I6@\n1 CHIL @I7@\n`,
+  ].join(''))
+  const p = parente(a, a.individus.get('@I7@')!, a.individus.get('@I3@')!)
+  expect(p.type === 'sang' && p.chemins.length).toBe(1)
+})
