@@ -1853,3 +1853,28 @@ th.lx-col-periodes { white-space: nowrap; }
 .classement .total { font-weight: 700; color: var(--fg); }
 .doyens { background: var(--panel-2); border-radius: 10px; padding: 10px 14px; }
 @media (max-width: 640px) { .stat { padding: 16px; } .st-sep { display: none; } }
+
+/* ---------- accueil : « D’où viennent vos ancêtres » et « Réglages », plus soignés ---------- */
+.panneau.carte-accueil { gap: 28px; padding: 22px 26px; background: linear-gradient(135deg, var(--panel) 55%, color-mix(in srgb, var(--accent) 4%, var(--panel))); }
+.carte-accueil-texte h2 { font-family: var(--serif); font-size: 1.45rem; font-weight: 500; line-height: 1.2; letter-spacing: -0.01em; }
+.carte-accueil-texte > .aide:first-of-type { font-size: 0.88rem; }
+.carte-accueil-regions { gap: 0; margin: 4px 0; border-top: 1px solid var(--line); }
+.carte-accueil-regions li { padding: 7px 0; border-bottom: 1px solid var(--line); grid-template-columns: 16px 1fr auto; gap: 10px; }
+.carte-accueil-regions .pastille-couleur { width: 16px; height: 16px; border-radius: 5px; }
+.carte-accueil-regions b { font-family: var(--serif); font-weight: 500; font-size: 1.05rem; }
+.carte-accueil-texte a { text-underline-offset: 3px; }
+.carte-accueil-fond svg { border: 1px solid var(--line); box-shadow: inset 0 0 24px rgb(16 24 40 / 5%); }
+
+.ac-reglages { padding: 0; gap: 0; overflow: hidden; }
+.ac-reglages > summary { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; transition: background 0.15s; }
+.ac-reglages > summary:hover { background: var(--panel-2); }
+.ac-reglages > summary h2 { font-family: var(--serif); font-size: 1.25rem; font-weight: 500; margin: 0; display: flex; align-items: center; }
+.ac-reglages > summary h2::before { content: '⚙'; margin-right: 10px; color: var(--accent); font-size: 1.05rem; }
+.ac-reglages > summary h2::after { margin-left: auto; padding-left: 12px; }
+.ac-reglages > summary { gap: 8px; }
+.ac-reglages[open] > summary { margin-bottom: 0; border-bottom: 1px solid var(--line); }
+.ac-reglages > .aide { margin: 0; padding: 14px 20px 0; }
+.ac-reglages > .reglage { margin: 14px 20px 0; padding: 14px 16px; background: var(--panel-2); border: 1px solid var(--line); border-radius: calc(var(--radius) - 2px); }
+.ac-reglages > .reglage:last-child { margin-bottom: 20px; }
+.ac-reglages .reglage h3 { font-size: 0.95rem; font-weight: 650; }
+.ac-reglages .reglage .aide { margin: 0; }
