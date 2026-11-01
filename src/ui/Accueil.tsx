@@ -106,7 +106,7 @@ function Jauge({ titre, niveaux }: { titre: string; niveaux: Niveau[] }) {
     <div class="ac-jauge">
       <svg viewBox="0 0 108 108" role="img" aria-label={`${titre} : ${niveaux.map((v) => `${v.libelle} ${pourcent(v.n, v.total)}`).join(', ')}`}>
         {niveaux.map((v, i) => {
-          const R = 44 - i * 11, C = 2 * Math.PI * R
+          const R = 45 - i * 12, C = 2 * Math.PI * R
           return (
             <g key={v.libelle} class={'anneau a' + i}>
               <circle class="piste" cx="54" cy="54" r={R} />
@@ -115,7 +115,10 @@ function Jauge({ titre, niveaux }: { titre: string; niveaux: Niveau[] }) {
           )
         })}
       </svg>
-      <span class="ac-pct">{pourcent(premier.n, premier.total)}</span>
+      <span class={'ac-pct' + (niveaux.length > 1 ? ' double' : '')}>{(() => {
+        const m = pourcent(premier.n, premier.total).match(/^(.*?)[\s\u202f\u00a0]*%$/)
+        return m ? <>{m[1]}<small>%</small></> : pourcent(premier.n, premier.total)
+      })()}</span>
       <strong>{titre}</strong>
       {niveaux.map((v, i) => (
         <span key={v.libelle} class="ac-detail">

@@ -1908,3 +1908,12 @@ th.lx-col-periodes { white-space: nowrap; }
 .ac-puce.a1 { background: color-mix(in srgb, var(--ok) 55%, var(--accent)); }
 .ac-jauge:has(.a1) { width: 190px; }
 .ac-detail { white-space: nowrap; }
+
+/* jauge à deux anneaux : chiffre centré, % collé au chiffre, deux couleurs bien distinctes */
+.ac-jauge circle { stroke-width: 7; }
+.ac-pct { top: 54px; transform: translateY(-50%); line-height: 1; white-space: nowrap; }
+.ac-pct small { font-size: 0.5em; margin-left: 1px; vertical-align: 0.55em; color: var(--muted); }
+.ac-pct.double { font-size: 1.35rem; }
+.ac-jauge .a1 .valeur { stroke: var(--accent); }
+.ac-jauge .a1 .piste { stroke: color-mix(in srgb, var(--accent) 10%, var(--line)); }
+.ac-puce.a1 { background: var(--accent); }
