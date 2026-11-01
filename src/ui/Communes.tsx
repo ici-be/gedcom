@@ -256,24 +256,25 @@ export function Lieu({ d, lieu, perimetre, setPerimetre }: { d: Donnees; lieu: s
 
   return (
     <section class="ecran">
-      <p class="retour"><a href="#/lieux">‹ Tous les lieux</a></p>
-      <header class="titre-ecran">
-        <h1>{c.nom}</h1>
-        <p class="sous-titre">{c.contexte}{c.contexte && ' · '}<a href={'#/carte/' + encodeURIComponent(c.lieu)}>Voir sur la carte</a></p>
-        <MiniCarte position={position} />
-      </header>
-      <div class="filtres">
-        <ChoixPerimetre valeur={perimetre} changer={setPerimetre} />
-        <label class="case">
-          <input type="checkbox" checked={tout} onChange={(e) => setTout(e.currentTarget.checked)} />
-          <span>Afficher aussi les faits sourcés{c.introuvables > 0 && ' ou introuvables'}</span>
-        </label>
-        {!tout && (
+      <div class="lieu-bloc">
+        <header class="titre-ecran">
+          <h1>{c.nom}</h1>
+          <p class="sous-titre">{c.contexte}{c.contexte && ' · '}<a href="#/lieux">‹ Tous les lieux</a> · <a href={'#/carte/' + encodeURIComponent(c.lieu)}>Voir sur la carte</a></p>
+          <MiniCarte position={position} />
+        </header>
+        <div class="filtres">
+          <ChoixPerimetre valeur={perimetre} changer={setPerimetre} />
           <label class="case">
-            <input type="checkbox" checked={masquerFaits} onChange={(e) => setMasquerFaits(e.currentTarget.checked)} />
-            <span>Masquer ce que j'ai coché</span>
+            <input type="checkbox" checked={tout} onChange={(e) => setTout(e.currentTarget.checked)} />
+            <span>Afficher aussi les faits sourcés{c.introuvables > 0 && ' ou introuvables'}</span>
           </label>
-        )}
+          {!tout && (
+            <label class="case">
+              <input type="checkbox" checked={masquerFaits} onChange={(e) => setMasquerFaits(e.currentTarget.checked)} />
+              <span>Masquer ce que j'ai coché</span>
+            </label>
+          )}
+        </div>
       </div>
       <div class="barre-resultats">
         <span>

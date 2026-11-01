@@ -1884,9 +1884,13 @@ th.lx-col-periodes { white-space: nowrap; }
 .titre-ecran:has(.mini-cartes) > .mini-cartes { grid-column: 2; grid-row: 1 / span 2; }
 .mini-cartes { display: flex; gap: 12px; justify-content: flex-end; }
 .mini-carte { margin: 0; display: flex; flex-direction: column; gap: 6px; align-items: center; }
-.mini-carte svg { display: block; height: 128px; width: auto; border-radius: 10px; border: 1px solid var(--line); box-shadow: var(--shadow); background: #fff; }
+.mini-carte svg { display: block; height: 128px; width: auto; border-radius: 10px; }
 .mini-carte figcaption { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); max-width: 100%; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 @media (max-width: 700px) {
   .titre-ecran:has(.mini-cartes) { grid-template-columns: 1fr; }
   .titre-ecran:has(.mini-cartes) > .mini-cartes { grid-column: 1; grid-row: auto; justify-content: flex-start; margin-top: 12px; }
 }
+
+/* fiche d'un lieu : titre, cartes et options d'affichage dans un même bloc blanc */
+.lieu-bloc { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; display: flex; flex-direction: column; gap: 14px; }
+.lieu-bloc .filtres { background: none; border: 0; border-top: 1px solid var(--line); border-radius: 0; padding: 14px 0 0; }

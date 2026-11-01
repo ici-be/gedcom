@@ -16,7 +16,7 @@ function Vignette({ contours, f, region, pos, titre, id }: { contours: Contours;
   return (
     <figure class="mini-carte">
       <svg viewBox={`0 0 ${w} ${h}`} width={w} height={h} role="img" aria-label={titre}>
-        <FondCarte id={id} contours={contours} f={f} zone={zone} couleurs={couleurs} cadre />
+        <FondCarte id={id} contours={contours} f={f} zone={zone} couleurs={couleurs} />
         <circle cx={x.toFixed(1)} cy={y.toFixed(1)} r="9" fill="#c4547a" fill-opacity="0.18" />
         <circle cx={x.toFixed(1)} cy={y.toFixed(1)} r="3.6" fill="#c4547a" stroke="#fff" stroke-width="1.2" />
       </svg>
