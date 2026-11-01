@@ -1907,3 +1907,4 @@ th.lx-col-periodes { white-space: nowrap; }
 .ac-puce { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); flex: none; }
 .ac-puce.a1 { background: color-mix(in srgb, var(--ok) 55%, var(--accent)); }
 .ac-jauge:has(.a1) { width: 190px; }
+.ac-detail { white-space: nowrap; }

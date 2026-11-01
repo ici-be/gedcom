@@ -257,7 +257,7 @@ export function TableauDeBord({ d, bilan, precedent, fichier, setAdresse, setPer
         <div class="ac-jauges">
           <Jauge titre="Ancêtres sourcés" niveaux={[
             { n: bilan.faitsAncetres.sources, total: bilan.faitsAncetres.attendus, libelle: 'tous' },
-            { n: dixGen.sources, total: dixGen.attendus, libelle: `${GENERATIONS_EVENTAIL} générations` },
+            { n: dixGen.sources, total: dixGen.attendus, libelle: `${GENERATIONS_EVENTAIL} gén.` },
           ]} />
           <Jauge titre="Tout l’arbre" niveaux={[{ n: bilan.faits.sources, total: bilan.faits.attendus, libelle: 'tout' }]} />
         </div>
