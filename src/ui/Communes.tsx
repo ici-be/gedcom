@@ -259,7 +259,8 @@ export function Lieu({ d, lieu, perimetre, setPerimetre }: { d: Donnees; lieu: s
       <div class="lieu-bloc">
         <header class="titre-ecran">
           <h1>{c.nom}</h1>
-          <p class="sous-titre">{c.contexte}{c.contexte && ' · '}<a href="#/lieux">‹ Tous les lieux</a> · <a href={'#/carte/' + encodeURIComponent(c.lieu)}>Voir sur la carte</a></p>
+          {c.contexte && <p class="sous-titre">{c.contexte}</p>}
+          <p class="sous-titre"><a href="#/lieux">Tous les lieux</a> · <a href={'#/carte/' + encodeURIComponent(c.lieu)}>Voir sur la carte</a></p>
           <MiniCarte position={position} />
         </header>
         <div class="filtres">

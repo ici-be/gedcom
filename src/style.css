@@ -1881,7 +1881,7 @@ th.lx-col-periodes { white-space: nowrap; }
 
 /* page d'un lieu : la commune dans sa province, la province dans son pays, à droite du titre */
 .titre-ecran:has(.mini-cartes) { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 24px; align-items: center; }
-.titre-ecran:has(.mini-cartes) > .mini-cartes { grid-column: 2; grid-row: 1 / span 2; }
+.titre-ecran:has(.mini-cartes) > .mini-cartes { grid-column: 2; grid-row: 1 / span 3; }
 .mini-cartes { display: flex; gap: 12px; justify-content: flex-end; }
 .mini-carte { margin: 0; display: flex; flex-direction: column; gap: 6px; align-items: center; }
 .mini-carte svg { display: block; height: 128px; width: auto; border-radius: 10px; }
