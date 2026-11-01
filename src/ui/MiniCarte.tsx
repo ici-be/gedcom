@@ -5,11 +5,11 @@ import type { Position } from '../lib/geo'
 import { cadrer, chargerContours, projection, proportions, type Contours, type Fenetre } from '../lib/carte-origines'
 import { FondCarte } from './arbres/FondCarte'
 
-const H = 150
+const H = 128
 
 function Vignette({ contours, f, region, pos, titre, id }: { contours: Contours; f: Fenetre; region: string; pos: Position; titre: string; id: string }) {
-  const w = Math.round(Math.min(H * proportions(f), 220))
-  const h = Math.round(w / proportions(f))
+  const h = H
+  const w = Math.round(H * proportions(f))
   const zone = { x: 0, y: 0, w, h }
   const [x, y] = projection(f, zone)(pos.lon, pos.lat)
   const couleurs = new Map([[region, '#b9d3c8']])

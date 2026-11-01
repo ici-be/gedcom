@@ -1879,8 +1879,14 @@ th.lx-col-periodes { white-space: nowrap; }
 .ac-reglages .reglage h3 { font-size: 0.95rem; font-weight: 650; }
 .ac-reglages .reglage .aide { margin: 0; }
 
-/* page d'un lieu : la commune dans sa province, la province dans son pays */
-.mini-cartes { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 12px; }
-.mini-carte { margin: 0; display: flex; flex-direction: column; gap: 4px; }
-.mini-carte svg { display: block; border-radius: 8px; max-width: 100%; height: auto; }
-.mini-carte figcaption { font-size: 0.78rem; color: var(--muted); }
+/* page d'un lieu : la commune dans sa province, la province dans son pays, à droite du titre */
+.titre-ecran:has(.mini-cartes) { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 24px; align-items: center; }
+.titre-ecran:has(.mini-cartes) > .mini-cartes { grid-column: 2; grid-row: 1 / span 2; }
+.mini-cartes { display: flex; gap: 12px; justify-content: flex-end; }
+.mini-carte { margin: 0; display: flex; flex-direction: column; gap: 6px; align-items: center; }
+.mini-carte svg { display: block; height: 128px; width: auto; border-radius: 10px; border: 1px solid var(--line); box-shadow: var(--shadow); background: #fff; }
+.mini-carte figcaption { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); max-width: 100%; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 700px) {
+  .titre-ecran:has(.mini-cartes) { grid-template-columns: 1fr; }
+  .titre-ecran:has(.mini-cartes) > .mini-cartes { grid-column: 1; grid-row: auto; justify-content: flex-start; margin-top: 12px; }
+}
