@@ -1897,3 +1897,13 @@ th.lx-col-periodes { white-space: nowrap; }
 
 .date-lieu a.lieu { text-decoration-color: var(--line); text-underline-offset: 3px; }
 .date-lieu a.lieu:hover { color: var(--accent); text-decoration-color: currentColor; }
+
+/* jauge à deux niveaux : tous les ancêtres (anneau extérieur) et les 10 premières générations (intérieur) */
+.ac-jauge .a1 .valeur { stroke: color-mix(in srgb, var(--ok) 55%, var(--accent)); }
+.ac-jauge .a1 .piste { stroke: color-mix(in srgb, var(--line) 60%, transparent); }
+.ac-jauge circle { stroke-width: 8; }
+.ac-detail { display: flex; align-items: center; justify-content: center; gap: 5px; }
+.ac-detail b { font-weight: 650; color: var(--fg); }
+.ac-puce { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); flex: none; }
+.ac-puce.a1 { background: color-mix(in srgb, var(--ok) 55%, var(--accent)); }
+.ac-jauge:has(.a1) { width: 190px; }

@@ -5,7 +5,8 @@ import { membres, type Bilan, type Donnees, type Perimetre, type Releve } from '
 import { communes } from '../lib/communes'
 import { adresseDevinee, normaliserAdresse } from '../lib/geneanet'
 import { nombre, pourcent } from '../lib/format'
-import { aChercher } from '../lib/suivi'
+import { aChercher, score } from '../lib/suivi'
+import { GENERATIONS_EVENTAIL } from '../lib/ascendance'
 import '@fontsource/fraunces/latin-400.css'
 import { Annees, Personne, Photo } from './commun'
 import { ChoixModeles } from './arbres/Vignettes'
@@ -96,18 +97,33 @@ export function Bienvenue({ ouvrir, erreur, impression }: { ouvrir: (f: File) =>
 }
 
 /** Une jauge circulaire : la part de faits sourcés */
-function Jauge({ titre, n, total, detail }: { titre: string; n: number; total: number; detail: string }) {
-  const R = 44, C = 2 * Math.PI * R
-  const part = total ? n / total : 0
+interface Niveau { n: number; total: number; libelle: string }
+
+/** Un anneau par niveau (le premier à l'extérieur) ; le pourcentage au centre est celui du premier */
+function Jauge({ titre, niveaux }: { titre: string; niveaux: Niveau[] }) {
+  const [premier] = niveaux
   return (
     <div class="ac-jauge">
-      <svg viewBox="0 0 108 108" role="img" aria-label={`${titre} : ${pourcent(n, total)}`}>
-        <circle class="piste" cx="54" cy="54" r={R} />
-        <circle class="valeur" cx="54" cy="54" r={R} stroke-dasharray={`${part * C} ${C}`} transform="rotate(-90 54 54)" />
+      <svg viewBox="0 0 108 108" role="img" aria-label={`${titre} : ${niveaux.map((v) => `${v.libelle} ${pourcent(v.n, v.total)}`).join(', ')}`}>
+        {niveaux.map((v, i) => {
+          const R = 44 - i * 11, C = 2 * Math.PI * R
+          return (
+            <g key={v.libelle} class={'anneau a' + i}>
+              <circle class="piste" cx="54" cy="54" r={R} />
+              <circle class="valeur" cx="54" cy="54" r={R} stroke-dasharray={`${(v.total ? v.n / v.total : 0) * C} ${C}`} transform="rotate(-90 54 54)" />
+            </g>
+          )
+        })}
       </svg>
-      <span class="ac-pct">{pourcent(n, total)}</span>
+      <span class="ac-pct">{pourcent(premier.n, premier.total)}</span>
       <strong>{titre}</strong>
-      <span class="ac-detail">{detail}</span>
+      {niveaux.map((v, i) => (
+        <span key={v.libelle} class="ac-detail">
+          {niveaux.length > 1 && <i class={'ac-puce a' + i} />}
+          {niveaux.length > 1 ? <>{v.libelle} : <b>{pourcent(v.n, v.total)}</b></> : null}
+          {niveaux.length > 1 ? ` · ${nombre(v.n)}/${nombre(v.total)}` : `${nombre(v.n)} faits sur ${nombre(v.total)}`}
+        </span>
+      ))}
     </div>
   )
 }
@@ -208,6 +224,17 @@ export function TableauDeBord({ d, bilan, precedent, fichier, setAdresse, setPer
     return { aSourcer, lieux, visages, signatures, chezAncetres }
   }, [d])
   const photos = chiffres.visages + chiffres.signatures
+  const dixGen = useMemo(() => {
+    const r = { attendus: 0, sources: 0 }
+    for (const [id, a] of d.ancetres) {
+      const sv = d.suivis.get(id)
+      if (!sv || a.generation > GENERATIONS_EVENTAIL) continue
+      const sc = score(sv)
+      r.attendus += sc.attendus
+      r.sources += sc.sources
+    }
+    return r
+  }, [d])
   const verifs = (bilan.anomalies ?? 0) + (bilan.encodages ?? 0)
   const initiales = racine ? ((racine.prenom[0] ?? '') + (racine.nom[0] ?? '')).toUpperCase() || '?' : '?'
   return (
@@ -228,8 +255,11 @@ export function TableauDeBord({ d, bilan, precedent, fichier, setAdresse, setPer
           </div>
         </div>
         <div class="ac-jauges">
-          <Jauge titre="Ancêtres sourcés" n={bilan.faitsAncetres.sources} total={bilan.faitsAncetres.attendus} detail={`${nombre(bilan.faitsAncetres.sources)} faits sur ${nombre(bilan.faitsAncetres.attendus)}`} />
-          <Jauge titre="Tout l’arbre" n={bilan.faits.sources} total={bilan.faits.attendus} detail={`${nombre(bilan.faits.sources)} faits sur ${nombre(bilan.faits.attendus)}`} />
+          <Jauge titre="Ancêtres sourcés" niveaux={[
+            { n: bilan.faitsAncetres.sources, total: bilan.faitsAncetres.attendus, libelle: 'tous' },
+            { n: dixGen.sources, total: dixGen.attendus, libelle: `${GENERATIONS_EVENTAIL} générations` },
+          ]} />
+          <Jauge titre="Tout l’arbre" niveaux={[{ n: bilan.faits.sources, total: bilan.faits.attendus, libelle: 'tout' }]} />
         </div>
       </header>
 
