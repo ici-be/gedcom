@@ -10,6 +10,7 @@ import { texteIntrouvable } from '../lib/introuvable'
 import { telecharger, versCsv } from '../lib/csv'
 import { nomComplet } from '../lib/parente'
 import { ecrire, lire } from '../lib/stockage'
+import { MiniCarte } from './MiniCarte'
 import { decouper, situerArbre, type Position } from '../lib/geo'
 import { lectures } from '../lib/lectures'
 import { Barre, ChoixPerimetre, EffacerFiltres, EnTeteTri, type Tri, MentionIntrouvable, Pagination, Pastille, Personne, Sources, normaliser, useImpression, lignesAffichees, AvisImpression } from './commun'
@@ -259,6 +260,7 @@ export function Lieu({ d, lieu, perimetre, setPerimetre }: { d: Donnees; lieu: s
       <header class="titre-ecran">
         <h1>{c.nom}</h1>
         <p class="sous-titre">{c.contexte}{c.contexte && ' · '}<a href={'#/carte/' + encodeURIComponent(c.lieu)}>Voir sur la carte</a></p>
+        <MiniCarte position={position} />
       </header>
       <div class="filtres">
         <ChoixPerimetre valeur={perimetre} changer={setPerimetre} />

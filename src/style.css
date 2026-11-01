@@ -1878,3 +1878,9 @@ th.lx-col-periodes { white-space: nowrap; }
 .ac-reglages > .reglage:last-child { margin-bottom: 20px; }
 .ac-reglages .reglage h3 { font-size: 0.95rem; font-weight: 650; }
 .ac-reglages .reglage .aide { margin: 0; }
+
+/* page d'un lieu : la commune dans sa province, la province dans son pays */
+.mini-cartes { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 12px; }
+.mini-carte { margin: 0; display: flex; flex-direction: column; gap: 4px; }
+.mini-carte svg { display: block; border-radius: 8px; max-width: 100%; height: auto; }
+.mini-carte figcaption { font-size: 0.78rem; color: var(--muted); }
