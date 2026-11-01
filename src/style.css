@@ -1894,3 +1894,6 @@ th.lx-col-periodes { white-space: nowrap; }
 /* fiche d'un lieu : titre, cartes et options d'affichage dans un même bloc blanc */
 .lieu-bloc { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; display: flex; flex-direction: column; gap: 14px; }
 .lieu-bloc .filtres { background: none; border: 0; border-top: 1px solid var(--line); border-radius: 0; padding: 14px 0 0; }
+
+.date-lieu a.lieu { text-decoration-color: var(--line); text-underline-offset: 3px; }
+.date-lieu a.lieu:hover { color: var(--accent); text-decoration-color: currentColor; }

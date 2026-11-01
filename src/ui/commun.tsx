@@ -66,7 +66,7 @@ export function DateLieu({ e, prefixe, sources }: { e?: Evenement; prefixe?: boo
         {type}{e.date?.texte || (e.avere && !e.lieu ? 'date inconnue' : '')}
         {sources && e.sources.length > 0 && <> <Sources sources={e.sources} /></>}
       </span>
-      {commune && <span class="lieu" title={e.lieu}>{commune}</span>}
+      {commune && <a class="lieu" href={'#/lieux/' + encodeURIComponent(e.lieu!)} title={e.lieu}>{commune}</a>}
     </span>
   )
 }
