@@ -70,7 +70,7 @@ export function Doublons({ d }: { d: Donnees }) {
           <tbody>
             {liste.slice(page * PAR_PAGE, (page + 1) * PAR_PAGE).map((p) => {
               const a = d.arbre.individus.get(p.a)!
-              const lien = lienGeneWeb(d.adresse, a, true)
+              const lien = lienGeneWeb(d.adresse, a)
               return (
                 <tr key={p.a + p.b}>
                   <td><Personne d={d} id={p.a} annees /><br /><span class="aide">{lieu(p.a)}</span></td>

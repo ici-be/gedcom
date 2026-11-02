@@ -25,15 +25,17 @@ function cle(s: string): string {
 }
 
 /**
- * Fiche GeneWeb par prénom et nom (p= et n=). En cas d'homonymes, le numéro d'occurrence
- * de GeneWeb n'est pas dans le GEDCOM : on renvoie vers la recherche, qui liste les homonymes.
+ * Fiche GeneWeb par prénom et nom (p= et n=), toujours par la recherche (m=S) : le numéro
+ * d'occurrence (oc=) n'est pas dans le GEDCOM et vaut parfois 1 sans homonyme dans l'export
+ * (homonyme supprimé, masqué ou orthographié autrement). La recherche ouvre directement la fiche
+ * quand une seule personne correspond, et liste les homonymes sinon.
  */
-export function lienGeneWeb(adresse: string, ind: Individu, homonyme: boolean): string | undefined {
+export function lienGeneWeb(adresse: string, ind: Individu): string | undefined {
   if (!adresse || (!ind.prenom && !ind.nom)) return undefined
   const sep = adresse.includes('?') ? '&' : '?'
   const p = encodeURIComponent(cle(ind.prenom || '?')).replace(/%2B/g, '+')
   const n = encodeURIComponent(cle(ind.nom || '?')).replace(/%2B/g, '+')
-  return `${adresse}${sep}lang=fr${homonyme ? '&m=S' : ''}&p=${p}&n=${n}${homonyme ? '' : '&type=fiche'}`
+  return `${adresse}${sep}lang=fr&m=S&p=${p}&n=${n}`
 }
 
 /** Base Geneanet devinée d'après l'en-tête du fichier (« 2 DATA bveyckemans.gwb ») */

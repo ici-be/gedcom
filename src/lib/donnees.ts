@@ -37,7 +37,7 @@ export function calculer(arbre: Arbre, racine: string, adresse: string): Donnees
     homonymes: hom,
     suivis,
     metiers: indexerMetiers(arbre),
-    lien: (ind) => lienGeneWeb(adresse, ind, hom.has(ind.id)),
+    lien: (ind) => lienGeneWeb(adresse, ind),
   }
 }
 
