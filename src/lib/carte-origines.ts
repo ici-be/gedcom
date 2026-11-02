@@ -4,8 +4,11 @@
 import { depuisRacine } from './geo'
 import { t, T } from './i18n'
 
-/** Contenu de public/geo/contours.json (scripts/contours.py) : anneaux en [lon×100, lat×100, …] par code de région */
-export interface Contours { r: Record<string, number[][]> }
+/**
+ * Contenu de public/geo/contours.json (scripts/contours.py) : anneaux en [lon×100, lat×100, …] par code de région,
+ * et le contour de chaque pays (l'union de ses régions)
+ */
+export interface Contours { r: Record<string, number[][]>; p?: Record<string, number[][]> }
 
 /** Pays dessinés sur la carte : ceux de contours.json (scripts/contours.py) */
 export const PAYS_CARTE = [
@@ -125,9 +128,14 @@ export function projection(f: Fenetre, r: Rect): (lon: number, lat: number) => [
 
 /** Les chemins SVG des régions visibles dans la fenêtre, projetée dans le rectangle `r` */
 export function projeter(contours: Contours, f: Fenetre, r: Rect): { code: string; d: string }[] {
+  return projeterAnneaux(contours.r, f, r)
+}
+
+/** Les chemins SVG des formes visibles dans la fenêtre (régions, ou pays avec contours.p) */
+export function projeterAnneaux(formes: Record<string, number[][]>, f: Fenetre, r: Rect): { code: string; d: string }[] {
   const pt = projection(f, r)
   const res: { code: string; d: string }[] = []
-  for (const [code, anneaux] of Object.entries(contours.r)) {
+  for (const [code, anneaux] of Object.entries(formes)) {
     const e = etendue(anneaux)
     if (e[2] < f[0] || e[0] > f[2] || e[3] < f[1] || e[1] > f[3]) continue
     let d = ''

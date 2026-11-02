@@ -10,7 +10,10 @@ Sources : Natural Earth, Admin 1 – States, Provinces, 1:10m (domaine public),
 https://github.com/nvkelso/natural-earth-vector/blob/master/geojson/ne_10m_admin_1_states_provinces.geojson
 et GeoNames (CC BY 4.0), https://download.geonames.org/export/dump/ (admin1CodesASCII.txt, cities5000.zip).
 
-Format : { "r": { "BE.WHT": [[lon×100, lat×100, lon×100, lat×100, …], …anneaux], … } }
+Format : { "r": { "BE.WHT": [[lon×100, lat×100, lon×100, lat×100, …], …anneaux], … },
+           "p": { "BE": [[…], …anneaux] } }
+« p » : le contour de chaque pays (l'union de ses régions), pour border les pays d'un liseré
+dessiné à l'intérieur des terres, sans boucher les détroits.
 Les clés reprennent les codes GeoNames (voir codeRegion dans src/lib/geo.ts) : province belge
 (BE.WHT), département français (FR.59), province néerlandaise et Land allemand (NL.06, DE.02),
 district luxembourgeois (LU.D), comté ou autorité unitaire britannique (GB.G5), comté irlandais (IE.33),
@@ -153,6 +156,28 @@ def unir(geometries: list) -> dict:
     return mapping(unary_union([shape(g).buffer(0) for g in geometries]))
 
 
+def plat(anneau: list, tol: float) -> list | None:
+    s = simplifier([tuple(pt) for pt in anneau], tol)
+    if len(s) < 4:
+        return None
+    res = []
+    for lon, lat in s:
+        res += [round(lon * 100), round(lat * 100)]
+    return res
+
+
+def contour_pays(geometries: list) -> list:
+    """L'union des régions d'un pays, sans les interstices entre régions mal jointives"""
+    from shapely.geometry import MultiPolygon, mapping, shape
+    from shapely.ops import unary_union
+    marge = 0.002
+    union = unary_union([shape(g).buffer(marge) for g in geometries]).buffer(-marge)
+    polys = list(union.geoms) if isinstance(union, MultiPolygon) else [union]
+    # les trous minuscules (interstices) disparaissent, les vrais restent (Saint-Marin, le Vatican, Büsingen…)
+    propres = [type(p)(p.exterior, [t for t in p.interiors if type(p)(t).area > 0.0005]) for p in polys if not p.is_empty]
+    return anneaux_de(mapping(MultiPolygon(propres)))
+
+
 def principal():
     source, cible, codes_admin1, cities = sys.argv[1:5]
     admin1 = {l.split('\t')[0] for l in open(codes_admin1, encoding='utf-8')}
@@ -168,19 +193,19 @@ def principal():
     for code, gs in geometries.items():
         anneaux = []
         tol = TOLERANCES.get(code[:2], TOLERANCE)
-        for anneau in anneaux_de(unir(gs)):
-            s = simplifier([tuple(pt) for pt in anneau], tol)
-            if len(s) < 4:
-                continue
-            plat = []
-            for lon, lat in s:
-                plat += [round(lon * 100), round(lat * 100)]
-            anneaux.append(plat)
+        anneaux = [a for a in (plat(anneau, tol) for anneau in anneaux_de(unir(gs))) if a]
         if anneaux:
             res[code] = anneaux
+    pays: dict[str, list] = {}
+    for code, gs in geometries.items():
+        pays.setdefault(code[:2], []).extend(gs)
+    contours_pays = {}
+    for code, gs in pays.items():
+        tol = TOLERANCES.get(code, TOLERANCE)
+        contours_pays[code] = [a for a in (plat(anneau, tol) for anneau in contour_pays(gs)) if a]
     with open(cible, 'w', encoding='utf-8') as out:
-        json.dump({'r': dict(sorted(res.items()))}, out, separators=(',', ':'))
-    print(len(res), 'régions')
+        json.dump({'r': dict(sorted(res.items())), 'p': dict(sorted(contours_pays.items()))}, out, separators=(',', ':'))
+    print(len(res), 'régions,', len(contours_pays), 'pays')
 
 
 if __name__ == '__main__':
