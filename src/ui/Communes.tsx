@@ -210,10 +210,11 @@ export function Lieu({ d, lieu, perimetre, setPerimetre }: { d: Donnees; lieu: s
   const toutes = useCommunes(d, perimetre, autres)
   const c = toutes.find((x) => x.lieu === lieu)
   const coches = useMemo(() => new Set(faits), [faits])
-  const [position, setPosition] = useState<Position | undefined>()
+  const [position, setPosition] = useState<Position | null | undefined>()
   useEffect(() => {
     let vivant = true
-    situerArbre(d.arbre).then((p) => vivant && setPosition(p.get(lieu))).catch(() => {})
+    setPosition(undefined)
+    situerArbre(d.arbre).then((p) => vivant && setPosition(p.get(lieu) ?? null)).catch(() => vivant && setPosition(null))
     return () => { vivant = false }
   }, [d, lieu])
 
@@ -318,7 +319,7 @@ export function Lieu({ d, lieu, perimetre, setPerimetre }: { d: Donnees; lieu: s
 }
 
 /** Où chercher des livres sur l'histoire de la commune, ses habitants, la vie d'autrefois */
-function Lectures({ lieu, position }: { lieu: string; position?: Position }) {
+function Lectures({ lieu, position }: { lieu: string; position?: Position | null }) {
   const decoupe = decouper(lieu)
   const rayons = lectures(decoupe.commune, position?.pays ?? decoupe.pays, position?.codeRegion)
   if (!rayons.length) return null

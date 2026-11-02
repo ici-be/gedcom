@@ -25,11 +25,12 @@ function Vignette({ contours, f, region, pos, titre, id }: { contours: Contours;
   )
 }
 
-export function MiniCarte({ position }: { position?: Position }) {
-  const [contours, setContours] = useState<Contours>()
+/** position : undefined tant qu'elle se cherche, null si le lieu n'est pas situé */
+export function MiniCarte({ position }: { position?: Position | null }) {
+  const [contours, setContours] = useState<Contours | null>()
   useEffect(() => {
     let vivant = true
-    chargerContours().then((c) => vivant && setContours(c)).catch(() => {})
+    chargerContours().then((c) => vivant && setContours(c)).catch(() => vivant && setContours(null))
     return () => { vivant = false }
   }, [])
   const cartes = useMemo(() => {
@@ -41,6 +42,14 @@ export function MiniCarte({ position }: { position?: Position }) {
     const national = cadrer(contours, memePays.includes(code) ? memePays : [code], 0.2)
     return province && national ? { province, national } : null
   }, [contours, position])
+  // pendant le chargement, deux cadres vides de la même hauteur : l'en-tête ne bouge plus quand les cartes arrivent
+  if (position === undefined || contours === undefined) {
+    return (
+      <div class="mini-cartes" aria-hidden="true">
+        {[0, 1].map((i) => <figure key={i} class="mini-carte attente"><div class="mini-carte-vide" /><figcaption>&nbsp;</figcaption></figure>)}
+      </div>
+    )
+  }
   if (!cartes || !position || !contours) return null
   const region = position.region ?? 'province'
   const pays = (() => { try { return new Intl.DisplayNames(['fr'], { type: 'region' }).of(position.codeRegion!.slice(0, 2)) ?? '' } catch { return '' } })()
