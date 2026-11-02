@@ -7,19 +7,33 @@ import { t, T } from './i18n'
 /** Contenu de public/geo/contours.json (scripts/contours.py) : anneaux en [lon×100, lat×100, …] par code de région */
 export interface Contours { r: Record<string, number[][]> }
 
-/** Pays dessinés sur la carte */
-export const PAYS_CARTE = ['BE', 'FR', 'NL', 'LU', 'DE', 'GB', 'IE']
+/** Pays dessinés sur la carte : ceux de contours.json (scripts/contours.py) */
+export const PAYS_CARTE = [
+  'BE', 'FR', 'NL', 'LU', 'DE', 'GB', 'IE', 'CH', 'IT', 'ES',
+  'PT', 'AT', 'PL', 'CZ', 'SK', 'HU', 'SI', 'HR', 'BA', 'RS', 'ME', 'MK', 'XK', 'AL', 'GR', 'BG', 'RO', 'MD',
+  'UA', 'BY', 'RU', 'LT', 'LV', 'EE', 'FI', 'SE', 'NO', 'DK', 'IS', 'MT', 'CY', 'AD', 'MC', 'SM', 'LI', 'FO',
+  'IM', 'JE', 'GG', 'GI',
+]
 
 // ——— Terres séparées par la mer : une carte chacune ———
 
-/** Le continent, les îles Britanniques, chaque département d'outre-mer */
+/** Îles loin du continent, chacune sa carte : les Canaries, Madère, les Açores */
+const ILES: Record<string, string> = { 'ES.GC': 'CN', 'ES.TF': 'CN', 'PT.10': 'PT.10', 'PT.23': 'PT.23' }
+
+/** Le continent, les îles Britanniques (avec Man et les îles Anglo-Normandes), l'Islande, Chypre, les Féroé, chaque île ou département d'outre-mer */
 export function zone(code: string): string {
   if (code.startsWith('FR.97')) return code
-  if (code.startsWith('GB.') || code.startsWith('IE.')) return 'IB'
+  if (ILES[code]) return ILES[code]
+  const pays = code.slice(0, 2)
+  if (pays === 'GB' || pays === 'IE' || pays === 'IM' || pays === 'JE' || pays === 'GG') return 'IB'
+  if (pays === 'IS' || pays === 'CY' || pays === 'FO') return pays
   return 'C'
 }
 
-const NOMS_DOM: Record<string, string> = { 'FR.971': T('Guadeloupe'), 'FR.972': T('Martinique'), 'FR.973': T('Guyane'), 'FR.974': T('La Réunion'), 'FR.976': T('Mayotte') }
+const NOMS_DOM: Record<string, string> = {
+  'FR.971': T('Guadeloupe'), 'FR.972': T('Martinique'), 'FR.973': T('Guyane'), 'FR.974': T('La Réunion'), 'FR.976': T('Mayotte'),
+  CN: T('Canaries'), 'PT.10': T('Madère'), 'PT.23': T('Açores'), IS: T('Islande'), CY: T('Chypre'), FO: T('Féroé'),
+}
 
 export interface Zone {
   zone: string
@@ -57,7 +71,7 @@ export function aCadrer(contours: Contours, z: Zone, principale: boolean): strin
     const gb = z.codes.some((c) => c.startsWith('GB.') && !c.startsWith('GB.N0'))
     return Object.keys(contours.r).filter((c) => (gb && c.startsWith('GB.') && !c.startsWith('GB.N0')) || (irlande && (c.startsWith('IE.') || c.startsWith('GB.N0'))))
   }
-  return [z.zone]
+  return Object.keys(contours.r).filter((c) => zone(c) === z.zone)
 }
 
 let enCache: Promise<Contours> | undefined

@@ -19,7 +19,10 @@ const FR: Repertoire = {
 }
 const GP: Repertoire = { a: { GP: ['Guadeloupe', 'guadeloupe'], 'GP.971': ['Guadeloupe', 'guadeloupe'] }, l: [['Saint-Claude', 16.017, -61.683, 'GP', '971', 10289]] }
 FR.l.push(['Saint-Claude', 46.387, 5.864, '84', '39', 9733])
-const monde: Repertoire = { a: {}, l: [['Prague', 50.088, 14.421, 'CZ', '', 1165581, ['Praha']]] }
+const monde: Repertoire = {
+  a: { 'CZ.52': ['Prague', 'prague'], 'PL.77': ['Lesser Poland', 'lesser poland'], 'CZ.85': ['Moravian-Silesian Region', 'moravian silesian region'] },
+  l: [['Prague', 50.088, 14.421, 'CZ', '52', 1165581, ['Praha']], ['Ostrava', 49.835, 18.282, 'CZ', '85', 284982], ['Rio Branco', -9.975, -67.81, 'BR', '', 305954]],
+}
 const charger = async (f: string) => ({ BE, FR, GP, monde } as Record<string, Repertoire>)[f] ?? Promise.reject(new Error(f))
 
 describe('pays', () => {
@@ -44,6 +47,11 @@ describe('pays', () => {
 })
 
 describe('situer', () => {
+  test('pays d’Europe de monde.json : la région, sans « Region » ; ailleurs, pas de région', async () => {
+    const p = await situer(['Ostrava, République tchèque', 'Rio Branco, Brésil'], charger)
+    expect(p.get('Ostrava, République tchèque')).toMatchObject({ region: 'Moravian-Silesian', codeRegion: 'CZ.85' })
+    expect(p.get('Rio Branco, Brésil')?.codeRegion).toBeUndefined()
+  })
   test('communes, noms alternatifs, homonymes départagés par la province', async () => {
     const p = await situer([
       'Cuesmes, Hainaut, Belgique', 'Malines, Anvers, Belgique', 'Saint Germain - Mons, Hainaut, Belgique',
@@ -54,7 +62,7 @@ describe('situer', () => {
     expect(p.get('Saint Germain - Mons, Hainaut, Belgique')).toMatchObject({ lat: 50.45, qualite: 'trouve' })
     expect(p.get('Borgerhout, Anvers, Belgique')).toMatchObject({ lat: 51.21, qualite: 'trouve' }) // la ville, pas le hameau
     expect(p.get('Paris 10e, Paris, France')).toMatchObject({ lat: 48.853, qualite: 'trouve', codeRegion: 'FR.75' })
-    expect(p.get('Prague, République tchèque')).toMatchObject({ lat: 50.088 })
+    expect(p.get('Prague, République tchèque')).toMatchObject({ lat: 50.088, region: 'Prague', codeRegion: 'CZ.52' })
     expect(p.has('Atlantide, Belgique')).toBe(false)
     expect(p.has('Belgique')).toBe(false)
   })

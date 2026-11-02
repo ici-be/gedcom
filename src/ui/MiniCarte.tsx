@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'preact/hooks'
 import type { Position } from '../lib/geo'
-import { cadrer, chargerContours, projection, proportions, type Contours, type Fenetre } from '../lib/carte-origines'
+import { cadrer, chargerContours, projection, proportions, zone, type Contours, type Fenetre } from '../lib/carte-origines'
 import { FondCarte } from './arbres/FondCarte'
 
 const H = 128
@@ -37,7 +37,8 @@ export function MiniCarte({ position }: { position?: Position | null }) {
     const code = position?.codeRegion
     if (!contours || !position || !code || !contours.r[code]) return null
     const pays = code.slice(0, 2)
-    const memePays = Object.keys(contours.r).filter((c) => c.startsWith(pays + '.') && !(pays === 'FR' && c.startsWith('FR.97')))
+    // le pays sur la même terre : la métropole sans l'outre-mer, l'Espagne sans les Canaries
+    const memePays = Object.keys(contours.r).filter((c) => c.startsWith(pays + '.') && zone(c) === zone(code))
     const province = cadrer(contours, [code], 0.12)
     const national = cadrer(contours, memePays.includes(code) ? memePays : [code], 0.2)
     return province && national ? { province, national } : null

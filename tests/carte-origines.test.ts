@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { aCadrer, cadrer, colonnes, grouper, projeter, proportions, zones, type Contours } from '../src/lib/carte-origines'
+import { aCadrer, cadrer, colonnes, grouper, projeter, proportions, zone, zones, type Contours } from '../src/lib/carte-origines'
 
 // Deux carrés d'un degré : un en Belgique, un en France
 const contours: Contours = { r: { 'BE.WHT': [[300, 5000, 400, 5000, 400, 5100, 300, 5100]], 'FR.18': [[200, 4600, 300, 4600, 300, 4700, 200, 4700]] } }
@@ -18,18 +18,18 @@ test('projection : seules les régions visibles, dans le rectangle', () => {
 })
 
 test('légende groupée par pays', () => {
-  const nomPays = (c: string) => ({ BE: 'Belgique', FR: 'France', IT: 'Italie' } as Record<string, string>)[c]
+  const nomPays = (c: string) => ({ BE: 'Belgique', FR: 'France', BR: 'Brésil' } as Record<string, string>)[c]
   const g = grouper([
     { nom: 'Hainaut', pays: 'BE', couleur: '#a', n: 10 },
     { nom: 'Namur', pays: 'BE', couleur: 'gris', n: 1 },
     { pays: 'BE', couleur: 'gris', n: 3 },
     { nom: 'Liège', pays: 'BE', couleur: 'gris', n: 2 },
     { nom: 'Cher', pays: 'FR', couleur: '#b', n: 4 },
-    { nom: 'Lombardia', pays: 'IT', couleur: 'gris', n: 1 },
+    { nom: 'Bahia', pays: 'BR', couleur: 'gris', n: 1 },
   ], nomPays, 'gris')
   expect(g.map((x) => x.titre)).toEqual(['Belgique', 'France', 'Autres pays'])
   expect(g[0].lignes).toEqual([{ nom: 'Hainaut', couleur: '#a', n: 10 }, { nom: 'Liège, Namur, sans précision', couleur: 'gris', n: 6 }])
-  expect(g[2].lignes[0].nom).toBe('Lombardia, Italie')
+  expect(g[2].lignes[0].nom).toBe('Bahia, Brésil')
   const [gauche, droite] = colonnes(g)
   expect(gauche.map((x) => x.titre)).toEqual(['Belgique'])
   expect(droite.map((x) => x.titre)).toEqual(['France', 'Autres pays'])
@@ -49,4 +49,14 @@ test('cartes secondaires : le territoire entier', () => {
   expect(aCadrer(contours, gp, false)).toEqual(['FR.971'])
   const [, irl] = zones(new Map([['BE.WHT', 9], ['IE.04', 1]]))
   expect(aCadrer(contours, irl, false).sort()).toEqual(['GB.N09000003', 'IE.04'])
+})
+
+test('les îles lointaines ont leur propre carte, le reste de l’Europe est sur le continent', () => {
+  expect(zone('PL.77')).toBe('C')
+  expect(zone('IT.AO')).toBe('C')
+  expect(zone('ES.TF')).toBe('CN')
+  expect(zone('ES.GC')).toBe('CN')
+  expect(zone('PT.23')).toBe('PT.23')
+  expect(zone('IS.38')).toBe('IS')
+  expect(zone('IM.9782193')).toBe('IB')
 })

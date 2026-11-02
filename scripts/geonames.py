@@ -5,10 +5,13 @@ Construit les fichiers de lieux de public/geo/ à partir des extraits GeoNames
 
     python3 -I scripts/geonames.py <dossier des .zip téléchargés> public/geo [codes…]
 
-Sans codes : tous les pays et monde.json ; avec des codes (IE GP…), seulement ces pays-là.
+Sans codes : tous les pays et monde.json ; avec des codes (IE GP… ou monde), seulement ceux-là.
+monde.json a besoin de cities5000.zip et d'admin1CodesASCII.txt dans le même dossier, et de
+contours.json déjà construit dans le dossier de sortie (scripts/contours.py).
 
 Un fichier par pays (BE.json, FR.json…) pour les pays détaillés, plus monde.json
-(les villes de plus de 5 000 habitants des autres pays).
+(les villes de plus de 5 000 habitants des autres pays ; pour ceux d'Europe, avec leur région :
+code GeoNames de premier niveau en 5e colonne, nom dans « a » sous « PL.83 », comme dans contours.json).
 
 Format : { "a": { "WAL": ["Wallonia", "wallonia", "wallonie", …], "WAL.WHT": [...] },
            "l": [[nom, lat, lon, "a1", "a2", population, [autres noms]], …] }
@@ -27,6 +30,13 @@ PAYS = ['BE', 'FR', 'NL', 'LU', 'CH', 'DE', 'IT', 'ES', 'GB', 'IE', 'CA', 'US', 
 POPULATION_MIN = {'US': 500}
 # Niveau administratif des communes (ADM3 est un arrondissement en France, une commune en Italie…)
 NIVEAU_COMMUNE = {**{c: 'ADM4' for c in ('GP', 'MQ', 'GF', 'RE', 'YT', 'PM')}, 'BE': 'ADM4', 'FR': 'ADM4', 'DE': 'ADM4', 'IT': 'ADM3', 'ES': 'ADM3', 'CH': 'ADM3', 'NL': 'ADM2', 'LU': 'ADM2'}
+
+# Pays d'Europe de monde.json dont la région est gardée : les mêmes que EUROPE dans scripts/contours.py
+EUROPE = {
+    'PT', 'AT', 'PL', 'CZ', 'SK', 'HU', 'SI', 'HR', 'BA', 'RS', 'ME', 'MK', 'XK', 'AL', 'GR', 'BG', 'RO', 'MD',
+    'UA', 'BY', 'RU', 'LT', 'LV', 'EE', 'FI', 'SE', 'NO', 'DK', 'IS', 'MT', 'CY', 'AD', 'MC', 'SM', 'LI', 'FO',
+    'IM', 'JE', 'GG', 'GI',
+}
 
 LATIN = re.compile(r"^[A-Za-zÀ-ÖØ-öø-ÿŒœŸĀ-ſ'’ .\-()]+$")
 
@@ -96,29 +106,64 @@ def pays(dossier: Path, code: str) -> dict:
     return {'a': {k: [nom, *sorted(cles)] for k, (nom, cles) in admin.items()}, 'l': resultat}
 
 
-def monde(dossier: Path) -> dict:
+def dans(anneaux: list, lon: float, lat: float) -> bool:
+    """Le point est-il dans la région (anneaux de contours.json, en degrés × 100) ?"""
+    x, y = lon * 100, lat * 100
+    dedans = False
+    for a in anneaux:
+        for i in range(0, len(a), 2):
+            x1, y1, x2, y2 = a[i - 2], a[i - 1], a[i], a[i + 1]
+            if (y1 > y) != (y2 > y) and x < x1 + (y - y1) * (x2 - x1) / (y2 - y1):
+                dedans = not dedans
+    return dedans
+
+
+def monde(dossier: Path, contours: dict) -> dict:
+    regions = {}
+    for brut in (dossier / 'admin1CodesASCII.txt').read_text(encoding='utf-8').splitlines():
+        code, nom, ascii_, _ = brut.split('\t')
+        if code.split('.')[0] in EUROPE:
+            regions[code] = [nom, *sorted({cle(nom), cle(ascii_)})]
     lieux = []
+    utiles = set()
     for c in lignes(dossier / 'cities5000.zip', 'cities5000.txt'):
         if c[8] in PAYS:
             continue
-        lieux.append([c[1], round(float(c[4]), 3), round(float(c[5]), 3), c[8], '', int(c[14] or 0), autres_noms(c[1], c[3])])
+        region = ''
+        if c[8] in EUROPE:
+            code = f'{c[8]}.{c[10]}'
+            if code not in contours:
+                # région sans contour à son nom (découpage plus récent) : celle dont le contour contient la ville
+                lon, lat = float(c[5]), float(c[4])
+                voisins = [k for k in contours if k.startswith(c[8] + '.')]
+                code = next((k for k in voisins if dans(contours[k], lon, lat)), '')
+                # sur la côte, hors du contour simplifié : la région au point de contour le plus proche
+                if not code and voisins:
+                    code = min(voisins, key=lambda k: min((a[i] - lon * 100) ** 2 + (a[i + 1] - lat * 100) ** 2 for a in contours[k] for i in range(0, len(a), 2)))
+            if code in regions:
+                region = code.split('.', 1)[1]
+        if region:
+            utiles.add(f'{c[8]}.{region}')
+        lieux.append([c[1], round(float(c[4]), 3), round(float(c[5]), 3), c[8], region, int(c[14] or 0), autres_noms(c[1], c[3])])
     for l in lieux:
         if not l[6]:
             l.pop()
-    return {'a': {}, 'l': lieux}
+    return {'a': {k: v for k, v in sorted(regions.items()) if k in utiles}, 'l': lieux}
 
 
 def main():
     dossier, sortie = Path(sys.argv[1]), Path(sys.argv[2])
     sortie.mkdir(parents=True, exist_ok=True)
-    codes = sys.argv[3:] or PAYS
+    codes = sys.argv[3:] or [*PAYS, 'monde']
     for code in codes:
+        if code == 'monde':
+            continue
         donnees = pays(dossier, code)
         (sortie / f'{code}.json').write_text(json.dumps(donnees, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
         print(code, len(donnees['l']))
-    if sys.argv[3:]:
+    if 'monde' not in codes:
         return
-    donnees = monde(dossier)
+    donnees = monde(dossier, json.loads((sortie / 'contours.json').read_text(encoding='utf-8'))['r'])
     (sortie / 'monde.json').write_text(json.dumps(donnees, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
     print('monde', len(donnees['l']))
 

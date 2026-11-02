@@ -23,7 +23,7 @@ export interface Position {
   region?: string
   /** Code ISO du pays de la localité */
   pays?: string
-  /** Code de la région, comme dans public/geo/contours.json (« BE.WHT », « FR.59 », « NL.06 », « LU.D ») */
+  /** Code de la région, comme dans public/geo/contours.json (« BE.WHT », « FR.59 », « NL.06 », « LU.D », « IT.AO », « PL.77 ») */
   codeRegion?: string
 }
 
@@ -179,7 +179,7 @@ const PROVINCES_BE: Record<string, string> = {
 }
 
 const PREFIXE_REGION = /^(province|provincie|provincia|provinz|département|departement|région|region|canton|kanton|county of|county|city and borough of|city and county of|city of|royal borough of|borough of)\s+(du |de la |de l'|de l’|des |de |di |del |della |d'|d’)?/i
-const SUFFIXE_REGION = /\s+(county|county council|city and county council)$/i
+const SUFFIXE_REGION = /\s+(county|county council|city and county council|region|municipality|voivodeship|novads|rajons)$/i
 
 /**
  * Comtés irlandais : les noms anglais (GeoNames en donne plusieurs en irlandais) et les villes-comtés
@@ -203,7 +203,12 @@ const DISTRICTS_LU: Record<string, [string, string]> = {
 
 /** « Province du Hainaut » → « Hainaut », avec le code de la région (voir Position.codeRegion) */
 function regionLocalite(idx: Index, l: Localite): { region?: string; codeRegion?: string } {
-  if (idx.pays === 'monde') return {}
+  if (idx.pays === 'monde') {
+    // pays d'Europe de monde.json : la région de premier niveau (« PL.77 »), celle de contours.json
+    const code = l[4] && l[3] + '.' + l[4]
+    const nom = code ? idx.rep.a[code]?.[0] : undefined
+    return nom ? { region: nom.replace(SUFFIXE_REGION, '').trim(), codeRegion: code } : {}
+  }
   if (OUTRE_MER[idx.pays]) return { region: idx.rep.a[l[3]]?.[0], codeRegion: 'FR.' + OUTRE_MER[idx.pays] }
   if (idx.pays === 'IE') {
     const c = COMTES_IE[l[4]]
