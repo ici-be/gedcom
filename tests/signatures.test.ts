@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest'
 import { lireArbre } from '../src/lib/gedcom/arbre'
 import { calculer } from '../src/lib/donnees'
 import { actesASignatures, bilanSignatures, debutSignatures } from '../src/lib/signatures'
-import { fileActes, identifiantImage, liensDuTexte, siteDuLien } from '../src/lib/actes-en-ligne'
+import { fileActes, fileSignatures, identifiantImage, liensDuTexte, siteDuLien } from '../src/lib/actes-en-ligne'
 
 // Jean (I1, départ) né en 1850 ; ses parents Paul (I2) et Anne (I3) mariés en 1848 ; Luc (I4), père de Paul ; Marc (I5), témoin
 const GED = `0 HEAD
@@ -109,5 +109,12 @@ describe('actes en ligne', () => {
     ])
     expect(fileActes(arbre, calculer(arbre, '@I1@', '').ancetres, { generations: 1 })).toHaveLength(1)
     expect(fileActes(arbre, calculer(arbre, '@I1@', '').ancetres, { sites: ['agatha'] })).toHaveLength(2)
+  })
+  test('la file des signatures : les actes où un ancêtre reste à trouver, avec ceux qu’on y cherche', () => {
+    const arbre = lireArbre(GED)
+    const f = fileSignatures(arbre, calculer(arbre, '@I1@', '').ancetres)
+    expect(f.map((a) => [a.fichier, a.sosa, a.signataires])).toEqual([
+      ['Signatures/Naissance 1820 DUPONT Paul', '4', ['père (déclarant) : DUPONT Luc (Sosa 4)']],
+    ])
   })
 })

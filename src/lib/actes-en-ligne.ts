@@ -5,6 +5,7 @@ import type { Arbre, Evenement, Individu } from './gedcom/arbre'
 import { annee } from './gedcom/dates'
 import { libelle } from './format'
 import { comparerSosa, type Ancetre } from './parente'
+import { actesASignatures, sansSignature } from './signatures'
 
 export interface Site {
   id: string
@@ -75,6 +76,8 @@ export interface ActeEnLigne {
   personnes: string
   /** Chemin proposé, sans extension : « G05/0018 Naissance 1843 DE BRULE Jean Baptiste » */
   fichier: string
+  /** File des signatures : ceux dont la signature est à chercher sur l'image, « époux : DUPONT Paul (Sosa 2) » */
+  signataires?: string[]
 }
 
 export interface OptionsFile {
@@ -126,6 +129,42 @@ export function fileActes(arbre: Arbre, ancetres: ReadonlyMap<string, Ancetre>, 
       const personnes = conjoints.map(nomCourt).join(' & ')
       for (const e of fam.evenements) evenement(a, e, personnes)
       ajouter(a, 'Source du couple', undefined, personnes, fam.sources)
+    }
+  }
+  return [...actes.values()]
+}
+
+/**
+ * Les images des actes où la signature d'un ancêtre est à trouver (voir signatures.ts), les plus prometteuses d'abord,
+ * rangées dans « Signatures/ » avec la liste de ceux qu'on y cherche.
+ */
+export function fileSignatures(arbre: Arbre, ancetres: ReadonlyMap<string, Ancetre>, options: OptionsFile = {}): ActeEnLigne[] {
+  const actes = new Map<string, ActeEnLigne>()
+  const noms = new Set<string>()
+  for (const a of actesASignatures(arbre, ancetres)) {
+    const cherches = a.signataires.filter((s) => sansSignature(s.etat))
+    const directs = cherches.map((s) => ancetres.get(s.id)).filter((x): x is Ancetre => !!x && (!options.generations || x.generation <= options.generations))
+    if (!directs.length) continue
+    const premier = directs.sort((x, y) => comparerSosa(x.sosa, y.sosa))[0]
+    const personnes = a.sujets.map((id) => arbre.individus.get(id)).filter((x): x is Individu => !!x).map(nomCourt).join(' & ')
+    const type = libelle(a.evenement)
+    const an = annee(a.evenement.date)
+    const signataires = cherches.map((s) => {
+      const ind = arbre.individus.get(s.id)!
+      const sosa = ancetres.get(s.id)?.sosa
+      return `${s.role} : ${nomCourt(ind)}${sosa ? ` (Sosa ${sosa})` : ''}${s.certitude === 'possible' ? ', possible' : ''}${s.etat === 'photo' ? ', à vérifier' : ''}`
+    })
+    let n = 0
+    for (const lien of a.liens) {
+      const id = identifiantImage(lien)
+      if (!id || actes.has(id)) continue
+      const site = id.slice(0, id.indexOf(':'))
+      if (options.sites && !options.sites.includes(site)) continue
+      const base = `Signatures/${propre([type, an ?? '', personnes].filter(Boolean).join(' '))}`.slice(0, 150)
+      let fichier = base
+      while (noms.has(fichier)) fichier = `${base} (${++n + 1})`
+      noms.add(fichier)
+      actes.set(id, { id, site, url: lien, sosa: premier.sosa, generation: premier.generation, type, annee: an, personnes, fichier, signataires })
     }
   }
   return [...actes.values()]

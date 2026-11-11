@@ -196,6 +196,40 @@ Chaque nom renvoie à la fiche de la personne sur Geneanet (ou tout autre site G
 de l'arbre est indiquée. Le GEDCOM ne contient pas le numéro qui distingue les homonymes sur GeneWeb :
 pour eux, le lien ouvre la recherche, qui les liste tous.
 
+## Télécharger les actes des ancêtres
+
+`scripts/actes.mjs` enregistre sur le disque les images de registre citées comme sources (FamilySearch et Agatha, les
+Archives de l'État en Belgique), en commençant par les ancêtres les plus proches : seuls les actes des Sosa sont pris, une
+fois chacun. Le script tourne sur l'ordinateur, pas sur le site.
+
+```
+npm run actes connexion          # ouvre un Chrome à part : s'y connecter à FamilySearch et à Agatha
+npm run actes liste              # images citées, téléchargées, à faire, par site et par génération
+npm run actes telecharger        # la suite de la file : 40 images, une toutes les 4 secondes environ
+npm run actes telecharger -- --signatures --max 20   # les actes où la signature d'un ancêtre est à trouver
+npm run actes pcloud-connexion   # une fois, dans un terminal : adresse et mot de passe pCloud (seul un jeton est gardé)
+npm run actes pcloud             # envoie sur pCloud les images qui n'y sont pas encore
+```
+
+- Les mots de passe FamilySearch et Agatha ne passent jamais par le script : on se connecte soi-même dans une fenêtre
+  Chrome au profil séparé (`~/.local/share/lignees/chrome`), qui garde la session. Les images sont demandées une à une,
+  avec une pause, comme à la main ; trois échecs de suite arrêtent le script.
+- Les images vont dans `~/Lignées/actes` (ou `--dossier`), un dossier par génération :
+  `G05/0018 Naissance 1843 DE BRULE Jean Baptiste.jpg` (0018 = numéro Sosa). `index.json` retient quelle image vient de
+  quelle adresse : une image n'est jamais téléchargée deux fois, même si la personne de départ change.
+- FamilySearch donne le fichier du bouton « Télécharger » ; Agatha ne sert pas plus de 3000 px de large d'un coup, les
+  images plus grandes sont demandées par morceaux puis assemblées (Pillow).
+- Options : `--ged FICHIER` (par défaut le dernier export de `~/Téléchargements`), `--racine "Prénom Nom"`,
+  `--generations N`, `--site familysearch|agatha`, `--max N`, `--pause SECONDES`, `--seulement TEXTE` (nom, type d'acte),
+  `--reessayer` (les images en échec), `--liberer` (avec `pcloud` : efface la copie locale une fois envoyée). Les réglages
+  durables s'écrivent dans `~/.config/lignees/actes.json` (`{ "racine": "…", "dossier": "…" }`).
+- `--signatures` suit la page « Signatures à trouver » : les images vont dans `Signatures/`, et `index.json` note pour
+  chacune les personnes dont on cherche la signature. Il faut un export avec les liens vers les photos. Les images
+  peuvent ensuite passer par la skill `signatures-registre`.
+- pCloud : les images sont envoyées dans `/Lignées/actes` par l'API (`eapi.pcloud.com` pour les comptes européens).
+  Avec la double authentification, la connexion par mot de passe ne marche pas : donner plutôt en `--dossier` un dossier
+  synchronisé par l'application pCloud.
+
 ## Le fichier
 
 - Geneanet : *Mon arbre → Exporter* (https://gw.geneanet.org/my-tree/operations/export),
