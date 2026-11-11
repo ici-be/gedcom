@@ -2,14 +2,14 @@
 // les plus prometteurs d'abord (ancêtres, signatures attendues). Les actes déjà regardés se cochent.
 
 import { Fragment } from 'preact'
-import { useMemo, useState } from 'preact/hooks'
+import { useEffect, useMemo, useState } from 'preact/hooks'
 import type { Donnees } from '../lib/donnees'
 import { actesASignatures, bilanSignatures, sansSignature, type ActeSignatures, type Signataire } from '../lib/signatures'
 import { nomComplet } from '../lib/parente'
 import { libelle, nombre } from '../lib/format'
 import { versCsv, telecharger } from '../lib/csv'
 import { ecrire, lire } from '../lib/stockage'
-import { siteDuLien, SITES } from '../lib/actes-en-ligne'
+import { identifiantImage, siteDuLien, SITES } from '../lib/actes-en-ligne'
 import { AvisImpression, DateLieu, EffacerFiltres, Pagination, Personne, lignesAffichees, normaliser, useImpression } from './commun'
 
 const CLE_VUS = 'signatures.vus'
@@ -22,6 +22,32 @@ const TYPES: Record<Exclude<Type, ''>, string[]> = {
   naissance: ['BIRT', 'BAPM', 'CHR'],
   mariage: ['MARR', 'MARC'],
   deces: ['DEAT', 'BURI'],
+}
+
+/** En local (npm run dev) : ce que le serveur sait des images téléchargées et de la file de la skill signatures-registre */
+interface Atelier { images: Record<string, 'disque' | 'pcloud'>; attente: string[]; faits: string[] }
+
+function useAtelier() {
+  const [atelier, setAtelier] = useState<Atelier | undefined>()
+  const [occupe, setOccupe] = useState('')
+  const [erreur, setErreur] = useState('')
+  useEffect(() => {
+    if (!import.meta.env.DEV) return
+    fetch('/__signatures').then((r) => (r.ok ? r.json() : undefined)).then(setAtelier).catch(() => undefined)
+  }, [])
+  const pousser = async (cle: string, demande: { images: string[]; acte: string; personnes: string; signataires: string[] }) => {
+    setOccupe(cle)
+    setErreur('')
+    try {
+      const j = await (await fetch('/__signatures', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(demande) })).json()
+      if (j.erreur) setErreur(j.erreur)
+      else setAtelier(j)
+    } catch (e) {
+      setErreur(e instanceof Error ? e.message : String(e))
+    }
+    setOccupe('')
+  }
+  return { atelier, occupe, erreur, pousser }
 }
 
 function Signature({ d, s }: { d: Donnees; s: Signataire }) {
@@ -50,6 +76,7 @@ export function Signatures({ d }: { d: Donnees }) {
   const [page, setPage] = useState(0)
   const [vus, setVus] = useState<Set<string>>(() => new Set(lire<string[]>(CLE_VUS, [])))
   const impression = useImpression()
+  const { atelier, occupe, erreur, pousser } = useAtelier()
 
   const cocher = (cle: string, oui: boolean) => {
     const n = new Set(vus)
@@ -88,6 +115,27 @@ export function Signatures({ d }: { d: Donnees }) {
   ].filter((x): x is string => !!x)
   const effacer = () => { setQui('ancetres'); setType(''); setSite(''); setAttendues(false); setTexte(''); setCacherVus(true); setPage(0) }
   const nom = (id: string) => { const i = d.arbre.individus.get(id); return i ? nomComplet(i) : '?' }
+
+  /** Les images de l'acte, et où elles en sont : à pousser, en attente de la skill, extraites */
+  const images = (a: ActeSignatures) => {
+    const ids = [...new Set(a.liens.map(identifiantImage).filter((x): x is string => !!x))]
+    const connues = ids.filter((id) => atelier?.images[id])
+    return {
+      connues,
+      attente: connues.some((id) => atelier!.attente.includes(id)),
+      faites: connues.length > 0 && connues.every((id) => atelier!.faits.includes(id)),
+      pcloud: connues.some((id) => atelier!.images[id] === 'pcloud'),
+    }
+  }
+  const pousserActe = (a: ActeSignatures) => pousser(a.cle, {
+    images: images(a).connues,
+    acte: [libelle(a.evenement), a.evenement.date?.texte, a.evenement.lieu].filter(Boolean).join(' · '),
+    personnes: a.sujets.map(nom).join(' & '),
+    signataires: manquants(a).map((s) => {
+      const sosa = d.ancetres.get(s.id)?.sosa
+      return `${s.role}\u202f: ${nom(s.id)}${sosa ? ` (Sosa ${sosa})` : ''}${s.certitude === 'possible' ? ', possible' : ''}${s.etat === 'photo' ? ', à vérifier' : ''}`
+    }),
+  })
 
   const exporter = () => {
     const lignes: (string | number)[][] = [['Acte', 'Date', 'Lieu', 'Personnes', 'Signatures à trouver', 'Dont ancêtres', 'Liens']]
@@ -167,11 +215,20 @@ export function Signatures({ d }: { d: Donnees }) {
         <button type="button" class="bouton discret" disabled={!liste.length} onClick={exporter}>Exporter en CSV</button>
       </div>
 
+      {atelier && (
+        <p class="aide sig-atelier">
+          Version locale{'\u202f'}: « Pousser » copie l'image de l'acte dans <code>_skills/Images pour signatures/</code>, avec les signatures à y chercher.
+          {atelier.attente.length > 0
+            ? <> <strong>{nombre(atelier.attente.length)}</strong> image{atelier.attente.length > 1 ? 's' : ''} en attente{'\u202f'}: lancez <code>/signatures-registre</code> dans Claude Code.</>
+            : <> Lancez ensuite <code>/signatures-registre</code> dans Claude Code.</>}
+        </p>
+      )}
+      {erreur && <p class="avertissement">{erreur}</p>}
       <AvisImpression impression={impression} total={liste.length} page={p} parPage={PAR_PAGE} />
       {liste.length > 0 && (
         <div class="tableau-conteneur">
           <table class="tableau sig-tableau">
-            <thead><tr><th title="Acte déjà regardé">✓</th><th>Acte</th><th>Signatures à trouver</th><th>Voir</th></tr></thead>
+            <thead><tr><th title="Acte déjà regardé">✓</th><th>Acte</th><th>Signatures à trouver</th><th>Voir</th>{atelier && <th>Extraire</th>}</tr></thead>
             <tbody>
               {lignesAffichees(liste, p, PAR_PAGE, impression).map((a) => (
                 <tr key={a.cle} class={vus.has(a.cle) ? 'coche' : ''}>
@@ -184,6 +241,21 @@ export function Signatures({ d }: { d: Donnees }) {
                   <td class="sig-liens">
                     {a.liens.map((l) => <a key={l} class="bouton discret" href={l} target="_blank" rel="noopener noreferrer">{SITES.find((s) => s.id === siteDuLien(l))?.court ?? 'Ouvrir'}</a>)}
                   </td>
+                  {atelier && (() => {
+                    const i = images(a)
+                    return (
+                      <td class="sig-liens">
+                        {!i.connues.length ? <span class="vide" title="Image pas encore téléchargée : npm run actes telecharger -- --signatures">pas d'image</span>
+                          : i.faites ? <span class="sig-fait">extrait</span>
+                          : i.attente ? <span class="vide">en attente</span>
+                          : (
+                            <button type="button" class="bouton discret" disabled={!!occupe} title={i.pcloud ? 'L’image est rapportée de pCloud' : undefined} onClick={() => void pousserActe(a)}>
+                              {occupe === a.cle ? 'Copie…' : 'Pousser'}
+                            </button>
+                          )}
+                      </td>
+                    )
+                  })()}
                 </tr>
               ))}
             </tbody>

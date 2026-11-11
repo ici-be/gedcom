@@ -199,7 +199,10 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   Qui a déjà sa signature (image principale en PNG) ou porte « Signature: illettré » n'est plus proposé ; un portrait
   en image principale donne « à vérifier ». Filtres : ancêtres ou tout l'arbre, type d'acte, site (FamilySearch, Agatha,
   autres), nom ou lieu, signatures attendues seulement ; une case à cocher par acte déjà regardé (gardée dans le
-  navigateur) ; export CSV. La logique est dans `src/lib/signatures.ts`.
+  navigateur) ; export CSV. La logique est dans `src/lib/signatures.ts`. En local (`npm run dev`), une colonne « Extraire »
+  s'ajoute : « Pousser » copie l'image de l'acte, déjà téléchargée par `scripts/actes.mjs` (du disque, ou de pCloud par
+  rclone), dans `_skills/Images pour signatures/` avec une fiche des signatures à y chercher, pour la skill
+  `signatures-registre` ; l'acte passe ensuite « en attente », puis « extrait » (`scripts/pousser-signatures.mjs`).
 
 Pour chaque événement, un badge **S** (bleu) ouvre la source en ligne ; un badge **T** (orange)
 montre une source écrite en texte.

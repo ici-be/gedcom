@@ -1929,6 +1929,7 @@ th.lx-col-periodes { white-space: nowrap; }
 .sig-liens { white-space: nowrap; }
 .sig-liens .bouton { display: block; margin-bottom: 4px; text-align: center; text-decoration: none; }
 .sig-tableau td { vertical-align: top; }
+.sig-fait { color: var(--ok); font-weight: 600; }
 
 /* ---------- recherche automatique ---------- */
 .rch-auto-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }

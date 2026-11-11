@@ -18,6 +18,14 @@ Dossiers (non commités, voir `.gitignore`) :
   Dans chaque sous-dossier, les signatures déjà présentes dans l'arbre vont dans
   `déjà dans l'arbre/` : ce qui reste à la racine du sous-dossier est à téléverser.
 
+Actes poussés depuis la page « Signatures à trouver » du site ouvert en local (`npm run dev`, bouton « Pousser ») : l'image
+arrive à la racine de `_skills/Images pour signatures/` avec une fiche du même nom en `.json`, qui donne l'acte (`acte`,
+`personnes`), son adresse (`adresse`) et, sous `signataires`, les personnes dont la signature manque dans l'arbre
+(« époux : DUPONT Paul (Sosa 2) ») : ce sont elles qu'on cherche d'abord sur l'image, et la fiche aide à nommer le
+sous-dossier de sortie. Sans autre consigne, traiter toutes les images en attente à la racine, l'une après l'autre.
+Une fois l'image traitée, **déplacer la fiche `.json` dans `old/` avec l'image** : c'est ce qui la fait passer
+d'« en attente » à « extrait » sur la page.
+
 Images téléchargées par `scripts/actes.mjs` (`npm run actes telecharger -- --signatures`) : elles sont dans
 `~/Lignées/actes/Signatures à chercher/` (ou le `--dossier` choisi), et `index.json`, à la racine de ce dossier, donne pour chacune
 l'adresse de l'acte et, sous `signataires`, les personnes dont la signature manque dans l'arbre (« époux : DUPONT Paul
@@ -80,7 +88,7 @@ Scripts (Python, Pillow + numpy seulement) :
    avec une photo JPG peut avoir sa signature en média secondaire, la signaler
    « à vérifier » plutôt que la déplacer.
 8. **Ranger l'image traitée** : une fois les signatures extraites et vérifiées, déplacer
-   l'image d'entrée dans `_skills/Images pour signatures/old/`.
+   l'image d'entrée dans `_skills/Images pour signatures/old/`, avec sa fiche `.json` si elle en a une.
 
 `$SCRATCH` = le dossier scratchpad de la session.
 

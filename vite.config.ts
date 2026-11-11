@@ -3,6 +3,8 @@ import { resolve } from 'node:path'
 import { defineConfig } from 'vite'
 import preact from '@preact/preset-vite'
 import { VitePWA } from 'vite-plugin-pwa'
+// @ts-ignore : script Node sans types
+import { pousserSignatures } from './scripts/pousser-signatures.mjs'
 
 const PAGES_IMPRESSION = ['print', 'print+fr-be', 'print+en-gb', 'print+nl-be']
 
@@ -14,6 +16,8 @@ export default defineConfig({
   build: { rollupOptions: { input: Object.fromEntries(PAGES_IMPRESSION.map((d) => [d, resolve(import.meta.dirname, d, 'index.html')]).concat([['main', resolve(import.meta.dirname, 'index.html')]])) } },
   plugins: [
     preact(),
+    // en local : la page Signatures peut pousser un acte vers la skill signatures-registre
+    pousserSignatures(import.meta.dirname),
     // les pages d'impression sont un cran plus bas : le manifeste ajouté par le plugin PWA doit remonter d'un dossier
     {
       name: 'manifeste-print',
