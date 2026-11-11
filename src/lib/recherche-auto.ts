@@ -9,8 +9,10 @@ import type { Evenement, Individu } from './gedcom/arbre'
 import type { Donnees } from './donnees'
 import { annee } from './gedcom/dates'
 import { cleGeo, decouper } from './geo'
+import { decouperLieu } from './communes'
+import { libelle } from './format'
 import { clePrenom, variantesPrenom } from './prenoms'
-import { aChercher } from './suivi'
+import { aChercher, anneeNaissanceEstimee } from './suivi'
 import type { Nom } from './recherches'
 
 export interface Resultat { titre: string; detail?: string; url: string }
@@ -80,26 +82,57 @@ export type Quoi = 'naissance' | 'mariage' | 'deces'
 
 export interface FaitCherche {
   quoi: Quoi
-  evenement: Evenement
-  annee: number
+  /** L'événement de l'arbre, s'il existe */
+  evenement?: Evenement
+  /** Années cherchées : la même pour un fait daté, une fourchette estimée pour un fait sans date */
+  de: number
+  a: number
   /** Pas encore de source dans l'arbre */
   aSourcer: boolean
+  /** Le fait n'a pas de date dans l'arbre : la fourchette vient des autres faits (mariage, enfants…) */
+  estime: boolean
   conjoint?: Individu
 }
 
-/** Les faits datés d'une personne qu'on peut chercher dans un index : naissance ou baptême, mariages, décès ou inhumation */
-export function faitsCherches(d: Donnees, ind: Individu): FaitCherche[] {
+const ANNEES_DECES = ['DEAT', 'BURI', 'CREM']
+
+/**
+ * Les faits d'une personne qu'on peut chercher dans un index : naissance ou baptême, mariages, décès ou inhumation.
+ * `sansDate` ajoute les faits sans date, dans une fourchette estimée : naissance d'après le mariage ou les enfants,
+ * mariage dans les douze ans avant le premier enfant, décès entre le dernier fait connu et cent ans après la naissance.
+ */
+export function faitsCherches(d: Donnees, ind: Individu, sansDate = false): FaitCherche[] {
   const s = d.suivis.get(ind.id)
   if (!s) return []
   const faits: FaitCherche[] = []
-  const ajouter = (quoi: Quoi, f: { etat: Parameters<typeof aChercher>[0]; evenement?: Evenement; conjoint?: string }) => {
+  const dater = (quoi: Quoi, f: { etat: Parameters<typeof aChercher>[0]; evenement?: Evenement; conjoint?: string }): boolean => {
     const an = annee(f.evenement?.date)
-    if (!f.evenement || an === undefined) return
-    faits.push({ quoi, evenement: f.evenement, annee: an, aSourcer: aChercher(f.etat), conjoint: f.conjoint ? d.arbre.individus.get(f.conjoint) : undefined })
+    if (!f.evenement || an === undefined) return false
+    faits.push({ quoi, evenement: f.evenement, de: an, a: an, aSourcer: aChercher(f.etat), estime: false, conjoint: f.conjoint ? d.arbre.individus.get(f.conjoint) : undefined })
+    return true
   }
-  ajouter('naissance', s.naissance)
-  for (const m of s.mariages) ajouter('mariage', m)
-  ajouter('deces', s.deces)
+  const estimer = (quoi: Quoi, f: { evenement?: Evenement; conjoint?: string }, de: number | undefined, a: number | undefined) => {
+    if (de === undefined || a === undefined || a < de || a - de > 80) return
+    faits.push({ quoi, evenement: f.evenement, de, a: Math.min(a, new Date().getFullYear()), aSourcer: true, estime: true, conjoint: f.conjoint ? d.arbre.individus.get(f.conjoint) : undefined })
+  }
+  const naissance = annee(s.naissance.evenement?.date) ?? anneeNaissanceEstimee(d.arbre, ind, s.naissance)
+  const anneesEnfants = (famille?: string) => (d.arbre.familles.get(famille ?? '')?.enfants ?? [])
+    .map((c) => annee(d.arbre.individus.get(c)?.evenements.find((e) => ['BIRT', 'BAPM', 'CHR'].includes(e.tag) && e.date)?.date))
+    .filter((x): x is number => x !== undefined)
+
+  if (!dater('naissance', s.naissance) && sansDate && aChercher(s.naissance.etat) && naissance !== undefined) {
+    estimer('naissance', s.naissance, naissance - 10, naissance + 5)
+  }
+  let dernier = naissance
+  for (const m of s.mariages) {
+    const enfants = anneesEnfants(m.famille)
+    for (const x of [annee(m.evenement?.date), ...enfants]) if (x !== undefined && (dernier === undefined || x > dernier)) dernier = x
+    if (dater('mariage', m) || !sansDate || !aChercher(m.etat) || !enfants.length) continue
+    estimer('mariage', m, Math.min(...enfants) - 12, Math.min(...enfants))
+  }
+  if (!dater('deces', s.deces) && sansDate && aChercher(s.deces.etat) && !ind.evenements.some((e) => ANNEES_DECES.includes(e.tag) && annee(e.date) !== undefined)) {
+    estimer('deces', s.deces, dernier, naissance === undefined ? undefined : Math.min(naissance + 100, (dernier ?? naissance) + 80))
+  }
   return faits
 }
 
@@ -140,28 +173,42 @@ const ROLES: Record<Quoi, RegExp> = {
 const sansAccents = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '')
 const mots = (s: string) => sansAccents(s).toLowerCase().split(/[^a-z]+/).filter(Boolean)
 
+/** Filtres d'Open Archives (en néerlandais) pour une fourchette d'années : sans eux, il y aurait trop de lignes à lire */
+function filtres(ind: Individu, fait: FaitCherche): string[] {
+  if (!fait.estime) return ['']
+  if (fait.quoi === 'mariage') return [`&eventtype=Huwelijk${ind.sexe === 'M' ? '&relationtype=Bruidegom' : ind.sexe === 'F' ? '&relationtype=Bruid' : ''}`]
+  // registres paroissiaux avant l'état civil (1796), état civil ensuite
+  const paroisse = fait.de < 1796
+  const civil = fait.a >= 1796
+  if (fait.quoi === 'naissance') return [...(paroisse ? ['&eventtype=Doop&relationtype=Dopeling'] : []), ...(civil ? ['&eventtype=Geboorte&relationtype=Kind'] : [])]
+  return [...(paroisse ? ['&eventtype=Begraven&relationtype=Overledene'] : []), ...(civil ? ['&eventtype=Overlijden&relationtype=Overledene'] : [])]
+}
+
 /** Les requêtes à poser pour un fait : une par initiale des formes connues du premier prénom (« G* », « W* » pour Guillaume) */
 export function requetesOpenArch(ind: Individu, fait: FaitCherche): string[] {
   const prenom = ind.prenom.split(/\s+/)[0] ?? ''
   const nom = sansAccents(ind.nom).trim()
   if (!prenom || !nom) return []
   const initiales = [...new Set(variantesPrenom(prenom).map((v) => v[0]).filter((c) => /[a-z]/.test(c)))]
-  return initiales.map((i) => `https://api.openarch.nl/1.0/records/search.json?name=${e(`${i.toUpperCase()}* ${nom} ${fait.annee}`)}&lang=fr&number=10`)
+  const annees = fait.de === fait.a ? String(fait.de) : `${fait.de}-${fait.a}`
+  return initiales.flatMap((i) => filtres(ind, fait).map((f) => `https://api.openarch.nl/1.0/records/search.json?name=${e(`${i.toUpperCase()}* ${nom} ${annees}`)}&lang=fr&number=10${f}`))
 }
 
 /** Parmi les lignes d'index, celles qui peuvent être l'acte cherché : même type d'acte, même rôle, un prénom en commun, à un an près */
 export function candidats(docs: Doc[], ind: Individu, fait: FaitCherche): Candidat[] {
   const cles = new Set(ind.prenom.split(/[\s-]+/).filter(Boolean).map(clePrenom))
   const nom = new Set(mots(ind.nom))
-  const commune = fait.evenement.lieu ? cleGeo(decouper(fait.evenement.lieu).commune) : ''
-  const jour = fait.evenement.date?.debut
+  const commune = fait.evenement?.lieu ? cleGeo(decouper(fait.evenement.lieu).commune) : ''
+  const jour = fait.evenement?.date?.debut
+  // un fait daté : à un an près ; une fourchette estimée : dedans
+  const marge = fait.estime ? 0 : 1
   const vus = new Set<string>()
   const res: (Candidat & { rang: number })[] = []
   for (const doc of docs) {
     if (!doc.url || vus.has(doc.url)) continue
     if (!TYPES[fait.quoi].test(doc.eventtype ?? '') || !ROLES[fait.quoi].test((doc.relationtype ?? '').trim())) continue
     const an = doc.eventdate?.year
-    if (an !== undefined && Math.abs(an - fait.annee) > 1) continue
+    if (an !== undefined && (an < fait.de - marge || an > fait.a + marge)) continue
     const prenoms = mots((doc.personname ?? '').split('>')[0]).filter((m) => !nom.has(m))
     if (!prenoms.some((p) => cles.has(clePrenom(p)))) continue
     vus.add(doc.url)
@@ -176,6 +223,15 @@ export function candidats(docs: Doc[], ind: Individu, fait: FaitCherche): Candid
     })
   }
   return res.sort((a, b) => b.rang - a.rang).map(({ rang: _, ...c }) => c)
+}
+
+const NOMS_FAITS: Record<Quoi, string> = { naissance: 'Naissance', mariage: 'Mariage', deces: 'Décès' }
+
+/** « Mariage 10 novembre 1877, Anderlecht », ou « Décès entre 1850 et 1890 » pour un fait sans date */
+export function titreFait(f: FaitCherche): string {
+  if (f.estime) return `${NOMS_FAITS[f.quoi]} entre ${f.de} et ${f.a}`
+  const lieu = f.evenement?.lieu ? decouperLieu(f.evenement.lieu).nom : ''
+  return `${f.evenement ? libelle(f.evenement) : NOMS_FAITS[f.quoi]} ${f.evenement?.date?.texte ?? f.de}${lieu ? ', ' + lieu : ''}`
 }
 
 const attendre = (ms: number, signal?: AbortSignal) => new Promise<void>((ok, ko) => {

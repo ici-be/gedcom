@@ -36,7 +36,7 @@ describe('recherche automatique des actes', () => {
   const faits = faitsCherches(d, ind)
 
   test('les faits datés, avec ceux qui restent à sourcer', () => {
-    expect(faits.map((f) => [f.quoi, f.annee, f.aSourcer])).toEqual([['naissance', 1850, true], ['mariage', 1876, true], ['deces', 1901, false]])
+    expect(faits.map((f) => [f.quoi, f.de, f.a, f.aSourcer, f.estime])).toEqual([['naissance', 1850, 1850, true, false], ['mariage', 1876, 1876, true, false], ['deces', 1901, 1901, false, false]])
     expect(faits[1].conjoint?.id).toBe('@I2@')
   })
   test('une requête par initiale des formes du prénom', () => {

@@ -58,3 +58,16 @@ export function oublierTout(): void {
     for (const k of Object.keys(localStorage)) if (k.startsWith('lignees.')) localStorage.removeItem(k)
   } catch { /* rien */ }
 }
+
+/** Un objet gardé dans la base du navigateur (plus de place que localStorage) : les résultats de la recherche en série */
+export async function lireObjet<T>(cle: string): Promise<T | undefined> {
+  try { return await operation<T | undefined>('readonly', (s) => s.get(cle)) } catch { return undefined }
+}
+
+export async function garderObjet(cle: string, v: unknown): Promise<void> {
+  try { await operation('readwrite', (s) => s.put(v, cle)) } catch { /* navigation privée : tant pis */ }
+}
+
+export async function oublierObjet(cle: string): Promise<void> {
+  try { await operation('readwrite', (s) => s.delete(cle)) } catch { /* rien à effacer */ }
+}

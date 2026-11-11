@@ -5,10 +5,8 @@ import { useEffect, useRef, useState } from 'preact/hooks'
 import type { Donnees } from '../lib/donnees'
 import type { Individu } from '../lib/gedcom/arbre'
 import { comparerSosa } from '../lib/parente'
-import { libelle } from '../lib/format'
-import { decouperLieu } from '../lib/communes'
 import { nomRecherche } from '../lib/recherches'
-import { MOTEURS, chercherActe, faitsCherches, type Candidat, type FaitCherche, type Reponse } from '../lib/recherche-auto'
+import { MOTEURS, chercherActe, faitsCherches, titreFait, type Candidat, type FaitCherche, type Reponse } from '../lib/recherche-auto'
 import { Personne } from './commun'
 
 interface ResultatActe { fait: FaitCherche; candidats?: Candidat[]; complet?: boolean; erreur?: string }
@@ -75,10 +73,6 @@ export function RechercheAuto({ d, liste, tousPrenoms, ajouter }: { d: Donnees; 
 
   const faits = liste.filter((id) => resultats.has(id))
   const restants = liste.filter((id) => !resultats.get(id)?.fini).length
-  const titreFait = (f: FaitCherche) => {
-    const lieu = f.evenement.lieu ? decouperLieu(f.evenement.lieu).nom : ''
-    return `${libelle(f.evenement)} ${f.evenement.date?.texte ?? f.annee}${lieu ? ', ' + lieu : ''}`
-  }
 
   return (
     <div class="panneau rch-auto">
@@ -95,6 +89,7 @@ export function RechercheAuto({ d, liste, tousPrenoms, ajouter }: { d: Donnees; 
         et des archives néerlandaises, en essayant les formes latines et flamandes du prénom (« Petrus » pour Pierre) ; puis compte les mentions du nom dans
         Internet Archive, Wikisource et Europeana. Les noms ne sont envoyés à ces sites qu'au clic sur « Chercher ».
       </p>
+      <p class="aide">Pour tout l'arbre d'un coup, avec mémoire de ce qui est trouvé{'\u202f'}: <a href="#/serie">recherche en série ›</a></p>
       <div class="rch-auto-actions">
         <button type="button" class="bouton principal" disabled={enCours || !restants} onClick={lancer}>
           {enCours ? 'Recherche en cours…' : restants ? `Chercher (${restants} personne${restants > 1 ? 's' : ''})` : 'Tout est cherché'}

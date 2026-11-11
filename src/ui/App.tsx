@@ -24,6 +24,7 @@ import { Filiation } from './Filiation'
 import { Introuvables } from './Introuvables'
 import { Illettres } from './Illettres'
 import { Signatures } from './Signatures'
+import { Serie } from './Serie'
 import { Annotations } from './Annotations'
 import { Doublons } from './Doublons'
 import { Anomalies } from './Anomalies'
@@ -355,6 +356,7 @@ export function App() {
   else if (page === 'filiation') contenu = <Filiation d={donnees} />
   else if (page === 'introuvables') contenu = <Introuvables d={donnees} />
   else if (page === 'illettres') contenu = <Illettres key={fichier.importe} d={donnees} importe={fichier.importe} />
+  else if (page === 'serie') contenu = <Serie d={donnees} />
   else if (page === 'signatures') contenu = <Signatures d={donnees} />
   else if (page === 'metiers') contenu = <Metiers d={donnees} perimetre={perimetre} setPerimetre={setPerimetre} />
   else contenu = (
@@ -397,7 +399,7 @@ export function App() {
               <a href="#/doublons" class={page === 'doublons' ? 'actif' : ''}><Icone nom="doublons" />Doublons</a>
               <a href="#/anomalies" class={page === 'anomalies' ? 'actif' : ''}><Icone nom="anomalies" />Anomalies</a>
               <a href="#/signatures" class={page === 'signatures' ? 'actif' : ''}><Icone nom="signatures" />Signatures</a>
-              <a href="#/recherches" class={page === 'recherches' ? 'actif' : ''}><Icone nom="recherches" />Recherches</a>
+              <a href="#/recherches" class={page === 'recherches' || page === 'serie' ? 'actif' : ''}><Icone nom="recherches" />Recherches</a>
               <a href="#/imprimer" class={page === 'imprimer' ? 'actif' : ''}><Icone nom="imprimer" />Imprimer</a>
             </nav>
           )}

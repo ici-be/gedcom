@@ -146,6 +146,13 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   Europeana. Les noms ne partent qu'au clic sur « Chercher », vers ces seuls sites (`src/lib/recherche-auto.ts`). Les
   autres bases (Google Livres, Gallica, BelgicaPress, RetroNews, Delpher, FamilySearch, Geneanet, Google) n'acceptent pas
   d'être interrogées depuis une page web : elles s'ouvrent dans un onglet, recherche préremplie (`src/lib/recherches.ts`).
+- **Recherche en série** (`#/serie`, depuis la page Recherches) : cherche dans les index d'Open Archives l'acte de chaque
+  fait sans source ou sans date, pour les ancêtres d'abord (par numéro Sosa), puis leurs frères et sœurs, puis le reste
+  de l'arbre. Un fait sans date est cherché dans une fourchette estimée (naissance d'après le mariage ou les enfants,
+  mariage dans les douze ans avant le premier enfant, décès après le dernier fait connu). Ce qui est trouvé et
+  l'avancement restent dans le navigateur (IndexedDB) : la recherche reprend où elle s'était arrêtée, même après un nouvel
+  export, et continue pendant qu'on visite les autres écrans. Filtres, case « traité » par fait, export CSV
+  (`src/lib/recherche-serie.ts`).
 - **Annotations** (`#/annotations`, dans le menu) : ce que le GEDCOM ne sait pas dire s'écrit dans les notes
   de l'arbre ; la page présente les trois mentions ci-dessous (à copier), leur nombre dans l'arbre, et
   renvoie vers la page de chacune, qui ramène aux annotations.
