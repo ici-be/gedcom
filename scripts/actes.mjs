@@ -429,20 +429,32 @@ async function pcloudMotDePasse() {
   let derniere
   for (const hote of HOTES_PCLOUD) {
     try {
+      const identite = { getauth: 1, logout: 1, username, password, device: 'Lignées (actes)' }
       let j
       try {
-        j = await pcloud(hote, 'userinfo', { getauth: 1, logout: 1, username, password, device: 'Lignées (actes)' })
+        j = await pcloud(hote, 'userinfo', identite)
       } catch (e) {
-        // double authentification : pCloud attend le code de l'application ou du SMS
-        if (e.code !== 2297 || !e.reponse?.token) throw e
-        const code = await demander('Code de double authentification : ')
-        j = await pcloud(hote, 'tfa_login', { token: e.reponse.token, code, trustdevice: 1 })
-        if (!j.auth) j = await pcloud(hote, 'userinfo', { getauth: 1, auth: j.token ?? j.auth })
+        // pCloud attend un code : double authentification, ou vérification d'un nouvel appareil par courriel
+        if (e.code !== 2297 && !/'code'/.test(e.message)) throw e
+        const r = e.reponse ?? {}
+        console.log(`pCloud demande un code (réponse ${r.result} ; champs : ${Object.keys(r).join(', ')}).`)
+        if (r.token && r.hassms) await pcloud(hote, 'tfa_sendsms', { token: r.token }).catch(() => undefined)
+        const code = await demander('Code reçu (application d’authentification, SMS ou courriel) : ')
+        if (r.token) {
+          j = await pcloud(hote, 'tfa_login', { token: r.token, code, trustdevice: 1 })
+          if (!j.auth) j = await pcloud(hote, 'userinfo', { getauth: 1, auth: j.token })
+        } else {
+          j = await pcloud(hote, 'userinfo', { ...identite, code })
+        }
       }
       ecrireJson(FICHIER_PCLOUD, { hote, jeton: j.auth }, 0o600)
       console.log(`Connecté à ${j.email ?? username} (${hote}). Le jeton est dans ${FICHIER_PCLOUD} ; le mot de passe n’est pas gardé.`)
       return
-    } catch (e) { derniere = e }
+    } catch (e) {
+      // mauvais centre de données : on essaie l'autre ; toute autre erreur est la bonne à montrer
+      if (e.code !== 2000 && e.code !== 2330 && e.code !== 2321) throw e
+      derniere = e
+    }
   }
   throw derniere
 }
