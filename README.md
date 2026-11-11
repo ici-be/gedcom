@@ -136,11 +136,16 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
 - **Doublons** (`#/doublons`, dans le menu) : les paires de personnes de même nom et prénoms (accents, tirets et
   majuscules ignorés, comme GeneWeb) dont les dates ne s'écartent pas de plus de deux ans et qui ont une date, un lieu, un
   parent ou un conjoint en commun ; « Comparer » ouvre la recherche de l'arbre en ligne, d'où l'on fusionne les deux fiches.
-- **Recherches** (`#/recherches[/id]`, dans le menu) : pour une personne choisie (la personne de départ par défaut), des liens qui
-  ouvrent, recherche préremplie (« Prénom Nom »), Google Livres, Gallica, BelgicaPress, RetroNews, Delpher, Internet Archive,
-  Wikisource, Europeana, FamilySearch, Geneanet et Google. Pour Google Livres, Internet Archive et Wikisource (qui acceptent
-  les requêtes depuis un navigateur), « Compter » affiche le nombre de résultats ; le nom n'est envoyé qu'au clic. Les autres
-  bases n'ont pas d'API ouverte : on ne peut que les ouvrir. Les sources sont dans `src/lib/recherches.ts`.
+- **Recherches** (`#/recherches[/id]`, dans le menu) : pour une ou plusieurs personnes (la personne de départ par défaut, ses
+  proches, ou « + 20 ancêtres à sourcer » par numéro Sosa). La **recherche automatique** affiche ses résultats dans la page :
+  pour chaque fait daté (naissance, mariage, décès), l'acte est cherché dans les index d'Open Archives (Archives de l'État
+  en Belgique, archives néerlandaises) par nom, année et initiale du prénom, puis trié : même type d'acte, la personne
+  dans le bon rôle (l'enfant, un marié, le défunt), un prénom en commun en tenant compte des formes latines et flamandes
+  (« Petrus » pour Pierre, « Wilhelmus » pour Guillaume), à un an près ; « même date » et « même lieu » signalent les
+  meilleurs candidats. S'y ajoutent le nombre de mentions et les premiers résultats d'Internet Archive, Wikisource et
+  Europeana. Les noms ne partent qu'au clic sur « Chercher », vers ces seuls sites (`src/lib/recherche-auto.ts`). Les
+  autres bases (Google Livres, Gallica, BelgicaPress, RetroNews, Delpher, FamilySearch, Geneanet, Google) n'acceptent pas
+  d'être interrogées depuis une page web : elles s'ouvrent dans un onglet, recherche préremplie (`src/lib/recherches.ts`).
 - **Annotations** (`#/annotations`, dans le menu) : ce que le GEDCOM ne sait pas dire s'écrit dans les notes
   de l'arbre ; la page présente les trois mentions ci-dessous (à copier), leur nombre dans l'arbre, et
   renvoie vers la page de chacune, qui ramène aux annotations.
@@ -179,15 +184,15 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   modifiées sur Geneanet : les cases tiennent dans le navigateur jusqu'au prochain fichier chargé.
   Dans **Personnes**, une petite plume suit le nom de qui a sa signature dans l'arbre, une croix celui
   de qui ne savait pas signer ; la fiche dépliée montre la signature, ou la mention et sa précision.
-- **Signatures à trouver** (`#/signatures`, dans le menu) : les actes en ligne de l'arbre où des personnes sans
+- **Signatures à trouver** (`#/signatures`, dans le menu) : les actes en ligne de l'arbre où des personnes sans
   signature ont dû signer, les plus prometteurs d'abord. Sont comptés comme signataires les époux, leurs parents en vie
-  au mariage, le père qui déclare une naissance, les témoins, parrains et marraines notés dans l'acte (`2 ASSO`) ; la
-  signature est « attendue » à l'état civil (dès 1796), « possible » avant ; les actes d'avant 1779 en Belgique et
+  au mariage, le père qui déclare une naissance, les témoins, parrains et marraines notés dans l'acte (`2 ASSO`) ; la
+  signature est « attendue » à l'état civil (dès 1796), « possible » avant ; les actes d'avant 1779 en Belgique et
   d'avant 1667 en France, jamais signés, sont laissés de côté. Un ancêtre compte quatre fois plus qu'un collatéral.
-  Qui a déjà sa signature (image principale en PNG) ou porte « Signature: illettré » n'est plus proposé ; un portrait
-  en image principale donne « à vérifier ». Filtres : ancêtres ou tout l'arbre, type d'acte, site (FamilySearch, Agatha,
-  autres), nom ou lieu, signatures attendues seulement ; une case à cocher par acte déjà regardé (gardée dans le
-  navigateur) ; export CSV. La logique est dans `src/lib/signatures.ts`.
+  Qui a déjà sa signature (image principale en PNG) ou porte « Signature: illettré » n'est plus proposé ; un portrait
+  en image principale donne « à vérifier ». Filtres : ancêtres ou tout l'arbre, type d'acte, site (FamilySearch, Agatha,
+  autres), nom ou lieu, signatures attendues seulement ; une case à cocher par acte déjà regardé (gardée dans le
+  navigateur) ; export CSV. La logique est dans `src/lib/signatures.ts`.
 
 Pour chaque événement, un badge **S** (bleu) ouvre la source en ligne ; un badge **T** (orange)
 montre une source écrite en texte.

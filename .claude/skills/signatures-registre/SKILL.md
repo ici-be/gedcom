@@ -18,6 +18,12 @@ Dossiers (non commités, voir `.gitignore`) :
   Dans chaque sous-dossier, les signatures déjà présentes dans l'arbre vont dans
   `déjà dans l'arbre/` : ce qui reste à la racine du sous-dossier est à téléverser.
 
+Images téléchargées par `scripts/actes.mjs` (`npm run actes telecharger -- --signatures`) : elles sont dans
+`~/Lignées/actes/Signatures/` (ou le `--dossier` choisi), et `index.json`, à la racine de ce dossier, donne pour chacune
+l'adresse de l'acte et, sous `signataires`, les personnes dont la signature manque dans l'arbre (« époux : DUPONT Paul
+(Sosa 2) ») : ce sont elles qu'on cherche d'abord sur l'image. Ces images ne se déplacent pas dans `old/` ; une fois
+traitée, noter `"signatures": "fait"` dans son entrée d'`index.json`.
+
 Scripts (Python, Pillow + numpy seulement) :
 - `.claude/skills/signatures-registre/extraire_signatures.py` : découpe et nettoyage ;
 - `.claude/skills/signatures-registre/chercher_dans_arbre.py` : recherche des signataires

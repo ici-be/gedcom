@@ -27,7 +27,7 @@ const TYPES: Record<Exclude<Type, ''>, string[]> = {
 function Signature({ d, s }: { d: Donnees; s: Signataire }) {
   const sosa = d.ancetres.get(s.id)?.sosa
   const titre = s.etat === 'photo'
-    ? 'Un portrait est son image principale : sa signature est peut-être déjà dans l’arbre, à vérifier'
+    ? 'Un portrait est son image principale : sa signature est peut-être déjà dans l’arbre, à vérifier'
     : s.certitude === 'possible' ? 'A peut-être signé cet acte' : 'Signe d’ordinaire un tel acte'
   return (
     <li class={'sig-qui' + (sosa ? ' ancetre' : '') + (s.certitude === 'possible' ? ' possible' : '')} title={titre}>
@@ -111,7 +111,7 @@ export function Signatures({ d }: { d: Donnees }) {
       <section class="panneau">
         {!bilan.avecImages && (
           <p class="avertissement">
-            Ce fichier ne contient aucune image : impossible de savoir qui a déjà sa signature. Sur Geneanet, cochez
+            Ce fichier ne contient aucune image : impossible de savoir qui a déjà sa signature. Sur Geneanet, cochez
             « Liens web vers les photos principales des individus » au moment de l'export.
           </p>
         )}
@@ -122,9 +122,9 @@ export function Signatures({ d }: { d: Donnees }) {
           au moins un acte en ligne où {bilan.avecActe > 1 ? 'ils ont' : 'il a'} pu signer.
         </p>
         <p class="aide">
-          Sont comptés comme signataires : les époux, leurs parents en vie au mariage, le père qui déclare une naissance, les témoins, parrains et marraines notés
-          dans l'acte. Avant l'état civil (1796), la signature n'est que « possible » ; les actes d'avant 1779 en Belgique et d'avant 1667 en France, jamais signés,
-          sont laissés de côté. Une personne dont l'image principale est un portrait a peut-être déjà sa signature en seconde image : elle est marquée « à vérifier ».
+          Sont comptés comme signataires : les époux, leurs parents en vie au mariage, le père qui déclare une naissance, les témoins, parrains et marraines notés
+          dans l'acte. Avant l'état civil (1796), la signature n'est que « possible » ; les actes d'avant 1779 en Belgique et d'avant 1667 en France, jamais signés,
+          sont laissés de côté. Une personne dont l'image principale est un portrait a peut-être déjà sa signature en seconde image : elle est marquée « à vérifier ».
           Quand un acte montre qu'une personne ne savait pas signer, notez-le par <a href="#/illettres">« Signature: illettré »</a> : elle ne sera plus proposée.
         </p>
       </section>

@@ -1929,3 +1929,23 @@ th.lx-col-periodes { white-space: nowrap; }
 .sig-liens { white-space: nowrap; }
 .sig-liens .bouton { display: block; margin-bottom: 4px; text-align: center; text-decoration: none; }
 .sig-tableau td { vertical-align: top; }
+
+/* ---------- recherche automatique ---------- */
+.rch-auto-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.rch-resultat { border-top: 1px solid var(--line); padding-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.rch-resultat h3 { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font: 700 1rem var(--body); margin: 0; }
+.rch-resultat .rouet { width: 14px; height: 14px; }
+.rch-compte.vide { background: var(--panel-2); color: var(--muted); }
+.rch-faits, .rch-candidats, .rch-moteurs, .rch-moteurs ul { list-style: none; margin: 0; padding: 0; }
+.rch-faits { display: flex; flex-direction: column; gap: 6px; }
+.rch-faits > li { display: grid; grid-template-columns: minmax(0, 17em) minmax(0, 1fr); gap: 4px 14px; align-items: baseline; }
+.rch-fait { font-weight: 600; }
+.rch-a-sourcer, .rch-marque { display: inline-block; margin-left: 6px; padding: 0 7px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; white-space: nowrap; }
+.rch-a-sourcer { background: var(--mid-bg); color: var(--mid); }
+.rch-marque { background: var(--ok-bg); color: var(--ok); }
+.rch-candidats { display: flex; flex-direction: column; gap: 4px; }
+.rch-candidats .rch-detail { display: block; }
+.rch-moteurs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 8px 18px; font-size: 0.9rem; }
+.rch-moteurs ul { margin-top: 2px; display: flex; flex-direction: column; gap: 2px; }
+.rch-moteur { font-weight: 600; }
+@media (max-width: 640px) { .rch-faits > li { grid-template-columns: 1fr; } }

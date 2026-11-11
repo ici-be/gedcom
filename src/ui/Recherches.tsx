@@ -8,6 +8,7 @@ import { nomComplet } from '../lib/parente'
 import { ecrire, lire } from '../lib/stockage'
 import { CATEGORIES, nomRecherche, SOURCES, type Nom, type Source } from '../lib/recherches'
 import { Annees, ChoixPersonne, Personne } from './commun'
+import { RechercheAuto } from './RechercheAuto'
 
 const CLE_SOURCES = 'recherches.sources'
 const CLE_PRENOMS = 'recherches.tous-prenoms'
@@ -109,7 +110,7 @@ export function Recherches({ d, id }: { d: Donnees; id?: string }) {
     <section class="ecran rch">
       <header class="titre-ecran">
         <h1>Recherches externes</h1>
-        <p class="sous-titre">Chercher une ou plusieurs personnes dans des livres, journaux et archives numérisés : chaque base cochée s’ouvre dans un nouvel onglet, la recherche déjà remplie.</p>
+        <p class="sous-titre">Chercher une ou plusieurs personnes dans des index d’actes, des livres, journaux et archives numérisés : la recherche automatique affiche ici ce qu’elle trouve ; les autres bases s’ouvrent dans un nouvel onglet, la recherche déjà remplie.</p>
       </header>
 
       <div class="panneau">
@@ -177,6 +178,8 @@ export function Recherches({ d, id }: { d: Donnees; id?: string }) {
           <p class="aide">{personnes.length ? 'Ajouter une autre personne, ou ses proches avec le bouton « Proches ».' : 'Choisissez une personne à chercher.'}</p>
         </div>
       </div>
+
+      <RechercheAuto d={d} liste={liste} tousPrenoms={tous} ajouter={(ids) => setListe((l) => [...new Set([...l, ...ids])])} />
 
       <div class="panneau">
         <div class="rch-entete">

@@ -63,7 +63,7 @@ function dernierExport() {
     // un zip de Geneanet : le nom du .ged y figure en clair
     if (readFileSync(c.chemin).subarray(0, 4096).includes('.ged')) return c.chemin
   }
-  throw new Error('Aucun export trouvé dans ~/Téléchargements : indiquez-le avec --ged FICHIER')
+  throw new Error('Aucun export trouvé dans ~/Téléchargements : indiquez-le avec --ged FICHIER')
 }
 
 async function file() {
@@ -75,15 +75,15 @@ async function file() {
   if (estZip(octets)) octets = gedDuZip(octets).octets
   const arbre = lireArbre(decoder(octets))
   const racine = reglages.racine ? trouverIndividu(arbre, String(reglages.racine)) : arbre.individus.has('@I1@') ? '@I1@' : arbre.individus.keys().next().value
-  if (!racine) throw new Error(`Personne de départ introuvable : ${reglages.racine}`)
+  if (!racine) throw new Error(`Personne de départ introuvable : ${reglages.racine}`)
   const depart = arbre.individus.get(racine)
-  console.log(`Arbre : ${chemin}\nPersonne de départ : ${depart.prenom} ${depart.nom} (${racine})`)
+  console.log(`Arbre : ${chemin}\nPersonne de départ : ${depart.prenom} ${depart.nom} (${racine})`)
   const options = {
     generations: reglages.generations ? Number(reglages.generations) : undefined,
     sites: reglages.site ? [String(reglages.site)] : undefined,
   }
   if (reglages.signatures && ![...arbre.individus.values()].some((i) => i.photo)) {
-    throw new Error('Cet export ne contient aucune image : on ne sait pas qui a déjà sa signature. Sur Geneanet, cochez\n« Liens web vers les photos principales des individus » à l’export, ou donnez un export qui les a avec --ged.')
+    throw new Error('Cet export ne contient aucune image : on ne sait pas qui a déjà sa signature. Sur Geneanet, cochez\n« Liens web vers les photos principales des individus » à l’export, ou donnez un export qui les a avec --ged.')
   }
   const actes = (reglages.signatures ? fileSignatures : fileActes)(arbre, ancetres(arbre, racine), options)
   // --seulement TEXTE : les actes dont le nom de fichier ou l'adresse contient ce texte
@@ -227,7 +227,7 @@ async function connexion() {
     for (const u of CONNEXIONS) await (await ctx.newPage()).goto(u).catch(() => undefined)
     await navigateur.close()
   }
-  console.log('Une fenêtre Chrome à part est ouverte : connectez-vous-y à FamilySearch et à Agatha, puis laissez-la ouverte\n(ou fermez-la : la session reste dans son profil). Ensuite : node scripts/actes.mjs telecharger')
+  console.log('Une fenêtre Chrome à part est ouverte : connectez-vous-y à FamilySearch et à Agatha, puis laissez-la ouverte\n(ou fermez-la : la session reste dans son profil). Ensuite : node scripts/actes.mjs telecharger')
 }
 
 function resume(actes, index) {
@@ -246,7 +246,7 @@ function resume(actes, index) {
 async function liste() {
   const actes = await file()
   const index = lireIndex()
-  console.log(`Dossier : ${DOSSIER}`)
+  console.log(`Dossier : ${DOSSIER}`)
   resume(actes, index)
   const parGeneration = new Map()
   for (const a of actes) {
@@ -255,9 +255,9 @@ async function liste() {
     if (fait(index[a.id])) g[1]++
     parGeneration.set(a.generation, g)
   }
-  console.log('Par génération (téléchargées / citées) : ' + [...parGeneration].sort((a, b) => a[0] - b[0]).map(([g, [n, f]]) => `${g}: ${f}/${n}`).join(' · '))
+  console.log('Par génération (téléchargées / citées) : ' + [...parGeneration].sort((a, b) => a[0] - b[0]).map(([g, [n, f]]) => `${g}: ${f}/${n}`).join(' · '))
   const octets = Object.values(index).reduce((n, e) => n + (fait(e) ? e.octets ?? 0 : 0), 0)
-  if (octets) console.log(`Sur le disque : ${(octets / 1e6).toFixed(0)} Mo`)
+  if (octets) console.log(`Sur le disque : ${(octets / 1e6).toFixed(0)} Mo`)
   const suite = actes.filter((a) => !index[a.id]).slice(0, 10)
   if (suite.length) console.log('À suivre :\n' + suite.map((a) => `  ${a.fichier}  (${a.site})`).join('\n'))
 }
@@ -288,13 +288,13 @@ async function telecharger() {
         console.log(`${(image.length / 1e6).toFixed(1)} Mo`)
       } catch (e) {
         if (e instanceof NonConnecte) {
-          console.log(`\nLa session ${e.message} a expiré : reconnectez-vous dans la fenêtre Chrome (node scripts/actes.mjs connexion), puis relancez.`)
+          console.log(`\nLa session ${e.message} a expiré : reconnectez-vous dans la fenêtre Chrome (node scripts/actes.mjs connexion), puis relancez.`)
           break
         }
         index[a.id] = { url: a.url, sosa: a.sosa, erreur: String(e.message ?? e).split('\n')[0], date: new Date().toISOString().slice(0, 10) }
-        console.log('échec : ' + index[a.id].erreur)
+        console.log('échec : ' + index[a.id].erreur)
         // trois échecs de suite : le site a un souci, inutile d'insister
-        if (++echecs >= 3) { console.log('Trois échecs de suite : arrêt. Relancez plus tard avec --reessayer.'); break }
+        if (++echecs >= 3) { console.log('Trois échecs de suite : arrêt. Relancez plus tard avec --reessayer.'); break }
       }
       ecrireJson(INDEX, index)
       if (i < aFaire.length - 1) await pause(attente * (0.75 + Math.random() / 2))
@@ -316,7 +316,7 @@ async function pcloud(hote, methode, parametres, fichier) {
   }
   const r = await fetch(`https://${hote}/${methode}?${new URLSearchParams(parametres)}`, envoi)
   const j = await r.json()
-  if (j.result !== 0) throw Object.assign(new Error(`pCloud : ${j.error ?? j.result}`), { code: j.result })
+  if (j.result !== 0) throw Object.assign(new Error(`pCloud : ${j.error ?? j.result}`), { code: j.result })
   return j
 }
 
@@ -328,9 +328,9 @@ function demander(question, cache = false) {
 }
 
 async function pcloudConnexion() {
-  if (!process.stdin.isTTY) throw new Error('À lancer dans un terminal : le mot de passe se tape au clavier.')
-  const username = await demander('Adresse du compte pCloud : ')
-  const password = await demander('Mot de passe (ne s’affiche pas) : ', true)
+  if (!process.stdin.isTTY) throw new Error('À lancer dans un terminal : le mot de passe se tape au clavier.')
+  const username = await demander('Adresse du compte pCloud : ')
+  const password = await demander('Mot de passe (ne s’affiche pas) : ', true)
   // les comptes européens sont sur eapi.pcloud.com, les autres sur api.pcloud.com
   let derniere
   for (const hote of ['eapi.pcloud.com', 'api.pcloud.com']) {
@@ -346,7 +346,7 @@ async function pcloudConnexion() {
 
 async function envoyerPcloud() {
   const c = lireJson(FICHIER_PCLOUD, null)
-  if (!c?.jeton) throw new Error('Pas encore connecté à pCloud : node scripts/actes.mjs pcloud-connexion')
+  if (!c?.jeton) throw new Error('Pas encore connecté à pCloud : node scripts/actes.mjs pcloud-connexion')
   const index = lireIndex()
   const aEnvoyer = Object.values(index).filter((e) => fait(e) && !e.pcloud && existsSync(join(DOSSIER, e.fichier)))
   const dossiers = new Set()
@@ -366,7 +366,7 @@ async function envoyerPcloud() {
     await creer(dossier)
     const local = join(DOSSIER, e.fichier)
     const j = await pcloud(c.hote, 'uploadfile', { auth: c.jeton, path: dossier, nopartial: 1 }, { nom: distant.slice(dossier.length + 1), octets: readFileSync(local) })
-    if (j.metadata?.[0]?.size !== statSync(local).size) throw new Error(`pCloud : ${e.fichier} n’est pas arrivé entier`)
+    if (j.metadata?.[0]?.size !== statSync(local).size) throw new Error(`pCloud : ${e.fichier} n’est pas arrivé entier`)
     e.pcloud = distant
     if (reglages.liberer) rmSync(local)
     ecrireJson(INDEX, index)
@@ -382,7 +382,7 @@ async function envoyerPcloud() {
 
 const COMMANDES = { connexion, liste, telecharger, 'pcloud-connexion': pcloudConnexion, pcloud: envoyerPcloud }
 if (!COMMANDES[commande]) {
-  console.error(`Commande inconnue : ${commande}\nCommandes : ${Object.keys(COMMANDES).join(', ')}`)
+  console.error(`Commande inconnue : ${commande}\nCommandes : ${Object.keys(COMMANDES).join(', ')}`)
   process.exit(2)
 }
 COMMANDES[commande]().then(() => process.exit(0), (e) => { console.error(e.message ?? e); process.exit(1) })

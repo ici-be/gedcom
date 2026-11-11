@@ -233,3 +233,10 @@ export function formeUsuelle(prenom: string): string | undefined {
 export function clePrenom(prenom: string): string {
   return formeUsuelle(prenom) ?? sansAccents(prenom)
 }
+
+/** Toutes les formes connues d'un prénom, sans accents ni majuscules : « Guillaume » → guillaume, wilhelmus, willem… */
+export function variantesPrenom(prenom: string): string[] {
+  const cle = clePrenom(prenom)
+  const v = [...TABLE].filter(([, forme]) => forme === cle).map(([variante]) => variante)
+  return v.length ? v : [sansAccents(prenom)]
+}
