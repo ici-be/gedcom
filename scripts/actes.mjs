@@ -4,7 +4,7 @@
 //   node scripts/actes.mjs connexion        ouvre un Chrome à part pour se connecter à FamilySearch et à Agatha
 //   node scripts/actes.mjs liste            ce qui est cité, téléchargé, encore à faire
 //   node scripts/actes.mjs telecharger      télécharge la suite de la file (40 images par défaut)
-//   node scripts/actes.mjs pcloud-connexion demande l'adresse et le mot de passe pCloud, ne garde qu'un jeton
+//   node scripts/actes.mjs pcloud-connexion relie le script à pCloud par le navigateur (connexion Google comprise)
 //   node scripts/actes.mjs pcloud           envoie sur pCloud les images qui n'y sont pas encore, et vérifie chacune
 //   node scripts/actes.mjs pcloud --essai   montre où irait chaque image, sans rien envoyer
 //   node scripts/actes.mjs pcloud --verifier  compare ce qui est sur pCloud avec ce qui a été téléchargé
@@ -379,13 +379,55 @@ function demander(question, cache = false) {
   return new Promise((ok) => rl.question(question, (v) => { rl.close(); if (cache) process.stdout.write('\n'); ok(v.trim()) }))
 }
 
+/** Jeton d'application (connexion par le navigateur) ou jeton de session (connexion par mot de passe) */
+const jeton = (c) => (c.oauth ? { access_token: c.jeton } : { auth: c.jeton })
+const HOTES_PCLOUD = ['api.pcloud.com', 'eapi.pcloud.com']
+
+/**
+ * Connexion par le navigateur, la seule possible quand on entre chez pCloud par Google : on crée une fois une application
+ * à soi (https://docs.pcloud.com/my_apps/), pCloud affiche un code après accord, et ce code s'échange contre un jeton.
+ * En deux temps si l'on n'a pas de terminal :  pcloud-connexion --client-id … --client-secret …   puis   pcloud-connexion --code …
+ */
 async function pcloudConnexion() {
+  if (reglages['mot-de-passe']) return pcloudMotDePasse()
+  const c = lireJson(FICHIER_PCLOUD, {}) ?? {}
+  const saisie = async (option, question) => {
+    if (typeof reglages[option] === 'string') return reglages[option]
+    return process.stdin.isTTY ? demander(question) : undefined
+  }
+  const clientId = (await saisie('client-id', 'Client ID de votre application pCloud : ')) ?? c.clientId
+  const clientSecret = (await saisie('client-secret', 'Client secret : ')) ?? c.clientSecret
+  if (!clientId || !clientSecret) {
+    throw new Error('Il faut d’abord une application pCloud à vous : https://docs.pcloud.com/my_apps/ → « New app » (accès à tous les dossiers).\nPuis : node scripts/actes.mjs pcloud-connexion --client-id … --client-secret …')
+  }
+  ecrireJson(FICHIER_PCLOUD, { ...c, clientId, clientSecret }, 0o600)
+  const adresse = `https://my.pcloud.com/oauth2/authorize?client_id=${encodeURIComponent(clientId)}&response_type=code`
+  let code = typeof reglages.code === 'string' ? reglages.code : undefined
+  if (!code) {
+    console.log(`Ouvrez cette adresse, connectez-vous (par Google) et acceptez ; pCloud affiche alors un code :\n  ${adresse}`)
+    spawn('xdg-open', [adresse], { detached: true, stdio: 'ignore' }).on('error', () => undefined).unref()
+    if (!process.stdin.isTTY) { console.log('Ensuite : node scripts/actes.mjs pcloud-connexion --code LE_CODE'); return }
+    code = await demander('Code affiché par pCloud : ')
+  }
+  let derniere
+  for (const hote of HOTES_PCLOUD) {
+    try {
+      const j = await pcloud(hote, 'oauth2_token', { client_id: clientId, client_secret: clientSecret, code })
+      const moi = await pcloud(hote, 'userinfo', { access_token: j.access_token })
+      ecrireJson(FICHIER_PCLOUD, { clientId, clientSecret, hote, jeton: j.access_token, oauth: true }, 0o600)
+      console.log(`Connecté à pCloud (${moi.email}, ${hote}). Le jeton est dans ${FICHIER_PCLOUD}.`)
+      return
+    } catch (e) { derniere = e }
+  }
+  throw new Error(`${derniere.message} Le code ne sert qu’une fois et expire vite : redemandez-en un.`)
+}
+
+async function pcloudMotDePasse() {
   if (!process.stdin.isTTY) throw new Error('À lancer dans un terminal : le mot de passe se tape au clavier.')
   const username = await demander('Adresse du compte pCloud : ')
   const password = await demander('Mot de passe (ne s’affiche pas) : ', true)
-  // my.pcloud.com : api.pcloud.com ; e.pcloud.com (comptes européens) : eapi.pcloud.com
   let derniere
-  for (const hote of ['api.pcloud.com', 'eapi.pcloud.com']) {
+  for (const hote of HOTES_PCLOUD) {
     try {
       let j
       try {
@@ -402,14 +444,14 @@ async function pcloudConnexion() {
       return
     } catch (e) { derniere = e }
   }
-  throw new Error(`${derniere.message}. Si la connexion par mot de passe est refusée, donnez plutôt en --dossier un dossier synchronisé par l’application pCloud.`)
+  throw derniere
 }
 
 /** Le dossier d'arrivée : son numéro (folder=… dans l'adresse de my.pcloud.com) ou son chemin ; il doit déjà exister */
 async function dossierPcloud(c) {
   const cible = String(reglages.pcloud ?? '')
   if (!cible || cible === 'true') throw new Error('Quel dossier pCloud ? --pcloud NUMÉRO (le « folder=… » de son adresse) ou --pcloud "/Généalogie/Actes", ou "pcloud" dans ~/.config/lignees/actes.json')
-  const j = await pcloud(c.hote, 'listfolder', { auth: c.jeton, nofiles: 1, ...(/^\d+$/.test(cible) ? { folderid: cible } : { path: cible }) })
+  const j = await pcloud(c.hote, 'listfolder', { ...jeton(c), nofiles: 1, ...(/^\d+$/.test(cible) ? { folderid: cible } : { path: cible }) })
   return j.metadata
 }
 
@@ -417,7 +459,7 @@ const sha1 = (octets) => createHash('sha1').update(octets).digest('hex')
 
 /** Tous les fichiers sous un dossier pCloud : chemin relatif → { fileid, size } */
 async function contenuPcloud(c, folderid) {
-  const j = await pcloud(c.hote, 'listfolder', { auth: c.jeton, folderid, recursive: 1 })
+  const j = await pcloud(c.hote, 'listfolder', { ...jeton(c), folderid, recursive: 1 })
   const fichiers = new Map()
   const parcourir = (dossier, prefixe) => {
     for (const x of dossier.contents ?? []) {
@@ -431,7 +473,7 @@ async function contenuPcloud(c, folderid) {
 
 async function envoyerPcloud() {
   const c = lireJson(FICHIER_PCLOUD, null)
-  if (!c?.jeton) throw new Error('Pas encore connecté à pCloud : node scripts/actes.mjs pcloud-connexion (dans un terminal)')
+  if (!c?.jeton) throw new Error('Pas encore connecté à pCloud : node scripts/actes.mjs pcloud-connexion')
   const index = lireIndex()
   const racine = await dossierPcloud(c)
   const chemin = racine.path ?? racine.name
@@ -471,18 +513,18 @@ async function envoyerPcloud() {
     if (dossiers.has(relatif)) return dossiers.get(relatif)
     const coupe = relatif.lastIndexOf('/')
     const parent = await creer(coupe < 0 ? '' : relatif.slice(0, coupe))
-    const j = await pcloud(c.hote, 'createfolderifnotexists', { auth: c.jeton, folderid: parent, name: relatif.slice(coupe + 1) })
+    const j = await pcloud(c.hote, 'createfolderifnotexists', { ...jeton(c), folderid: parent, name: relatif.slice(coupe + 1) })
     dossiers.set(relatif, j.metadata.folderid)
     return j.metadata.folderid
   }
   const envoyer = async (relatif, octets) => {
     const coupe = relatif.lastIndexOf('/')
     const folderid = await creer(coupe < 0 ? '' : relatif.slice(0, coupe))
-    const j = await pcloud(c.hote, 'uploadfile', { auth: c.jeton, folderid, nopartial: 1 }, { nom: relatif.slice(coupe + 1), octets })
+    const j = await pcloud(c.hote, 'uploadfile', { ...jeton(c), folderid, nopartial: 1 }, { nom: relatif.slice(coupe + 1), octets })
     const m = j.metadata?.[0]
     if (!m || m.size !== octets.length) throw new Error(`pCloud : ${relatif} n’est pas arrivé entier`)
     // l'empreinte calculée par pCloud doit être celle du fichier d'ici
-    const somme = await pcloud(c.hote, 'checksumfile', { auth: c.jeton, fileid: m.fileid })
+    const somme = await pcloud(c.hote, 'checksumfile', { ...jeton(c), fileid: m.fileid })
     if (somme.sha1 !== sha1(octets)) throw new Error(`pCloud : ${relatif} est arrivé abîmé (empreinte différente)`)
     return m.fileid
   }

@@ -212,7 +212,7 @@ npm run actes connexion          # ouvre un Chrome à part : s'y connecter à Fa
 npm run actes liste              # images citées, téléchargées, à faire, par site et par génération
 npm run actes telecharger        # la suite de la file : 40 images, une toutes les 4 secondes environ
 npm run actes telecharger -- --signatures --max 20   # les actes où la signature d'un ancêtre est à trouver
-npm run actes pcloud-connexion   # une fois, dans un terminal : adresse et mot de passe pCloud (seul un jeton est gardé)
+npm run actes pcloud-connexion   # une fois : relie le script à pCloud par le navigateur
 npm run actes pcloud             # envoie sur pCloud les images qui n'y sont pas encore, et vérifie chacune
 npm run actes pcloud -- --verifier   # compare pCloud et le disque
 ```
@@ -242,7 +242,10 @@ npm run actes pcloud -- --verifier   # compare pCloud et le disque
   dossier doit exister ; rien n'est écrit ailleurs. Après chaque envoi, la taille et l'empreinte SHA-1 calculée par pCloud
   sont comparées à celles du fichier d'ici ; `index.json` et le catalogue partent aussi. `pcloud --essai` montre où irait
   chaque image sans rien envoyer, `pcloud --verifier` compare ce qui est sur pCloud avec ce qui a été téléchargé.
-  `pcloud-connexion` demande le code de double authentification s'il y en a une.
+  `pcloud-connexion` passe par le navigateur (la seule voie quand on entre chez pCloud par Google) : on crée une fois
+  une application à soi sur https://docs.pcloud.com/my_apps/, on donne son « Client ID » et son « Client secret », on
+  accepte l'accès, et le code que pCloud affiche s'échange contre un jeton, gardé dans `~/.config/lignees/pcloud.json`.
+  Avec un mot de passe pCloud : `pcloud-connexion --mot-de-passe` (code de double authentification compris).
 
 ## Le fichier
 
