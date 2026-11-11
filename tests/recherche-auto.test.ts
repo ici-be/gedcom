@@ -67,8 +67,32 @@ describe('recherche automatique des actes', () => {
     const m = candidats([
       { personname: 'Petrus Dupont', relationtype: 'Marié', eventtype: 'Mariage', eventdate: { year: 1876 }, eventplace: ['Brussel'], url: 'm1' },
       { personname: 'Petrus Dupont', relationtype: 'Père de marié', eventtype: 'Mariage', eventdate: { year: 1876 }, url: 'm2' },
+      { personname: 'Petrus Dupont', relationtype: 'Marié', eventtype: 'Mariage', eventdate: { year: 1876 }, eventplace: ['Gent'], url: 'm3' }, // ailleurs : le second prénom ne suffit plus
     ], ind, faits[1])
-    expect(m.map((x) => x.url)).toEqual(['m1'])
+    expect(m.map((x) => [x.url, x.memeLieu])).toEqual([['m1', true]]) // « Brussel » est Bruxelles
+  })
+  test('des prénoms différents, un autre pays, un doublon', () => {
+    const doc = (personname: string, url: string, plus: Partial<Doc> = {}): Doc => ({ personname, relationtype: 'Enfant', eventtype: 'Naissance', eventdate: { year: 1850 }, archive_code: 'abl', url, ...plus })
+    const c = candidats([
+      doc('Guilielmus Petrus Dupont', 'a'),
+      doc('Wilhelmus Josephus Dupont', 'b'), // second prénom différent
+      doc('Carolus Wilhelmus Dupont', 'c'), // premier prénom différent
+      doc('Wilhelmus Du Pont', 'd', { eventplace: ['Diest'] }),
+      doc('Wilhelmus Dupont', 'e', { archive_code: 'zar' }), // archives néerlandaises, pour une naissance à Louvain
+      doc('Wilhelmus Dupont', 'f', { archive_code: 'ins', eventdate: { day: 3, month: 3, year: 1850 } }), // ailleurs, mais le même jour
+      doc('Wilhelmus Du Pont', 'g', { eventplace: ['Diest'], archive_code: 'aba' }), // le même acte dans une autre archive
+    ], ind, faits[0])
+    expect(c.map((x) => x.url)).toEqual(['f', 'a', 'd'])
+  })
+  test('le mariage est cherché avec le nom du conjoint', () => {
+    expect(requetesOpenArch(ind, faits[1]).map((u) => new URL(u).searchParams.get('name'))).toEqual(['G* Dupont & Lambert 1876', 'W* Dupont & Lambert 1876'])
+  })
+  test('« après 1936 » n’est pas l’année 1936', () => {
+    const a = lireArbre(GED.replace('2 DATE 1901\n2 SOUR Registre', '2 DATE AFT 1890'))
+    const da = calculer(a, '@I1@', '')
+    const p = a.individus.get('@I1@')!
+    expect(faitsCherches(da, p).map((f) => f.quoi)).toEqual(['naissance', 'mariage'])
+    expect(faitsCherches(da, p, true).filter((f) => f.quoi === 'deces').map((f) => [f.de, f.a, f.estime])).toEqual([[1890, 1940, true]])
   })
 })
 
@@ -79,6 +103,12 @@ describe('mémoire de la recherche en série', () => {
     expect(Object.keys(m.faits)).toEqual(['jean|dupont|1850|naissance|1850|', 'anne|dupont||naissance|1840-1855|', 'jean|dupont||deces|1760-1800|'])
     expect(m.traites).toEqual(['x'])
     expect(Object.keys(rafraichir(m).faits).length).toBe(3)
-    expect(rafraichir(undefined)).toEqual({ faits: {}, traites: [], version: 2 })
+    expect(rafraichir(undefined)).toEqual({ faits: {}, traites: [], version: 3 })
+  })
+  test('ce qui avait des candidats, les mariages et les noms trop répandus sont cherchés à nouveau avec le tri plus sévère', () => {
+    const rien = { quand: '2026-11-10', candidats: [], complet: true }
+    const c = { titre: 't', detail: '', url: 'u', dateExacte: false, memeLieu: false }
+    const m = rafraichir({ version: 2, traites: [], faits: { 'a|b|1850|deces|1901|': rien, 'a|b|1850|naissance|1850|': { ...rien, candidats: [c] }, 'a|b|1850|mariage|1876|c': rien, 'a|b|1850|deces|1902|': { ...rien, complet: false } } })
+    expect(Object.keys(m.faits)).toEqual(['a|b|1850|deces|1901|'])
   })
 })

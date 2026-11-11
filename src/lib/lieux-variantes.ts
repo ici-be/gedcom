@@ -73,6 +73,12 @@ for (const ligne of NOMS_BELGES) {
   for (const nom of ligne) ALIAS_COMMUNES.set(cleCommune(nom), canon)
 }
 
+/** Clé d'une commune, la même pour ses noms français et néerlandais : « Brussel » et « Bruxelles » → « bruxelles » */
+export function cleCommuneBilingue(nom: string): string {
+  const k = cleCommune(nom)
+  return ALIAS_COMMUNES.get(k) ?? k
+}
+
 interface Entree {
   lieu: string
   faits: number

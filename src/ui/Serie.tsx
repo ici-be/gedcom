@@ -170,7 +170,7 @@ export function Serie({ d }: { d: Donnees }) {
                   <td class="nom"><Personne d={d} id={l.tache.id} annees prenoms={2} /></td>
                   <td>
                     {titreFait(l.f.fait)}
-                    <span class="contexte">{l.f.fait.estime ? 'sans date dans l’arbre' : 'sans source'}{l.f.fait.conjoint && <> · avec {nomComplet(l.f.fait.conjoint)}</>}</span>
+                    <span class="contexte">{!l.f.fait.estime ? 'sans source' : l.f.fait.evenement?.date?.debut ? 'date imprécise dans l’arbre' : 'sans date dans l’arbre'}{l.f.fait.conjoint && <> · avec {nomComplet(l.f.fait.conjoint)}</>}</span>
                   </td>
                   <td>
                     <ul class="rch-candidats">

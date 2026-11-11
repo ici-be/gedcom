@@ -22,13 +22,20 @@ export interface Memoire {
   faits: Record<string, Trouve>
   /** Faits marqués « traité » */
   traites: string[]
-  /** 2 : les naissances sans date d'avant 1796 sont cherchées sous le rôle « Kind » aussi */
+  /**
+   * 2 : les naissances sans date d'avant 1796 sont cherchées sous le rôle « Kind » aussi
+   * 3 : tri plus sévère (prénoms, pays) et mariages cherchés avec le nom du conjoint
+   */
   version?: number
 }
 
-const VERSION = 2
+const VERSION = 3
 
-/** Ce qu'une version précédente a mal cherché est oublié, pour être cherché à nouveau : les naissances sans date d'avant 1796 */
+/**
+ * Ce qu'une version précédente a mal cherché est oublié, pour être cherché à nouveau : les naissances sans date d'avant
+ * 1796, puis tout ce qui avait des candidats (triés trop largement), les mariages et les noms trop répandus.
+ * Un fait sans candidat le reste avec un tri plus sévère : il n'est pas cherché à nouveau.
+ */
 export function rafraichir(m: Memoire | undefined): Memoire {
   const faits = { ...m?.faits }
   if ((m?.version ?? 1) < 2) {
@@ -36,6 +43,9 @@ export function rafraichir(m: Memoire | undefined): Memoire {
       const [, , , quoi, annees = ''] = cle.split('|')
       if (quoi === 'naissance' && annees.includes('-') && parseInt(annees) < 1796) delete faits[cle]
     }
+  }
+  if ((m?.version ?? 1) < 3) {
+    for (const [cle, t] of Object.entries(faits)) if (t.candidats.length || !t.complet || cle.split('|')[3] === 'mariage') delete faits[cle]
   }
   return { faits, traites: m?.traites ?? [], version: VERSION }
 }
