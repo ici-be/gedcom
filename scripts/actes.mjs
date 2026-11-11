@@ -14,6 +14,7 @@
 //   --signatures (au lieu des actes des ancêtres : les actes où la signature d'un ancêtre est à trouver, les plus prometteurs d'abord)
 //   --seulement TEXTE (nom de personne, type d'acte ou morceau d'adresse) · --reessayer (les images en échec)
 //   --liberer (pcloud : efface la copie locale une fois l'image envoyée et vérifiée)
+//   --rclone "pcloud:Généalogie/Actes" (pcloud : envoyer par rclone, connecté par le navigateur ; le plus simple avec Google)
 //   --pcloud DOSSIER (pcloud : le dossier d'arrivée, par son numéro — le « folder=… » de son adresse sur my.pcloud.com — ou
 //   son chemin, « /Généalogie/Actes »)
 // Les réglages durables (racine, dossier, ged, pcloud) peuvent s'écrire dans ~/.config/lignees/actes.json.
@@ -490,7 +491,97 @@ async function contenuPcloud(c, folderid) {
   return fichiers
 }
 
+// ——— pCloud par rclone ———
+// rclone (https://rclone.org) a sa propre application pCloud : « rclone config » ouvre le navigateur, on s'y connecte
+// comme d'habitude (Google compris). Réglage : --rclone "pcloud:Généalogie/Actes" (nom du remote, deux-points, chemin).
+
+function rclone(args, options = {}) {
+  const binaire = [...(process.env.PATH ?? '').split(':'), join(homedir(), '.local', 'bin')].map((d) => join(d, 'rclone')).find((f) => existsSync(f))
+  if (!binaire) throw new Error('rclone introuvable : https://rclone.org/install/')
+  return new Promise((ok, ko) => {
+    const p = spawn(binaire, args, { stdio: ['ignore', options.montrer ? 'inherit' : 'pipe', options.montrer ? 'inherit' : 'pipe'] })
+    let sortie = ''
+    let erreurs = ''
+    p.stdout?.on('data', (d) => { sortie += d })
+    p.stderr?.on('data', (d) => { erreurs += d })
+    p.on('error', ko)
+    p.on('exit', (code) => (code === 0 || options.tolerer ? ok({ code, sortie, erreurs }) : ko(new Error(`rclone : ${erreurs.trim().split('\n').pop() || 'code ' + code}`))))
+  })
+}
+
+async function envoyerRclone(cible) {
+  const index = lireIndex()
+  const tous = Object.values(index).filter(fait)
+  // le dossier doit exister : on n'en crée pas par mégarde à côté du bon
+  const [remote, chemin = ''] = cible.split(/:(.*)/s)
+  const parent = chemin.includes('/') ? chemin.slice(0, chemin.lastIndexOf('/')) : ''
+  const nom = chemin.slice(chemin.lastIndexOf('/') + 1)
+  const freres = JSON.parse((await rclone(['lsjson', '--dirs-only', `${remote}:${parent}`])).sortie)
+  const dossier = freres.find((d) => d.Name.normalize('NFC') === nom.normalize('NFC'))
+  if (!dossier) throw new Error(`Le dossier ${cible} n’existe pas sur pCloud (dossiers présents : ${freres.map((d) => d.Name).join(', ')})`)
+  const numero = String(dossier.ID ?? '').replace(/^d/, '')
+  console.log(`Dossier pCloud : ${cible} (n° ${numero})`)
+  if (/^\d+$/.test(String(reglages.pcloud ?? '')) && numero && numero !== String(reglages.pcloud)) {
+    throw new Error(`Ce n’est pas le dossier attendu : son numéro est ${numero}, pas ${reglages.pcloud}`)
+  }
+
+  if (reglages.verifier) {
+    const distant = new Map(JSON.parse((await rclone(['lsjson', '-R', '--files-only', cible])).sortie).map((f) => [f.Path.normalize('NFC'), { size: f.Size }]))
+    return comparer(tous, distant)
+  }
+
+  const aEnvoyer = tous.filter((e) => !e.pcloud && existsSync(join(DOSSIER, e.fichier)))
+  if (reglages.essai) {
+    for (const e of aEnvoyer) console.log(`  ${cible}/${e.fichier}`)
+    console.log(`${aEnvoyer.length} image${aEnvoyer.length > 1 ? 's' : ''} à envoyer (essai : rien n’est parti).`)
+    return
+  }
+  ecrireCatalogue(index)
+  const liste = join(DOSSIER, '.envoi.txt')
+  const envoyer = async (fichiers) => {
+    writeFileSync(liste, fichiers.join('\n') + '\n')
+    try {
+      // copy n'efface ni ne déplace rien à l'arrivée ; check relit ensuite les empreintes calculées par pCloud
+      await rclone(['copy', DOSSIER, cible, '--files-from-raw', liste, '--transfers', '4', '--stats', '15s', '--stats-one-line', '-v'], { montrer: true })
+      await rclone(['check', DOSSIER, cible, '--files-from-raw', liste, '--one-way'])
+    } finally { rmSync(liste, { force: true }) }
+  }
+  // par lots : ce qui est vérifié est noté au fur et à mesure
+  for (let i = 0; i < aEnvoyer.length; i += 50) {
+    const lot = aEnvoyer.slice(i, i + 50)
+    await envoyer(lot.map((e) => e.fichier))
+    for (const e of lot) {
+      e.pcloud = { chemin: `${cible}/${e.fichier}` }
+      if (reglages.liberer) rmSync(join(DOSSIER, e.fichier))
+    }
+    ecrireJson(INDEX, index)
+    console.log(`${Math.min(i + 50, aEnvoyer.length)}/${aEnvoyer.length} envoyées et vérifiées`)
+  }
+  await envoyer(['index.json', CATALOGUE].filter((f) => existsSync(join(DOSSIER, f))))
+  console.log(aEnvoyer.length ? `${aEnvoyer.length} image${aEnvoyer.length > 1 ? 's envoyées et vérifiées' : ' envoyée et vérifiée'} dans ${cible}.` : `Rien de nouveau à envoyer dans ${cible}.`)
+}
+
+/** Compare les images téléchargées avec ce qui est sur pCloud (chemin → taille) */
+function comparer(tous, distant) {
+  let bons = 0
+  const soucis = []
+  for (const e of tous) {
+    const d = distant.get(e.fichier.normalize('NFC'))
+    if (!d) { if (e.pcloud) soucis.push(`absent de pCloud : ${e.fichier}`); continue }
+    if (d.size !== e.octets) soucis.push(`taille différente (${d.size} au lieu de ${e.octets}) : ${e.fichier}`)
+    else bons++
+  }
+  const connus = new Set([...tous.map((e) => e.fichier.normalize('NFC')), 'index.json', CATALOGUE])
+  const autres = [...distant.keys()].filter((f) => !connus.has(f))
+  console.log(`${bons} image${bons > 1 ? 's' : ''} sur ${tous.length} sont sur pCloud, entières.`)
+  for (const l of soucis) console.log('  ' + l)
+  const pasEnvoyees = tous.filter((e) => !distant.has(e.fichier.normalize('NFC')) && !e.pcloud).length
+  if (pasEnvoyees) console.log(`${pasEnvoyees} pas encore envoyée${pasEnvoyees > 1 ? 's' : ''} : node scripts/actes.mjs pcloud`)
+  if (autres.length) console.log(`${autres.length} autre${autres.length > 1 ? 's fichiers' : ' fichier'} dans ce dossier, non touché${autres.length > 1 ? 's' : ''} : ${autres.slice(0, 5).join(', ')}${autres.length > 5 ? '…' : ''}`)
+}
+
 async function envoyerPcloud() {
+  if (typeof reglages.rclone === 'string') return envoyerRclone(reglages.rclone.replace(/\/+$/, ''))
   const c = lireJson(FICHIER_PCLOUD, null)
   if (!c?.jeton) throw new Error('Pas encore connecté à pCloud : node scripts/actes.mjs pcloud-connexion')
   const index = lireIndex()
@@ -500,23 +591,7 @@ async function envoyerPcloud() {
   const tous = Object.values(index).filter(fait)
 
   if (reglages.verifier) {
-    const distant = await contenuPcloud(c, racine.folderid)
-    let bons = 0
-    const soucis = []
-    for (const e of tous) {
-      const d = distant.get(e.fichier.normalize('NFC'))
-      if (!d) { if (e.pcloud) soucis.push(`absent de pCloud : ${e.fichier}`) ; continue }
-      if (d.size !== e.octets) soucis.push(`taille différente (${d.size} au lieu de ${e.octets}) : ${e.fichier}`)
-      else bons++
-    }
-    const connus = new Set([...tous.map((e) => e.fichier.normalize('NFC')), 'index.json', CATALOGUE])
-    const autres = [...distant.keys()].filter((f) => !connus.has(f))
-    console.log(`${bons} image${bons > 1 ? 's' : ''} sur ${tous.length} sont sur pCloud, entières.`)
-    for (const l of soucis) console.log('  ' + l)
-    const pasEnvoyees = tous.filter((e) => !distant.has(e.fichier.normalize('NFC')) && !e.pcloud).length
-    if (pasEnvoyees) console.log(`${pasEnvoyees} pas encore envoyée${pasEnvoyees > 1 ? 's' : ''} : node scripts/actes.mjs pcloud`)
-    if (autres.length) console.log(`${autres.length} autre${autres.length > 1 ? 's fichiers' : ' fichier'} dans ce dossier, laissé${autres.length > 1 ? 's' : ''} tel${autres.length > 1 ? 's' : ''} quel${autres.length > 1 ? 's' : ''} : ${autres.slice(0, 5).join(', ')}${autres.length > 5 ? '…' : ''}`)
-    return
+    return comparer(tous, await contenuPcloud(c, racine.folderid))
   }
 
   const aEnvoyer = tous.filter((e) => !e.pcloud && existsSync(join(DOSSIER, e.fichier)))

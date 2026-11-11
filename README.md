@@ -242,7 +242,11 @@ npm run actes pcloud -- --verifier   # compare pCloud et le disque
   dossier doit exister ; rien n'est écrit ailleurs. Après chaque envoi, la taille et l'empreinte SHA-1 calculée par pCloud
   sont comparées à celles du fichier d'ici ; `index.json` et le catalogue partent aussi. `pcloud --essai` montre où irait
   chaque image sans rien envoyer, `pcloud --verifier` compare ce qui est sur pCloud avec ce qui a été téléchargé.
-  `pcloud-connexion` passe par le navigateur (la seule voie quand on entre chez pCloud par Google) : on crée une fois
+  Le plus simple, surtout quand on entre chez pCloud par Google : [rclone](https://rclone.org). `rclone config create
+  pcloud pcloud` ouvre le navigateur pour autoriser l'accès, puis `--rclone "pcloud:Généalogie/Actes"` (ou `"rclone"` dans
+  `actes.json`) fait passer l'envoi et la vérification par lui : `rclone copy`, qui n'efface rien à l'arrivée, puis
+  `rclone check`, qui compare les empreintes ; si `"pcloud"` donne aussi le numéro du dossier, il est contrôlé avant tout envoi.
+  Sans rclone, `pcloud-connexion` passe par le navigateur (la seule voie quand on entre chez pCloud par Google) : on crée une fois
   une application à soi sur https://docs.pcloud.com/my_apps/, on donne son « Client ID » et son « Client secret », on
   accepte l'accès, et le code que pCloud affiche s'échange contre un jeton, gardé dans `~/.config/lignees/pcloud.json`.
   Avec un mot de passe pCloud : `pcloud-connexion --mot-de-passe` (code de double authentification compris).
