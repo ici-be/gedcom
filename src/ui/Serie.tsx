@@ -164,7 +164,7 @@ export function Serie({ d }: { d: Donnees }) {
             <thead><tr><th title="Fait traité : acte vérifié et ajouté à l'arbre, ou écarté">✓</th><th>Sosa</th><th>Personne</th><th>Fait cherché</th><th>Actes trouvés dans l'index</th></tr></thead>
             <tbody>
               {lignesAffichees(liste, p, PAR_PAGE, impression).map((l) => (
-                <tr key={l.f.cle} class={traite.has(l.f.cle) ? 'coche' : ''}>
+                <tr key={l.tache.id + l.f.cle} class={traite.has(l.f.cle) ? 'coche' : ''}>
                   <td><input type="checkbox" checked={traite.has(l.f.cle)} onChange={(e) => marquerTraite(l.f.cle, e.currentTarget.checked)} aria-label="Fait traité" /></td>
                   <td class="sosa">{l.tache.rang === 0 ? l.tache.sosa : l.tache.rang === 1 ? <span class="gen">fratrie de {l.tache.sosa}</span> : ''}</td>
                   <td class="nom"><Personne d={d} id={l.tache.id} annees prenoms={2} /></td>

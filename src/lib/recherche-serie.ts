@@ -22,6 +22,22 @@ export interface Memoire {
   faits: Record<string, Trouve>
   /** Faits marqués « traité » */
   traites: string[]
+  /** 2 : les naissances sans date d'avant 1796 sont cherchées sous le rôle « Kind » aussi */
+  version?: number
+}
+
+const VERSION = 2
+
+/** Ce qu'une version précédente a mal cherché est oublié, pour être cherché à nouveau : les naissances sans date d'avant 1796 */
+export function rafraichir(m: Memoire | undefined): Memoire {
+  const faits = { ...m?.faits }
+  if ((m?.version ?? 1) < 2) {
+    for (const cle of Object.keys(faits)) {
+      const [, , , quoi, annees = ''] = cle.split('|')
+      if (quoi === 'naissance' && annees.includes('-') && parseInt(annees) < 1796) delete faits[cle]
+    }
+  }
+  return { faits, traites: m?.traites ?? [], version: VERSION }
 }
 
 const CLE = 'recherche-serie'
@@ -62,7 +78,7 @@ export interface Etat {
   rythme?: number
 }
 
-let etat: Etat = { pret: false, enCours: false, memoire: { faits: {}, traites: [] } }
+let etat: Etat = { pret: false, enCours: false, memoire: { faits: {}, traites: [], version: VERSION } }
 const abonnes = new Set<() => void>()
 let arret: AbortController | undefined
 let chargement: Promise<void> | undefined
@@ -81,7 +97,7 @@ export function abonner(f: () => void): () => void {
 
 /** Relit la mémoire du navigateur (une fois) */
 export function chargerSerie(): Promise<void> {
-  chargement ??= lireObjet<Memoire>(CLE).then((m) => publier({ pret: true, memoire: { faits: m?.faits ?? {}, traites: m?.traites ?? [] } }))
+  chargement ??= lireObjet<Memoire>(CLE).then((m) => publier({ pret: true, memoire: rafraichir(m) }))
   return chargement
 }
 
@@ -110,28 +126,30 @@ export async function demarrerSerie(d: Donnees, taches: Tache[]): Promise<void> 
       for (const f of t.faits) {
         if (etat.memoire.faits[f.cle]) continue
         if (etat.courant !== t.id) publier({ courant: t.id })
-        const debut = Date.now()
-        try {
-          const r = await chercherActe(ind, f.fait, controle.signal)
-          echecs = 0
-          nombre++
-          duree += Date.now() - debut
-          publier({
-            memoire: { ...etat.memoire, faits: { ...etat.memoire.faits, [f.cle]: { quand: new Date().toISOString().slice(0, 10), candidats: r.candidats.slice(0, 8), complet: r.complet } } },
-            rythme: duree / nombre,
-          })
-          if (++depuisSauvegarde >= 10) { depuisSauvegarde = 0; await garder() }
-        } catch (e) {
-          if (controle.signal.aborted) throw e
-          // la base ne répond pas ou demande de ralentir : on patiente, puis on abandonne au troisième échec de suite
-          if (++echecs >= 3) throw e
-          await attendre(30000, controle.signal)
+        // la base ne répond pas ou demande de ralentir : on patiente et on repose la question, puis on abandonne au troisième échec de suite
+        for (;;) {
+          const debut = Date.now()
+          try {
+            const r = await chercherActe(ind, f.fait, controle.signal)
+            echecs = 0
+            nombre++
+            duree += Date.now() - debut
+            publier({
+              memoire: { ...etat.memoire, faits: { ...etat.memoire.faits, [f.cle]: { quand: new Date().toISOString().slice(0, 10), candidats: r.candidats.slice(0, 8), complet: r.complet } } },
+              rythme: duree / nombre,
+            })
+            if (++depuisSauvegarde >= 10) { depuisSauvegarde = 0; await garder() }
+            break
+          } catch (e) {
+            if (controle.signal.aborted || ++echecs >= 3) throw e
+            await attendre(30000, controle.signal)
+          }
         }
       }
     }
     publier({ enCours: false, courant: undefined })
   } catch (e) {
-    publier({ enCours: false, courant: undefined, erreur: controle.signal.aborted ? undefined : 'Open Archives ne répond plus : ' + (e instanceof Error ? e.message : String(e)) + '. La recherche reprendra où elle en est.' })
+    publier({ enCours: false, courant: undefined, erreur: controle.signal.aborted ? undefined : 'Open Archives ne répond plus\u202f: ' + (e instanceof Error ? e.message : String(e)) + '. La recherche reprendra où elle en est.' })
   }
   await garder()
 }
@@ -151,6 +169,6 @@ export function marquerTraite(cle: string, oui: boolean): void {
 /** Oublie tout ce qui a été trouvé : la recherche repartira du début */
 export async function effacerSerie(): Promise<void> {
   arreterSerie()
-  publier({ memoire: { faits: {}, traites: [] }, erreur: undefined })
+  publier({ memoire: { faits: {}, traites: [], version: VERSION }, erreur: undefined })
   await oublierObjet(CLE)
 }

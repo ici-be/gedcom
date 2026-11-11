@@ -180,7 +180,8 @@ function filtres(ind: Individu, fait: FaitCherche): string[] {
   // registres paroissiaux avant l'état civil (1796), état civil ensuite
   const paroisse = fait.de < 1796
   const civil = fait.a >= 1796
-  if (fait.quoi === 'naissance') return [...(paroisse ? ['&eventtype=Doop&relationtype=Dopeling'] : []), ...(civil ? ['&eventtype=Geboorte&relationtype=Kind'] : [])]
+  // l'enfant d'un acte de naissance ou de baptême est « Kind » ; seules certaines archives néerlandaises écrivent « Dopeling » au baptême
+  if (fait.quoi === 'naissance') return ['&relationtype=Kind', ...(paroisse ? ['&eventtype=Doop&relationtype=Dopeling'] : [])]
   return [...(paroisse ? ['&eventtype=Begraven&relationtype=Overledene'] : []), ...(civil ? ['&eventtype=Overlijden&relationtype=Overledene'] : [])]
 }
 

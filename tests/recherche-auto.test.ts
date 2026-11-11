@@ -3,6 +3,7 @@ import { lireArbre } from '../src/lib/gedcom/arbre'
 import { calculer } from '../src/lib/donnees'
 import { candidats, faitsCherches, requetesOpenArch, type Doc } from '../src/lib/recherche-auto'
 import { variantesPrenom } from '../src/lib/prenoms'
+import { rafraichir } from '../src/lib/recherche-serie'
 
 const GED = `0 HEAD
 1 CHAR UTF-8
@@ -43,6 +44,12 @@ describe('recherche automatique des actes', () => {
     expect(variantesPrenom('Guillaume')).toContain('wilhelmus')
     expect(requetesOpenArch(ind, faits[0]).map((u) => new URL(u).searchParams.get('name'))).toEqual(['G* Dupont 1850', 'W* Dupont 1850'])
   })
+  test('une naissance sans date : l’enfant est « Kind », au baptême comme à la naissance, ou « Dopeling »', () => {
+    const filtres = (de: number, a: number) => requetesOpenArch({ ...ind, prenom: 'Pierre' }, { quoi: 'naissance', de, a, aSourcer: true, estime: true })
+      .map((u) => u.slice(u.indexOf('&number=10') + 10))
+    expect(filtres(1740, 1755)).toEqual(['&relationtype=Kind', '&eventtype=Doop&relationtype=Dopeling'])
+    expect(filtres(1840, 1855)).toEqual(['&relationtype=Kind'])
+  })
   test('le tri des lignes d’index', () => {
     const docs: Doc[] = [
       { personname: 'Wilhelmus Dupont', relationtype: 'Enfant', eventtype: 'Naissance', eventdate: { day: 3, month: 3, year: 1850 }, eventplace: ['Leuven'], archive_org: 'Rijksarchief België (Leuven)', sourcetype: 'État civil', url: 'u1' },
@@ -62,5 +69,16 @@ describe('recherche automatique des actes', () => {
       { personname: 'Petrus Dupont', relationtype: 'Père de marié', eventtype: 'Mariage', eventdate: { year: 1876 }, url: 'm2' },
     ], ind, faits[1])
     expect(m.map((x) => x.url)).toEqual(['m1'])
+  })
+})
+
+describe('mémoire de la recherche en série', () => {
+  test('les naissances sans date d’avant 1796, mal cherchées par la première version, sont oubliées', () => {
+    const t = { quand: '2026-11-10', candidats: [], complet: true }
+    const m = rafraichir({ faits: { 'jean|dupont||naissance|1740-1755|': t, 'jean|dupont|1850|naissance|1850|': t, 'anne|dupont||naissance|1840-1855|': t, 'jean|dupont||deces|1760-1800|': t }, traites: ['x'] })
+    expect(Object.keys(m.faits)).toEqual(['jean|dupont|1850|naissance|1850|', 'anne|dupont||naissance|1840-1855|', 'jean|dupont||deces|1760-1800|'])
+    expect(m.traites).toEqual(['x'])
+    expect(Object.keys(rafraichir(m).faits).length).toBe(3)
+    expect(rafraichir(undefined)).toEqual({ faits: {}, traites: [], version: 2 })
   })
 })
