@@ -144,7 +144,7 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   (« Petrus » pour Pierre, « Wilhelmus » pour Guillaume), à un an près ; « même date » et « même lieu » signalent les
   meilleurs candidats. S'y ajoutent le nombre de mentions et les premiers résultats d'Internet Archive, Wikisource et
   Europeana. Les noms ne partent qu'au clic sur « Chercher », vers ces seuls sites (`src/lib/recherche-auto.ts`). Les
-  autres bases (Google Livres, Gallica, BelgicaPress, RetroNews, Delpher, FamilySearch, Geneanet, Google) n'acceptent pas
+  autres bases (Google Livres, Gallica, BelgicaPress, RetroNews, Delpher, FamilySearch, Geneanet, Delcampe, Google) n'acceptent pas
   d'être interrogées depuis une page web : elles s'ouvrent dans un onglet, recherche préremplie (`src/lib/recherches.ts`).
 - **Recherche en série** (`#/serie`, depuis la page Recherches) : cherche dans les index d'Open Archives l'acte de chaque
   fait sans source ou sans date, pour les ancêtres d'abord (par numéro Sosa), puis leurs frères et sœurs, puis le reste

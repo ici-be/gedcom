@@ -119,6 +119,14 @@ export const SOURCES: Source[] = [
     url: (n) => `https://www.geneanet.org/fonds/individus/?nom=${e(n.nom)}&prenom=${e(n.prenom)}&go=1`,
   },
   {
+    id: 'delcampe',
+    categorie: 'genealogie',
+    nom: 'Delcampe',
+    detail: 'Cartes postales, faire-part et souvenirs mortuaires mis en vente',
+    // tous les mots, dans le titre ou la description de l'objet : les vendeurs écrivent « DUPONT Jean » comme « Jean Dupont »
+    url: (n) => `https://www.delcampe.net/fr/collections/search?term=${e(`${n.prenom} ${n.nom}`)}&search_mode=all&is_searchable_in_descriptions=1`,
+  },
+  {
     id: 'google',
     categorie: 'genealogie',
     nom: 'Google',
