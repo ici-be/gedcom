@@ -23,6 +23,7 @@ import { ListeEvenements, PageEvenement } from './Evenements'
 import { Filiation } from './Filiation'
 import { Introuvables } from './Introuvables'
 import { Illettres } from './Illettres'
+import { Signatures } from './Signatures'
 import { Annotations } from './Annotations'
 import { Doublons } from './Doublons'
 import { Anomalies } from './Anomalies'
@@ -92,6 +93,7 @@ const ICONES: Record<string, string> = {
   archives: 'M2.5 3h11v3h-11zM3.5 6v7.5h9V6M6.5 9h3',
   parente: 'M8 2.5a1.8 1.8 0 1 1 0 3.6a1.8 1.8 0 1 1 0-3.6M3.5 11a1.8 1.8 0 1 1 0 3.6a1.8 1.8 0 1 1 0-3.6M12.5 11a1.8 1.8 0 1 1 0 3.6a1.8 1.8 0 1 1 0-3.6M8 6.1v2M8 8.1H3.5V11M8 8.1h4.5V11',
   anomalies: 'M8 2l6.5 11.5h-13zM8 6.5v3.2M8 11.6v.4',
+  signatures: 'M1.5 11.5c2-5 3.5-7.5 4.5-7.5s0 6 1.5 6s1.5-3 2.5-3s.5 3 2 3h2.5M1.5 14h13',
   recherches: 'M7 2.5a4.5 4.5 0 1 1 0 9a4.5 4.5 0 1 1 0-9M10.3 10.3L14 14',
   priorites: 'M3.5 14.5V2M3.5 2.5h9l-2 3 2 3h-9',
   annotations: 'M2 2.5h5.5l6 6-5 5-6-6zM5 4.5a1 1 0 1 1 0 2a1 1 0 1 1 0-2',
@@ -353,6 +355,7 @@ export function App() {
   else if (page === 'filiation') contenu = <Filiation d={donnees} />
   else if (page === 'introuvables') contenu = <Introuvables d={donnees} />
   else if (page === 'illettres') contenu = <Illettres key={fichier.importe} d={donnees} importe={fichier.importe} />
+  else if (page === 'signatures') contenu = <Signatures d={donnees} />
   else if (page === 'metiers') contenu = <Metiers d={donnees} perimetre={perimetre} setPerimetre={setPerimetre} />
   else contenu = (
     <>
@@ -393,6 +396,7 @@ export function App() {
               <a href="#/annotations" class={['annotations', 'filiation', 'introuvables', 'illettres'].includes(page) ? 'actif' : ''}><Icone nom="annotations" />Annotations</a>
               <a href="#/doublons" class={page === 'doublons' ? 'actif' : ''}><Icone nom="doublons" />Doublons</a>
               <a href="#/anomalies" class={page === 'anomalies' ? 'actif' : ''}><Icone nom="anomalies" />Anomalies</a>
+              <a href="#/signatures" class={page === 'signatures' ? 'actif' : ''}><Icone nom="signatures" />Signatures</a>
               <a href="#/recherches" class={page === 'recherches' ? 'actif' : ''}><Icone nom="recherches" />Recherches</a>
               <a href="#/imprimer" class={page === 'imprimer' ? 'actif' : ''}><Icone nom="imprimer" />Imprimer</a>
             </nav>

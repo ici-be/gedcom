@@ -179,6 +179,15 @@ Le fichier est lu **dans le navigateur** : rien n'est envoyé sur Internet.
   modifiées sur Geneanet : les cases tiennent dans le navigateur jusqu'au prochain fichier chargé.
   Dans **Personnes**, une petite plume suit le nom de qui a sa signature dans l'arbre, une croix celui
   de qui ne savait pas signer ; la fiche dépliée montre la signature, ou la mention et sa précision.
+- **Signatures à trouver** (`#/signatures`, dans le menu) : les actes en ligne de l'arbre où des personnes sans
+  signature ont dû signer, les plus prometteurs d'abord. Sont comptés comme signataires les époux, leurs parents en vie
+  au mariage, le père qui déclare une naissance, les témoins, parrains et marraines notés dans l'acte (`2 ASSO`) ; la
+  signature est « attendue » à l'état civil (dès 1796), « possible » avant ; les actes d'avant 1779 en Belgique et
+  d'avant 1667 en France, jamais signés, sont laissés de côté. Un ancêtre compte quatre fois plus qu'un collatéral.
+  Qui a déjà sa signature (image principale en PNG) ou porte « Signature: illettré » n'est plus proposé ; un portrait
+  en image principale donne « à vérifier ». Filtres : ancêtres ou tout l'arbre, type d'acte, site (FamilySearch, Agatha,
+  autres), nom ou lieu, signatures attendues seulement ; une case à cocher par acte déjà regardé (gardée dans le
+  navigateur) ; export CSV. La logique est dans `src/lib/signatures.ts`.
 
 Pour chaque événement, un badge **S** (bleu) ouvre la source en ligne ; un badge **T** (orange)
 montre une source écrite en texte.

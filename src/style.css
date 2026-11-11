@@ -1918,3 +1918,14 @@ th.lx-col-periodes { white-space: nowrap; }
 .ac-jauge .a1 .valeur { stroke: var(--accent); }
 .ac-jauge .a1 .piste { stroke: color-mix(in srgb, var(--accent) 10%, var(--line)); }
 .ac-puce.a1 { background: var(--accent); }
+
+/* ---------- signatures à trouver ---------- */
+.sig-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+.sig-qui { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; }
+.sig-qui.possible { opacity: 0.75; }
+.sig-role { color: var(--muted); font-size: 0.85rem; }
+.sig-sosa { padding: 0 7px; border-radius: 6px; background: var(--ok-bg); color: var(--ok); font-size: 0.75rem; font-weight: 700; white-space: nowrap; }
+.sig-verifier { padding: 0 7px; border-radius: 6px; background: var(--mid-bg); color: var(--mid); font-size: 0.75rem; white-space: nowrap; }
+.sig-liens { white-space: nowrap; }
+.sig-liens .bouton { display: block; margin-bottom: 4px; text-align: center; text-decoration: none; }
+.sig-tableau td { vertical-align: top; }
