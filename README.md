@@ -215,6 +215,7 @@ npm run actes telecharger -- --signatures --max 20   # les actes où la signatur
 npm run actes pcloud-connexion   # une fois : relie le script à pCloud par le navigateur
 npm run actes pcloud             # envoie sur pCloud les images qui n'y sont pas encore, et vérifie chacune
 npm run actes pcloud -- --verifier   # compare pCloud et le disque
+npm run actes telecharger -- --max 500 --envoyer --liberer   # télécharge, envoie toutes les 25 images, libère le disque
 ```
 
 - Les mots de passe FamilySearch et Agatha ne passent jamais par le script : on se connecte soi-même dans une fenêtre

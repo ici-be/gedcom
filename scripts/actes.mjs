@@ -13,6 +13,7 @@
 //   --generations N · --site familysearch|agatha · --max N · --pause SECONDES · --dossier DOSSIER (défaut ~/Lignées/actes)
 //   --signatures (au lieu des actes des ancêtres : les actes où la signature d'un ancêtre est à trouver, les plus prometteurs d'abord)
 //   --seulement TEXTE (nom de personne, type d'acte ou morceau d'adresse) · --reessayer (les images en échec)
+//   --envoyer (telecharger : envoie sur pCloud toutes les 25 images ; avec --liberer, le disque ne se remplit pas)
 //   --liberer (pcloud : efface la copie locale une fois l'image envoyée et vérifiée)
 //   --rclone "pcloud:Généalogie/Actes" (pcloud : envoyer par rclone, connecté par le navigateur ; le plus simple avec Google)
 //   --pcloud DOSSIER (pcloud : le dossier d'arrivée, par son numéro — le « folder=… » de son adresse sur my.pcloud.com — ou
@@ -322,11 +323,23 @@ async function telecharger() {
   const attente = Number(reglages.pause ?? 4) * 1000
   const { navigateur, ctx } = await contexte()
   let echecs = 0
+  let depuisEnvoi = 0
+  // l'envoi note dans index.json ce qui est parti : on relit le fichier pour ne pas l'écraser ensuite
+  const envoyer = async () => {
+    await envoyerPcloud()
+    const relu = lireIndex()
+    for (const k of Object.keys(relu)) index[k] = relu[k]
+  }
   try {
     for (const [i, a] of aFaire.entries()) {
       process.stdout.write(`${String(i + 1).padStart(3)}/${aFaire.length} ${a.fichier} … `)
       try {
-        const image = await IMAGES[a.site](ctx, a)
+        // une coupure du réseau : on réessaie une fois
+        const image = await IMAGES[a.site](ctx, a).catch(async (e) => {
+          if (e instanceof NonConnecte || !/ECONNRESET|socket hang up|ETIMEDOUT|EAI_AGAIN|Timeout/i.test(String(e.message))) throw e
+          await pause(5000)
+          return IMAGES[a.site](ctx, a)
+        })
         if (image.length < 2000 || image[0] !== 0xff || image[1] !== 0xd8) throw new Error('la réponse n’est pas une image JPEG')
         const fichier = a.fichier + '.jpg'
         const etiquetee = etiqueter(image, a)
@@ -349,10 +362,13 @@ async function telecharger() {
         if (++echecs >= 3) { console.log('Trois échecs de suite : arrêt. Relancez plus tard avec --reessayer.'); break }
       }
       ecrireJson(INDEX, index)
+      // --envoyer : toutes les 25 images, envoi sur pCloud (avec --liberer, le disque ne se remplit pas)
+      if (reglages.envoyer && fait(index[a.id]) && ++depuisEnvoi >= 25) { await envoyer(); depuisEnvoi = 0 }
       if (i < aFaire.length - 1) await pause(attente * (0.75 + Math.random() / 2))
     }
   } finally { await navigateur.close() }
   ecrireCatalogue(index)
+  if (reglages.envoyer) await envoyer()
   resume(actes, index)
 }
 
