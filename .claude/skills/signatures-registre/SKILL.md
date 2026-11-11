@@ -19,7 +19,7 @@ Dossiers (non commités, voir `.gitignore`) :
   `déjà dans l'arbre/` : ce qui reste à la racine du sous-dossier est à téléverser.
 
 Images téléchargées par `scripts/actes.mjs` (`npm run actes telecharger -- --signatures`) : elles sont dans
-`~/Lignées/actes/Signatures/` (ou le `--dossier` choisi), et `index.json`, à la racine de ce dossier, donne pour chacune
+`~/Lignées/actes/Signatures à chercher/` (ou le `--dossier` choisi), et `index.json`, à la racine de ce dossier, donne pour chacune
 l'adresse de l'acte et, sous `signataires`, les personnes dont la signature manque dans l'arbre (« époux : DUPONT Paul
 (Sosa 2) ») : ce sont elles qu'on cherche d'abord sur l'image. Ces images ne se déplacent pas dans `old/` ; une fois
 traitée, noter `"signatures": "fait"` dans son entrée d'`index.json`.

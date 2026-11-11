@@ -5,19 +5,24 @@
 //   node scripts/actes.mjs liste            ce qui est cité, téléchargé, encore à faire
 //   node scripts/actes.mjs telecharger      télécharge la suite de la file (40 images par défaut)
 //   node scripts/actes.mjs pcloud-connexion demande l'adresse et le mot de passe pCloud, ne garde qu'un jeton
-//   node scripts/actes.mjs pcloud           envoie sur pCloud les images qui n'y sont pas encore
+//   node scripts/actes.mjs pcloud           envoie sur pCloud les images qui n'y sont pas encore, et vérifie chacune
+//   node scripts/actes.mjs pcloud --essai   montre où irait chaque image, sans rien envoyer
+//   node scripts/actes.mjs pcloud --verifier  compare ce qui est sur pCloud avec ce qui a été téléchargé
 //
 // Options : --ged FICHIER (.zip ou .ged ; par défaut le dernier export de ~/Téléchargements) · --racine « Prénom Nom » ou @I1@
 //   --generations N · --site familysearch|agatha · --max N · --pause SECONDES · --dossier DOSSIER (défaut ~/Lignées/actes)
 //   --signatures (au lieu des actes des ancêtres : les actes où la signature d'un ancêtre est à trouver, les plus prometteurs d'abord)
 //   --seulement TEXTE (nom de personne, type d'acte ou morceau d'adresse) · --reessayer (les images en échec)
-//   --liberer (pcloud : efface la copie locale une fois l'image envoyée)
-// Les réglages durables (racine, dossier, ged) peuvent s'écrire dans ~/.config/lignees/actes.json.
+//   --liberer (pcloud : efface la copie locale une fois l'image envoyée et vérifiée)
+//   --pcloud DOSSIER (pcloud : le dossier d'arrivée, par son numéro — le « folder=… » de son adresse sur my.pcloud.com — ou
+//   son chemin, « /Généalogie/Actes »)
+// Les réglages durables (racine, dossier, ged, pcloud) peuvent s'écrire dans ~/.config/lignees/actes.json.
 //
 // Les mots de passe ne passent jamais par ce script : on se connecte soi-même dans la fenêtre Chrome, dont le profil
 // (~/.local/share/lignees/chrome) garde la session. Les images sont demandées une à une, avec une pause, comme à la main.
 
 import { spawn } from 'node:child_process'
+import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { homedir, tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
@@ -216,6 +221,48 @@ im.save(sys.argv[3], quality=90)`
   } finally { rmSync(tmp, { recursive: true, force: true }) }
 }
 
+// ——— Étiquettes et catalogue ———
+
+const xml = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+/**
+ * Écrit dans l'image (bloc XMP, sans toucher aux pixels) son titre, ses mots-clés, les signatures à y chercher et
+ * l'adresse de l'acte : les logiciels de photos (digiKam, XnView, Lightroom, l'explorateur de Windows, Spotlight) les lisent.
+ */
+function etiqueter(image, acte) {
+  const titre = [acte.type, acte.annee, acte.lieu ? `(${acte.lieu})` : '', acte.personnes].filter(Boolean).join(' ')
+  const description = [`Sosa ${acte.sosa}, génération ${acte.generation}.`, acte.signataires?.length ? `Signatures à chercher : ${acte.signataires.join(' ; ')}.` : ''].filter(Boolean).join(' ')
+  const paquet = `<?xpacket begin="\uFEFF" id="W5M0MpCehiHzreSzNTczkc9d"?>
+<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+<rdf:Description rdf:about="" xmlns:dc="http://purl.org/dc/elements/1.1/">
+<dc:title><rdf:Alt><rdf:li xml:lang="x-default">${xml(titre)}</rdf:li></rdf:Alt></dc:title>
+<dc:description><rdf:Alt><rdf:li xml:lang="x-default">${xml(description)}</rdf:li></rdf:Alt></dc:description>
+<dc:subject><rdf:Bag>${acte.etiquettes.map((e) => `<rdf:li>${xml(e)}</rdf:li>`).join('')}</rdf:Bag></dc:subject>
+<dc:source>${xml(acte.url)}</dc:source>
+</rdf:Description></rdf:RDF></x:xmpmeta>
+<?xpacket end="w"?>`
+  const contenu = Buffer.concat([Buffer.from('http://ns.adobe.com/xap/1.0/\0', 'latin1'), Buffer.from(paquet, 'utf8')])
+  if (contenu.length > 65000) return image
+  const segment = Buffer.concat([Buffer.from([0xff, 0xe1, (contenu.length + 2) >> 8, (contenu.length + 2) & 0xff]), contenu])
+  // après l'en-tête JFIF (APP0) et l'éventuel bloc Exif, qui doivent rester les premiers
+  let p = 2
+  while (p + 4 < image.length && image[p] === 0xff && (image[p + 1] === 0xe0 || (image[p + 1] === 0xe1 && image.subarray(p + 4, p + 8).toString('latin1') === 'Exif'))) {
+    p += 2 + image.readUInt16BE(p + 2)
+  }
+  return Buffer.concat([image.subarray(0, p), segment, image.subarray(p)])
+}
+
+const CATALOGUE = 'Catalogue des actes.csv'
+
+/** Le catalogue, lisible dans un tableur : une ligne par image, dans l'ordre des dossiers */
+function ecrireCatalogue(index) {
+  const cellule = (v) => { const t = v == null ? '' : String(v); return /[;"\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t }
+  const lignes = Object.values(index).filter(fait).sort((a, b) => a.fichier.localeCompare(b.fichier, 'fr', { numeric: true }))
+    .map((e) => [e.fichier, e.sosa, e.type, e.annee, e.lieu, e.personnes, (e.signataires ?? []).join(' | '), e.url, e.date].map(cellule).join(';'))
+  if (!existsSync(DOSSIER)) return
+  writeFileSync(join(DOSSIER, CATALOGUE), '\uFEFF' + ['Fichier;Sosa;Acte;Année;Lieu;Personnes;Signatures à chercher;Adresse;Téléchargé le', ...lignes].join('\r\n') + '\r\n')
+}
+
 const IMAGES = { familysearch: imageFamilySearch, agatha: imageAgatha }
 
 // ——— Commandes ———
@@ -281,9 +328,13 @@ async function telecharger() {
         const image = await IMAGES[a.site](ctx, a)
         if (image.length < 2000 || image[0] !== 0xff || image[1] !== 0xd8) throw new Error('la réponse n’est pas une image JPEG')
         const fichier = a.fichier + '.jpg'
+        const etiquetee = etiqueter(image, a)
         mkdirSync(dirname(join(DOSSIER, fichier)), { recursive: true })
-        writeFileSync(join(DOSSIER, fichier), image)
-        index[a.id] = { fichier, url: a.url, sosa: a.sosa, octets: image.length, date: new Date().toISOString().slice(0, 10), signataires: a.signataires }
+        writeFileSync(join(DOSSIER, fichier), etiquetee)
+        index[a.id] = {
+          fichier, url: a.url, sosa: a.sosa, type: a.type, annee: a.annee, lieu: a.lieu, personnes: a.personnes, etiquettes: a.etiquettes,
+          octets: etiquetee.length, date: new Date().toISOString().slice(0, 10), signataires: a.signataires,
+        }
         echecs = 0
         console.log(`${(image.length / 1e6).toFixed(1)} Mo`)
       } catch (e) {
@@ -300,6 +351,7 @@ async function telecharger() {
       if (i < aFaire.length - 1) await pause(attente * (0.75 + Math.random() / 2))
     }
   } finally { await navigateur.close() }
+  ecrireCatalogue(index)
   resume(actes, index)
 }
 
@@ -316,7 +368,7 @@ async function pcloud(hote, methode, parametres, fichier) {
   }
   const r = await fetch(`https://${hote}/${methode}?${new URLSearchParams(parametres)}`, envoi)
   const j = await r.json()
-  if (j.result !== 0) throw Object.assign(new Error(`pCloud : ${j.error ?? j.result}`), { code: j.result })
+  if (j.result !== 0) throw Object.assign(new Error(`pCloud : ${j.error ?? j.result}`), { code: j.result, reponse: j })
   return j
 }
 
@@ -331,53 +383,123 @@ async function pcloudConnexion() {
   if (!process.stdin.isTTY) throw new Error('À lancer dans un terminal : le mot de passe se tape au clavier.')
   const username = await demander('Adresse du compte pCloud : ')
   const password = await demander('Mot de passe (ne s’affiche pas) : ', true)
-  // les comptes européens sont sur eapi.pcloud.com, les autres sur api.pcloud.com
+  // my.pcloud.com : api.pcloud.com ; e.pcloud.com (comptes européens) : eapi.pcloud.com
   let derniere
-  for (const hote of ['eapi.pcloud.com', 'api.pcloud.com']) {
+  for (const hote of ['api.pcloud.com', 'eapi.pcloud.com']) {
     try {
-      const j = await pcloud(hote, 'userinfo', { getauth: 1, logout: 1, username, password, device: 'Lignées (actes)' })
-      ecrireJson(FICHIER_PCLOUD, { hote, jeton: j.auth, dossier: reglages['dossier-pcloud'] ?? '/Lignées/actes' }, 0o600)
-      console.log(`Connecté (${hote}). Le jeton est dans ${FICHIER_PCLOUD} ; le mot de passe n’est pas gardé.`)
+      let j
+      try {
+        j = await pcloud(hote, 'userinfo', { getauth: 1, logout: 1, username, password, device: 'Lignées (actes)' })
+      } catch (e) {
+        // double authentification : pCloud attend le code de l'application ou du SMS
+        if (e.code !== 2297 || !e.reponse?.token) throw e
+        const code = await demander('Code de double authentification : ')
+        j = await pcloud(hote, 'tfa_login', { token: e.reponse.token, code, trustdevice: 1 })
+        if (!j.auth) j = await pcloud(hote, 'userinfo', { getauth: 1, auth: j.token ?? j.auth })
+      }
+      ecrireJson(FICHIER_PCLOUD, { hote, jeton: j.auth }, 0o600)
+      console.log(`Connecté à ${j.email ?? username} (${hote}). Le jeton est dans ${FICHIER_PCLOUD} ; le mot de passe n’est pas gardé.`)
       return
     } catch (e) { derniere = e }
   }
-  throw new Error(`${derniere.message}. Avec la double authentification, créez plutôt le dossier de synchronisation de l’application pCloud et donnez-le en --dossier.`)
+  throw new Error(`${derniere.message}. Si la connexion par mot de passe est refusée, donnez plutôt en --dossier un dossier synchronisé par l’application pCloud.`)
+}
+
+/** Le dossier d'arrivée : son numéro (folder=… dans l'adresse de my.pcloud.com) ou son chemin ; il doit déjà exister */
+async function dossierPcloud(c) {
+  const cible = String(reglages.pcloud ?? '')
+  if (!cible || cible === 'true') throw new Error('Quel dossier pCloud ? --pcloud NUMÉRO (le « folder=… » de son adresse) ou --pcloud "/Généalogie/Actes", ou "pcloud" dans ~/.config/lignees/actes.json')
+  const j = await pcloud(c.hote, 'listfolder', { auth: c.jeton, nofiles: 1, ...(/^\d+$/.test(cible) ? { folderid: cible } : { path: cible }) })
+  return j.metadata
+}
+
+const sha1 = (octets) => createHash('sha1').update(octets).digest('hex')
+
+/** Tous les fichiers sous un dossier pCloud : chemin relatif → { fileid, size } */
+async function contenuPcloud(c, folderid) {
+  const j = await pcloud(c.hote, 'listfolder', { auth: c.jeton, folderid, recursive: 1 })
+  const fichiers = new Map()
+  const parcourir = (dossier, prefixe) => {
+    for (const x of dossier.contents ?? []) {
+      if (x.isfolder) parcourir(x, prefixe + x.name + '/')
+      else fichiers.set((prefixe + x.name).normalize('NFC'), { fileid: x.fileid, size: x.size })
+    }
+  }
+  parcourir(j.metadata, '')
+  return fichiers
 }
 
 async function envoyerPcloud() {
   const c = lireJson(FICHIER_PCLOUD, null)
-  if (!c?.jeton) throw new Error('Pas encore connecté à pCloud : node scripts/actes.mjs pcloud-connexion')
+  if (!c?.jeton) throw new Error('Pas encore connecté à pCloud : node scripts/actes.mjs pcloud-connexion (dans un terminal)')
   const index = lireIndex()
-  const aEnvoyer = Object.values(index).filter((e) => fait(e) && !e.pcloud && existsSync(join(DOSSIER, e.fichier)))
-  const dossiers = new Set()
-  const creer = async (chemin) => {
-    const parties = chemin.split('/').filter(Boolean)
-    for (let i = 1; i <= parties.length; i++) {
-      const d = '/' + parties.slice(0, i).join('/')
-      if (dossiers.has(d)) continue
-      await pcloud(c.hote, 'createfolderifnotexists', { auth: c.jeton, path: d })
-      dossiers.add(d)
+  const racine = await dossierPcloud(c)
+  const chemin = racine.path ?? racine.name
+  console.log(`Dossier pCloud : ${chemin} (n° ${racine.folderid})`)
+  const tous = Object.values(index).filter(fait)
+
+  if (reglages.verifier) {
+    const distant = await contenuPcloud(c, racine.folderid)
+    let bons = 0
+    const soucis = []
+    for (const e of tous) {
+      const d = distant.get(e.fichier.normalize('NFC'))
+      if (!d) { if (e.pcloud) soucis.push(`absent de pCloud : ${e.fichier}`) ; continue }
+      if (d.size !== e.octets) soucis.push(`taille différente (${d.size} au lieu de ${e.octets}) : ${e.fichier}`)
+      else bons++
     }
+    const connus = new Set([...tous.map((e) => e.fichier.normalize('NFC')), 'index.json', CATALOGUE])
+    const autres = [...distant.keys()].filter((f) => !connus.has(f))
+    console.log(`${bons} image${bons > 1 ? 's' : ''} sur ${tous.length} sont sur pCloud, entières.`)
+    for (const l of soucis) console.log('  ' + l)
+    const pasEnvoyees = tous.filter((e) => !distant.has(e.fichier.normalize('NFC')) && !e.pcloud).length
+    if (pasEnvoyees) console.log(`${pasEnvoyees} pas encore envoyée${pasEnvoyees > 1 ? 's' : ''} : node scripts/actes.mjs pcloud`)
+    if (autres.length) console.log(`${autres.length} autre${autres.length > 1 ? 's fichiers' : ' fichier'} dans ce dossier, laissé${autres.length > 1 ? 's' : ''} tel${autres.length > 1 ? 's' : ''} quel${autres.length > 1 ? 's' : ''} : ${autres.slice(0, 5).join(', ')}${autres.length > 5 ? '…' : ''}`)
+    return
   }
+
+  const aEnvoyer = tous.filter((e) => !e.pcloud && existsSync(join(DOSSIER, e.fichier)))
+  if (reglages.essai) {
+    for (const e of aEnvoyer) console.log(`  ${chemin}/${e.fichier}`)
+    console.log(`${aEnvoyer.length} image${aEnvoyer.length > 1 ? 's' : ''} à envoyer (essai : rien n’est parti).`)
+    return
+  }
+
+  // les sous-dossiers se créent au fur et à mesure, par leur numéro : rien n'est écrit ailleurs que sous le dossier choisi
+  const dossiers = new Map([['', racine.folderid]])
+  const creer = async (relatif) => {
+    if (dossiers.has(relatif)) return dossiers.get(relatif)
+    const coupe = relatif.lastIndexOf('/')
+    const parent = await creer(coupe < 0 ? '' : relatif.slice(0, coupe))
+    const j = await pcloud(c.hote, 'createfolderifnotexists', { auth: c.jeton, folderid: parent, name: relatif.slice(coupe + 1) })
+    dossiers.set(relatif, j.metadata.folderid)
+    return j.metadata.folderid
+  }
+  const envoyer = async (relatif, octets) => {
+    const coupe = relatif.lastIndexOf('/')
+    const folderid = await creer(coupe < 0 ? '' : relatif.slice(0, coupe))
+    const j = await pcloud(c.hote, 'uploadfile', { auth: c.jeton, folderid, nopartial: 1 }, { nom: relatif.slice(coupe + 1), octets })
+    const m = j.metadata?.[0]
+    if (!m || m.size !== octets.length) throw new Error(`pCloud : ${relatif} n’est pas arrivé entier`)
+    // l'empreinte calculée par pCloud doit être celle du fichier d'ici
+    const somme = await pcloud(c.hote, 'checksumfile', { auth: c.jeton, fileid: m.fileid })
+    if (somme.sha1 !== sha1(octets)) throw new Error(`pCloud : ${relatif} est arrivé abîmé (empreinte différente)`)
+    return m.fileid
+  }
+
   let n = 0
   for (const e of aEnvoyer) {
-    const distant = `${c.dossier}/${e.fichier}`.replace(/\/+/g, '/')
-    const dossier = distant.slice(0, distant.lastIndexOf('/'))
-    await creer(dossier)
     const local = join(DOSSIER, e.fichier)
-    const j = await pcloud(c.hote, 'uploadfile', { auth: c.jeton, path: dossier, nopartial: 1 }, { nom: distant.slice(dossier.length + 1), octets: readFileSync(local) })
-    if (j.metadata?.[0]?.size !== statSync(local).size) throw new Error(`pCloud : ${e.fichier} n’est pas arrivé entier`)
-    e.pcloud = distant
-    if (reglages.liberer) rmSync(local)
+    const fileid = await envoyer(e.fichier, readFileSync(local))
+    e.pcloud = { fileid, chemin: `${chemin}/${e.fichier}` }
     ecrireJson(INDEX, index)
-    console.log(`${String(++n).padStart(4)}/${aEnvoyer.length} ${distant}`)
+    if (reglages.liberer) rmSync(local)
+    console.log(`${String(++n).padStart(4)}/${aEnvoyer.length} ${e.fichier}  ✓`)
   }
-  // l'index part aussi : il dit quelle image correspond à quelle adresse
-  if (existsSync(INDEX)) {
-    await creer(c.dossier)
-    await pcloud(c.hote, 'uploadfile', { auth: c.jeton, path: c.dossier, nopartial: 1 }, { nom: 'index.json', octets: readFileSync(INDEX) })
-  }
-  console.log(n ? `${n} image${n > 1 ? 's envoyées' : ' envoyée'} dans ${c.dossier}.` : 'Tout est déjà sur pCloud.')
+  // l'index et le catalogue partent aussi : ils disent quelle image correspond à quel acte
+  ecrireCatalogue(index)
+  for (const f of ['index.json', CATALOGUE]) if (existsSync(join(DOSSIER, f))) await envoyer(f, readFileSync(join(DOSSIER, f)))
+  console.log(n ? `${n} image${n > 1 ? 's envoyées et vérifiées' : ' envoyée et vérifiée'} dans ${chemin}.` : `Rien de nouveau à envoyer dans ${chemin}.`)
 }
 
 const COMMANDES = { connexion, liste, telecharger, 'pcloud-connexion': pcloudConnexion, pcloud: envoyerPcloud }

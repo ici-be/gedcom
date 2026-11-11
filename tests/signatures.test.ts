@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest'
 import { lireArbre } from '../src/lib/gedcom/arbre'
 import { calculer } from '../src/lib/donnees'
 import { actesASignatures, bilanSignatures, debutSignatures } from '../src/lib/signatures'
-import { fileActes, fileSignatures, identifiantImage, liensDuTexte, siteDuLien } from '../src/lib/actes-en-ligne'
+import { dossierAncetre, fileActes, fileSignatures, identifiantImage, liensDuTexte, siteDuLien } from '../src/lib/actes-en-ligne'
 
 // Jean (I1, départ) né en 1850 ; ses parents Paul (I2) et Anne (I3) mariés en 1848 ; Luc (I4), père de Paul ; Marc (I5), témoin
 const GED = `0 HEAD
@@ -103,10 +103,13 @@ describe('actes en ligne', () => {
     const arbre = lireArbre(GED)
     const f = fileActes(arbre, calculer(arbre, '@I1@', '').ancetres)
     expect(f.map((a) => [a.sosa, a.site, a.fichier])).toEqual([
-      ['1', 'familysearch', 'G01/0001 Naissance 1850 DUPONT Jean'],
-      ['2', 'agatha', 'G02/0002 Naissance 1820 DUPONT Paul'],
-      ['3', 'agatha', 'G02/0003 Naissance 1770 LAMBERT Anne'],
+      ['1', 'familysearch', 'G01/1 DUPONT Jean/1850 Naissance DUPONT Jean'],
+      ['2', 'agatha', 'G02/2 DUPONT Paul/1820 Naissance DUPONT Paul'],
+      ['3', 'agatha', 'G02/3 LAMBERT Anne/1770 Naissance LAMBERT Anne'],
     ])
+    expect(f[1]).toMatchObject({ lieu: 'Ath', etiquettes: ['Naissance', '1820', 'DUPONT', 'Ath', 'Sosa 2', 'Génération 2', 'Agatha'] })
+    // le numéro Sosa prend la largeur de sa génération : les dossiers se suivent dans l'ordre
+    expect(dossierAncetre({ id: 'x', sosa: '513', generation: 10, occurrences: 1 }, arbre.individus.get('@I4@')!)).toBe('G10/0513 DUPONT Luc')
     expect(fileActes(arbre, calculer(arbre, '@I1@', '').ancetres, { generations: 1 })).toHaveLength(1)
     expect(fileActes(arbre, calculer(arbre, '@I1@', '').ancetres, { sites: ['agatha'] })).toHaveLength(2)
   })
@@ -114,7 +117,7 @@ describe('actes en ligne', () => {
     const arbre = lireArbre(GED)
     const f = fileSignatures(arbre, calculer(arbre, '@I1@', '').ancetres)
     expect(f.map((a) => [a.fichier, a.sosa, a.signataires])).toEqual([
-      ['Signatures/Naissance 1820 DUPONT Paul', '4', ['père (déclarant) : DUPONT Luc (Sosa 4)']],
+      ['Signatures à chercher/1820 Naissance DUPONT Paul', '4', ['père (déclarant) : DUPONT Luc (Sosa 4)']],
     ])
   })
 })
