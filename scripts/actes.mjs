@@ -436,7 +436,14 @@ async function pcloudMotDePasse() {
       } catch (e) {
         // pCloud attend un code : double authentification, ou vérification d'un nouvel appareil par courriel
         if (e.code !== 2297 && !/'code'/.test(e.message)) throw e
-        const r = e.reponse ?? {}
+        let r = e.reponse ?? {}
+        // d'abord l'autre façon de présenter le mot de passe (empreinte au lieu du mot de passe lui-même)
+        try {
+          const { digest } = await pcloud(hote, 'getdigest', {})
+          const sha = (t) => createHash('sha1').update(t).digest('hex')
+          j = await pcloud(hote, 'userinfo', { getauth: 1, logout: 1, username, digest, passworddigest: sha(password + sha(username.toLowerCase()) + digest), device: identite.device })
+        } catch (e2) { r = e2.reponse ?? r }
+        if (j?.auth) { ecrireJson(FICHIER_PCLOUD, { hote, jeton: j.auth }, 0o600); console.log(`Connecté à ${j.email ?? username} (${hote}). Le jeton est dans ${FICHIER_PCLOUD} ; le mot de passe n’est pas gardé.`); return }
         console.log(`pCloud demande un code (réponse ${r.result} ; champs : ${Object.keys(r).join(', ')}).`)
         if (r.token && r.hassms) await pcloud(hote, 'tfa_sendsms', { token: r.token }).catch(() => undefined)
         const code = await demander('Code reçu (application d’authentification, SMS ou courriel) : ')
