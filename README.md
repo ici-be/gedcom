@@ -253,7 +253,7 @@ npm run actes telecharger -- --max 500 --envoyer --liberer   # télécharge, env
   dossier doit exister ; rien n'est écrit ailleurs. Après chaque envoi, la taille et l'empreinte SHA-1 calculée par pCloud
   sont comparées à celles du fichier d'ici ; `index.json` et le catalogue partent aussi. `pcloud --essai` montre où irait
   chaque image sans rien envoyer, `pcloud --verifier` compare ce qui est sur pCloud avec ce qui a été téléchargé.
-  Une image recadrée sur pCloud après l'envoi y est gardée telle quelle : l'envoi ne réécrit jamais une image déjà
+  Une image recadrée sur pCloud après l'envoi y est gardée telle quelle : l'envoi ne réécrit jamais une image déjà
   partie, et la vérification la compte à part, comme retouchée.
   Le plus simple, surtout quand on entre chez pCloud par Google : [rclone](https://rclone.org). `rclone config create
   pcloud pcloud` ouvre le navigateur pour autoriser l'accès, puis `--rclone "pcloud:Généalogie/Actes"` (ou `"rclone"` dans
