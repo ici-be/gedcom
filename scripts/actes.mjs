@@ -581,15 +581,19 @@ async function envoyerRclone(cible) {
 function comparer(tous, distant) {
   let bons = 0
   const soucis = []
+  const recadrees = []
   for (const e of tous) {
     const d = distant.get(e.fichier.normalize('NFC'))
     if (!d) { if (e.pcloud) soucis.push(`absent de pCloud : ${e.fichier}`); continue }
-    if (d.size !== e.octets) soucis.push(`taille différente (${d.size} au lieu de ${e.octets}) : ${e.fichier}`)
+    // l'envoi est vérifié à l'arrivée : une taille qui change ensuite, c'est une image retouchée sur pCloud (recadrée
+    // sur l'acte), qu'on garde telle quelle — l'envoi ne réécrit jamais une image déjà partie
+    if (d.size !== e.octets) (e.pcloud ? recadrees : soucis).push(`taille différente (${d.size} au lieu de ${e.octets}) : ${e.fichier}`)
     else bons++
   }
   const connus = new Set([...tous.map((e) => e.fichier.normalize('NFC')), 'index.json', CATALOGUE])
   const autres = [...distant.keys()].filter((f) => !connus.has(f))
   console.log(`${bons} image${bons > 1 ? 's' : ''} sur ${tous.length} sont sur pCloud, entières.`)
+  if (recadrees.length) console.log(`${recadrees.length} autre${recadrees.length > 1 ? 's y sont, retouchées' : ' y est, retouchée'} depuis l’envoi (recadrage) : gardée${recadrees.length > 1 ? 's' : ''} telle${recadrees.length > 1 ? 's' : ''} quelle${recadrees.length > 1 ? 's' : ''}.`)
   for (const l of soucis) console.log('  ' + l)
   const pasEnvoyees = tous.filter((e) => !distant.has(e.fichier.normalize('NFC')) && !e.pcloud).length
   if (pasEnvoyees) console.log(`${pasEnvoyees} pas encore envoyée${pasEnvoyees > 1 ? 's' : ''} : node scripts/actes.mjs pcloud`)
