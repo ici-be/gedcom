@@ -573,7 +573,9 @@ async function envoyerRclone(cible) {
     ecrireJson(INDEX, index)
     console.log(`${Math.min(i + 50, aEnvoyer.length)}/${aEnvoyer.length} envoyées et vérifiées`)
   }
-  await envoyer(['index.json', CATALOGUE].filter((f) => existsSync(join(DOSSIER, f))))
+  // rien de téléchargé encore (dossier pas même créé) : rien à joindre
+  const annexes = ['index.json', CATALOGUE].filter((f) => existsSync(join(DOSSIER, f)))
+  if (annexes.length) await envoyer(annexes)
   console.log(aEnvoyer.length ? `${aEnvoyer.length} image${aEnvoyer.length > 1 ? 's envoyées et vérifiées' : ' envoyée et vérifiée'} dans ${cible}.` : `Rien de nouveau à envoyer dans ${cible}.`)
 }
 
