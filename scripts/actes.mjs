@@ -559,7 +559,13 @@ async function envoyerRclone(cible) {
     try {
       // copy n'efface ni ne déplace rien à l'arrivée ; check relit ensuite les empreintes calculées par pCloud
       await rclone(['copy', DOSSIER, cible, '--files-from-raw', liste, '--transfers', '4', '--stats', '15s', '--stats-one-line', '-v'], { montrer: true })
-      await rclone(['check', DOSSIER, cible, '--files-from-raw', liste, '--one-way'])
+      // un fichier remplacé (index, catalogue) peut garder quelques secondes l'ancienne empreinte chez pCloud : on revérifie
+      for (let essai = 1; ; essai++) {
+        try { await rclone(['check', DOSSIER, cible, '--files-from-raw', liste, '--one-way']); break } catch (err) {
+          if (essai >= 4) throw err
+          await new Promise((r) => setTimeout(r, 5000 * essai))
+        }
+      }
     } finally { rmSync(liste, { force: true }) }
   }
   // par lots : ce qui est vérifié est noté au fur et à mesure
