@@ -13,6 +13,14 @@ et tu notes le lien de l'image. Tu ne modifies rien d'autre que le fichier de r�
   JPEG, que tu lis avec Read. REGION : `full`, ou `pct:x,y,l,h` en pourcentages (ex. `pct:0,0,50,100` = moitié
   gauche, `pct:50,0,50,100` = moitié droite, `pct:0,0,100,50` = moitié haute).
 
+**Registre FamilySearch** (le registre a un champ `dgs`) : `node fs.mjs extrait D DGS IMAGE LARGEUR REGION`
+(IMAGE = numéro dans le film, 1 = première) affiche le chemin du JPEG puis le lien ark de l'image : c'est ce
+lien (`https://www.familysearch.org/ark:/61903/3:1:…`) qui va dans `src`. Les images voisines sont les numéros
+voisins. Un film contient souvent plusieurs registres à la suite (baptêmes, puis mariages, puis décès ; en état
+civil, naissances, mariages et décès année par année, avec tables) : si l'image lue n'est pas du bon type, cherche
+la bonne section en sautant de 10 en 10. Le champ `index_fs` de l'événement, s'il existe, donne ce que l'index
+nominatif de FamilySearch a relevé (date exacte, parents) : c'est une aide pour reconnaître l'acte, pas une preuve.
+
 ## Méthode
 - Économise les images : commence à l'image estimée, à 900 px de large en `full`, juste pour lire les dates
   et repérer où se trouve l'acte ; puis zoome sur la page ou la colonne utile (`pct:…`, 1200-1400 px) pour lire

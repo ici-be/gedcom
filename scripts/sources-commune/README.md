@@ -22,6 +22,11 @@ un export GEDCOM récent dans `~/Téléchargements`.
 4. **Registres Agatha** (sans navigateur) : `python3 -I agatha.py registres D Commune`, puis
    `python3 -I localiser.py D` → `a_lire.json` (registre et images probables de chaque acte restant), puis
    `python3 -I lots.py D 8` → `lot_KK.json`.
+   Pour une commune hors de Belgique (ou sans Agatha), les liens existants étant sur FamilySearch :
+   `node fs.mjs ancres D` (film et position de chaque lien existant), `node fs.mjs film D DGS` pour chaque film,
+   puis `python3 -I localiser_fs.py D` et `python3 -I lots.py D 8` (même format de lots ; `node fs.mjs extrait`
+   pour lire une image). Les index néerlandais repris par FamilySearch n'ont pas d'image : `lots.py` joint
+   leurs indications (`index_fs`) aux événements, sans les retenir d'office.
 5. **Lecture des images** : par des sous-agents, par lots d'une dizaine d'événements (consigne ci-dessous).
    Les images ne passent jamais par la conversation principale : seuls les résultats écrits reviennent.
 6. **Écriture sur Geneanet** : `node geneanet.mjs D` (essai), puis `node geneanet.mjs D --valider`. Chaque

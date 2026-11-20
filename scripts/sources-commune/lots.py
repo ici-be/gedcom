@@ -2,6 +2,8 @@
 
   python3 -I lots.py DOSSIER [TAILLE]     (TAILLE : 8 par défaut)
 
+Si DOSSIER/apparier.txt existe (sortie de apparier.py --tout), les candidats de l'index à date exacte
+et nom concordant sont joints à chaque événement (« index_fs »), comme aide à la lecture.
 Écrit DOSSIER/lot_01.json, lot_02.json… (événements, proches à reconnaître, registres et images probables)
 et affiche un résumé par lot. Des lots plus petits coûtent moins de tokens par acte (le contexte de chaque
 sous-agent grossit avec les images lues).
@@ -21,11 +23,20 @@ def p(x):
     return f"{x['prenom']} {x['nom']}" if x else None
 
 
+# indications de l'index FamilySearch (même date exacte et nom concordant), tirées de apparier.txt
+indices = {}
+if os.path.exists(f'{dossier}/apparier.txt'):
+    cur = None
+    for l in open(f'{dossier}/apparier.txt'):
+        if l.startswith('#'):
+            cur = int(l[1:].split()[0])
+        elif cur is not None and l.startswith('   DN'):
+            indices.setdefault(cur, []).append(l.strip()[2:].strip()[:300])
 items = []
 for s in a:
     e = ev[s['n']]
     if not s['registres']:
-        print('sans registre Agatha :', s['n'], e['tag'], e['date'])
+        print('sans registre :', s['n'], e['tag'], e['date'])
         continue
     it = {'n': s['n'], 'evenement': e['tag'][:4], 'date': e['date']}
     if e['kind'] == 'fam':
@@ -33,6 +44,8 @@ for s in a:
     else:
         it.update(personne=p(e['qui']), sexe=e['sexe'], pere=p(e['pere']), mere=p(e['mere']), conjoints=[p(x) for x in e['conjoints']])
     it['registres'] = s['registres']
+    if s['n'] in indices:
+        it['index_fs'] = indices[s['n']]
     items.append(it)
 items.sort(key=lambda i: (i['registres'][0]['dossier'], i['registres'][0]['estimation']))
 lots, cur = [], []
