@@ -57,22 +57,31 @@ use = collections.Counter()
 for n, d in R.items():
     if J.get(n) == 'posé':
         m = re.search(r'/images/\d+/([^/]+)/', d.get('src') or '')
-        use[m[1] if m else 'FamilySearch (index)'] += 1
+        if m:
+            use['Agatha ' + m[1]] += 1
+        elif str(d.get('origine', '')).startswith('index FS'):
+            use['FamilySearch, index nominatif'] += 1
+        else:
+            use['FamilySearch, lu sur les films'] += 1
 nb = sum(1 for v in J.values() if v == 'posé')
-fs = use['FamilySearch (index)']
+fs = use['FamilySearch, index nominatif']
+fsl = use['FamilySearch, lu sur les films']
 deja = [n for n, v in J.items() if v == 'déjà présent']
 datees = [n for n, e in ev.items() if e['dmy']]
-portee = sorted({e['rel'].split(' de ')[0] for e in ev.values()})
+cat = collections.Counter('ancêtres' if e['rel'].startswith('Sosa') else 'frères et sœurs' if e['rel'].startswith('fratrie')
+                          else 'unions' if 'union' in e['rel'] else 'hors lignée' for e in ev.values())
+portee = [f'{k} {v}' for k, v in cat.most_common()]
 L = [f"# {commune} : liens d’actes ajoutés sur Geneanet\n",
      f"Le {datetime.date.today():%d/%m/%Y}, {nb} liens ont été posés dans le champ Source des événements de {commune} qui n’en avaient pas "
-     f"({len(ev)} événements retenus, dont {len(datees)} à date complète ; catégories : {', '.join(portee)}). "
-     f"{fs} liens FamilySearch repérés par l’index nominatif (nom, date exacte et parents concordants) ; {nb - fs} liens Agatha, chaque acte "
-     f"ayant été lu sur l’image. Chaque lien a été relu sur la fiche publique juste après l’enregistrement. Aucune date ni aucun nom n’a été modifié."
+     f"({len(ev)} événements retenus, dont {len(datees)} à date complète ; {', '.join(portee)}). "
+     f"{fs} liens FamilySearch repérés par l’index nominatif (nom, date exacte et parents concordants) ; {fsl} liens FamilySearch et "
+     f"{nb - fs - fsl} liens Agatha lus sur l’image. Chaque lien a été relu sur la fiche publique juste après l’enregistrement. Aucune date ni aucun nom n’a été modifié."
      + (f" {len(deja)} événement(s) avaient déjà leur lien sur la fiche en ligne." if deja else '')
      + " Outil : `scripts/sources-commune/` du dépôt gedcom ; détail : `evenements.json`, `resultats*.jsonl`, `journal.jsonl`.\n",
      "## Registres utilisés\n"]
 for d, c in sorted(use.items()):
-    L.append(f"- {d} : {c} lien(s)" + (f" ({' ; '.join(sorted(noms_reg[d]))})" if d in noms_reg else ''))
+    k = d.removeprefix('Agatha ')
+    L.append(f"- {d} : {c} lien(s)" + (f" ({' ; '.join(sorted(noms_reg[k]))})" if k in noms_reg else ''))
 L.append('')
 if lire('notes_registres.md'):
     L.append(lire('notes_registres.md'))
@@ -100,4 +109,4 @@ if sans:
 t = re.sub(r' ([:;?!])(?=\s)', ' \\1', '\n'.join(L))
 nom = unicodedata.normalize('NFKD', commune).encode('ascii', 'ignore').decode().lower().replace(' ', '-')
 open(f'{W}/rapport_{nom}.md', 'w').write(t)
-print(f'{W}/rapport_{nom}.md :', nb, 'posés dont', fs, 'FamilySearch ;', len(douteux), 'douteux')
+print(f'{W}/rapport_{nom}.md :', nb, 'posés (index FS', fs, '; films FS', fsl, '; Agatha', nb - fs - fsl, ') ;', len(douteux), 'douteux')

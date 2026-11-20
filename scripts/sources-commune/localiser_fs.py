@@ -28,6 +28,13 @@ for a in json.load(open(f'{D}/fs_ancres.json')):
         anc.setdefault((a['dgs'], nat), []).append((date(a['dmy'][2], a['dmy'][1], a['dmy'][0]).toordinal(), a['image']))
 for k in anc:
     anc[k].sort()
+# toutes natures confondues : années couvertes par chaque film (un film d'état civil suit souvent l'ordre
+# naissances, mariages, décès année par année : ces repères situent l'année même sans repère de même nature)
+tous = {}
+for (dgs, _), pts in anc.items():
+    tous.setdefault(dgs, []).extend(pts)
+for k in tous:
+    tous[k].sort()
 
 
 def estimer(pts, j):
@@ -65,8 +72,13 @@ for e in evs:
         if lo <= j <= hi:
             dist = min(abs(j - p[0]) for p in pts)
             cands.append((dist, dgs, pts))
+    # film dont les repères (toutes natures) encadrent la date, sans repère de même nature : candidat prioritaire
+    vus = {c[1] for c in cands}
+    for dgs, pts in tous.items():
+        if dgs in films and dgs not in vus and pts[0][0] - 400 <= j <= pts[-1][0] + 400:
+            cands.append((-1, dgs, pts))
     regs = []
-    for dist, dgs, pts in sorted(cands)[:2]:
+    for dist, dgs, pts in sorted(cands, key=lambda c: (0 if c[2][0][0] <= j <= c[2][-1][0] else 1, c[0]))[:2]:
         est, mg = estimer(pts, j)
         n_im = len(films[dgs]['arks'])
         est = max(1, min(n_im, est))
