@@ -4,19 +4,24 @@ Pose des liens vers les images d'actes dans le champ Source des événements Gen
 (ancêtres d'une personne de référence, leurs frères et sœurs, leurs unions). Un dossier de travail par
 commune (`D` ci-dessous), à copier à la fin dans `pcloud:Généalogie/Recherches/Actes de <commune>/`.
 
-Prérequis : le Chrome de travail (port 9333, profil `~/.local/share/lignees/chrome`) connecté à
-Geneanet et à FamilySearch ; un export GEDCOM récent.
+Le skill `sources-commune` (`.claude/skills/sources-commune/SKILL.md`) enchaîne ces étapes à partir du seul nom
+de la commune et de la portée (ancêtres, avec fratrie, tous).
+
+Prérequis : le Chrome de travail (port 9333, profil `~/.local/share/lignees/chrome`) connecté à Geneanet,
+FamilySearch et Agatha (`node sessions.mjs` le vérifie et reconnecte avec les identifiants enregistrés) ;
+un export GEDCOM récent dans `~/Téléchargements`.
 
 ## Étapes
 
-1. **Sélection** : `python3 -I selection.py D export.ged Commune @I1@` → `evenements.json`, `ancres.json`
-   (liens déjà posés dans la commune, qui servent de repères dans les registres).
+1. **Sélection** : `python3 -I selection.py D Commune [--portee ancetres|fratrie|tous] [--ref @I21@] [--ged EXPORT]`
+   → `evenements.json`, `ancres.json` (liens déjà posés dans la commune, qui servent de repères dans les registres).
 2. **Index FamilySearch** : `node fs_index.mjs D Commune` → `fs_index.jsonl`. Une requête toutes les 4 s ;
    FamilySearch refuse (429) au-delà d'une soixantaine de requêtes rapides.
 3. **Rapprochement** : `python3 -I apparier.py D --tout` → les actes dont la date exacte, le nom et un parent
    (ou le conjoint) concordent vont d'office dans `resultats.jsonl` ; les autres candidats sont listés en texte.
 4. **Registres Agatha** (sans navigateur) : `python3 -I agatha.py registres D Commune`, puis
-   `python3 -I localiser.py D` → `a_lire.json` (registre et images probables de chaque acte restant).
+   `python3 -I localiser.py D` → `a_lire.json` (registre et images probables de chaque acte restant), puis
+   `python3 -I lots.py D 8` → `lot_KK.json`.
 5. **Lecture des images** : par des sous-agents, par lots d'une dizaine d'événements (consigne ci-dessous).
    Les images ne passent jamais par la conversation principale : seuls les résultats écrits reviennent.
 6. **Écriture sur Geneanet** : `node geneanet.mjs D` (essai), puis `node geneanet.mjs D --valider`. Chaque
