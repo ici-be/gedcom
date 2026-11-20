@@ -49,13 +49,16 @@ par ex. `<scratchpad>/<commune>`.
    (un lot peut avoir fini d'écrire après le passage précédent). Les arrêts (homonymes, union introuvable…) sont
    à examiner un par un.
 
-7. **Rapport et rangement** : `python3 -I rapport.py D` (adapter le titre, l'introduction et la section « À vérifier » :
-   prénoms contredits par un acte, dates de naissance postérieures au baptême, identifications fragiles). Copier
+7. **Rapport et rangement** : écrire `D/a_verifier.md` (liste à puces : prénoms contredits par un acte, dates de
+   naissance postérieures au baptême, identifications fragiles, doublons apparents de l'arbre) et au besoin
+   `D/notes_registres.md` (particularités des registres), puis `python3 -I rapport.py D <Commune>`. Copier
    `D` sur `pcloud:Généalogie/Recherches/Actes de <Commune>/` (sans `.agatha_cookies`) avec une copie des scripts,
    écrire la note de mémoire `actes-<commune>`, commiter et pousser les éventuels changements de l'outil.
 
 8. **Réponse à Bruno** : nombre de liens posés (FamilySearch / Agatha), non trouvés, points à vérifier, lien
    du dossier pCloud. Pas de liste détaillée des écarts : elle est dans le rapport.
+
+Si Bruno lance le skill sans nommer de commune, lui demander laquelle (et la portée s'il le souhaite).
 
 ## Règles
 - Ne jamais modifier une date ni un nom dans l'arbre : seulement le champ Source, vide.
