@@ -28,6 +28,10 @@ et tu notes le lien de l'image. Tu ne modifies rien d'autre que le fichier de r�
 - Retiens un acte seulement si l'enfant (ou le défunt, ou les époux) **et** au moins un parent (ou le conjoint)
   concordent. Un écart de date ou de prénom est possible : note-le dans `ecart`. Si tu hésites vraiment,
   `"douteux": true` et explique pourquoi. Ne devine jamais un lien.
+- Sous la Révolution, les registres civils d'Agatha sont étiquetés en années grégoriennes approximatives
+  (un registre « 1799-1800 » peut être celui de l'an VIII ou de l'an IX) : si le registre proposé ne couvre pas la
+  date, cherche le registre voisin du même type dans `D/agatha_CS.json` (`python3 -I agatha.py images D BOOKPART`),
+  et pour 1796-1800 pense aussi au registre paroissial de baptêmes.
 - Au plus ~12 images par événement. Au-delà, abandonne-le avec un motif précis (images lues, dates couvertes).
 - Plusieurs événements du lot peuvent se trouver sur la même image : lis-la une fois pour tous.
 

@@ -21,7 +21,15 @@ Geneanet et à FamilySearch ; un export GEDCOM récent.
    Les images ne passent jamais par la conversation principale : seuls les résultats écrits reviennent.
 6. **Écriture sur Geneanet** : `node geneanet.mjs D` (essai), puis `node geneanet.mjs D --valider`. Chaque
    lien est relu sur la fiche publique juste après l'enregistrement ; `journal.jsonl` garde l'avant/après.
-7. **Rapport** : `rapport_<commune>.md` (registres, écarts, non trouvés), copie sur pCloud, note de mémoire.
+7. **Rapport** : `python3 -I rapport.py D` → `rapport_<commune>.md` (registres, écarts, non trouvés ; nom de fichier et
+   paragraphe « À vérifier » à adapter), copie du dossier sur pCloud, note de mémoire.
+
+## Repères (Turnhout, 20/11/2026)
+
+157 événements datés : 10 par l'index FamilySearch (qui ne couvre guère que l'après-1850 à Turnhout), 139 lus
+sur Agatha par 14 sous-agents (lots de 8 à 12, 3 à 7 min chacun, 5 à 7 en parallèle), 7 non trouvés.
+Écriture Geneanet : 7 à 10 s par événement, vérification comprise. Environ 0,5 million de tokens relus par lien
+(1,2 million à Anderlecht) ; des lots plus petits (6) et des extraits plus serrés réduiraient encore ce coût.
 
 ## Consigne des sous-agents de lecture
 

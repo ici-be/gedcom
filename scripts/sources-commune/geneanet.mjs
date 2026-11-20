@@ -1,11 +1,11 @@
 // Pose les liens d'actes dans le champ Source des événements Geneanet, par l'éditeur en ligne, avec contrôles.
 //   node geneanet.mjs DOSSIER [--valider] [n1,n2,…]
-// Lit DOSSIER/evenements.json et DOSSIER/resultats.jsonl ({ n, src, douteux? }). Sans --valider : remplit le
+// Lit DOSSIER/evenements.json et DOSSIER/resultats*.jsonl (index et lots de lecture) ({ n, src, douteux? }). Sans --valider : remplit le
 // formulaire et vérifie, sans enregistrer. Avec --valider : enregistre, puis relit la fiche publique pour s'assurer
 // que le lien y figure. Journal : DOSSIER/journal.jsonl (avant/après de chaque événement), bilan à la fin.
 // Chrome de travail : port 9333, connecté à Geneanet. Arbre : bveyckemans.
 import { createRequire } from 'node:module'
-import { appendFileSync, readFileSync, existsSync } from 'node:fs'
+import { appendFileSync, readFileSync, existsSync, readdirSync } from 'node:fs'
 const require = createRequire(new URL('../../package.json', import.meta.url))
 const { chromium } = require('playwright-core')
 
@@ -19,7 +19,7 @@ const lignes = (f) => existsSync(f) ? readFileSync(f, 'utf8').trim().split('\n')
 const JOURNAL = `${dossier}/journal.jsonl`
 const faits = new Set(lignes(JOURNAL).filter(j => j.etat === 'posé' || j.etat === 'déjà présent').map(j => j.n))
 const res = new Map()
-for (const r of lignes(`${dossier}/resultats.jsonl`)) if (r.src && !r.douteux) res.set(r.n, r) // la dernière ligne l'emporte
+for (const f of readdirSync(dossier).filter(f => /^resultats.*\.jsonl$/.test(f)).sort()) for (const r of lignes(`${dossier}/${f}`)) if (r.src && !r.douteux) res.set(r.n, r) // la dernière ligne l'emporte
 
 const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre']
 const dateFr = ([d, m, y]) => `${d === 1 ? '1er' : d} ${MOIS[m - 1]} ${y}`
