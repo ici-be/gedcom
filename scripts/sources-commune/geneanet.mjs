@@ -22,10 +22,13 @@ const res = new Map()
 for (const f of readdirSync(dossier).filter(f => /^resultats.*\.jsonl$/.test(f)).sort()) for (const r of lignes(`${dossier}/${f}`)) if (r.src && !r.douteux) res.set(r.n, r) // la dernière ligne l'emporte
 
 const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre']
-const dateFr = ([d, m, y]) => `${d === 1 ? '1er' : d} ${MOIS[m - 1]} ${y}`
+const dateFr = ([d, m, y]) => d ? `${d === 1 ? '1er' : d} ${MOIS[m - 1]} ${y}` : `${y}` // année seule (résidence, registre de population)
 const TYPE = { ind: { BIRT: 0, BAPM: 1, CHR: 1, DEAT: 2, BURI: 3 }, fam: { MARR: 0 } }
 const norm = (s) => (s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
-const cle = (src) => src.includes('/data/images/') ? src.split('/data/images/')[1] : src.split('61903/')[1]
+const cle = (src) => src.includes('/data/images/') ? src.split('/data/images/')[1] : src.includes('61903/') ? src.split('61903/')[1] : src.replace(/^https?:\/\//, '')
+// lien partagé par plusieurs événements (registre de population des Archives de la Ville) : sa présence sur la fiche ne prouve rien
+const partage = (src) => !src.includes('/data/images/') && !src.includes('61903/')
+const compter = (html, c) => html.split(c).length - 1
 
 const nav = await chromium.connectOverCDP('http://127.0.0.1:9333')
 const ctx = nav.contexts()[0]
@@ -51,7 +54,7 @@ async function trouverFiches(t) {
     if (!f) { manques++; continue }
     manques = 0
     const tx = norm(f.texte)
-    if (tx.includes(norm(t.dateFr)) && t.indices.some(i => tx.includes(norm(i)))) out.push({ oc, deja: f.html.includes(t.cle) })
+    if (tx.includes(norm(t.dateFr)) && t.indices.some(i => tx.includes(norm(i)))) out.push({ oc, deja: !t.partage && f.html.includes(t.cle), avant: compter(f.html, t.cle) })
   }
   return out
 }
@@ -89,7 +92,9 @@ async function ouvrirEditeur(t, oc) {
   if (t.conjoint && !norm(m.titre).includes(norm(t.conjoint))) return `autre union : ${m.titre}`
   const evsF = t.kind === 'fam' ? m.family?.fevents : m.person?.pevents
   const [d, mo, y] = t.dmy
-  const idx = (evsF ?? []).map((e, i) => [e, i]).filter(([e]) => e.date?.dmy?.year === y && e.date.dmy.month === mo && e.date.dmy.day === d)
+  let idx = (evsF ?? []).map((e, i) => [e, i]).filter(([e]) => e.date?.dmy?.year === y && (e.date.dmy.month || 0) === mo && (e.date.dmy.day || 0) === d)
+  // plusieurs événements de la même année : "note" dans le résultat = texte propre à l'événement voulu (adresse…)
+  if (t.note) idx = idx.filter(([e]) => norm(JSON.stringify(e)).includes(norm(t.note)))
   const memeType = idx.filter(([e]) => (e.pevent_type ?? e.fevent_type) === t.type)
   const choix = memeType.length === 1 ? memeType : idx
   if (choix.length !== 1) return `${choix.length} événements à cette date : ` + JSON.stringify((evsF ?? []).map(e => [e.pevent_type ?? e.fevent_type, e.date?.dmy]))
@@ -104,17 +109,18 @@ for (const [n, r] of res) {
   const e = evs[n]
   const tag = e.tag.slice(0, 4)
   const t = {
-    kind: e.kind, dmy: e.dmy, dateFr: dateFr(e.dmy), type: TYPE[e.kind][tag], cle: cle(r.src),
+    kind: e.kind, dmy: e.dmy ?? [0, 0, Number(e.date.match(/\d{4}/)[0])], type: TYPE[e.kind][tag], cle: cle(r.src), partage: partage(r.src), note: r.note,
     ...(e.kind === 'fam'
       ? { p: e.mari.prenom.toLowerCase(), nn: e.mari.nom.toLowerCase(), conjoint: `${e.femme.prenom} ${e.femme.nom}`, indices: [e.femme.nom] }
       : { p: e.qui.prenom.toLowerCase(), nn: e.qui.nom.toLowerCase(), indices: [e.pere?.nom, e.mere?.nom, ...e.conjoints.map(c => c?.nom)].filter(Boolean) }),
   }
+  t.dateFr = dateFr(t.dmy)
   if (!t.indices.length) t.indices = ['']
   try {
     // "oc" dans le résultat : fiche imposée à la main quand des homonymes (parent et enfant) citent tous deux l'événement
     const fiches = Number.isInteger(r.oc) ? (await trouverFiches(t)).filter(f => f.oc === r.oc) : await trouverFiches(t)
     if (fiches.length !== 1) { note(n, 'arrêt', { motif: `${fiches.length} fiche(s) conviennent` }); continue }
-    const { oc, deja } = fiches[0]
+    const { oc, deja, avant: nAvant } = fiches[0]
     if (deja) { note(n, 'déjà présent', { oc }); continue }
     const o = await ouvrirEditeur(t, oc)
     if (typeof o === 'string') { note(n, 'arrêt', { motif: o, oc }); continue }
@@ -138,7 +144,7 @@ for (const [n, r] of res) {
       p.getByRole('button', { name: 'Valider', exact: true }).or(p.locator('input[type=submit][value="Valider"]')).first().click(),
     ])
     let ok = false
-    for (let k = 0; k < 4 && !ok; k++) { if (k) await p.waitForTimeout(2000); ok = !!(await lire(urlFiche(t.p, t.nn, oc) + '&type=fiche'))?.html.includes(t.cle) }
+    for (let k = 0; k < 4 && !ok; k++) { if (k) await p.waitForTimeout(2000); const h = (await lire(urlFiche(t.p, t.nn, oc) + '&type=fiche'))?.html ?? ''; ok = t.partage ? compter(h, t.cle) > nAvant : h.includes(t.cle) }
     note(n, ok ? 'posé' : 'arrêt', { oc, src: r.src, avant: evA, ...(ok ? {} : { motif: 'lien absent de la fiche après enregistrement' }) })
   } catch (err) {
     note(n, 'arrêt', { motif: 'erreur : ' + String(err).slice(0, 200) })
