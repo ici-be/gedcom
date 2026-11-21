@@ -20,6 +20,9 @@ voisins. Un film contient souvent plusieurs registres à la suite (baptêmes, pu
 civil, naissances, mariages et décès année par année, avec tables) : si l'image lue n'est pas du bon type, cherche
 la bonne section en sautant de 10 en 10. Le champ `index_fs` de l'événement, s'il existe, donne ce que l'index
 nominatif de FamilySearch a relevé (date exacte, parents) : c'est une aide pour reconnaître l'acte, pas une preuve.
+Le champ `indications`, s'il existe, donne la fiche d'une base d'index locale (paroisse, date exacte, graphie du
+nom, registre ou page) : la date qui y figure est souvent plus juste que celle de l'arbre ; sers-t'en pour
+reconnaître la paroisse sur l'image et viser le bon jour, et signale l'écart de date dans `ecart`.
 Si aucun film proposé ne couvre l'année, essaie les films de numéro voisin (DGS ± 1, ± 2 : les films d'état civil
 d'une commune se suivent) : `node fs.mjs film D DGS` dit s'il existe, puis lis sa première image pour voir les années.
 

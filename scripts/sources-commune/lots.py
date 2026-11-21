@@ -4,6 +4,8 @@
 
 Si DOSSIER/apparier.txt existe (sortie de apparier.py --tout), les candidats de l'index à date exacte
 et nom concordant sont joints à chaque événement (« index_fs »), comme aide à la lecture.
+Si DOSSIER/indications.json existe ({"N": [texte, …]}, par ex. la fiche d'une base d'index locale avec
+paroisse, registre et page), ces textes sont joints à l'événement (« indications »).
 Écrit DOSSIER/lot_01.json, lot_02.json… (événements, proches à reconnaître, registres et images probables)
 et affiche un résumé par lot. Des lots plus petits coûtent moins de tokens par acte (le contexte de chaque
 sous-agent grossit avec les images lues).
@@ -32,6 +34,7 @@ if os.path.exists(f'{dossier}/apparier.txt'):
             cur = int(l[1:].split()[0])
         elif cur is not None and l.startswith('   DN'):
             indices.setdefault(cur, []).append(l.strip()[2:].strip()[:300])
+indic = json.load(open(f'{dossier}/indications.json')) if os.path.exists(f'{dossier}/indications.json') else {}
 items = []
 for s in a:
     e = ev[s['n']]
@@ -46,6 +49,8 @@ for s in a:
     it['registres'] = s['registres']
     if s['n'] in indices:
         it['index_fs'] = indices[s['n']]
+    if str(s['n']) in indic:
+        it['indications'] = indic[str(s['n'])]
     items.append(it)
 items.sort(key=lambda i: (i['registres'][0]['dossier'], i['registres'][0]['estimation']))
 lots, cur = [], []

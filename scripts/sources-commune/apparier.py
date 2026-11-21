@@ -81,12 +81,12 @@ def juger(e, c):
     exacte = any(f == nat and cible in ds for f, ds in dates)
     proche = nat == 'n' and any(f == 'n' and any(abs(int(x[-2:]) - d) <= 3 and x[:7] == cible[:7] for x in ds) for f, ds in dates)
     if e['kind'] == 'fam':
-        a = pers_ok(e['mari'], c['nom']) and pers_ok(e['femme'], role(c, 'Spouse', 'Wife', 'Bride'))
-        b = pers_ok(e['femme'], c['nom']) and pers_ok(e['mari'], role(c, 'Spouse', 'Husband', 'Groom'))
+        a = pers_ok(e['mari'], c.get('nom')) and pers_ok(e['femme'], role(c, 'Spouse', 'Wife', 'Bride'))
+        b = pers_ok(e['femme'], c.get('nom')) and pers_ok(e['mari'], role(c, 'Spouse', 'Husband', 'Groom'))
         noms = bool(a or b)
         liens = [True] if noms else []
     else:
-        noms = bool(pers_ok(e['qui'], c['nom']))
+        noms = bool(pers_ok(e['qui'], c.get('nom')))
         liens = [pers_ok(e['pere'], role(c, 'Father')), pers_ok(e['mere'], role(c, 'Mother'))]
         if nat == 'd' and e['conjoints']:
             liens.append(any(pers_ok(k, role(c, 'Spouse', 'Husband', 'Wife')) for k in e['conjoints']) or None)
@@ -97,7 +97,7 @@ def juger(e, c):
 def resume(c):
     f = '; '.join(f'{t} {o}' for t, o, _, _ in c['faits'])
     p = ', '.join(f'{r} {n}' for r, n in c['proches'] if r not in ('Principal',))
-    return f"{c['nom']} [{f}] {p} → {c['img']}"
+    return f"{c.get('nom')} [{f}] {p} → {c['img']}"
 
 
 retenus, reste = [], []

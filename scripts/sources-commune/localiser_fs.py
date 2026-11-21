@@ -4,6 +4,9 @@ entre les liens déjà posés de même nature (baptême/naissance, mariage, déc
   python3 -I localiser_fs.py DOSSIER [MARGE]
 
 Lit evenements.json, resultats*.jsonl, fs_ancres.json et fs_film_*.json (node fs.mjs ancres / film).
+Ville à plusieurs paroisses : DOSSIER/paroisses.json facultatif, {"films": {DGS: [paroisse, …]},
+"evenements": {"N": paroisse}} (par ex. tiré d'une base d'index comme la DWV de Malines) ; un événement de
+paroisse connue n'est alors cherché que dans les films de cette paroisse (s'il y en a).
 Écrit DOSSIER/a_lire.json au format de localiser.py (registres : { dgs, dossier = DGS, quoi, estimation,
 images }), utilisable tel quel par lots.py ; les images sont des numéros dans le film (1 = première).
 """
@@ -57,6 +60,9 @@ def estimer(pts, j):
     return round(i0 + pente * (j - j0)), min(15, marge + 1 + int(ecart_ans))
 
 
+par = json.load(open(f'{D}/paroisses.json')) if os.path.exists(f'{D}/paroisses.json') else {}
+par_films, par_evs = par.get('films', {}), par.get('evenements', {})
+
 sortie = []
 for e in evs:
     if e['n'] in fait or not e['dmy'] or e['tag'][:4] not in NATURE:
@@ -72,11 +78,18 @@ for e in evs:
         if lo <= j <= hi:
             dist = min(abs(j - p[0]) for p in pts)
             cands.append((dist, dgs, pts))
-    # film dont les repères (toutes natures) encadrent la date, sans repère de même nature : candidat prioritaire
+    # film dont les repères (toutes natures) encadrent la date, sans repère de même nature : candidat prioritaire,
+    # sauf si un film de même nature encadre déjà la date
     vus = {c[1] for c in cands}
+    encadre = any(c[2][0][0] <= j <= c[2][-1][0] for c in cands)
     for dgs, pts in tous.items():
         if dgs in films and dgs not in vus and pts[0][0] - 400 <= j <= pts[-1][0] + 400:
-            cands.append((-1, dgs, pts))
+            cands.append((365 if encadre else -1, dgs, pts))
+    pe = par_evs.get(str(e['n']))
+    if pe:
+        dela = [c for c in cands if pe in par_films.get(c[1], [])]
+        if dela:
+            cands = dela
     regs = []
     for dist, dgs, pts in sorted(cands, key=lambda c: (0 if c[2][0][0] <= j <= c[2][-1][0] else 1, c[0]))[:2]:
         est, mg = estimer(pts, j)
