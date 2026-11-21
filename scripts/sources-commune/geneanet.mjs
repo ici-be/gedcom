@@ -119,7 +119,7 @@ for (const [n, r] of res) {
   try {
     // "oc" dans le résultat : fiche imposée à la main quand des homonymes (parent et enfant) citent tous deux l'événement
     const fiches = Number.isInteger(r.oc) ? (await trouverFiches(t)).filter(f => f.oc === r.oc) : await trouverFiches(t)
-    if (fiches.length !== 1) { note(n, 'arrêt', { motif: `${fiches.length} fiche(s) conviennent` }); continue }
+    if (fiches.length !== 1) { note(n, 'arrêt', { motif: `${fiches.length} fiche(s) conviennent (oc ${fiches.map(f => f.oc).join(", ")})` }); continue }
     const { oc, deja, avant: nAvant } = fiches[0]
     if (deja) { note(n, 'déjà présent', { oc }); continue }
     const o = await ouvrirEditeur(t, oc)
