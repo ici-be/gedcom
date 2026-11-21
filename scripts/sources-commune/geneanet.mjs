@@ -111,7 +111,8 @@ for (const [n, r] of res) {
   }
   if (!t.indices.length) t.indices = ['']
   try {
-    const fiches = await trouverFiches(t)
+    // "oc" dans le résultat : fiche imposée à la main quand des homonymes (parent et enfant) citent tous deux l'événement
+    const fiches = Number.isInteger(r.oc) ? (await trouverFiches(t)).filter(f => f.oc === r.oc) : await trouverFiches(t)
     if (fiches.length !== 1) { note(n, 'arrêt', { motif: `${fiches.length} fiche(s) conviennent` }); continue }
     const { oc, deja } = fiches[0]
     if (deja) { note(n, 'déjà présent', { oc }); continue }

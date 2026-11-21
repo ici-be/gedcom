@@ -29,7 +29,7 @@ un export GEDCOM récent dans `~/Téléchargements`.
    leurs indications (`index_fs`) aux événements, sans les retenir d'office.
 5. **Lecture des images** : par des sous-agents, par lots d'une dizaine d'événements (consigne ci-dessous).
    Les images ne passent jamais par la conversation principale : seuls les résultats écrits reviennent.
-6. **Écriture sur Geneanet** : `node geneanet.mjs D` (essai), puis `node geneanet.mjs D --valider`. Chaque
+6. **Écriture sur Geneanet** : `node geneanet.mjs D` (essai), puis `node geneanet.mjs D --valider` (ou `--valider N1,N2` pour quelques événements). Quand deux fiches homonymes (père et fils) citent l'événement, ajouter `"oc"` (numéro de la bonne fiche) au résultat. Chaque
    lien est relu sur la fiche publique juste après l'enregistrement ; `journal.jsonl` garde l'avant/après.
 7. **Rapport** : `python3 -I rapport.py D` → `rapport_<commune>.md` (registres, écarts, non trouvés ; nom de fichier et
    paragraphe « À vérifier » à adapter), copie du dossier sur pCloud, note de mémoire.
