@@ -1,5 +1,7 @@
 // Cherche chaque événement dans l'index nominatif de FamilySearch, par la session du Chrome de travail (port 9333).
 //   node fs_index.mjs DOSSIER COMMUNE [n1,n2,…]
+// COMMUNE « - » : commune propre à chaque événement (champ « commune » de selection_sosa.py) ; les événements sans
+// date exacte sont alors cherchés sur leur fourchette d'années (« annees »), ou sans date.
 // Lit DOSSIER/evenements.json, ajoute à DOSSIER/fs_index.jsonl une ligne par événement : { n, q, cands: [...] }
 // (les événements déjà présents dans le fichier sont sautés). Chaque candidat : image (ark 3:1), fiche (1:2),
 // collection, nom, faits (type, date, lieu) et proches (rôle, nom). Une requête toutes les ~4 s ; en cas de refus (429), pause croissante à partir d'une minute.
@@ -17,8 +19,8 @@ const choisis = liste ? new Set(liste.split(',').map(Number)) : null
 const GENRE = { BIRT: 'birth', BAPM: 'birth', CHR: 'birth', DEAT: 'death', BURI: 'death', MARR: 'marriage' }
 function requete(e) {
   const g = GENRE[e.tag.slice(0, 4)]
-  if (!g || !e.dmy) return null
-  const y = e.dmy[2]
+  if (!g || (!e.dmy && commune !== '-')) return null
+  const [y0, y1] = e.dmy ? [e.dmy[2], e.dmy[2]] : (e.annees ?? [null, null])
   const q = new URLSearchParams({ count: '8' })
   const nom = (pers, pre) => { if (pers?.prenom) q.set(`q.${pre}GivenName`, pers.prenom); if (pers?.nom) q.set(`q.${pre}Surname`, pers.nom) }
   if (e.kind === 'fam') { nom(e.mari, ''); nom(e.femme, 'spouse') } else {
@@ -26,8 +28,10 @@ function requete(e) {
     if (g === 'birth' || g === 'death') { nom(e.pere, 'father'); if (e.mere) { if (e.mere.prenom) q.set('q.motherGivenName', e.mere.prenom); if (e.mere.nom) q.set('q.motherSurname', e.mere.nom) } }
     if (g === 'death' && e.conjoints?.[0]) nom(e.conjoints[0], 'spouse')
   }
-  q.set(`q.${g}LikeDate.from`, String(y)); q.set(`q.${g}LikeDate.to`, String(y))
-  q.set(`q.${g}LikePlace`, commune)
+  if (y0) { q.set(`q.${g}LikeDate.from`, String(y0)); q.set(`q.${g}LikeDate.to`, String(y1)) }
+  const lieu = commune === '-' ? e.commune : commune
+  if (lieu) q.set(`q.${g}LikePlace`, lieu)
+  if (commune === '-' && !e.dmy && !(e.pere || e.mere || e.kind === 'fam' || e.conjoints?.length)) return null
   return q.toString()
 }
 
