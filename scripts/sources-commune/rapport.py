@@ -61,6 +61,8 @@ for n, d in R.items():
             use['Agatha ' + m[1]] += 1
         elif 'brucity' in (d.get('src') or ''):
             use['Archives de la Ville de Bruxelles, registres de population'] += 1
+        elif 'archivesdepartementales.lenord.fr' in (d.get('src') or ''):
+            use['Archives départementales du Nord'] += 1
         elif str(d.get('origine', '')).startswith('index FS'):
             use['FamilySearch, index nominatif'] += 1
         else:
@@ -69,6 +71,7 @@ nb = sum(1 for v in J.values() if v == 'posé')
 fs = use['FamilySearch, index nominatif']
 fsl = use['FamilySearch, lu sur les films']
 avb = use['Archives de la Ville de Bruxelles, registres de population']
+adn = use['Archives départementales du Nord']
 deja = [n for n, v in J.items() if v == 'déjà présent']
 datees = [n for n, e in ev.items() if e['dmy']]
 cat = collections.Counter('ancêtres' if e['rel'].startswith('Sosa') else 'frères et sœurs' if e['rel'].startswith('fratrie')
@@ -78,7 +81,7 @@ L = [f"# {commune} : liens d’actes ajoutés sur Geneanet\n",
      f"Le {datetime.date.today():%d/%m/%Y}, {nb} liens ont été posés dans le champ Source des événements de {commune} qui n’en avaient pas "
      f"({len(ev)} événements retenus, dont {len(datees)} à date complète ; {', '.join(portee)}). "
      f"{fs} liens FamilySearch repérés par l’index nominatif (nom, date exacte et parents concordants) ; {fsl} liens FamilySearch et "
-     f"{nb - fs - fsl - avb} liens Agatha lus sur l’image" + (f" ; {avb} liens vers les registres de population des Archives de la Ville de Bruxelles" if avb else '') + ". Chaque lien a été relu sur la fiche publique juste après l’enregistrement. Aucune date ni aucun nom n’a été modifié."
+     f"{nb - fs - fsl - avb - adn} liens Agatha lus sur l’image" + (f" ; {adn} liens Archives départementales du Nord" if adn else '') + (f" ; {avb} liens vers les registres de population des Archives de la Ville de Bruxelles" if avb else '') + ". Chaque lien a été relu sur la fiche publique juste après l’enregistrement. Aucune date ni aucun nom n’a été modifié."
      + (f" {len(deja)} événement(s) avaient déjà leur lien sur la fiche en ligne." if deja else '')
      + " Outil : `scripts/sources-commune/` du dépôt gedcom ; détail : `evenements.json`, `resultats*.jsonl`, `journal.jsonl`.\n",
      "## Registres utilisés\n"]
@@ -112,4 +115,4 @@ if sans:
 t = re.sub(r' ([:;?!])(?=\s)', ' \\1', '\n'.join(L))
 nom = unicodedata.normalize('NFKD', commune).encode('ascii', 'ignore').decode().lower().replace(' ', '-')
 open(f'{W}/rapport_{nom}.md', 'w').write(t)
-print(f'{W}/rapport_{nom}.md :', nb, 'posés (index FS', fs, '; films FS', fsl, '; Agatha', nb - fs - fsl - avb, '; AVB', avb, ') ;', len(douteux), 'douteux')
+print(f'{W}/rapport_{nom}.md :', nb, 'posés (index FS', fs, '; films FS', fsl, '; Agatha', nb - fs - fsl - avb - adn, '; AVB', avb, '; AD Nord', adn, ') ;', len(douteux), 'douteux')
