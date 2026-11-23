@@ -21,7 +21,8 @@ R = {}
 for f in sorted(glob.glob(W + '/resultats*.jsonl')):
     for l in open(f):
         d = json.loads(l)
-        R[d['n']] = d
+        if d.get("src") or not (R.get(d["n"]) or {}).get("src"):
+            R[d["n"]] = d  # une ligne sans lien n’écrase pas une ligne avec lien
 J = {}
 for l in (open(W + '/journal.jsonl') if os.path.exists(W + '/journal.jsonl') else []):
     d = json.loads(l)
