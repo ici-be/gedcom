@@ -23,7 +23,7 @@ for f in sorted(glob.glob(W + '/resultats*.jsonl')):
         d = json.loads(l)
         R[d['n']] = d
 J = {}
-for l in open(W + '/journal.jsonl'):
+for l in (open(W + '/journal.jsonl') if os.path.exists(W + '/journal.jsonl') else []):
     d = json.loads(l)
     if J.get(d['n']) != 'posé':
         J[d['n']] = d['etat']
