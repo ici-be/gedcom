@@ -31,6 +31,12 @@ un export GEDCOM récent dans `~/Téléchargements`.
    Les images ne passent jamais par la conversation principale : seuls les résultats écrits reviennent.
 6. **Écriture sur Geneanet** : `node geneanet.mjs D` (essai), puis `node geneanet.mjs D --valider` (ou `--valider N1,N2` pour quelques événements). Quand deux fiches homonymes (père et fils) citent l'événement, ajouter `"oc"` (numéro de la bonne fiche) au résultat. Chaque
    lien est relu sur la fiche publique juste après l'enregistrement ; `journal.jsonl` garde l'avant/après.
+   **Naissance → baptême** : si l'arbre donne pour naissance la date d'un acte qui n'est qu'un baptême (résultat
+   avec `"acte": "baptême"`, `"date_acte"` égale à la date de l'arbre et `"naissance_dans_acte": null`), l'événement
+   devient un Baptême (même date, même lieu, même note), y compris quand le lien était déjà posé (état « converti »).
+   Arrêt sans rien enregistrer si la date n'est pas exacte, si la naissance a des témoins, si la fiche a déjà un
+   baptême ou une autre naissance, ou si un autre champ du formulaire a bougé ; après enregistrement, la fiche
+   publique doit dire « Baptisé(e) le … » et plus « Né(e) le … ». `--sans-bapteme` désactive la conversion.
 7. **Rapport** : `python3 -I rapport.py D` → `rapport_<commune>.md` (registres, écarts, non trouvés ; nom de fichier et
    paragraphe « À vérifier » à adapter), copie du dossier sur pCloud, note de mémoire.
 

@@ -24,10 +24,13 @@ for f in sorted(glob.glob(W + '/resultats*.jsonl')):
         if d.get("src") or not (R.get(d["n"]) or {}).get("src"):
             R[d["n"]] = d  # une ligne sans lien n’écrase pas une ligne avec lien
 J = {}
+BAP = set()  # naissances changées en baptêmes (l'acte n'est qu'un baptême, à la date donnée pour la naissance)
 for l in (open(W + '/journal.jsonl') if os.path.exists(W + '/journal.jsonl') else []):
     d = json.loads(l)
     if J.get(d['n']) != 'posé':
         J[d['n']] = d['etat']
+    if d.get('bapteme') and d['etat'] in ('posé', 'converti'):
+        BAP.add(d['n'])
 regs = {}
 for t in ('PR', 'CS'):
     if os.path.exists(f'{W}/agatha_{t}.json'):
@@ -83,6 +86,7 @@ L = [f"# {commune} : liens d’actes ajoutés sur Geneanet\n",
      f"({len(ev)} événements retenus, dont {len(datees)} à date complète ; {', '.join(portee)}). "
      f"{fs} liens FamilySearch repérés par l’index nominatif (nom, date exacte et parents concordants) ; {fsl} liens FamilySearch et "
      f"{nb - fs - fsl - avb - adn} liens Agatha lus sur l’image" + (f" ; {adn} liens Archives départementales du Nord" if adn else '') + (f" ; {avb} liens vers les registres de population des Archives de la Ville de Bruxelles" if avb else '') + ". Chaque lien a été relu sur la fiche publique juste après l’enregistrement. Aucune date ni aucun nom n’a été modifié."
+     + (f" {len(BAP)} naissance(s) de l’arbre, qui avaient en fait la date d’un acte de baptême muet sur la naissance, sont devenues des baptêmes (même date, même lieu)." if BAP else '')
      + (f" {len(deja)} événement(s) avaient déjà leur lien sur la fiche en ligne." if deja else '')
      + " Outil : `scripts/sources-commune/` du dépôt gedcom ; détail : `evenements.json`, `resultats*.jsonl`, `journal.jsonl`.\n",
      "## Registres utilisés\n"]
@@ -94,6 +98,11 @@ if lire('notes_registres.md'):
     L.append(lire('notes_registres.md'))
 if lire('a_verifier.md'):
     L += ['## À vérifier en priorité\n', lire('a_verifier.md')]
+if BAP:
+    L.append('## Naissances changées en baptêmes\n')
+    for n in sorted(BAP, key=cle):
+        L.append(f"- **{qui(ev[n])}** ({dite(ev[n])}) : {R.get(n, {}).get('lu', '')}")
+    L.append('')
 L.append('## Écarts relevés (liens posés, arbre laissé tel quel)\n')
 for n in sorted(R, key=cle):
     d = R[n]

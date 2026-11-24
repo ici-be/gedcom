@@ -52,6 +52,13 @@ d'une commune se suivent) : `node fs.mjs film D DGS` dit s'il existe, puis lis s
 Ajoute une ligne JSON par événement (y compris les non trouvés) à `D/resultats_lot_K.jsonl`, au fur et à mesure :
 - trouvé : `{"n": 12, "src": "https://agatha.arch.be/data/images/511/DOSSIER/IMAGE", "lu": "Baptême 5/7/1701 : Joannes, fils de Martinus Boogaerts et d'Elisabetha Stakenborgh ; parrain …", "ecart": "…" (facultatif), "douteux": false}`
   (`511` = premier nombre du nom du dossier, ex. `511_0001_126_00007_000` → `511`) ;
+  Pour un événement `BIRT` (naissance), ajoute toujours trois champs qui disent ce que l'acte établit :
+  `"acte": "baptême"` ou `"naissance"` (acte civil de naissance), `"date_acte": "JJ/MM/AAAA"` (date du baptême ou
+  de l'acte) et `"naissance_dans_acte"` : la date de naissance écrite dans l'acte (`"JJ/MM/AAAA"`, aussi quand
+  c'est le jour même : « natus hodie », « né ce jour ») ou `null` si l'acte ne dit rien de la naissance. Ne mets
+  `null` que si tu as lu l'acte en entier et qu'il ne parle pas de la naissance. Si tu hésites, mets la date que
+  tu crois lire et signale-le dans `ecart`. Ces champs permettent de changer la naissance de l'arbre en baptême
+  quand l'arbre a pris la date du baptême pour une date de naissance.
 - non trouvé : `{"n": 12, "src": null, "motif": "images 0_2301 à 0_2312 lues (juin-août 1701), pas de Joannes Boogaerts"}`.
 
 Ta réponse finale tient en une ligne : « lot K : X trouvés, Y douteux, Z non trouvés ». Pas de transcription

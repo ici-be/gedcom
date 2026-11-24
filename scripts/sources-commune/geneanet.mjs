@@ -4,6 +4,12 @@
 // formulaire et vérifie, sans enregistrer. Avec --valider : enregistre, puis relit la fiche publique pour s'assurer
 // que le lien y figure. Journal : DOSSIER/journal.jsonl (avant/après de chaque événement), bilan à la fin.
 // Chrome de travail : port 9333, connecté à Geneanet. Arbre : bveyckemans.
+// Naissance → baptême : quand l'arbre donne pour naissance la date d'un acte qui n'est qu'un baptême (résultat avec
+// "acte": "baptême", "date_acte" = date de l'arbre, "naissance_dans_acte": null), le type de l'événement passe à
+// Baptême (rien d'autre ne change : ni date, ni lieu, ni note). Garde-fous : événement Naissance à date exacte, sans
+// témoin, seul de son type, aucun baptême sur la fiche ; seuls le type (et la source) changent dans le formulaire ;
+// après enregistrement, la fiche publique doit dire « Baptisé(e) le … » et plus « Né(e) le … ». Vaut aussi pour un
+// événement dont le lien est déjà posé (état « converti » au journal). --sans-bapteme : ne jamais changer le type.
 import { createRequire } from 'node:module'
 import { appendFileSync, readFileSync, existsSync, readdirSync } from 'node:fs'
 const require = createRequire(new URL('../../package.json', import.meta.url))
@@ -17,7 +23,10 @@ const choisis = liste ? new Set(liste.split(',').map(Number)) : null
 const evs = Object.fromEntries(JSON.parse(readFileSync(`${dossier}/evenements.json`, 'utf8')).map(e => [e.n, e]))
 const lignes = (f) => existsSync(f) ? readFileSync(f, 'utf8').trim().split('\n').filter(Boolean).map(l => JSON.parse(l)) : []
 const JOURNAL = `${dossier}/journal.jsonl`
-const faits = new Set(lignes(JOURNAL).filter(j => j.etat === 'posé' || j.etat === 'déjà présent').map(j => j.n))
+const J = lignes(JOURNAL)
+const faits = new Set(J.filter(j => j.etat === 'posé' || j.etat === 'déjà présent').map(j => j.n))
+const convertis = new Set(J.filter(j => j.bapteme && (j.etat === 'posé' || j.etat === 'converti')).map(j => j.n))
+const sansBapteme = opts.includes('--sans-bapteme')
 const res = new Map()
 for (const f of readdirSync(dossier).filter(f => /^resultats.*\.jsonl$/.test(f)).sort()) for (const r of lignes(`${dossier}/${f}`)) if (r.src && !r.douteux) res.set(r.n, r) // la dernière ligne l'emporte
 
@@ -29,6 +38,11 @@ const cle = (src) => src.includes('/data/images/') ? src.split('/data/images/')[
 // lien partagé par plusieurs événements (registre de population des Archives de la Ville) : sa présence sur la fiche ne prouve rien
 const partage = (src) => !src.includes('/data/images/') && !src.includes('61903/')
 const compter = (html, c) => html.split(c).length - 1
+const jma = (s) => (String(s ?? '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/) ?? []).slice(1).map(Number)
+// l'acte lu n'est qu'un baptême, à la date que l'arbre donne pour la naissance, et ne dit rien de la naissance
+const aBaptiser = (e, r) => !sansBapteme && e.kind === 'ind' && e.tag === 'BIRT' && !r.douteux && !r.note
+  && norm(r.acte) === 'bapteme' && r.naissance_dans_acte === null && Array.isArray(e.dmy) && e.dmy[0]
+  && JSON.stringify(jma(r.date_acte)) === JSON.stringify(e.dmy)
 
 const nav = await chromium.connectOverCDP('http://127.0.0.1:9333')
 const ctx = nav.contexts()[0]
@@ -101,12 +115,13 @@ async function ouvrirEditeur(t, oc) {
   return { m, i: choix[0][1] }
 }
 
-const bilan = { posé: [], 'déjà présent': [], essai: [], arrêt: [] }
-const note = (n, etat, plus = {}) => { bilan[etat === 'posé' || etat === 'déjà présent' || etat === 'essai' ? etat : 'arrêt'].push(n); console.log(n, etat, plus.motif ?? '') ; if (etat !== 'essai') appendFileSync(JOURNAL, JSON.stringify({ quand: new Date().toISOString(), n, etat, ...plus }) + '\n') }
+const bilan = { posé: [], 'dont baptême': [], converti: [], 'déjà présent': [], essai: [], arrêt: [] }
+const note = (n, etat, plus = {}) => { bilan[etat in bilan ? etat : 'arrêt'].push(n); if (plus.bapteme && etat === 'posé') bilan['dont baptême'].push(n); console.log(n, etat, plus.motif ?? '') ; if (etat !== 'essai') appendFileSync(JOURNAL, JSON.stringify({ quand: new Date().toISOString(), n, etat, ...plus }) + '\n') }
 
 for (const [n, r] of res) {
-  if (faits.has(n) || (choisis && !choisis.has(n))) continue
   const e = evs[n]
+  const bap = aBaptiser(e, r) && !convertis.has(n)
+  if ((faits.has(n) && !bap) || (choisis && !choisis.has(n))) continue
   const tag = e.tag.slice(0, 4)
   const t = {
     kind: e.kind, dmy: e.dmy ?? [0, 0, Number(e.date.match(/\d{4}/)[0])], type: TYPE[e.kind][tag], cle: cle(r.src), partage: partage(r.src), note: r.note,
@@ -121,31 +136,59 @@ for (const [n, r] of res) {
     const fiches = Number.isInteger(r.oc) ? (await trouverFiches(t)).filter(f => f.oc === r.oc) : await trouverFiches(t)
     if (fiches.length !== 1) { note(n, 'arrêt', { motif: `${fiches.length} fiche(s) conviennent (oc ${fiches.map(f => f.oc).join(", ")})` }); continue }
     const { oc, deja, avant: nAvant } = fiches[0]
-    if (deja) { note(n, 'déjà présent', { oc }); continue }
+    if (deja && !bap) { note(n, 'déjà présent', { oc }); continue }
     const o = await ouvrirEditeur(t, oc)
     if (typeof o === 'string') { note(n, 'arrêt', { motif: o, oc }); continue }
     const { m: avant, i } = o
-    const evA = (t.kind === 'fam' ? avant.family.fevents : avant.person.pevents)[i]
-    if (evA.src && evA.src.trim() && !r.forcer_src) { note(n, 'arrêt', { motif: 'source déjà remplie : ' + evA.src, oc }); continue }
-    const champ = p.locator(`[name*="[${t.kind === 'fam' ? 'fevents' : 'pevents'}][_${i}]"][name$="[pevent_src][_${i}]"]`)
-    if ((await champ.count()) !== 1) { note(n, 'arrêt', { motif: 'champ Source introuvable', oc }); continue }
-    await champ.fill(r.src)
-    await p.waitForTimeout(300)
+    const evsA = t.kind === 'fam' ? avant.family.fevents : avant.person.pevents
+    const evA = evsA[i]
+    // lien déjà posé (séance précédente) : seul le type reste à changer
+    const srcDeja = deja && evA.src === r.src
+    if (deja && !srcDeja) { note(n, 'arrêt', { motif: 'lien présent sur la fiche mais pas dans cet événement : ' + evA.src, oc }); continue }
+    if (!srcDeja && evA.src && evA.src.trim() && !r.forcer_src) { note(n, 'arrêt', { motif: 'source déjà remplie : ' + evA.src, oc }); continue }
+    if (bap) {
+      const pb = evA.pevent_type !== 0 ? 'événement qui n’est pas une naissance'
+        : evA.date?.prec !== 0 || evA.date?.cal || evA.date?.text || evA.date?.dmy?.delta || evA.date?.dmy2?.year ? 'date non exacte'
+        : evA.witnesses?.length ? 'naissance avec témoins'
+        : evsA.some((x, k) => k !== i && x.pevent_type === 0) ? 'autre naissance sur la fiche'
+        : evsA.some(x => x.pevent_type === 1) ? 'baptême déjà présent sur la fiche' : null
+      if (pb) { note(n, 'arrêt', { motif: 'baptême non converti : ' + pb, oc }); continue }
+    }
+    if (!srcDeja) {
+      const champ = p.locator(`[name*="[${t.kind === 'fam' ? 'fevents' : 'pevents'}][_${i}]"][name$="[pevent_src][_${i}]"]`)
+      if ((await champ.count()) !== 1) { note(n, 'arrêt', { motif: 'champ Source introuvable', oc }); continue }
+      await champ.fill(r.src)
+      await p.waitForTimeout(300)
+    }
+    if (bap) {
+      const sel = p.locator(`select[name*="[pevents][_${i}]"][name$="[event_type][_${i}]"]`)
+      if ((await sel.count()) !== 1 || !(await sel.locator('option[value="number:1"]').textContent())?.startsWith('Baptême')) { note(n, 'arrêt', { motif: 'liste des types introuvable', oc }); continue }
+      await sel.selectOption('number:1')
+      await p.waitForTimeout(300)
+    }
     const apres = await lireModele()
     const copie = JSON.parse(JSON.stringify(avant))
     const evB = (t.kind === 'fam' ? apres.family.fevents : apres.person.pevents)[i]
-    ;(t.kind === 'fam' ? copie.family.fevents : copie.person.pevents)[i] = evB
+    // seuls la source et (si demandé) le type de cet événement peuvent avoir changé
+    ;(t.kind === 'fam' ? copie.family.fevents : copie.person.pevents)[i] = { ...evA, src: r.src, ...(bap ? { pevent_type: 1 } : {}) }
     copie.titre = apres.titre
     if (JSON.stringify(copie) !== JSON.stringify(apres)) { note(n, 'arrêt', { motif: "d'autres champs ont changé", oc }); continue }
     if (evB.src !== r.src) { note(n, 'arrêt', { motif: 'source non prise : ' + evB.src, oc }); continue }
-    if (!valider) { note(n, 'essai', { motif: `oc ${oc}, événement ${i}` }); continue }
+    if (!valider) { note(n, 'essai', { motif: `oc ${oc}, événement ${i}${bap ? ', naissance → baptême' : ''}${srcDeja ? ' (lien déjà posé)' : ''}` }); continue }
     await Promise.all([
       p.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 45000 }).catch(() => null),
       p.getByRole('button', { name: 'Valider', exact: true }).or(p.locator('input[type=submit][value="Valider"]')).first().click(),
     ])
-    let ok = false
-    for (let k = 0; k < 4 && !ok; k++) { if (k) await p.waitForTimeout(2000); const h = (await lire(urlFiche(t.p, t.nn, oc) + '&type=fiche'))?.html ?? ''; ok = t.partage ? compter(h, t.cle) > nAvant : h.includes(t.cle) }
-    note(n, ok ? 'posé' : 'arrêt', { oc, src: r.src, avant: evA, ...(ok ? {} : { motif: 'lien absent de la fiche après enregistrement' }) })
+    let ok = false, okBap = !bap
+    for (let k = 0; k < 4 && !(ok && okBap); k++) {
+      if (k) await p.waitForTimeout(2000)
+      const f = await lire(urlFiche(t.p, t.nn, oc) + '&type=fiche')
+      const h = f?.html ?? ''
+      ok = srcDeja || (t.partage ? compter(h, t.cle) > nAvant : h.includes(t.cle))
+      if (bap) { const tx = norm(f?.texte); okBap = new RegExp(`baptisee? le ${norm(t.dateFr)}`).test(tx) && !new RegExp(`(^| )nee? le ${norm(t.dateFr)}`).test(tx) }
+    }
+    const motif = !ok ? 'lien absent de la fiche après enregistrement' : !okBap ? 'type non vérifié sur la fiche après enregistrement (voir « avant » au journal)' : null
+    note(n, motif ? 'arrêt' : srcDeja ? 'converti' : 'posé', { oc, src: r.src, avant: evA, ...(bap ? { bapteme: !motif } : {}), ...(motif ? { motif } : {}) })
   } catch (err) {
     note(n, 'arrêt', { motif: 'erreur : ' + String(err).slice(0, 200) })
   }
