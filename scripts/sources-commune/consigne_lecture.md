@@ -8,7 +8,7 @@ et tu notes le lien de l'image. Tu ne modifies rien d'autre que le fichier de r�
   DEAT décès, BURI sépulture, MARR mariage), `date` (date de l'arbre), la personne et ses proches
   (parents, conjoints ; pour un mariage, les époux et leurs parents), et `registres` : registre(s) probable(s),
   avec `dossier` (dossier IIIF), `images` (images probables, dans l'ordre) et `estimation` (image la plus probable).
-- `D` : dossier de travail. Outil (depuis `/home/bruno/Scripts Claude/gedcom/scripts/sources-commune`) :
+- `D` : dossier de travail. Outil (depuis `/home/bruno/projets/perso/gedcom/scripts/sources-commune`) :
   `python3 -I agatha.py extrait D DOSSIER IMAGE LARGEUR REGION` télécharge un extrait et affiche le chemin du
   JPEG, que tu lis avec Read. REGION : `full`, ou `pct:x,y,l,h` en pourcentages (ex. `pct:0,0,50,100` = moitié
   gauche, `pct:50,0,50,100` = moitié droite, `pct:0,0,100,50` = moitié haute).

@@ -39,9 +39,9 @@ par ex. `<scratchpad>/<commune>`.
    `python3 -I lots.py D 8`.
 
 5. **Lecture** : un sous-agent `general-purpose` par lot, 6 à 7 en parallèle au plus, avec ce prompt :
-   « Lis d'abord la consigne /home/bruno/Scripts Claude/gedcom/scripts/sources-commune/consigne_lecture.md et
+   « Lis d'abord la consigne /home/bruno/projets/perso/gedcom/scripts/sources-commune/consigne_lecture.md et
    applique-la. LOT = D/lot_K.json ; D = … ; K = … ; commune : … . Lance les commandes Bash depuis
-   /home/bruno/Scripts Claude/gedcom/scripts/sources-commune. » Ne jamais lire les images dans la conversation
+   /home/bruno/projets/perso/gedcom/scripts/sources-commune. » Ne jamais lire les images dans la conversation
    principale ; ne pas ouvrir les transcriptions des sous-agents.
 
 6. **Écriture** : dès que des lots sont finis, `node geneanet.mjs D --valider` (relançable : ce qui est déjà
