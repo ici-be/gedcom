@@ -50,13 +50,23 @@ const p = ctx.pages().find(x => x.url().includes('geneanet')) ?? await ctx.newPa
 if (!p.url().includes('geneanet')) await p.goto(`https://gw.geneanet.org/${ARBRE}_w?lang=fr`, { waitUntil: 'domcontentloaded' })
 p.on('dialog', d => d.dismiss().catch(() => {}))
 
-const lire = (u) => p.evaluate(async (u) => {
+const lire1 = (u) => p.evaluate(async (u) => {
   const r = await fetch(u, { credentials: 'include' })
   if (r.status === 404) return null
   const h = await r.text()
+  // page de contrôle Cloudflare (« Just a moment... », 403) : à relire plus tard, pas une fiche absente
+  if (r.status === 403 || r.status === 429 || h.includes('_cf_chl_opt')) return { bloque: true }
   const d = new DOMParser().parseFromString(h, 'text/html')
   return { texte: (d.querySelector('#perso, #content, main') ?? d.body).innerText.replace(/\s+/g, ' '), html: h }
 }, u)
+async function lire(u) {
+  for (let essai = 0; essai < 5; essai++) {
+    const f = await lire1(u)
+    if (!f?.bloque) return f
+    await p.waitForTimeout(15000 * (essai + 1))
+  }
+  throw new Error('Geneanet bloque la lecture (Cloudflare) : ' + u)
+}
 const urlFiche = (pn, nn, oc, w = false) => `https://gw.geneanet.org/${ARBRE}${w ? '_w' : ''}?lang=fr&p=${encodeURIComponent(pn)}&n=${encodeURIComponent(nn)}&oc=${oc}`
 
 // Fiches candidates : celles qui citent la date de l'événement et un proche (parent ou conjoint)
