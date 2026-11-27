@@ -1,11 +1,14 @@
 // Vérifie que le Chrome de travail (port 9333, profil ~/.local/share/lignees/chrome) est ouvert et connecté à
-// Geneanet, FamilySearch et Agatha ; sinon tente la connexion avec les identifiants enregistrés dans Chrome.
+// Geneanet et FamilySearch ; sinon tente la connexion avec les identifiants enregistrés dans Chrome.
+// Agatha n'en fait plus partie : son serveur d'images (i3f.arch.be) et ses manifestes se lisent sans session (il
+// suffit du Referer https://agatha.arch.be/), seule la visionneuse web demande un compte ; agatha.py et actes.mjs
+// s'en passent.
 //   node sessions.mjs [--attendre MINUTES]
 // Les mots de passe ne passent jamais par ce script : Chrome remplit lui-même le formulaire (identifiants
 // enregistrés), le script ne fait que cliquer dans le champ puis sur le bouton de connexion du formulaire.
 // FamilySearch : connexion par identifiant et mot de passe uniquement, jamais par le bouton Google.
 // Si le remplissage automatique n'a rien donné, l'onglet de connexion reste au premier plan et le script attend
-// que Bruno se connecte lui-même (5 minutes par défaut). Code de sortie 0 si les trois sessions sont actives.
+// que Bruno se connecte lui-même (5 minutes par défaut). Code de sortie 0 si les deux sessions sont actives.
 import { createRequire } from 'node:module'
 import { spawn } from 'node:child_process'
 import { existsSync, mkdirSync } from 'node:fs'
@@ -48,12 +51,6 @@ const SITES = {
     connexion: 'https://www.familysearch.org/fr/global',
     // l'adresse de connexion directe renvoie à l'accueil : passer par le bouton « Ouvrir une session »
     avant: async (p) => { await Promise.all([p.waitForNavigation({ timeout: 30000 }).catch(() => null), p.locator('#signInLink').click()]); await p.waitForTimeout(2500) },
-  },
-  agatha: {
-    test: 'https://agatha.arch.be/fr/',
-    connecte: () => document.documentElement.innerHTML.includes('logout()'),
-    connexion: 'https://agatha.arch.be/fr/',
-    ouvrir: () => { const m = document.getElementById('modal_login'); if (m && window.bootstrap) window.bootstrap.Modal.getOrCreateInstance(m).show() },
   },
 }
 

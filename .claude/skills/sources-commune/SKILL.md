@@ -19,8 +19,9 @@ par ex. `<scratchpad>/<commune>`.
 0. **Mémoire** : regarder s'il existe une note `actes-<commune>` (registres déjà repérés, liens déjà posés, pièges).
 
 1. **Sessions** : `node sessions.mjs`. Il ouvre au besoin le Chrome de travail (port 9333), vérifie Geneanet
-   (droits d'écriture), FamilySearch et Agatha, et reconnecte avec les identifiants enregistrés dans Chrome
-   (FamilySearch par identifiant et mot de passe, jamais par Google). Si un site reste « NON CONNECTÉ », dire à
+   (droits d'écriture) et FamilySearch, et reconnecte avec les identifiants enregistrés dans Chrome
+   (FamilySearch par identifiant et mot de passe, jamais par Google). Agatha n'a pas besoin de session :
+   `agatha.py` lit images et manifestes sans connexion. Si un site reste « NON CONNECTÉ », dire à
    Bruno de se connecter dans la fenêtre Chrome (le script attend 5 min) et relancer. Ne jamais lire ni afficher
    la valeur d'un champ de formulaire.
 

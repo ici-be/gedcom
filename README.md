@@ -218,7 +218,7 @@ Archives de l'État en Belgique), en commençant par les ancêtres les plus proc
 fois chacun. Le script tourne sur l'ordinateur, pas sur le site.
 
 ```
-npm run actes connexion          # ouvre un Chrome à part : s'y connecter à FamilySearch et à Agatha
+npm run actes connexion          # ouvre un Chrome à part : s'y connecter à FamilySearch
 npm run actes liste              # images citées, téléchargées, à faire, par site et par génération
 npm run actes telecharger        # la suite de la file : 40 images, une toutes les 4 secondes environ
 npm run actes telecharger -- --signatures --max 20   # les actes où la signature d'un ancêtre est à trouver

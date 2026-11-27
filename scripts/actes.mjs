@@ -1,7 +1,7 @@
 // Télécharge les images des actes cités comme sources chez les ancêtres (FamilySearch, Agatha), du Sosa le plus proche
 // au plus lointain, et les envoie si on veut sur pCloud.
 //
-//   node scripts/actes.mjs connexion        ouvre un Chrome à part pour se connecter à FamilySearch et à Agatha
+//   node scripts/actes.mjs connexion        ouvre un Chrome à part pour se connecter à FamilySearch (Agatha n'en a pas besoin)
 //   node scripts/actes.mjs liste            ce qui est cité, téléchargé, encore à faire
 //   node scripts/actes.mjs telecharger      télécharge la suite de la file (40 images par défaut)
 //   node scripts/actes.mjs pcloud-connexion relie le script à pCloud par le navigateur (connexion Google comprise)
@@ -35,7 +35,7 @@ const CONFIG = join(homedir(), '.config', 'lignees')
 const PROFIL = join(homedir(), '.local', 'share', 'lignees', 'chrome')
 const PORT = 9333
 const CDP = `http://127.0.0.1:${PORT}`
-const CONNEXIONS = ['https://www.familysearch.org/auth/familysearch/login', 'https://agatha.arch.be/fr/']
+const CONNEXIONS = ['https://www.familysearch.org/auth/familysearch/login'] // Agatha : images lues sans session
 
 // ——— Arguments et réglages ———
 
@@ -159,20 +159,17 @@ async function imageAgatha(ctx, acte) {
   let base = `https://i3f.arch.be/iiif/${inst}/${dossier.split('_').slice(0, 3).join('_')}/${dossier}/${dossier}_${vue}.jp2`
   let info = await lire(`${base}/info.json`)
   if (!info.ok()) {
-    // rangement inattendu, ou session expirée : on ouvre la page et on regarde ce que la visionneuse demande
-    const page = await ctx.newPage()
-    try {
-      const vu = page.waitForResponse((r) => /i3f\.arch\.be\/.*\/info\.json/.test(r.url()), { timeout: 30000 }).catch(() => undefined)
-      await page.goto(acte.url, { waitUntil: 'domcontentloaded', timeout: 60000 })
-      const reponse = await vu
-      if (!reponse) {
-        if (await page.locator('[data-bs-target="#modal_login"].alert-link').count()) throw new NonConnecte('Agatha')
-        throw new Error('la visionneuse ne montre aucune image')
-      }
-      base = reponse.url().replace(/\/info\.json.*$/, '')
-      info = await lire(`${base}/info.json`)
-      if (!info.ok()) throw new Error(`Agatha répond ${info.status()}`)
-    } finally { await page.close() }
+    // rangement inattendu : le manifeste IIIF du registre (public) donne l'adresse de chaque image. Ni la visionneuse
+    // (qui exige une session Agatha) ni la connexion ne servent : le serveur d'images ne regarde que le Referer.
+    const pre = dossier.split('_').slice(0, 3).join('_')
+    const man = await lire(`https://agatha.arch.be/fr//data/json/${inst}/${pre}/${dossier}/${dossier}.json`)
+    if (!man.ok()) throw new Error(`manifeste Agatha : ${man.status()}`)
+    const canevas = ((await man.json()).sequences?.[0]?.canvases ?? []).find((c) => c['@id']?.endsWith(`_${vue}.jp2`))
+    const service = canevas?.images?.[0]?.resource?.service?.['@id']
+    if (!service) throw new Error(`image ${vue} absente du manifeste`)
+    base = service.replace(/\/$/, '')
+    info = await lire(`${base}/info.json`)
+    if (!info.ok()) throw new Error(`Agatha répond ${info.status()}`)
   }
   // le serveur ne donne pas plus de 3000 px de large d'un coup : une image plus grande est demandée par morceaux, puis assemblée
   const { width, height } = await info.json()
@@ -276,7 +273,7 @@ async function connexion() {
     for (const u of CONNEXIONS) await (await ctx.newPage()).goto(u).catch(() => undefined)
     await navigateur.close()
   }
-  console.log('Une fenêtre Chrome à part est ouverte : connectez-vous-y à FamilySearch et à Agatha, puis laissez-la ouverte\n(ou fermez-la : la session reste dans son profil). Ensuite : node scripts/actes.mjs telecharger')
+  console.log('Une fenêtre Chrome à part est ouverte : connectez-vous-y à FamilySearch, puis laissez-la ouverte\n(ou fermez-la : la session reste dans son profil). Ensuite : node scripts/actes.mjs telecharger')
 }
 
 function resume(actes, index) {

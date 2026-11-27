@@ -7,8 +7,8 @@ commune (`D` ci-dessous), à copier à la fin dans `pcloud:Généalogie/Recherch
 Le skill `sources-commune` (`.claude/skills/sources-commune/SKILL.md`) enchaîne ces étapes à partir du seul nom
 de la commune et de la portée (ancêtres, avec fratrie, tous).
 
-Prérequis : le Chrome de travail (port 9333, profil `~/.local/share/lignees/chrome`) connecté à Geneanet,
-FamilySearch et Agatha (`node sessions.mjs` le vérifie et reconnecte avec les identifiants enregistrés) ;
+Prérequis : le Chrome de travail (port 9333, profil `~/.local/share/lignees/chrome`) connecté à Geneanet
+et FamilySearch (`node sessions.mjs` le vérifie et reconnecte avec les identifiants enregistrés) ;
 un export GEDCOM récent dans `~/Téléchargements`.
 
 ## Étapes
