@@ -7,6 +7,7 @@ import { lienGeneWeb } from './geneanet'
 import { indexerMetiers, type IndexMetiers } from './metiers'
 
 import { anomalies } from './anomalies'
+import { genres } from './genres'
 import { doublons } from './doublons'
 import { encodages } from './encodages'
 export type Perimetre = 'ancetres' | 'ancetres-fratries' | 'tous'
@@ -59,6 +60,7 @@ export interface Bilan {
   /** Absents des relevés plus anciens : ils n'entrent dans la comparaison que si les deux relevés les ont */
   anomalies?: number
   encodages?: number
+  genres?: number
   doublons?: number
 }
 
@@ -85,6 +87,7 @@ export function bilan(d: Donnees): Bilan {
     faitsAncetres,
     anomalies: anomalies(d.arbre).length,
     encodages: encodages(d.arbre).length,
+    genres: genres(d.arbre).length,
     doublons: doublons(d.arbre).length,
   }
 }

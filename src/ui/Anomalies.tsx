@@ -4,6 +4,7 @@ import { useMemo, useState } from 'preact/hooks'
 import type { Donnees } from '../lib/donnees'
 import { anomalies, TYPES_ANOMALIES, type TypeAnomalie } from '../lib/anomalies'
 import { encodages, TYPES_ENCODAGES, type Encodage, type TypeEncodage } from '../lib/encodages'
+import { genres, TYPES_GENRES, type Genre, type TypeGenre } from '../lib/genres'
 import { lieuxAVerifier, RAISONS_VARIANTES } from '../lib/lieux-variantes'
 import { telecharger, versCsv } from '../lib/csv'
 import { nombre } from '../lib/format'
@@ -12,6 +13,7 @@ import { Personne, Pagination } from './commun'
 
 const PAR_PAGE = 50
 const cleE = (e: Encodage) => `E|${e.type}|${e.id ?? ''}|${e.famille ?? ''}|${e.texte}`
+const cleG = (g: Genre) => `G|${g.id}|${g.prenom}|${g.type}`
 const cle = (a: { id: string; autre?: string; type: string; texte: string }) => `${a.id}|${a.autre ?? ''}|${a.type}|${a.texte}`
 
 export function Anomalies({ d }: { d: Donnees }) {
@@ -44,6 +46,16 @@ export function Anomalies({ d }: { d: Donnees }) {
     return <>{[f?.mari, f?.femme].filter((x): x is string => !!x).map((id) => <div key={id}><Personne d={d} id={id} annees /></div>)}</>
   }
 
+  const tousG = useMemo(() => genres(d.arbre), [d])
+  const [typeG, setTypeG] = useState<TypeGenre | ''>('')
+  const [pageG, setPageG] = useState(0)
+  const listeG = useMemo(() => tousG.filter((g) => (!typeG || g.type === typeG) && !ignorees.includes(cleG(g))), [tousG, typeG, ignorees])
+  const porteurs = (g: Genre) => {
+    const h = g.hommes ? pluriel(g.hommes, 'homme') : 'aucun homme'
+    const f = g.femmes ? pluriel(g.femmes, 'femme') : 'aucune femme'
+    return g.suggere === 'F' ? `${f} et ${h}` : `${h} et ${f}`
+  }
+
   const [lieuxEcartes, setLieuxEcartes] = useState<string[]>(() => lire('lieuxEcartes', []))
   const [pageL, setPageL] = useState(0)
   const groupesL = useMemo(() => lieuxAVerifier(d.arbre, new Set(lieuxEcartes)), [d, lieuxEcartes])
@@ -58,6 +70,7 @@ export function Anomalies({ d }: { d: Donnees }) {
   const tuiles: { id: string; titre: string; n: number; detail: string }[] = [
     { id: 'an-dates', titre: 'Dates incohérentes', n: toutes.length, detail: 'parents trop jeunes, décès avant naissance…' },
     { id: 'an-encodages', titre: 'Mauvais encodages', n: groupesE.length, detail: `${pluriel(listeE.length, 'problème')} sur ${pluriel(groupesE.length, 'fiche')}` },
+    { id: 'an-genres', titre: 'Genres douteux', n: listeG.length, detail: 'prénom d’homme noté femme, ou l’inverse' },
     { id: 'an-lieux', titre: 'Lieux à normaliser', n: groupesL.length, detail: 'même lieu écrit de plusieurs façons' },
   ]
 
@@ -150,6 +163,44 @@ export function Anomalies({ d }: { d: Donnees }) {
           ))}
         </ul>
         <Pagination page={pageE} pages={Math.ceil(groupesE.length / PAR_PAGE)} aller={setPageE} />
+      </section>
+
+      <section class="an-section" id="an-genres">
+        <div class="an-entete">
+          <h2>Genres douteux <span class={listeG.length ? 'compte' : 'compte ok'}>{nombre(listeG.length)}</span></h2>
+          <select value={typeG} onChange={(e) => { setTypeG(e.currentTarget.value as TypeGenre | ''); setPageG(0) }} aria-label="Type de genre douteux">
+            <option value="">Tous les types</option>
+            {(Object.keys(TYPES_GENRES) as TypeGenre[]).map((k) => <option key={k} value={k}>{TYPES_GENRES[k]}</option>)}
+          </select>
+        </div>
+        <details class="an-aide">
+          <summary>Ce qui est signalé</summary>
+          <p>
+            Une personne dont le premier prénom est, dans l’arbre même, porté par au moins 5 personnes de l’autre sexe et à 95 % ou plus par l’autre sexe
+            (un « Jean » noté femme, une « Maria » noté homme), ou une personne de sexe inconnu au prénom aussi marqué. Seul le premier prénom compte, sans ce qui suit
+            un trait d’union (« Jean-Marie » est compté comme « Jean »). Les prénoms mixtes (Dominique, Claude, Camille, Hyacinthe, Amable, Alix…) ne sont jamais signalés.
+            Un homme prénommé Marie-Joseph, comme on en baptisait autrefois, peut être écarté.
+          </p>
+        </details>
+        {listeG.length === 0 && <p class="an-vide">Aucun prénom en désaccord avec le sexe noté.</p>}
+        <ul class="an-lignes">
+          {listeG.slice(pageG * PAR_PAGE, (pageG + 1) * PAR_PAGE).map((g) => (
+            <li key={cleG(g)}>
+              <div class="an-qui">
+                <Personne d={d} id={g.id} annees />
+              </div>
+              <div class="an-quoi">
+                <span class="an-type">{TYPES_GENRES[g.type]}</span>
+                <span>
+                  {g.type === 'inconnu' ? 'Sexe non noté' : g.suggere === 'F' ? 'Noté homme' : 'Notée femme'}, mais « {g.prenom} » est porté dans l’arbre par {porteurs(g)} :
+                  sans doute {g.suggere === 'F' ? 'une femme' : 'un homme'}
+                </span>
+              </div>
+              <button type="button" class="bouton discret" title="Le sexe noté est juste : ne plus le signaler" onClick={() => changer([...ignorees, cleG(g)])}>{coche}Sexe juste</button>
+            </li>
+          ))}
+        </ul>
+        <Pagination page={pageG} pages={Math.ceil(listeG.length / PAR_PAGE)} aller={setPageG} />
       </section>
 
       <section class="an-section" id="an-lieux">

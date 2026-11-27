@@ -170,6 +170,7 @@ function Progres({ d, bilan, precedent }: { d: Donnees; bilan: Bilan; precedent?
   const controles: [keyof Bilan, string, string][] = [
     ['anomalies', 'anomalies de dates', '#/anomalies'],
     ['encodages', 'mauvais encodages', '#/anomalies'],
+    ['genres', 'genres douteux', '#/anomalies'],
     ['doublons', 'doublons potentiels', '#/doublons'],
   ]
   for (const [k, titre, lien] of controles) {
@@ -238,7 +239,7 @@ export function TableauDeBord({ d, bilan, precedent, fichier, setAdresse, setPer
     }
     return r
   }, [d])
-  const verifs = (bilan.anomalies ?? 0) + (bilan.encodages ?? 0)
+  const verifs = (bilan.anomalies ?? 0) + (bilan.encodages ?? 0) + (bilan.genres ?? 0)
   const initiales = racine ? ((racine.prenom[0] ?? '') + (racine.nom[0] ?? '')).toUpperCase() || '?' : '?'
   return (
     <section class="ecran accueil">
