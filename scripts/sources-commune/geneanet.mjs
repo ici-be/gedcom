@@ -30,6 +30,8 @@ const sansBapteme = opts.includes('--sans-bapteme')
 const res = new Map()
 for (const f of readdirSync(dossier).filter(f => /^resultats.*\.jsonl$/.test(f)).sort()) for (const r of lignes(`${dossier}/${f}`)) if (r.src && !r.douteux) res.set(r.n, r) // la dernière ligne l'emporte
 
+// date sans jour (« FEB 1733 », « 1706 ») : [0, mois ou 0, année]
+const dmyPartiel = (d) => [0, 1 + ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'].indexOf(/\b([A-Z]{3}) \d{4}$/.exec(d)?.[1]), Number(d.match(/\d{4}/)[0])]
 const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre']
 const dateFr = ([d, m, y]) => d ? `${d === 1 ? '1er' : d} ${MOIS[m - 1]} ${y}` : `${y}` // année seule (résidence, registre de population)
 const TYPE = { ind: { BIRT: 0, BAPM: 1, CHR: 1, DEAT: 2, BURI: 3 }, fam: { MARR: 0 } }
@@ -116,7 +118,7 @@ async function ouvrirEditeur(t, oc) {
   if (t.conjoint && !norm(m.titre).includes(norm(t.conjoint))) return `autre union : ${m.titre}`
   const evsF = t.kind === 'fam' ? m.family?.fevents : m.person?.pevents
   const [d, mo, y] = t.dmy
-  let idx = (evsF ?? []).map((e, i) => [e, i]).filter(([e]) => e.date?.dmy?.year === y && (e.date.dmy.month || 0) === mo && (e.date.dmy.day || 0) === d)
+  let idx = (evsF ?? []).map((e, i) => [e, i]).filter(([e]) => e.date?.dmy?.year === y && (e.date.dmy.month || 0) === (mo || 0) && (e.date.dmy.day || 0) === (d || 0))
   // plusieurs événements de la même année : "note" dans le résultat = texte propre à l'événement voulu (adresse…)
   if (t.note) idx = idx.filter(([e]) => norm(JSON.stringify(e)).includes(norm(t.note)))
   const memeType = idx.filter(([e]) => (e.pevent_type ?? e.fevent_type) === t.type)
@@ -134,7 +136,7 @@ for (const [n, r] of res) {
   if ((faits.has(n) && !bap) || (choisis && !choisis.has(n))) continue
   const tag = e.tag.slice(0, 4)
   const t = {
-    kind: e.kind, dmy: e.dmy ?? [0, 0, Number(e.date.match(/\d{4}/)[0])], type: TYPE[e.kind][tag], cle: cle(r.src), partage: partage(r.src), note: r.note,
+    kind: e.kind, dmy: e.dmy ?? dmyPartiel(e.date), type: TYPE[e.kind][tag], cle: cle(r.src), partage: partage(r.src), note: r.note,
     ...(e.kind === 'fam'
       ? { p: e.mari.prenom.toLowerCase(), nn: e.mari.nom.toLowerCase(), conjoint: `${e.femme.prenom} ${e.femme.nom}`, indices: [e.femme.nom] }
       : { p: e.qui.prenom.toLowerCase(), nn: e.qui.nom.toLowerCase(), indices: [e.pere?.nom, e.mere?.nom, ...e.conjoints.map(c => c?.nom)].filter(Boolean) }),
