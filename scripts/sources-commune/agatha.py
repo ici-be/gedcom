@@ -26,8 +26,13 @@ def registres(dossier, commune):
     jar = f'{dossier}/.agatha_cookies'
     lieux = json.loads(curl('-X', 'POST', BASE + 'ajax.php', '--data-urlencode', 'method=getMunicipalities', '--data-urlencode', f'term={commune}'))
     lieu = next((x for x in lieux if x['CURRENT_NAME'].lower() == commune.lower()), lieux[0])
-    paroisses = [x for x in json.loads(curl('-X', 'POST', BASE + 'ajax.php', '--data-urlencode', 'method=getPlaces', '--data-urlencode', f'term={commune}'))
-                 if x['PLACEPOINT_ID'] == lieu['PLACEPOINT_ID']]
+    paroisses = {}
+    # la recherche renvoie peu de résultats : « Meise » rend les sections (Imde, Rossem…) mais pas « Meise: Sint-Martinus »
+    for terme in (commune, f'{lieu["CURRENT_NAME"]}:'):
+        for x in json.loads(curl('-X', 'POST', BASE + 'ajax.php', '--data-urlencode', 'method=getPlaces', '--data-urlencode', f'term={terme}')):
+            if x['PLACEPOINT_ID'] == lieu['PLACEPOINT_ID']:
+                paroisses[x['PARISH_ID']] = x
+    paroisses = list(paroisses.values())
     print('lieu', lieu['PLACEPOINT_ID'], lieu['CURRENT_NAME'], '| paroisses', [(p['PARISH_ID'], p['label']) for p in paroisses])
     for tab in ('PR', 'CS'):
         curl('-c', jar, '-b', jar, BASE, '-o', '/dev/null')
