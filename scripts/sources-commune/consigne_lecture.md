@@ -26,6 +26,13 @@ reconnaître la paroisse sur l'image et viser le bon jour, et signale l'écart d
 Si aucun film proposé ne couvre l'année, essaie les films de numéro voisin (DGS ± 1, ± 2 : les films d'état civil
 d'une commune se suivent) : `node fs.mjs film D DGS` dit s'il existe, puis lis sa première image pour voir les années.
 
+**Registre des Archives du Cher** (champ `dgs` de la forme `ad18-ID`) : `node ad18.mjs extrait D ID IMAGE LARGEUR REGION`
+(ID = nombre après `ad18-`, IMAGE = numéro dans le registre, 1 = première) affiche le chemin du JPEG puis le lien ark de
+l'image (`https://www.archives18.fr/ark:41383/…`) : c'est ce lien qui va dans `src`. Les registres d'avant 1793 mêlent
+baptêmes, mariages et sépultures dans l'ordre des dates ; les registres d'état civil vont souvent par année et par type.
+La liste des registres de la commune (cote, années) est dans `D/ad18_registres.json` ; `node ad18.mjs liste D ID` charge
+un registre voisin s'il le faut.
+
 ## Méthode
 - Économise les images : commence à l'image estimée, à 900 px de large en `full`, juste pour lire les dates
   et repérer où se trouve l'acte ; puis zoome sur la page ou la colonne utile (`pct:…`, 1200-1400 px) pour lire

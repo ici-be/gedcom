@@ -27,6 +27,12 @@ un export GEDCOM récent dans `~/Téléchargements`.
    puis `python3 -I localiser_fs.py D` et `python3 -I lots.py D 8` (même format de lots ; `node fs.mjs extrait`
    pour lire une image). Les index néerlandais repris par FamilySearch n'ont pas d'image : `lots.py` joint
    leurs indications (`index_fs`) aux événements, sans les retenir d'office.
+   Pour une commune du **Cher** (liens existants sur archives18.fr) : `node ad18.mjs registres D Commune`
+   (→ `ad18_registres.json`), `node ad18.mjs liste D ID` pour chaque registre utile (→ `fs_film_ad18-ID.json`, même
+   format qu'un film FS), `node ad18.mjs ancres D` (→ `fs_ancres.json`), puis `localiser_fs.py` et `lots.py` comme
+   ci-dessus ; les sous-agents lisent avec `node ad18.mjs extrait D ID IMAGE`. Le site renvoie une page de contrôle
+   sans navigateur : tout passe par la session du Chrome de travail (API JSON `visionneuse-infos` et IIIF). Un registre
+   sans repère, ou un registre BMS mêlé, se règle en ajoutant à la main des repères approchés dans `fs_ancres.json`.
 5. **Lecture des images** : par des sous-agents, par lots d'une dizaine d'événements (consigne ci-dessous).
    Les images ne passent jamais par la conversation principale : seuls les résultats écrits reviennent.
 6. **Écriture sur Geneanet** : `node geneanet.mjs D` (essai), puis `node geneanet.mjs D --valider` (ou `--valider N1,N2` pour quelques événements). Quand deux fiches homonymes (père et fils) citent l'événement, ajouter `"oc"` (numéro de la bonne fiche) au résultat. Chaque

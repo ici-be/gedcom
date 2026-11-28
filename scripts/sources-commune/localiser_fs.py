@@ -96,7 +96,8 @@ for e in evs:
         n_im = len(films[dgs]['arks'])
         est = max(1, min(n_im, est))
         ims = list(range(max(1, est - mg), min(n_im, est + mg) + 1))
-        regs.append({'dgs': dgs, 'dossier': dgs, 'quoi': f"film FS {dgs} {films[dgs].get('titre', '')}".strip(),
+        regs.append({'dgs': dgs, 'dossier': dgs, 'quoi': (f"AD Cher, registre {dgs[5:]} {films[dgs].get('titre', '')}" if dgs.startswith('ad18-')
+                                                  else f"film FS {dgs} {films[dgs].get('titre', '')}").strip(),
                      'estimation': est, 'images': ims, 'repere_le_plus_proche_jours': dist})
     sortie.append({'n': e['n'], 'registres': regs})
 json.dump(sortie, open(f'{D}/a_lire.json', 'w'), ensure_ascii=False, indent=1)
