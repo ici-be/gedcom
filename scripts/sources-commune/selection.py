@@ -1,6 +1,6 @@
 """Événements d'une commune sans lien d'acte.
 
-  python3 -I selection.py DOSSIER COMMUNE [--portee ancetres|fratrie|tous] [--ref @I21@] [--ged EXPORT]
+  python3 -I selection.py DOSSIER COMMUNE[|AUTRE GRAPHIE…] [--portee ancetres|fratrie|tous] [--ref @I21@] [--ged EXPORT]
 
 Portée : « ancetres » = ancêtres de REF et leurs unions ; « fratrie » (défaut) = plus leurs frères et sœurs ;
 « tous » = toutes les personnes et unions de l'arbre. REF : @I21@ (Olivia ; Bruno est son Sosa 2).
@@ -22,6 +22,7 @@ def option(nom, defaut):
 
 
 dossier, commune = sys.argv[1:3]
+noms_lieu = {c.strip().lower() for c in commune.split('|')}  # « Jouy|Jouy - Sancoins|Sancoins » : plusieurs graphies
 portee = option('--portee', 'fratrie')
 ref = option('--ref', '@I21@')
 ged = option('--ged', None)
@@ -69,7 +70,7 @@ for rid, rec in A.r.items():
         continue
     for b in A.blocs(rid):
         plac = [x for _, t, x in b if t == 'PLAC']
-        if not plac or plac[0].split(',')[0].strip().lower() != commune.lower():
+        if not plac or plac[0].split(',')[0].strip().lower() not in noms_lieu:
             continue
         date = ([x for _, t, x in b if t == 'DATE'] or [''])[0]
         tag = b[0][1] if b[0][1] != 'EVEN' else 'EVEN ' + ([x for _, t, x in b if t == 'TYPE'] or [''])[0]
